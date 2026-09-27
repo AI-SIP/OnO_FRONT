@@ -1,23 +1,31 @@
 import 'package:flutter/material.dart';
 
+import '../../Module/Text/mobile_font_size.dart';
 import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import 'ProblemSolveCanvasScreen.dart';
 import 'ProblemSolveRegisterScreen.dart';
+import '../../Module/Motion/TossPageRoute.dart';
+import '../../Module/Motion/PressableScale.dart';
+import '../../Module/Motion/AppMotion.dart';
+import '../../Module/Design/AppRadius.dart';
+import '../../Module/Design/AppColors.dart';
+import '../../Util/AppAnalytics.dart';
 
 class ProblemSolveEntry {
   static Future<bool?> open({
     required BuildContext context,
     required int problemId,
-    required String? problemImageUrl,
+    required List<String> problemImageUrls,
     required VoidCallback onRefresh,
     required ThemeHandler themeProvider,
   }) async {
     final mode = await showModalBottomSheet<_ProblemSolveMode>(
+      sheetAnimationStyle: AppMotion.sheetStyle,
       context: context,
       backgroundColor: Colors.transparent,
       builder: (sheetContext) => _ProblemSolveModeSheet(
-        problemImageUrl: problemImageUrl,
+        problemImageCount: problemImageUrls.length,
         themeProvider: themeProvider,
       ),
     );
@@ -26,10 +34,18 @@ class ProblemSolveEntry {
       return null;
     }
 
+    // 종이에 풀고 기록만 남기는지, 앱 안 캔버스에 푸는지. 문제 이미지가
+    // 없으면 캔버스를 골라도 기록 화면으로 간다.
+    AppAnalytics.logEvent('solve_mode_select', {
+      'mode': mode == _ProblemSolveMode.offline || problemImageUrls.isEmpty
+          ? 'offline'
+          : 'canvas',
+    });
+
     if (mode == _ProblemSolveMode.offline) {
       return Navigator.push<bool>(
         context,
-        MaterialPageRoute(
+        TossPageRoute(
           builder: (context) => ProblemSolveRegisterScreen(
             problemId: problemId,
             onRefresh: onRefresh,
@@ -38,10 +54,10 @@ class ProblemSolveEntry {
       );
     }
 
-    if (problemImageUrl == null) {
+    if (problemImageUrls.isEmpty) {
       return Navigator.push<bool>(
         context,
-        MaterialPageRoute(
+        TossPageRoute(
           builder: (context) => ProblemSolveRegisterScreen(
             problemId: problemId,
             onRefresh: onRefresh,
@@ -52,10 +68,10 @@ class ProblemSolveEntry {
 
     return Navigator.push<bool>(
       context,
-      MaterialPageRoute(
+      TossPageRoute(
         builder: (context) => ProblemSolveCanvasScreen(
           problemId: problemId,
-          problemImageUrl: problemImageUrl,
+          problemImageUrls: problemImageUrls,
           onRefresh: onRefresh,
         ),
       ),
@@ -69,11 +85,11 @@ enum _ProblemSolveMode {
 }
 
 class _ProblemSolveModeSheet extends StatelessWidget {
-  final String? problemImageUrl;
+  final int problemImageCount;
   final ThemeHandler themeProvider;
 
   const _ProblemSolveModeSheet({
-    required this.problemImageUrl,
+    required this.problemImageCount,
     required this.themeProvider,
   });
 
@@ -114,7 +130,7 @@ class _ProblemSolveModeSheet extends StatelessWidget {
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
                   color: themeProvider.primaryColor.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(AppRadius.small),
                 ),
                 child: Icon(
                   Icons.edit_note,
@@ -123,11 +139,11 @@ class _ProblemSolveModeSheet extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 12),
-              const StandardText(
+              StandardText(
                 text: '다시 풀기 방식 선택',
-                fontSize: 20,
+                fontSize: MobileFontSize.reduced(context, 20),
                 fontWeight: FontWeight.w600,
-                color: Colors.black87,
+                color: AppColors.textPrimary,
               ),
             ],
           ),
@@ -143,11 +159,11 @@ class _ProblemSolveModeSheet extends StatelessWidget {
           _ModeTile(
             icon: Icons.draw,
             title: '앱에서 바로 풀기',
-            description: problemImageUrl == null
+            description: problemImageCount == 0
                 ? '문제 이미지가 있어야 사용할 수 있습니다.'
-                : '문제 이미지 위에 필기하고 풀이 시간도 자동 기록합니다.',
+                : '문제 이미지 $problemImageCount장 위에 필기하고 풀이 시간도 자동 기록합니다.',
             themeProvider: themeProvider,
-            isEnabled: problemImageUrl != null,
+            isEnabled: problemImageCount > 0,
             onTap: () => Navigator.pop(context, _ProblemSolveMode.inApp),
           ),
         ],
@@ -177,15 +193,14 @@ class _ModeTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final color = isEnabled ? themeProvider.primaryColor : Colors.grey;
 
-    return InkWell(
+    return PressableScale(
       onTap: isEnabled ? onTap : null,
-      borderRadius: BorderRadius.circular(14),
       child: Container(
         width: double.infinity,
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: isEnabled ? Colors.grey[50] : Colors.grey[100],
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(AppRadius.large),
           border: Border.all(
             color: isEnabled
                 ? themeProvider.primaryColor.withOpacity(0.18)
@@ -200,7 +215,7 @@ class _ModeTile extends StatelessWidget {
               height: 42,
               decoration: BoxDecoration(
                 color: color.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppRadius.medium),
               ),
               child: Icon(icon, color: color, size: 23),
             ),
@@ -211,7 +226,8 @@ class _ModeTile extends StatelessWidget {
                 children: [
                   StandardText(
                     text: title,
-                    fontSize: 16,
+                    fontSize:
+                        isEnabled ? MobileFontSize.reduced(context, 16) : 16,
                     fontWeight: FontWeight.w600,
                     color: isEnabled ? Colors.black87 : Colors.grey,
                   ),

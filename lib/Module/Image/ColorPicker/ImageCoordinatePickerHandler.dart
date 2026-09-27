@@ -1,4 +1,3 @@
-import 'dart:developer';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -7,12 +6,14 @@ import 'package:provider/provider.dart';
 import '../../Text/StandardText.dart';
 import '../../Theme/ThemeHandler.dart';
 import 'ImageCoordinateGuideDialog.dart';
+import '../../Motion/TossPageRoute.dart';
+import '../../Design/AppRadius.dart';
 
 class ImageCoordinatePickerHandler {
   Future<List<List<double>>?> showCoordinatePicker(
       BuildContext context, String imagePath) async {
     final result = await Navigator.of(context).push(
-      MaterialPageRoute(
+      TossPageRoute(
         builder: (context) => CoordinatePickerScreen(imagePath: imagePath),
       ),
     );
@@ -173,7 +174,7 @@ class _CoordinatePickerScreenState extends State<CoordinatePickerScreen> {
                     side: BorderSide(
                         color: themeProvider.primaryColor, width: 2.0),
                     shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20.0)),
+                        borderRadius: BorderRadius.circular(AppRadius.xlarge)),
                     padding: const EdgeInsets.symmetric(vertical: 8),
                   ),
                   child: Row(
@@ -288,7 +289,7 @@ class _CoordinatePickerScreenState extends State<CoordinatePickerScreen> {
                   Colors.white,
                   () {
                     final rectCoordinates = _getBoxCoordinates();
-                    log(rectCoordinates.toString());
+                    debugPrint(rectCoordinates.toString());
                     Navigator.of(context).pop(rectCoordinates);
                   },
                 ),
@@ -413,7 +414,7 @@ Widget _buildActionButton(String text, Color backgroundColor, Color textColor,
       style: ElevatedButton.styleFrom(
         backgroundColor: backgroundColor,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(15.0),
+          borderRadius: BorderRadius.circular(AppRadius.large),
         ),
         padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 10),
       ),
@@ -436,7 +437,7 @@ Widget _buildOutlinedActionButton(
         backgroundColor: Colors.white, // 흰색 배경
         side: BorderSide(color: borderColor, width: 2), // 테두리 색상
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(15.0),
+          borderRadius: BorderRadius.circular(AppRadius.large),
         ),
         padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 5),
       ),

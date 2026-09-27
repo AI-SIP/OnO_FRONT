@@ -2,18 +2,157 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 
+import '../../../Model/Cosmetic/CosmeticLoadoutModel.dart';
+import '../../../Module/Motion/AppMotion.dart';
 import '../../../Module/Text/StandardText.dart';
+import '../../../Module/Design/AppRadius.dart';
+import '../../../Module/Design/AppColors.dart';
+import '../../Cosmetic/Widget/CosmeticArt.dart';
+import 'FrogMotion.dart';
 
+/// 개구리를 층층이 겹쳐 그리는 것만 하는 위젯이다.
+///
+/// 파츠가 전부 같은 512×512 좌표계로 그려져 있어서, 같은 크기의 사각형에
+/// 포개기만 하면 자리가 맞는다. 오프셋을 따로 계산하지 않는다.
+///
+/// 누름이나 말풍선은 여기에 없다. 그게 필요하면 [FrogCharacter] 를 쓴다.
+/// 레벨업 연출처럼 개구리 두 장을 겹쳐 놓고 직접 움직여야 하는 곳은 이쪽이
+/// 편하다.
+class FrogLayerStack extends StatelessWidget {
+  /// 뒤에서 앞 순서로 겹쳐 그릴 층들. `CosmeticProvider.layers` 를 그대로 넘긴다.
+  ///
+  /// 비어 있으면 개구리 본체 한 장만 그린다. 치장을 아직 모르는 화면도 개구리
+  /// 자리가 비어 있으면 안 된다.
+  final List<CosmeticLayerModel> layers;
+
+  /// 한 변의 길이. 정사각형이다.
+  final double size;
+
+  /// 모서리 둥글기.
+  ///
+  /// 배경 파츠는 투명한 데가 없는 정사각형이라 그냥 깔면 각진 판이 된다.
+  /// 카드처럼 보이도록 잘라 낸다. 배경을 안 걸었으면 잘라도 보이는 변화가 없다.
+  final double borderRadius;
+
+  /// 개구리가 눈을 깜빡일지.
+  ///
+  /// 켜면 BASE 한 장을 눈 깜빡임 webp 로 **바꿔 그린다.** 겹치는 것이 아니라
+  /// 자리를 대신하는 것이라 그 위에 얹힌 치장의 좌표는 그대로다.
+  ///
+  /// **개구리가 주인공인 자리에서만 켠다.** 하단 탭 아이콘과 프로필 사진은
+  /// 화면에 늘 떠 있어서, 거기까지 깜빡이면 어디를 봐도 무언가가 움직인다.
+  final bool blinking;
+
+  const FrogLayerStack({
+    super.key,
+    this.layers = const [],
+    this.size = 180,
+    this.borderRadius = AppRadius.large,
+    this.blinking = false,
+  });
+
+  /// 실제로 그릴 층들. 비어 있으면 개구리 본체 한 장으로 메운다.
+  List<CosmeticLayerModel> get _resolved => layers.isEmpty
+      ? const [
+          CosmeticLayerModel(
+            imageUrl: CosmeticLoadoutModel.defaultBaseImageUrl,
+            layerOrder: 0,
+          ),
+        ]
+      : layers;
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(borderRadius),
+      child: SizedBox(
+        width: size,
+        height: size,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            for (final layer in _resolved) _buildLayer(context, layer),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// 이 층에 실제로 그릴 그림.
+  ///
+  /// 눈 깜빡임만 여기서 갈린다. BASE 자리에 들어가는 그림이라 겹치지 않고
+  /// **바꿔 끼운다.**
+  String _resolveUrl(BuildContext context, CosmeticLayerModel layer) {
+    if (!blinking || !layer.isBase) return layer.imageUrl;
+
+    // 깜빡이는 그림은 기본 개구리 한 장에서 떠 온 것이다. 전신 옷을 입어
+    // 본체가 [CosmeticLoadoutModel.defaultBaseHeadImageUrl] 로 갈렸거나 서버가
+    // 다른 본체를 내려주면 눈 자리가 맞는다는 보장이 없다. 그럴 때는 원래
+    // 그림을 그대로 둔다. 갈아 끼우는 규칙 자체는 건드리지 않는다.
+    if (layer.imageUrl != CosmeticLoadoutModel.defaultBaseImageUrl) {
+      return layer.imageUrl;
+    }
+
+    // 끝나지 않는 움직임이라 "동작 줄이기"를 켠 기기에서는 빼고, 테스트에서도
+    // 끈다. [FrogMotion.loopsEnabled] 설명을 참고한다.
+    if (!FrogMotion.loopsEnabled || AppMotion.isReduced(context)) {
+      return layer.imageUrl;
+    }
+
+    return FrogMotion.blink.webp ?? layer.imageUrl;
+  }
+
+  Widget _buildLayer(BuildContext context, CosmeticLayerModel layer) {
+    final url = _resolveUrl(context, layer);
+    if (url.isEmpty) return const SizedBox.shrink();
+
+    // 지금 여기 오는 것은 전부 512 비트맵이지만, 그림 종류를 가리는 일은
+    // [CosmeticArt] 한 군데에만 둔다. 화면마다 확장자를 따져 묻기 시작하면
+    // 새 형식이 들어올 때마다 고칠 데가 늘어난다.
+    return KeyedSubtree(
+      key: ValueKey(layer.itemKey ?? 'BASE'),
+      child: CosmeticArt(url: url, size: size),
+    );
+  }
+}
+
+/// 마이페이지와 미션 화면에 서 있는 개구리다.
+///
+/// 누르면 살짝 커지면서 격려 한마디를 띄운다. 그림은 [FrogLayerStack] 이
+/// 그린다.
 class FrogCharacter extends StatefulWidget {
-  final int level;
+  /// 겹쳐 그릴 층들. `CosmeticProvider.layers` 를 그대로 넘긴다.
+  ///
+  /// 비어 있으면 개구리 본체 한 장만 그린다.
+  final List<CosmeticLayerModel> layers;
+
   final VoidCallback? onTap;
   final double size;
 
+  /// 눌렀을 때 격려 말풍선을 띄울지.
+  ///
+  /// 튜토리얼 안내처럼 개구리가 장식으로만 서 있는 자리에서는 끈다.
+  final bool showEncouragement;
+
+  /// 모서리 둥글기. [FrogLayerStack.borderRadius] 로 그대로 간다.
+  final double borderRadius;
+
+  /// 가만히 있을 때 숨을 쉬고 눈을 깜빡일지.
+  ///
+  /// 켜면 층 전체가 잔잔하게 오르내리고([FrogMotion.idle]) 눈이 깜빡인다
+  /// ([FrogMotion.blink]). 둘 다 끝나지 않는 움직임이라 **개구리가 주인공인
+  /// 무대에서만 켠다.** 목록 카드나 미션 고리 안처럼 다른 것을 보는 중에 곁에
+  /// 서 있는 개구리까지 계속 움직이면 화면이 산만해진다.
+  final bool idleMotion;
+
   const FrogCharacter({
     super.key,
-    required this.level,
+    this.layers = const [],
     this.onTap,
     this.size = 180,
+    this.showEncouragement = true,
+    this.borderRadius = AppRadius.large,
+    this.idleMotion = false,
   });
 
   @override
@@ -65,41 +204,51 @@ class _FrogCharacterState extends State<FrogCharacter>
     super.dispose();
   }
 
-  String _getFrogImagePath(int level) {
-    if (level >= 15) return 'assets/FrogCharacter/FROG_LEVEL15.png';
-    if (level >= 13) return 'assets/FrogCharacter/FROG_LEVEL13.png';
-    if (level >= 11) return 'assets/FrogCharacter/FROG_LEVEL11.png';
-    if (level >= 9) return 'assets/FrogCharacter/FROG_LEVEL9.png';
-    if (level >= 7) return 'assets/FrogCharacter/FROG_LEVEL7.png';
-    if (level >= 5) return 'assets/FrogCharacter/FROG_LEVEL5.png';
-    if (level >= 3) return 'assets/FrogCharacter/FROG_LEVEL3.png';
-    if (level >= 1) return 'assets/FrogCharacter/FROG_LEVEL1.png';
-    return 'assets/FrogCharacter/FROG_LEVEL1.png';
-  }
-
   void _onCharacterTap() {
     // 애니메이션 실행
     _animationController.forward().then((_) {
       _animationController.reverse();
     });
 
-    // 랜덤 메시지 표시
-    setState(() {
-      _displayMessage = _encouragementMessages[
-          Random().nextInt(_encouragementMessages.length)];
-      _showMessage = true;
-    });
+    if (widget.showEncouragement) {
+      // 랜덤 메시지 표시
+      setState(() {
+        _displayMessage = _encouragementMessages[
+            Random().nextInt(_encouragementMessages.length)];
+        _showMessage = true;
+      });
 
-    // 2초 후 메시지 숨김
-    Future.delayed(const Duration(seconds: 2), () {
-      if (mounted) {
-        setState(() {
-          _showMessage = false;
-        });
-      }
-    });
+      // 2초 후 메시지 숨김
+      Future.delayed(const Duration(seconds: 2), () {
+        if (mounted) {
+          setState(() {
+            _showMessage = false;
+          });
+        }
+      });
+    }
 
     widget.onTap?.call();
+  }
+
+  /// 개구리 그림. 대기 모션을 켰으면 **층 전체**를 함께 움직인다.
+  ///
+  /// 층 하나만 움직이면 모자와 옷이 제자리에 남아 개구리만 몸에서 빠져나간다.
+  Widget _buildStack() {
+    final stack = FrogLayerStack(
+      layers: widget.layers,
+      size: widget.size,
+      borderRadius: widget.borderRadius,
+      blinking: widget.idleMotion,
+    );
+
+    if (!widget.idleMotion) return stack;
+
+    return FrogStackMotion(
+      clip: FrogMotion.idle,
+      size: widget.size,
+      child: stack,
+    );
   }
 
   @override
@@ -119,12 +268,7 @@ class _FrogCharacterState extends State<FrogCharacter>
                 child: child,
               );
             },
-            child: Image.asset(
-              _getFrogImagePath(widget.level),
-              width: widget.size,
-              height: widget.size,
-              fit: BoxFit.contain,
-            ),
+            child: _buildStack(),
           ),
           // 격려 메시지
           if (_showMessage && _displayMessage != null)
@@ -145,10 +289,10 @@ class _FrogCharacterState extends State<FrogCharacter>
                           horizontal: 20, vertical: 10),
                       decoration: BoxDecoration(
                         color: Colors.white,
-                        borderRadius: BorderRadius.circular(20),
+                        borderRadius: BorderRadius.circular(AppRadius.xlarge),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.1),
+                            color: Colors.black.withValues(alpha: 0.1),
                             blurRadius: 8,
                             offset: const Offset(0, 2),
                           ),
@@ -157,7 +301,7 @@ class _FrogCharacterState extends State<FrogCharacter>
                       child: StandardText(
                         text: _displayMessage!,
                         fontSize: 12,
-                        color: Colors.black87,
+                        color: AppColors.textPrimary,
                         textAlign: TextAlign.center,
                       ),
                     ),
@@ -193,7 +337,7 @@ class _SpeechBubbleTailPainter extends CustomPainter {
     // 그림자 효과
     canvas.drawShadow(
       path,
-      Colors.black.withOpacity(0.1),
+      Colors.black.withValues(alpha: 0.1),
       2.0,
       false,
     );
@@ -203,4 +347,77 @@ class _SpeechBubbleTailPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+/// 개구리 얼굴만 동그랗게 잘라 보여 준다.
+///
+/// 개구리는 전신 그림인데 프로필 사진과 하단 탭 아이콘은 작은 원이다. 512
+/// 사각형을 그대로 원에 우겨 넣으면 머리가 원 위쪽에 조그맣게 박히고 아래
+/// 절반은 발이 차지한다. 그래서 **얼굴이 있는 자리만 잘라 확대**한다.
+///
+/// [assets/Cosmetic/BASE_HEAD.png] 한 장을 쓰는 방법도 있지만 그러면 배경도
+/// 목도리도 옷깃도 사라지고 모자와 안경만 남는다. 꾸민 것이 프로필에 안
+/// 보이면 꾸밀 이유가 없어지므로, 입은 그대로를 그린 뒤 얼굴 언저리를
+/// 도려내는 쪽을 택했다. 배경 파츠는 원을 가득 채우는 배경이 되고, 목도리와
+/// 옷깃은 턱 아래에 걸린다.
+///
+/// 잘라 낼 자리는 파츠 그림들의 실제 위치에서 왔다. 개구리 머리는 512 안에서
+/// 가로 112~399, 세로 87~284 에 있고 모자는 25 까지 올라간다. 그 범위를
+/// 품는 정사각형이 아래 세 상수다.
+class FrogHeadAvatar extends StatelessWidget {
+  /// 겹쳐 그릴 층들. `CosmeticProvider.layers` 를 그대로 넘긴다.
+  final List<CosmeticLayerModel> layers;
+
+  /// 원 하나의 지름.
+  final double size;
+
+  const FrogHeadAvatar({
+    super.key,
+    required this.layers,
+    required this.size,
+  });
+
+  /// 잘라 낼 정사각형의 한 변. 512 사각형에 대한 비율이다.
+  ///
+  /// 0.64 까지 좁혀 보면 얼굴은 커지지만 학사모 술과 왕관 꼭대기가 원 밖으로
+  /// 밀린다. 모자를 다 품으면서 얼굴이 가장 큰 값이 0.70 이다.
+  static const double _cropSide = 0.70;
+
+  /// 잘라 낼 정사각형의 왼쪽 위 모서리. 512 사각형에 대한 비율이다.
+  ///
+  /// 가로는 가운데(0.15 + 0.70 / 2 = 0.50), 세로는 맨 위에 붙인다. 모자가
+  /// 그림 맨 위까지 올라오는 것이 있어서 위쪽으로는 뺄 여유가 없다.
+  static const double _cropLeft = 0.15;
+  static const double _cropTop = 0.0;
+
+  @override
+  Widget build(BuildContext context) {
+    // 잘라 낸 조각이 [size] 가 되려면 개구리를 이만큼 키워야 한다.
+    final full = size / _cropSide;
+
+    return SizedBox(
+      width: size,
+      height: size,
+      child: ClipOval(
+        child: Stack(
+          clipBehavior: Clip.hardEdge,
+          children: [
+            Positioned(
+              left: -_cropLeft * full,
+              top: -_cropTop * full,
+              width: full,
+              height: full,
+              // 이미 원으로 자르고 있다. 여기서 또 둥글리면 배경 파츠의
+              // 모서리가 원 안쪽에서 한 번 더 깎인다.
+              child: FrogLayerStack(
+                layers: layers,
+                size: full,
+                borderRadius: 0,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }

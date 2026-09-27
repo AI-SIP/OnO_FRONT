@@ -5,6 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../Text/HandWriteText.dart';
 import '../Theme/ThemeHandler.dart';
+import '../Motion/TossDialog.dart';
 
 class ReviewHandler {
   final InAppReview _inAppReview = InAppReview.instance;
@@ -26,7 +27,7 @@ class ReviewHandler {
   void _showCustomReviewDialog(BuildContext context) {
     final themeProvider = Provider.of<ThemeHandler>(context);
 
-    showDialog(
+    showTossDialog(
       context: context,
       builder: (BuildContext dialogContext) {
         return AlertDialog(

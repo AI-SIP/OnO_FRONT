@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:developer';
 
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
@@ -7,17 +6,29 @@ import 'package:ono/Model/PracticeNote/PracticeNoteUpdateModel.dart';
 import 'package:ono/Module/Dialog/SnackBarDialog.dart';
 import 'package:ono/Provider/PracticeNoteProvider.dart';
 import 'package:ono/Screen/ProblemRegister/ProblemRegisterScreen.dart';
+import 'package:ono/Util/AppAnalytics.dart';
 import 'package:ono/Util/AppErrorReporter.dart';
 import 'package:provider/provider.dart';
 
 import '../../Model/Problem/ProblemAnalysisStatus.dart';
 import '../../Model/Problem/ProblemModel.dart';
 import '../../Module/Dialog/LoadingDialog.dart';
+import '../../Module/Text/mobile_font_size.dart';
 import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/ProblemsProvider.dart';
 import '../PracticeNote/PracticeNavigationButtons.dart';
 import 'ProblemDetailTemplate.dart';
+import '../../Module/Motion/AppHaptic.dart';
+import '../../Module/Motion/PressableScale.dart';
+import '../../Module/Motion/TossPageRoute.dart';
+import '../../Module/Motion/TossDialog.dart';
+import '../../Module/Motion/AppMotion.dart';
+import '../../Module/Design/AppColors.dart';
+import '../../Module/Design/AppToast.dart';
+import '../../Module/Design/AppRadius.dart';
+import '../../Module/Motion/AppearTransition.dart';
+import '../../Module/Motion/Skeleton.dart';
 
 class ProblemDetailScreen extends StatefulWidget {
   final int problemId;
@@ -42,6 +53,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
   @override
   void initState() {
     super.initState();
+    AppAnalytics.logScreenView('ProblemDetailScreen');
     _setProblemModel();
   }
 
@@ -69,7 +81,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
     _pollingCount = 0;
     _analysisPollingFailureCount = 0;
 
-    log('🔄 Started analysis polling for problem $problemId');
+    debugPrint('🔄 Started analysis polling for problem $problemId');
 
     _pollAnalysisStatus(problemId);
   }
@@ -92,7 +104,8 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
       nextInterval = const Duration(seconds: 10);
     } else {
       // 105초(1분 45초) 이상: 폴링 중지
-      log('⏱️ Analysis polling timeout - stopped after ${_pollingCount} attempts');
+      debugPrint(
+          '⏱️ Analysis polling timeout - stopped after ${_pollingCount} attempts');
       _stopAnalysisPolling();
       return;
     }
@@ -107,7 +120,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
           Provider.of<ProblemsProvider>(context, listen: false);
 
       try {
-        log('🔍 Polling analysis status (attempt $_pollingCount)...');
+        debugPrint('🔍 Polling analysis status (attempt $_pollingCount)...');
 
         // 서버에서 최신 분석 상태 조회
         await problemsProvider.fetchProblemAnalysis(problemId);
@@ -117,8 +130,18 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
         final problem = await problemsProvider.getProblem(problemId);
 
         // 분석이 완료되거나 실패하거나 이미지가 없으면 폴링 중지
+        final status = problem.analysis?.status;
+        if (status == ProblemAnalysisStatus.COMPLETED ||
+            status == ProblemAnalysisStatus.FAILED ||
+            status == ProblemAnalysisStatus.NO_IMAGE) {
+          // 등록하면 AI 분석이 뒤에서 돈다. 얼마나 성공하는지 본다.
+          AppAnalytics.logEvent('problem_analysis_result', {
+            'result': status!.name.toLowerCase(),
+            'poll_count': _pollingCount,
+          });
+        }
         if (problem.analysis?.status == ProblemAnalysisStatus.COMPLETED) {
-          log('✅ Analysis completed - polling stopped');
+          debugPrint('✅ Analysis completed - polling stopped');
           _stopAnalysisPolling();
           // UI 강제 업데이트
           if (mounted) {
@@ -128,7 +151,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
           }
           return;
         } else if (problem.analysis?.status == ProblemAnalysisStatus.FAILED) {
-          log('❌ Analysis failed - polling stopped');
+          debugPrint('❌ Analysis failed - polling stopped');
           _stopAnalysisPolling();
           // UI 강제 업데이트
           if (mounted) {
@@ -138,7 +161,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
           }
           return;
         } else if (problem.analysis?.status == ProblemAnalysisStatus.NO_IMAGE) {
-          log('📷 No image detected during polling - polling stopped');
+          debugPrint('📷 No image detected during polling - polling stopped');
           _stopAnalysisPolling();
           // UI 강제 업데이트 (중요: NO_IMAGE 상태를 화면에 반영)
           if (mounted) {
@@ -153,7 +176,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
         _pollAnalysisStatus(problemId);
       } catch (e, stackTrace) {
         _analysisPollingFailureCount++;
-        log('⚠️ Error during analysis polling: $e');
+        debugPrint('⚠️ Error during analysis polling: $e');
         await AppErrorReporter.report(
           e,
           stackTrace,
@@ -163,7 +186,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
               _analysisPollingFailureCount >= _maxAnalysisPollingFailures,
         );
         if (_analysisPollingFailureCount >= _maxAnalysisPollingFailures) {
-          log('⏱️ Analysis polling stopped after repeated failures');
+          debugPrint('⏱️ Analysis polling stopped after repeated failures');
           _stopAnalysisPolling();
           return;
         }
@@ -213,11 +236,9 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                         next.analysis?.problemType;
               },
               builder: (context, problemModel, child) {
-                if (_isProblemDeleted) {
-                  return Expanded(
-                      child:
-                          Container()); // Problem has been deleted, so show nothing or a message
-                }
+                // 이 builder 는 이미 Expanded 안에 있다. 여기서 Expanded 를 또
+                // 두르면 ParentDataWidget 오류가 난다.
+                if (_isProblemDeleted) return const SizedBox.shrink();
                 if (problemModel == null) {
                   // 초기 로딩 시에만 Future로 가져오기
                   return FutureBuilder<ProblemModel>(
@@ -226,7 +247,12 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                             .getProblem(widget.problemId),
                     builder: (context, snapshot) {
                       if (snapshot.connectionState == ConnectionState.waiting) {
-                        return const Center(child: CircularProgressIndicator());
+                        return const SkeletonList(
+                          itemCount: 3,
+                          itemHeight: 160,
+                          spacing: 16,
+                          padding: EdgeInsets.all(16),
+                        );
                       } else if (snapshot.hasError) {
                         return Center(
                           child: StandardText(
@@ -235,7 +261,12 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                           ),
                         );
                       } else if (snapshot.hasData) {
-                        return _buildContent(snapshot.data!);
+                        // 화면이 열릴 때 주는 모션은 데이터가 오기 전에 끝난다.
+                        // 정작 내용이 뜨는 순간에는 아무 움직임이 없어서,
+                        // 여기서 한 번 더 자리를 잡으며 나타나게 한다.
+                        return AppearTransition(
+                          child: _buildContent(snapshot.data!),
+                        );
                       } else {
                         return Center(
                           child: StandardText(
@@ -249,7 +280,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                 }
 
                 // 이미 로드된 경우 바로 렌더링
-                return _buildContent(problemModel);
+                return AppearTransition(child: _buildContent(problemModel));
               },
             ),
           ),
@@ -329,10 +360,11 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
   void _showActionDialog(
       ProblemModel problemModel, ThemeHandler themeProvider) {
     FirebaseAnalytics.instance
-        .logEvent(name: 'problem_detail_screen_action_dialog_button_click');
+        .logEvent(name: 'problem_detail_action_dialog_click');
 
     final openTime = DateTime.now();
     showModalBottomSheet(
+      sheetAnimationStyle: AppMotion.sheetStyle,
       backgroundColor: Colors.transparent,
       context: context,
       isDismissible: false,
@@ -380,7 +412,8 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
                             color: themeProvider.primaryColor.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius:
+                                BorderRadius.circular(AppRadius.small),
                           ),
                           child: Icon(
                             Icons.edit_note,
@@ -389,11 +422,11 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                           ),
                         ),
                         const SizedBox(width: 12),
-                        const StandardText(
+                        StandardText(
                           text: '오답노트 편집하기',
-                          fontSize: 20,
+                          fontSize: MobileFontSize.reduced(context, 20),
                           fontWeight: FontWeight.w600,
-                          color: Colors.black87,
+                          color: AppColors.textPrimary,
                         ),
                       ],
                     ),
@@ -409,7 +442,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                         Navigator.pop(context);
                         Navigator.of(context)
                             .push(
-                          MaterialPageRoute(
+                          TossPageRoute(
                             builder: (context) => ProblemRegisterScreen(
                               problemModel: problemModel,
                               isEditMode: true,
@@ -466,15 +499,14 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
     Color? titleColor,
     required VoidCallback onTap,
   }) {
-    return InkWell(
+    return PressableScale(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
           color: Colors.grey[50],
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.grey[200]!, width: 1),
+          borderRadius: BorderRadius.circular(AppRadius.medium),
+          border: Border.all(color: AppColors.border),
         ),
         child: Row(
           children: [
@@ -494,7 +526,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
             Expanded(
               child: StandardText(
                 text: title,
-                fontSize: 16,
+                fontSize: MobileFontSize.reduced(context, 16),
                 color: titleColor ?? Colors.black87,
               ),
             ),
@@ -536,6 +568,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
     final openTime = DateTime.now();
 
     showModalBottomSheet(
+      sheetAnimationStyle: AppMotion.sheetStyle,
       backgroundColor: Colors.transparent,
       context: context,
       isScrollControlled: true,
@@ -591,7 +624,8 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                             decoration: BoxDecoration(
                               color: themeProvider.primaryColor
                                   .withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(8),
+                              borderRadius:
+                                  BorderRadius.circular(AppRadius.small),
                             ),
                             child: Icon(
                               Icons.playlist_add,
@@ -600,12 +634,12 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                             ),
                           ),
                           const SizedBox(width: 12),
-                          const Expanded(
+                          Expanded(
                             child: StandardText(
                               text: '복습 세트에 추가하기',
-                              fontSize: 20,
+                              fontSize: MobileFontSize.reduced(context, 20),
                               fontWeight: FontWeight.w600,
-                              color: Colors.black87,
+                              color: AppColors.textPrimary,
                             ),
                           ),
                         ],
@@ -622,10 +656,10 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                                 color: Colors.grey[350],
                               ),
                               const SizedBox(height: 12),
-                              const StandardText(
+                              StandardText(
                                 text: '아직 복습 세트가 없습니다.',
-                                fontSize: 16,
-                                color: Colors.black87,
+                                fontSize: MobileFontSize.reduced(context, 16),
+                                color: AppColors.textPrimary,
                               ),
                             ],
                           ),
@@ -660,7 +694,9 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                                       ? themeProvider.primaryColor
                                       : Colors.grey.shade200;
 
-                              return InkWell(
+                              return PressableScale(
+                                haptic: HapticLevel.selection,
+                                enabled: !alreadyAdded,
                                 onTap: alreadyAdded
                                     ? null
                                     : () {
@@ -674,13 +710,13 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                                           }
                                         });
                                       },
-                                borderRadius: BorderRadius.circular(12),
                                 child: Container(
                                   padding: const EdgeInsets.symmetric(
                                       horizontal: 14, vertical: 12),
                                   decoration: BoxDecoration(
                                     color: itemBackgroundColor,
-                                    borderRadius: BorderRadius.circular(12),
+                                    borderRadius:
+                                        BorderRadius.circular(AppRadius.medium),
                                     border: Border.all(
                                       color: itemBorderColor,
                                       width: selected || alreadyAdded ? 1.5 : 1,
@@ -694,8 +730,8 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                                         decoration: BoxDecoration(
                                           color:
                                               itemColor.withValues(alpha: 0.12),
-                                          borderRadius:
-                                              BorderRadius.circular(10),
+                                          borderRadius: BorderRadius.circular(
+                                              AppRadius.medium),
                                         ),
                                         child: Icon(
                                           alreadyAdded
@@ -717,7 +753,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                                               text: practice.practiceTitle,
                                               fontSize: 16,
                                               fontWeight: FontWeight.w500,
-                                              color: Colors.black87,
+                                              color: AppColors.textPrimary,
                                             ),
                                             const SizedBox(height: 4),
                                             StandardText(
@@ -753,13 +789,14 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                                     const EdgeInsets.symmetric(vertical: 13),
                                 backgroundColor: Colors.grey[100],
                                 shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10),
+                                  borderRadius:
+                                      BorderRadius.circular(AppRadius.medium),
                                 ),
                               ),
-                              child: const StandardText(
+                              child: StandardText(
                                 text: '취소',
-                                fontSize: 15,
-                                color: Colors.black87,
+                                fontSize: MobileFontSize.reduced(context, 15),
+                                color: AppColors.textPrimary,
                               ),
                             ),
                           ),
@@ -785,7 +822,8 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                                     ? Colors.grey[300]
                                     : themeProvider.primaryColor,
                                 shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10),
+                                  borderRadius:
+                                      BorderRadius.circular(AppRadius.medium),
                                 ),
                               ),
                               child: const StandardText(
@@ -817,10 +855,15 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
 
     try {
       for (final practiceId in practiceIds) {
+        // 서버는 practiceNotification 키가 없으면 그 세트의 복습 알림을 지운다.
+        // 문제만 담는 요청이므로 세트가 이미 가진 알림 설정을 그대로 실어 보낸다.
+        // 바로 위에서 fetchAllPracticeContents 로 받아 둔 캐시라 추가 요청은 없다.
+        final practiceNote = await practiceProvider.getPracticeNote(practiceId);
         final updateModel = PracticeNoteUpdateModel(
           practiceNoteId: practiceId,
           addProblemIdList: [problemId],
           removeProblemIdList: const [],
+          practiceNotificationModel: practiceNote.practiceNotificationModel,
         );
         await practiceProvider.updatePractice(
           updateModel,
@@ -829,6 +872,9 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
         );
       }
 
+      AppAnalytics.logEvent('practice_set_add_problem', {
+        'set_count': practiceIds.length,
+      });
       if (!mounted) return;
       LoadingDialog.hide(context);
       SnackBarDialog.showSnackBar(
@@ -846,19 +892,19 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
         message: '복습 세트에 추가하지 못했습니다. 잠시 후 다시 시도해주세요.',
         backgroundColor: Colors.red,
       );
-      log('복습 세트 문제 추가 실패: $e');
+      debugPrint('복습 세트 문제 추가 실패: $e');
     }
   }
 
   Future<void> _showDeleteProblemDialog(
       int problemId, ThemeHandler themeProvider) async {
-    return showDialog(
+    return showTossDialog(
       context: context,
       builder: (dialogContext) {
         return Dialog(
           backgroundColor: Colors.white,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(AppRadius.large),
           ),
           child: Container(
             padding: const EdgeInsets.all(24),
@@ -872,7 +918,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
                         color: Colors.red.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(AppRadius.small),
                       ),
                       child: const Icon(
                         Icons.delete_forever,
@@ -881,20 +927,20 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                       ),
                     ),
                     const SizedBox(width: 12),
-                    const StandardText(
+                    StandardText(
                       text: '오답노트 삭제',
-                      fontSize: 18,
+                      fontSize: MobileFontSize.reduced(context, 18),
                       fontWeight: FontWeight.w600,
-                      color: Colors.black87,
+                      color: AppColors.textPrimary,
                     ),
                   ],
                 ),
                 const SizedBox(height: 20),
                 // 내용
-                const StandardText(
+                StandardText(
                   text: '정말로 이 오답노트를 삭제하시겠습니까?',
-                  fontSize: 15,
-                  color: Colors.black87,
+                  fontSize: MobileFontSize.reduced(context, 15),
+                  color: AppColors.textPrimary,
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 24),
@@ -910,13 +956,14 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                           padding: const EdgeInsets.symmetric(vertical: 12),
                           backgroundColor: Colors.grey[100],
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius:
+                                BorderRadius.circular(AppRadius.small),
                           ),
                         ),
-                        child: const StandardText(
+                        child: StandardText(
                           text: '취소',
-                          fontSize: 15,
-                          color: Colors.black87,
+                          fontSize: MobileFontSize.reduced(context, 15),
+                          color: AppColors.textPrimary,
                         ),
                       ),
                     ),
@@ -924,9 +971,6 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                     Expanded(
                       child: TextButton(
                         onPressed: () async {
-                          FirebaseAnalytics.instance
-                              .logEvent(name: 'problem_delete');
-
                           // context가 유효할 때 Provider와 Navigator 가져오기
                           final problemsProvider =
                               Provider.of<ProblemsProvider>(context,
@@ -942,6 +986,11 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                           try {
                             // 삭제 작업 수행
                             await problemsProvider.deleteProblems([problemId]);
+                            // 예전에는 삭제를 요청하기 전에 남겨서 실패도 셌다.
+                            AppAnalytics.logEvent('problem_delete', {
+                              'count': 1,
+                              'source': 'detail',
+                            });
                             //await practiceProvider.fetchAllPracticeContents();
 
                             if (mounted) {
@@ -956,19 +1005,24 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                             if (mounted) {
                               navigator.pop(true);
                             }
+                            // 화면을 닫은 뒤에 알린다. 토스트는 앱 전체
+                            // Overlay 를 쓰므로 이 화면이 사라져도 뜬다.
+                            AppToast.success('오답노트를 삭제했어요.');
                           } catch (e) {
                             // 에러 발생 시 로딩 다이얼로그 닫기
                             if (mounted) {
                               LoadingDialog.hide(context);
                             }
-                            log('문제 삭제 실패: $e');
+                            debugPrint('문제 삭제 실패: $e');
+                            AppToast.error('오답노트를 삭제하지 못했어요. 잠시 후 다시 시도해주세요.');
                           }
                         },
                         style: TextButton.styleFrom(
                           padding: const EdgeInsets.symmetric(vertical: 12),
                           backgroundColor: Colors.red,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius:
+                                BorderRadius.circular(AppRadius.small),
                           ),
                         ),
                         child: const StandardText(
@@ -1050,11 +1104,11 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
         Provider.of<ProblemsProvider>(context, listen: false);
     final problem = await problemsProvider.getProblem(problemId!);
 
-    log('Moved to problem: ${problem.problemId}');
+    debugPrint('Moved to problem: ${problem.problemId}');
 
     // 분석 객체가 없으면 폴링하지 않음
     if (problem.analysis == null) {
-      log('⚠️ No analysis object - polling not needed');
+      debugPrint('⚠️ No analysis object - polling not needed');
       _stopAnalysisPolling();
       return problem;
     }
@@ -1064,20 +1118,21 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
 
     if (analysisStatus == ProblemAnalysisStatus.NO_IMAGE) {
       // 이미지 없음 - 폴링 중지
-      log('📷 No image for analysis - polling not needed');
+      debugPrint('📷 No image for analysis - polling not needed');
       _stopAnalysisPolling();
     } else if (analysisStatus == ProblemAnalysisStatus.COMPLETED) {
       // 분석 완료 - 폴링 중지
-      log('✅ Analysis already completed - no polling needed');
+      debugPrint('✅ Analysis already completed - no polling needed');
       _stopAnalysisPolling();
     } else if (analysisStatus == ProblemAnalysisStatus.FAILED) {
       // 분석 실패 - 폴링 중지
-      log('❌ Analysis failed - polling not needed');
+      debugPrint('❌ Analysis failed - polling not needed');
       _stopAnalysisPolling();
     } else if (analysisStatus == ProblemAnalysisStatus.PROCESSING ||
         analysisStatus == ProblemAnalysisStatus.NOT_STARTED) {
       // 분석 진행 중 또는 시작 전 - 폴링 시작
-      log('📊 Analysis in progress (status: $analysisStatus) - starting polling');
+      debugPrint(
+          '📊 Analysis in progress (status: $analysisStatus) - starting polling');
 
       // 분석 결과 조회 (await 하지 않고 백그라운드에서 실행)
       problemsProvider.fetchProblemAnalysis(problemId);

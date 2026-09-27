@@ -8,6 +8,8 @@ import 'package:provider/provider.dart';
 import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/PracticeNoteProvider.dart';
+import '../../Module/Motion/TossPageRoute.dart';
+import '../../Module/Design/AppRadius.dart';
 
 class PracticeNavigationButtons extends StatefulWidget {
   final BuildContext context;
@@ -87,7 +89,7 @@ class _PracticeNavigationButtonsState extends State<PracticeNavigationButtons> {
           width: 2.0,
         ),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(15.0),
+          borderRadius: BorderRadius.circular(AppRadius.large),
         ),
       ),
       child: isReviewed
@@ -187,17 +189,24 @@ class _PracticeNavigationButtonsState extends State<PracticeNavigationButtons> {
     );
   }
 
+  /// 완료 화면으로 넘어가는 중인지. 두 번 눌리면 완료 화면이 이 화면이
+  /// 아니라 먼저 뜬 완료 화면을 갈아 끼워서, 닫을 때 한 화면이 남았다.
+  bool _openingCompletion = false;
+
   void _showCompletionScreen() {
+    if (_openingCompletion) return;
+    _openingCompletion = true;
+
     final practiceId = widget.practiceProvider.currentPracticeNote!.practiceId;
     final totalProblems = widget.practiceProvider.currentProblems.length;
     final matchingPractices = widget.practiceProvider.practices
         .where((practice) => practice.practiceId == practiceId);
     final practiceRound = matchingPractices.isNotEmpty
-        ? (matchingPractices.first.practiceCount ?? 0)
+        ? matchingPractices.first.practiceCount
         : 0;
 
     Navigator.of(context).pushReplacement(
-      MaterialPageRoute(
+      TossPageRoute(
         builder: (context) => PracticeCompletionScreen(
           practiceId: practiceId,
           totalProblems: totalProblems,
@@ -218,14 +227,14 @@ class _PracticeNavigationButtonsState extends State<PracticeNavigationButtons> {
         ? widget.practiceProvider.currentProblems[currentProblemIndex]
         : null;
     final problemImages = currentProblem?.problemImageDataList ?? [];
-    final problemImageUrl =
-        problemImages.isNotEmpty ? problemImages.first.imageUrl : null;
+    final problemImageUrls =
+        problemImages.map((image) => image.imageUrl).toList();
     final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
 
     final result = await ProblemSolveEntry.open(
       context: context,
       problemId: widget.currentProblemId,
-      problemImageUrl: problemImageUrl,
+      problemImageUrls: problemImageUrls,
       onRefresh: widget.onRefresh,
       themeProvider: themeProvider,
     );
@@ -244,7 +253,8 @@ class _PracticeNavigationButtonsState extends State<PracticeNavigationButtons> {
       padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
       backgroundColor: isCompletion ? themeProvider.primaryColor : Colors.white,
       side: BorderSide(color: themeProvider.primaryColor, width: 2.0),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15.0)),
+      shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.large)),
     );
   }
 }

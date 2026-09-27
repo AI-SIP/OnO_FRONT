@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:ono/Model/PracticeNote/PracticeNoteDetailModel.dart';
 import 'package:ono/Model/Tag/TagModel.dart';
 import 'package:ono/Provider/PracticeNoteProvider.dart';
@@ -14,13 +13,26 @@ import '../../Model/PracticeNote/PracticeNoteRegisterModel.dart';
 import '../../Model/PracticeNote/PracticeNoteUpdateModel.dart';
 import '../../Model/Problem/ProblemModel.dart';
 import '../../Module/Problem/ProblemThumbnailCard.dart';
+import '../../Module/Text/mobile_font_size.dart';
 import '../../Module/Text/StandardText.dart';
+import '../../Module/Theme/ClayIcon.dart';
 import '../../Module/Theme/NoteIconHandler.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/FoldersProvider.dart';
 import '../../Provider/ProblemsProvider.dart';
 import '../../Util/AppErrorReporter.dart';
 import '../../Util/AppSnackBar.dart';
+import '../../Module/Motion/AppHaptic.dart';
+import '../../Module/Motion/AppMotion.dart';
+import '../../Module/Motion/AppearTransition.dart';
+import '../../Module/Motion/SelectionPop.dart';
+import '../../Module/Motion/PressableScale.dart';
+import '../../Module/Motion/TossPageRoute.dart';
+import '../../Module/Motion/Skeleton.dart';
+import '../../Module/Motion/TossDialog.dart';
+import '../../Module/Design/AppColors.dart';
+import '../../Module/Design/AppRadius.dart';
+import 'package:ono/Util/AppAnalytics.dart';
 
 enum _PracticeSearchMode { folder, tag, title }
 
@@ -40,6 +52,7 @@ class _PracticeProblemSelectionScreenState
 
   int? selectedFolderId;
   List<ProblemModel> selectedProblems = [];
+  final Set<int> _selectedProblemIds = {};
   List<FolderThumbnailModel> allFolders = [];
   late final List<int> _originalProblemIds;
 
@@ -68,6 +81,7 @@ class _PracticeProblemSelectionScreenState
   @override
   void initState() {
     super.initState();
+    AppAnalytics.logScreenView('PracticeProblemSelectionScreen');
     _folderScrollController = ScrollController();
     _problemScrollController = ScrollController();
     _folderScrollController.addListener(_onFolderScroll);
@@ -78,7 +92,11 @@ class _PracticeProblemSelectionScreenState
       _loadInitialFolders();
       _loadTags();
       if (widget.practiceModel != null) {
-        _originalProblemIds = widget.practiceModel!.problemIdList;
+        _originalProblemIds =
+            List<int>.from(widget.practiceModel!.problemIdList);
+        if (mounted) {
+          setState(() => _selectedProblemIds.addAll(_originalProblemIds));
+        }
         _fetchProblems();
       } else {
         _originalProblemIds = [];
@@ -131,7 +149,12 @@ class _PracticeProblemSelectionScreenState
 
     await practiceNoteProvider.moveToPractice(widget.practiceModel!.practiceId);
     final problemModelList = practiceNoteProvider.currentProblems;
-    setState(() => selectedProblems = problemModelList);
+    if (!mounted) return;
+    setState(() {
+      selectedProblems = problemModelList
+          .where((problem) => _selectedProblemIds.contains(problem.problemId))
+          .toList();
+    });
   }
 
   Future<void> _loadInitialFolders() async {
@@ -505,16 +528,62 @@ class _PracticeProblemSelectionScreenState
         child: Scaffold(
           appBar: _buildAppBar(themeProvider),
           backgroundColor: Colors.white,
-          body: Column(
-            children: [
-              SizedBox(height: screenHeight * 0.012),
-              _buildSearchControlPanel(context, themeProvider),
-              SizedBox(
-                height: _searchMode == _PracticeSearchMode.folder ? 16 : 26,
-              ),
-              _buildProblemList(context, themeProvider),
-              _buildSubmitButton(context, themeProvider),
-            ],
+          body: LayoutBuilder(
+            builder: (context, constraints) {
+              final useFolderSplit = _searchMode == _PracticeSearchMode.folder;
+              final isCompact = constraints.maxWidth < 600;
+              final folderWidth = isCompact
+                  ? (constraints.maxWidth * 0.25).clamp(82.0, 160.0).toDouble()
+                  : (constraints.maxWidth * 0.30).clamp(96.0, 184.0).toDouble();
+
+              return Column(
+                children: [
+                  SizedBox(height: screenHeight * 0.012),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: _buildSearchModeSelector(themeProvider),
+                  ),
+                  SizedBox(height: useFolderSplit ? 16 : 24),
+                  if (useFolderSplit)
+                    Expanded(
+                      child: Row(
+                        children: [
+                          SizedBox(
+                            width: folderWidth,
+                            child: _buildSideFolderList(
+                              themeProvider,
+                              isCompact: isCompact,
+                            ),
+                          ),
+                          Container(width: 1, color: Colors.grey[200]),
+                          Expanded(
+                            child: _buildProblemList(
+                              context,
+                              themeProvider,
+                              expand: false,
+                              padding: EdgeInsets.fromLTRB(
+                                constraints.maxWidth < 360 ? 10 : 14,
+                                8,
+                                constraints.maxWidth < 360 ? 10 : 14,
+                                12,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  else ...[
+                    _buildSearchFilter(context, themeProvider),
+                    SizedBox(
+                      height:
+                          _searchMode == _PracticeSearchMode.folder ? 16 : 26,
+                    ),
+                    _buildProblemList(context, themeProvider),
+                  ],
+                  _buildSubmitButton(context, themeProvider),
+                ],
+              );
+            },
           ),
         ));
   }
@@ -531,23 +600,14 @@ class _PracticeProblemSelectionScreenState
     );
   }
 
-  Widget _buildSearchControlPanel(
-      BuildContext context, ThemeHandler themeProvider) {
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: _buildSearchModeSelector(themeProvider),
-        ),
-        const SizedBox(height: 24),
-        if (_searchMode == _PracticeSearchMode.folder)
-          _buildFolderList(context, themeProvider)
-        else if (_searchMode == _PracticeSearchMode.tag)
-          _buildTagFilterBar(themeProvider)
-        else
-          _buildTitleSearchBar(themeProvider),
-      ],
-    );
+  Widget _buildSearchFilter(BuildContext context, ThemeHandler themeProvider) {
+    if (_searchMode == _PracticeSearchMode.folder) {
+      return _buildFolderList(context, themeProvider);
+    }
+    if (_searchMode == _PracticeSearchMode.tag) {
+      return _buildTagFilterBar(themeProvider);
+    }
+    return _buildTitleSearchBar(themeProvider);
   }
 
   Widget _buildSearchModeSelector(ThemeHandler themeProvider) {
@@ -557,9 +617,9 @@ class _PracticeProblemSelectionScreenState
     }) {
       final selected = _searchMode == mode;
       return Expanded(
-        child: InkWell(
+        child: PressableScale(
+          haptic: HapticLevel.selection,
           onTap: () => _switchSearchMode(mode),
-          borderRadius: BorderRadius.circular(10),
           child: Container(
             height: 40,
             alignment: Alignment.center,
@@ -567,7 +627,7 @@ class _PracticeProblemSelectionScreenState
               color: selected
                   ? themeProvider.primaryColor.withOpacity(0.08)
                   : Colors.grey[50],
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(AppRadius.medium),
               border: Border.all(
                 color:
                     selected ? themeProvider.primaryColor : Colors.grey[300]!,
@@ -602,8 +662,8 @@ class _PracticeProblemSelectionScreenState
       padding: const EdgeInsets.all(6),
       decoration: BoxDecoration(
         color: Colors.grey[100],
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey[200]!, width: 1),
+        borderRadius: BorderRadius.circular(AppRadius.medium),
+        border: Border.all(color: AppColors.border),
       ),
       child: Row(
         children: [
@@ -644,8 +704,8 @@ class _PracticeProblemSelectionScreenState
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           decoration: BoxDecoration(
             color: Colors.grey[50],
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: Colors.grey[300]!, width: 1),
+            borderRadius: BorderRadius.circular(AppRadius.medium),
+            border: Border.all(color: AppColors.border),
           ),
           child: StandardText(
             text: '생성된 태그가 없습니다.',
@@ -667,9 +727,9 @@ class _PracticeProblemSelectionScreenState
               final selected = _selectedTagId == tag.tagId;
               return Padding(
                 padding: const EdgeInsets.only(right: 8),
-                child: InkWell(
+                child: PressableScale(
+                  haptic: HapticLevel.selection,
                   onTap: () => _loadTagProblems(tag.tagId, isInitial: true),
-                  borderRadius: BorderRadius.circular(8),
                   child: Container(
                     padding:
                         const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
@@ -677,7 +737,7 @@ class _PracticeProblemSelectionScreenState
                       color: selected
                           ? themeProvider.primaryColor.withOpacity(0.08)
                           : Colors.white,
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(AppRadius.small),
                       border: Border.all(
                         color: selected
                             ? themeProvider.primaryColor
@@ -713,7 +773,7 @@ class _PracticeProblemSelectionScreenState
         onSubmitted: (value) => _searchTitleProblems(value, isInitial: true),
         style: baseTextStyle.copyWith(
           fontSize: 14,
-          color: Colors.black87,
+          color: AppColors.textPrimary,
           fontWeight: FontWeight.w500,
         ),
         decoration: InputDecoration(
@@ -728,15 +788,15 @@ class _PracticeProblemSelectionScreenState
           contentPadding:
               const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(AppRadius.medium),
             borderSide: BorderSide(color: Colors.grey[300]!, width: 1),
           ),
           enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(AppRadius.medium),
             borderSide: BorderSide(color: Colors.grey[300]!, width: 1),
           ),
           focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(AppRadius.medium),
             borderSide: BorderSide(
               color: themeProvider.primaryColor.withOpacity(0.5),
               width: 1.5,
@@ -777,7 +837,8 @@ class _PracticeProblemSelectionScreenState
             }
 
             final folder = allFolders[index];
-            return GestureDetector(
+            return PressableScale(
+              haptic: HapticLevel.selection,
               onTap: () async {
                 setState(() {
                   selectedFolderId = folder.folderId;
@@ -802,84 +863,197 @@ class _PracticeProblemSelectionScreenState
     final screenWidth = MediaQuery.of(context).size.width;
     final isWide = screenWidth >= 600;
     final folderNameWidth = isWide ? 120.0 : screenWidth * 0.2;
-    final rootFolderId =
-        context.read<FoldersProvider>().rootFolder?.folderId;
-    final displayName = folder.folderId == rootFolderId
-        ? '책장'
-        : folder.folderName;
+    final rootFolderId = context.read<FoldersProvider>().rootFolder?.folderId;
+    final displayName =
+        folder.folderId == rootFolderId ? '책장' : folder.folderName;
 
-    return Opacity(
-      opacity: isSelected ? 1.0 : 0.5, // 선택된 폴더가 아니라면 흐리게 표시
-      child: Column(
-        children: [
-          SvgPicture.asset(
-            NoteIconHandler.getNoteIcon(allFolders.indexOf(folder)),
-            width: 60,
-            height: 60,
-          ),
-          const SizedBox(height: 8),
-          SizedBox(
-            width: folderNameWidth,
-            child: StandardText(
-              text: displayName.length > 10
-                  ? '${displayName.substring(0, 10)}..'
-                  : displayName,
-              fontSize: 14,
-              color: Colors.black,
-              textAlign: TextAlign.center,
-              overflow: TextOverflow.ellipsis,
-              maxLines: 1,
+    return AnimatedOpacity(
+      // 선택된 폴더가 아니라면 흐리게 표시
+      opacity: isSelected ? 1.0 : 0.5,
+      duration: AppMotion.fast,
+      curve: AppMotion.standard,
+      child: AnimatedScale(
+        scale: isSelected ? 1.0 : 0.94,
+        duration: AppMotion.normal,
+        curve: AppMotion.emphasized,
+        child: Column(
+          children: [
+            ClayIcon(
+              NoteIconHandler.getNoteIcon(allFolders.indexOf(folder)),
+              width: 60,
+              height: 60,
             ),
-          ),
-        ],
+            const SizedBox(height: 8),
+            SizedBox(
+              width: folderNameWidth,
+              child: StandardText(
+                text: displayName.length > 10
+                    ? '${displayName.substring(0, 10)}..'
+                    : displayName,
+                fontSize: 14,
+                color: Colors.black,
+                textAlign: TextAlign.center,
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildProblemList(BuildContext context, ThemeHandler themeProvider) {
-    return Expanded(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        child: _isLoadingProblems && _currentFolderProblems.isEmpty
-            ? const Center(child: CircularProgressIndicator())
-            : _currentFolderProblems.isNotEmpty
-                ? ListView.builder(
-                    controller: _problemScrollController,
-                    itemCount: _currentFolderProblems.length +
-                        (_problemHasNext || _isLoadingProblems ? 1 : 0),
-                    itemBuilder: (context, index) {
-                      // 로딩 인디케이터
-                      if (index == _currentFolderProblems.length) {
-                        return const Padding(
-                          padding: EdgeInsets.all(16.0),
-                          child: Center(child: CircularProgressIndicator()),
-                        );
-                      }
+  Widget _buildSideFolderList(
+    ThemeHandler themeProvider, {
+    required bool isCompact,
+  }) {
+    final rootFolderId = context.read<FoldersProvider>().rootFolder?.folderId;
+    return Container(
+      color: Colors.white,
+      child: ListView.builder(
+        controller: _folderScrollController,
+        padding: EdgeInsets.symmetric(vertical: isCompact ? 8 : 10),
+        itemCount:
+            allFolders.length + (_folderHasNext || _isLoadingFolders ? 1 : 0),
+        itemBuilder: (context, index) {
+          if (index == allFolders.length) {
+            return const Padding(
+              padding: EdgeInsets.symmetric(vertical: 18),
+              child: Center(
+                child: SizedBox(
+                  width: 22,
+                  height: 22,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+              ),
+            );
+          }
 
-                      final problem = _currentFolderProblems[index];
-                      final isSelected = selectedProblems.any(
-                          (selectedProblem) =>
-                              selectedProblem.problemId == problem.problemId);
+          final folder = allFolders[index];
+          final isSelected = selectedFolderId == folder.folderId;
+          final displayName =
+              folder.folderId == rootFolderId ? '책장' : folder.folderName;
 
-                      return GestureDetector(
+          return PressableScale(
+            haptic: HapticLevel.selection,
+            onTap: () async {
+              if (selectedFolderId == folder.folderId) return;
+              setState(() => selectedFolderId = folder.folderId);
+              await _loadInitialProblems(folder.folderId);
+            },
+            child: Padding(
+              padding: EdgeInsets.symmetric(
+                horizontal: isCompact ? 4 : 8,
+                vertical: 4,
+              ),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 160),
+                padding: EdgeInsets.symmetric(
+                  horizontal: isCompact ? 7 : 10,
+                  vertical: isCompact ? 9 : 11,
+                ),
+                decoration: BoxDecoration(
+                  color: isSelected
+                      ? themeProvider.primaryColor.withValues(alpha: 0.08)
+                      : Colors.transparent,
+                  borderRadius: BorderRadius.circular(AppRadius.medium),
+                  border: Border.all(
+                    color: isSelected
+                        ? themeProvider.primaryColor.withValues(alpha: 0.30)
+                        : Colors.transparent,
+                    width: 1,
+                  ),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    ClayIcon(
+                      NoteIconHandler.getNoteIcon(index),
+                      width: isCompact ? 34 : 42,
+                      height: isCompact ? 34 : 42,
+                    ),
+                    SizedBox(height: isCompact ? 5 : 6),
+                    StandardText(
+                      text: displayName,
+                      fontSize: isCompact ? 10 : 11,
+                      color: isSelected
+                          ? themeProvider.primaryColor
+                          : Colors.grey[700]!,
+                      fontWeight:
+                          isSelected ? FontWeight.w700 : FontWeight.normal,
+                      fontFamily:
+                          isSelected ? 'PretendardBold' : 'PretendardLight',
+                      textAlign: TextAlign.center,
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 2,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildProblemList(
+    BuildContext context,
+    ThemeHandler themeProvider, {
+    bool expand = true,
+    EdgeInsets padding = const EdgeInsets.symmetric(horizontal: 16),
+  }) {
+    final list = Padding(
+      padding: padding,
+      child: _isLoadingProblems && _currentFolderProblems.isEmpty
+          ? const SkeletonList(itemCount: 4, itemHeight: 88, spacing: 12)
+          : _currentFolderProblems.isNotEmpty
+              ? ListView.builder(
+                  controller: _problemScrollController,
+                  itemCount: _currentFolderProblems.length +
+                      (_problemHasNext || _isLoadingProblems ? 1 : 0),
+                  itemBuilder: (context, index) {
+                    // 로딩 인디케이터
+                    if (index == _currentFolderProblems.length) {
+                      return const Padding(
+                        padding: EdgeInsets.all(16.0),
+                        child: Center(child: CircularProgressIndicator()),
+                      );
+                    }
+
+                    final problem = _currentFolderProblems[index];
+                    final isSelected =
+                        _selectedProblemIds.contains(problem.problemId);
+
+                    return AppearTransition(
+                      delay: AppMotion.stagger * (index < 6 ? index : 6),
+                      child: PressableScale(
+                        haptic: HapticLevel.selection,
                         onTap: () {
                           setState(() {
                             if (isSelected) {
+                              _selectedProblemIds.remove(problem.problemId);
                               selectedProblems.removeWhere(
                                   (p) => p.problemId == problem.problemId);
                             } else {
-                              selectedProblems.add(problem);
+                              _selectedProblemIds.add(problem.problemId);
+                              if (!selectedProblems.any(
+                                  (p) => p.problemId == problem.problemId)) {
+                                selectedProblems.add(problem);
+                              }
                             }
                           });
                         },
                         child: _problemTileContent(
                             problem, themeProvider, isSelected),
-                      );
-                    },
-                  )
-                : _buildEmptyProblemMessage(),
-      ),
+                      ),
+                    );
+                  },
+                )
+              : _buildEmptyProblemMessage(),
     );
+
+    return expand ? Expanded(child: list) : list;
   }
 
   Widget _buildEmptyProblemMessage() {
@@ -888,11 +1062,33 @@ class _PracticeProblemSelectionScreenState
         : '작성한 오답노트가 없습니다!';
 
     if (_searchMode == _PracticeSearchMode.title && _titleQuery.isEmpty) {
+      // 문구만 있으면 화면이 비어 보인다. 검색 안내라 연필 대신 돋보기를 쓴다.
+      // 바로 아래 빈 상태가 점토 연필이라 돋보기도 같은 재질로 둔다.
       return Center(
-        child: StandardText(
-          text: message,
-          color: Colors.grey[600]!,
-          fontSize: 15,
+        child: AppearTransition(
+          offset: 12,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const ClayIcon(
+                'assets/Icon/Search.png',
+                width: 100,
+                height: 100,
+              ),
+              const SizedBox(height: 16),
+              StandardText(
+                text: message,
+                color: AppColors.textPrimary,
+                fontSize: 16,
+              ),
+              const SizedBox(height: 6),
+              const StandardText(
+                text: '오답노트 제목의 일부만 넣어도 찾을 수 있어요.',
+                color: AppColors.textTertiary,
+                fontSize: 13,
+              ),
+            ],
+          ),
         ),
       );
     }
@@ -906,8 +1102,8 @@ class _PracticeProblemSelectionScreenState
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                SvgPicture.asset(
-                  'assets/Icon/PencilDetail.svg',
+                const ClayIcon(
+                  'assets/Icon/PencilDetail.png',
                   width: 100,
                   height: 100,
                 ),
@@ -927,6 +1123,7 @@ class _PracticeProblemSelectionScreenState
 
   Widget _problemTileContent(
       ProblemModel problem, ThemeHandler themeProvider, bool isSelected) {
+    final isCompact = MediaQuery.of(context).size.width < 600;
     final problemImageUrl = problem.problemImageDataList != null &&
             problem.problemImageDataList!.isNotEmpty
         ? problem.problemImageDataList!.first.imageUrl
@@ -943,10 +1140,66 @@ class _PracticeProblemSelectionScreenState
         solveCount: problem.solveCount,
         lastSolvedAt: problem.lastSolvedAt,
         themeProvider: themeProvider,
-        trailing: isSelected
-            ? Icon(Icons.check_circle,
-                color: themeProvider.primaryColor, size: 25)
-            : const Icon(Icons.circle_outlined, color: Colors.grey),
+        padding: EdgeInsets.fromLTRB(
+          isCompact ? 9 : 12,
+          isCompact ? 10 : 12,
+          isCompact ? 8 : 12,
+          isCompact ? 10 : 12,
+        ),
+        imageWidth: isCompact ? 44 : 50,
+        imageHeight: isCompact ? 66 : 70,
+        contentGap: isCompact ? 9 : 16,
+        trailingGap: isCompact ? 7 : 12,
+        titleFontSize: isCompact ? 12.5 : 16,
+        titleMaxLines: isCompact ? 2 : 1,
+        tagFontSize: isCompact ? 8 : 10,
+        tagPadding: EdgeInsets.symmetric(
+          horizontal: isCompact ? 5 : 8,
+          vertical: isCompact ? 1.5 : 3,
+        ),
+        tagSpacing: isCompact ? 4 : 6,
+        tagRunSpacing: isCompact ? 4 : 6,
+        trailing: _buildSelectionTrailing(
+          themeProvider,
+          isSelected: isSelected,
+          isCompact: isCompact,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSelectionTrailing(
+    ThemeHandler themeProvider, {
+    required bool isSelected,
+    required bool isCompact,
+  }) {
+    final color = isSelected ? themeProvider.primaryColor : Colors.grey[400]!;
+    return SelectionPop(
+      selected: isSelected,
+      peak: 1.15,
+      child: AnimatedContainer(
+        duration: AppMotion.fast,
+        curve: AppMotion.standard,
+        width: isCompact ? 34 : 40,
+        height: isCompact ? 34 : 40,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: isSelected
+              ? themeProvider.primaryColor.withValues(alpha: 0.08)
+              : Colors.grey[50],
+          borderRadius: BorderRadius.circular(AppRadius.medium),
+          border: Border.all(
+            color: isSelected
+                ? themeProvider.primaryColor.withValues(alpha: 0.35)
+                : Colors.grey[300]!,
+            width: 1,
+          ),
+        ),
+        child: Icon(
+          isSelected ? Icons.check_box : Icons.check_box_outline_blank,
+          color: color,
+          size: isCompact ? 19 : 22,
+        ),
       ),
     );
   }
@@ -959,10 +1212,9 @@ class _PracticeProblemSelectionScreenState
         width: double.infinity,
         height: 50,
         child: ElevatedButton(
-          onPressed: selectedProblems.isNotEmpty
+          onPressed: _selectedProblemIds.isNotEmpty
               ? () {
-                  final newIds =
-                      selectedProblems.map((p) => p.problemId).toList();
+                  final newIds = _selectedProblemIds.toList();
 
                   // 추가된 문제: newIds 에는 있지만 원본에는 없는 것
                   final addList = newIds
@@ -984,7 +1236,7 @@ class _PracticeProblemSelectionScreenState
                     // 다음 화면으로 updateModel 넘기기
                     Navigator.push(
                       context,
-                      MaterialPageRoute(
+                      TossPageRoute(
                         builder: (context) => PracticeTitleWriteScreen(
                           practiceNoteUpdateModel: updateModel,
                           practiceNoteDetailModel: widget.practiceModel!,
@@ -1000,7 +1252,7 @@ class _PracticeProblemSelectionScreenState
                     );
                     Navigator.push(
                       context,
-                      MaterialPageRoute(
+                      TossPageRoute(
                         builder: (context) => PracticeTitleWriteScreen(
                           practiceRegisterModel: registerModel,
                         ),
@@ -1012,7 +1264,7 @@ class _PracticeProblemSelectionScreenState
           style: ElevatedButton.styleFrom(
             backgroundColor: themeProvider.primaryColor,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(AppRadius.large),
             ),
             elevation: 0,
           ),
@@ -1037,10 +1289,17 @@ class _PracticeProblemSelectionScreenState
                   color: Colors.white,
                   shape: BoxShape.circle,
                 ),
-                child: StandardText(
-                  text: selectedProblems.length.toString(),
-                  fontSize: 12,
-                  color: themeProvider.primaryColor,
+                // 개수가 바뀔 때마다 숫자가 한 번 튀어서, 눌린 것이 셈에
+                // 반영됐다는 걸 알 수 있게 한다.
+                child: SelectionPop(
+                  key: ValueKey<int>(_selectedProblemIds.length),
+                  selected: true,
+                  peak: 1.3,
+                  child: StandardText(
+                    text: _selectedProblemIds.length.toString(),
+                    fontSize: 12,
+                    color: themeProvider.primaryColor,
+                  ),
                 ),
               ),
             ],
@@ -1053,13 +1312,13 @@ class _PracticeProblemSelectionScreenState
   void _showSelectProblemDialog(BuildContext context) {
     final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
 
-    showDialog(
+    showTossDialog(
       context: context,
       builder: (BuildContext dialogContext) {
         return Dialog(
           backgroundColor: Colors.white,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(AppRadius.large),
           ),
           child: Container(
             padding: const EdgeInsets.all(24),
@@ -1072,7 +1331,7 @@ class _PracticeProblemSelectionScreenState
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
                         color: Colors.orange.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(AppRadius.small),
                       ),
                       child: const Icon(
                         Icons.warning_amber_rounded,
@@ -1081,19 +1340,19 @@ class _PracticeProblemSelectionScreenState
                       ),
                     ),
                     const SizedBox(width: 12),
-                    const StandardText(
+                    StandardText(
                       text: '문제 선택 필요',
-                      fontSize: 18,
+                      fontSize: MobileFontSize.reduced(context, 18),
                       fontWeight: FontWeight.w600,
-                      color: Colors.black87,
+                      color: AppColors.textPrimary,
                     ),
                   ],
                 ),
                 const SizedBox(height: 20),
-                const StandardText(
+                StandardText(
                   text: '하나 이상의 문제를 선택해주세요!',
-                  fontSize: 15,
-                  color: Colors.black87,
+                  fontSize: MobileFontSize.reduced(context, 15),
+                  color: AppColors.textPrimary,
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 24),
@@ -1108,7 +1367,7 @@ class _PracticeProblemSelectionScreenState
                           horizontal: 12, vertical: 10),
                       backgroundColor: themeProvider.primaryColor,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(AppRadius.small),
                       ),
                     ),
                     child: const StandardText(

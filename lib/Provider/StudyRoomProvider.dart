@@ -1,0 +1,603 @@
+import 'package:flutter/material.dart';
+
+import '../Model/StudyRoom/ActivityFeedModel.dart';
+import '../Model/StudyRoom/ChallengeModel.dart';
+import '../Model/StudyRoom/InviteCodeModel.dart';
+import '../Model/StudyRoom/SharedProblemCommentModel.dart';
+import '../Model/StudyRoom/SharedProblemModel.dart';
+import '../Model/StudyRoom/StudyRoomMemberModel.dart';
+import '../Model/StudyRoom/StudyRoomModel.dart';
+import '../Model/StudyRoom/WeeklyReportModel.dart';
+import '../Module/Emoji/OnoEmojiCatalog.dart';
+import '../Service/Api/StudyRoom/StudyRoomService.dart';
+import '../Util/AppErrorReporter.dart';
+import '../Util/AppAnalytics.dart';
+
+class StudyRoomProvider extends ChangeNotifier {
+  final StudyRoomService _service;
+
+  StudyRoomProvider({StudyRoomService? studyRoomService})
+      : _service = studyRoomService ?? StudyRoomService();
+
+  List<StudyRoomModel> rooms = [];
+  StudyRoomModel? selectedRoom;
+  bool isLoading = false;
+
+  List<ActivityFeedModel> feedItems = [];
+  int? _feedNextCursor;
+  bool feedHasNext = false;
+  bool isFeedLoadingMore = false;
+  List<ChallengeModel> challenges = [];
+  List<SharedProblemModel> sharedProblems = [];
+  int? _sharedProblemsNextCursor;
+  bool sharedProblemsHasNext = false;
+  bool isSharedProblemsLoadingMore = false;
+  final Map<int, List<SharedProblemCommentModel>> sharedProblemComments = {};
+  WeeklyReportModel? weeklyReport;
+  int? myWeeklyGoal;
+
+  int? currentUserId;
+  int? _activeRoomId;
+
+  void updateCurrentUserId(int? userId) {
+    currentUserId = userId;
+  }
+
+  bool isHost(StudyRoomModel room) => room.hostUserId == currentUserId;
+
+  // ── 기존 방 CRUD ──
+
+  Future<void> fetchMyRooms() async {
+    isLoading = true;
+    notifyListeners();
+    try {
+      rooms = await _service.fetchMyRooms();
+    } finally {
+      isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> fetchRoomDetail(int roomId) async {
+    isLoading = true;
+    notifyListeners();
+    try {
+      _activeRoomId = roomId;
+      final detail = await _service.fetchRoomDetail(roomId);
+      // 상세 응답에는 hasUnreadReport 가 없어서 언제나 false 로 온다. 목록 항목을
+      // 상세로 통째로 갈아 끼우면, 리포트를 읽지도 않았는데 목록의 배지가
+      // 사라진다. 목록이 들고 있던 값을 그대로 잇는다. 배지를 다시 맞추는 것은
+      // 목록을 새로 받을 때고, 여기서 목록을 또 부르면 요청만 하나 는다.
+      selectedRoom = _keepUnreadReport(detail);
+      rooms = [
+        for (final room in rooms)
+          if (room.roomId == roomId) selectedRoom! else room,
+      ];
+      // 하나의 실패가 나머지 결과 전체를 소실시키지 않도록 각각 에러를 흡수한다.
+      await Future.wait([
+        fetchFeed(roomId, notify: false).catchError((_) {}),
+        fetchChallenges(roomId, notify: false).catchError((_) {}),
+        fetchSharedProblems(roomId, notify: false).catchError((_) {}),
+        fetchWeeklyReport(roomId, notify: false).catchError((_) {}),
+      ]);
+    } finally {
+      isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  /// 목록이 들고 있던 [StudyRoomModel.hasUnreadReport] 를 상세에 이어 붙인다.
+  ///
+  /// 목록에 없던 방(초대 링크로 바로 들어온 경우)이면 이어 붙일 것이 없어
+  /// 상세를 그대로 쓴다.
+  StudyRoomModel _keepUnreadReport(StudyRoomModel detail) {
+    for (final room in rooms) {
+      if (room.roomId != detail.roomId) continue;
+      if (!room.hasUnreadReport) break;
+      return detail.copyWith(hasUnreadReport: true);
+    }
+    return detail;
+  }
+
+  /// 그 방의 읽지 않은 리포트 배지를 내린다.
+  void _clearUnreadReportBadge(int? roomId) {
+    if (roomId == null) return;
+    rooms = [
+      for (final room in rooms)
+        if (room.roomId == roomId && room.hasUnreadReport)
+          room.copyWith(hasUnreadReport: false)
+        else
+          room,
+    ];
+    if (selectedRoom?.roomId == roomId && selectedRoom!.hasUnreadReport) {
+      selectedRoom = selectedRoom!.copyWith(hasUnreadReport: false);
+    }
+  }
+
+  Future<StudyRoomModel> createRoom(String name) async {
+    isLoading = true;
+    notifyListeners();
+    try {
+      final newRoom = await _service.createRoom(name);
+      rooms = [...rooms.where((r) => r.roomId != newRoom.roomId), newRoom];
+      return newRoom;
+    } finally {
+      isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> joinRoom(String code) async {
+    isLoading = true;
+    notifyListeners();
+    try {
+      final joinedRoom = await _service.joinRoom(code);
+      rooms = [
+        ...rooms.where((r) => r.roomId != joinedRoom.roomId),
+        joinedRoom
+      ];
+    } finally {
+      isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> leaveRoom(int roomId) async {
+    isLoading = true;
+    notifyListeners();
+    try {
+      await _service.leaveRoom(roomId);
+      rooms = rooms.where((r) => r.roomId != roomId).toList();
+      if (selectedRoom?.roomId == roomId) selectedRoom = null;
+    } finally {
+      isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> deleteRoom(int roomId) async {
+    isLoading = true;
+    notifyListeners();
+    try {
+      await _service.deleteRoom(roomId);
+      rooms = rooms.where((r) => r.roomId != roomId).toList();
+      if (selectedRoom?.roomId == roomId) selectedRoom = null;
+    } finally {
+      isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> kickMember(int roomId, int memberId) async {
+    await _service.kickMember(roomId, memberId);
+    await fetchRoomDetail(roomId);
+  }
+
+  bool _isUploadingThumbnail = false;
+
+  Future<void> updateRoomThumbnail(int roomId, String imagePath) async {
+    if (_isUploadingThumbnail) return;
+    _isUploadingThumbnail = true;
+    try {
+      final thumbnailUrl = await _service.uploadRoomThumbnail(
+        roomId: roomId,
+        imagePath: imagePath,
+      );
+      if (thumbnailUrl == null) throw Exception('썸네일 업로드 실패');
+      rooms = rooms.map((r) {
+        if (r.roomId != roomId) return r;
+        return r.copyWith(thumbnailImagePath: thumbnailUrl);
+      }).toList();
+      if (selectedRoom?.roomId == roomId) {
+        selectedRoom = selectedRoom!.copyWith(thumbnailImagePath: thumbnailUrl);
+      }
+      notifyListeners();
+    } finally {
+      _isUploadingThumbnail = false;
+    }
+  }
+
+  Future<void> updateRoomName(int roomId, String name) async {
+    final updatedRoom = await _service.updateRoomName(
+      roomId: roomId,
+      name: name,
+    );
+    rooms = rooms.map((r) {
+      if (r.roomId != roomId) return r;
+      return r.copyWith(name: updatedRoom.name);
+    }).toList();
+    if (selectedRoom?.roomId == roomId) {
+      selectedRoom = selectedRoom!.copyWith(name: updatedRoom.name);
+    }
+    notifyListeners();
+  }
+
+  Future<InviteCodeModel> generateInviteCode(int roomId) async {
+    final code = await _service.generateInviteCode(roomId);
+    selectedRoom = selectedRoom?.roomId == roomId
+        ? selectedRoom!.copyWith(
+            inviteCode: code.code,
+            inviteExpiredAt: code.expiredAt,
+          )
+        : selectedRoom;
+    return code;
+  }
+
+  // ── A. 활동 피드 ──
+
+  Future<void> fetchFeed(int roomId, {bool notify = true}) async {
+    final page = await _service.fetchFeed(roomId);
+    feedItems = page.content;
+    _feedNextCursor = page.nextCursor;
+    feedHasNext = page.hasNext;
+    if (notify) notifyListeners();
+  }
+
+  Future<void> loadMoreFeed(int roomId) async {
+    if (!feedHasNext || isFeedLoadingMore || _feedNextCursor == null) return;
+    isFeedLoadingMore = true;
+    notifyListeners();
+    try {
+      final page = await _service.fetchFeed(roomId, cursor: _feedNextCursor);
+      feedItems = [...feedItems, ...page.content];
+      _feedNextCursor = page.nextCursor;
+      feedHasNext = page.hasNext;
+    } finally {
+      isFeedLoadingMore = false;
+      notifyListeners();
+    }
+  }
+
+  /// 반응을 누른 곳은 결과를 기다리지 않는다. 여기서 받지 않으면 예외가
+  /// 끝까지 올라가 fatal 로 보고됐다. 사용자에게는 HttpService 가 스낵바로
+  /// 이미 알렸고, 반응은 누르기 전 그대로 남는다.
+  Future<void> _reportReactionFailure(
+    Object error,
+    StackTrace stackTrace,
+  ) {
+    return AppErrorReporter.report(
+      error,
+      stackTrace,
+      source: 'study_room_reaction_toggle',
+      severity: AppErrorSeverity.warning,
+    );
+  }
+
+  String _normalizeEmojiKey(String emoji) {
+    return OnoEmojiCatalog.byKey(emoji)?.key ?? emoji;
+  }
+
+  Future<void> toggleFeedReaction(int feedId, String emoji) async {
+    final feed = feedItems.where((f) => f.feedId == feedId).firstOrNull;
+    if (feed == null) return;
+    final emojiKey = _normalizeEmojiKey(emoji);
+    final roomId = selectedRoom?.roomId ?? _activeRoomId;
+    if (roomId == null) return;
+
+    try {
+      feed.reactions = await _service.toggleFeedReaction(
+        roomId: roomId,
+        feedId: feedId,
+        emoji: emojiKey,
+      );
+    } catch (error, stackTrace) {
+      await _reportReactionFailure(error, stackTrace);
+      return;
+    }
+    AppAnalytics.logEvent('feed_reaction_toggled', {
+      'emoji': emojiKey,
+      'feed_type': feed.eventType,
+    });
+    notifyListeners();
+  }
+
+  // ── B. 챌린지 ──
+
+  Future<void> fetchChallenges(int roomId, {bool notify = true}) async {
+    challenges = await _service.fetchChallenges(roomId);
+    if (notify) notifyListeners();
+  }
+
+  Future<void> createChallenge({
+    required String title,
+    required String type,
+    required String metric,
+    String? period,
+    int? periodDays,
+    required int targetValue,
+    required DateTime endAt,
+  }) async {
+    final roomId = selectedRoom?.roomId ?? _activeRoomId;
+    if (roomId == null) return;
+    final newChallenge = await _service.createChallenge(
+      roomId: roomId,
+      title: title,
+      type: type,
+      metric: metric,
+      period: period,
+      periodDays: periodDays,
+      targetValue: targetValue,
+      endAt: endAt,
+    );
+    challenges = [...challenges, newChallenge];
+    // 어떤 챌린지를 만드는지. 개인과 그룹, 무엇을 세는지, 기간과 목표를 본다.
+    AppAnalytics.logEvent('challenge_created', {
+      'scope': type,
+      'metric': metric,
+      'period': period ?? 'once',
+      'period_days': periodDays,
+      'target_value': targetValue,
+    });
+    notifyListeners();
+  }
+
+  Future<void> deleteChallenge(int challengeId) async {
+    final roomId = selectedRoom?.roomId ?? _activeRoomId;
+    if (roomId == null) return;
+    await _service.deleteChallenge(roomId: roomId, challengeId: challengeId);
+    challenges = challenges.where((c) => c.challengeId != challengeId).toList();
+    AppAnalytics.logEvent('challenge_deleted');
+    notifyListeners();
+  }
+
+  // ── C. 문제 공유 ──
+
+  Future<void> shareProblems(
+    int problemId, {
+    String? comment,
+    bool notify = true,
+  }) async {
+    final roomId = selectedRoom?.roomId ?? _activeRoomId;
+    if (roomId == null) return;
+    final shared = await _service.shareProblems(
+      roomId: roomId,
+      problemId: problemId,
+      comment: comment,
+    );
+    sharedProblems = [shared, ...sharedProblems];
+    if (notify) notifyListeners();
+  }
+
+  Future<void> deleteSharedProblem(int sharedProblemId) async {
+    final roomId = selectedRoom?.roomId ?? _activeRoomId;
+    if (roomId == null) return;
+    await _service.deleteSharedProblem(
+      roomId: roomId,
+      sharedProblemId: sharedProblemId,
+    );
+    sharedProblems.removeWhere((s) => s.sharedProblemId == sharedProblemId);
+    sharedProblemComments.remove(sharedProblemId);
+    AppAnalytics.logEvent('shared_problem_deleted');
+    notifyListeners();
+  }
+
+  Future<void> fetchSharedProblems(int roomId, {bool notify = true}) async {
+    final page = await _service.fetchSharedProblems(roomId);
+    sharedProblems = page.content;
+    _sharedProblemsNextCursor = page.nextCursor;
+    sharedProblemsHasNext = page.hasNext;
+    if (notify) notifyListeners();
+  }
+
+  Future<void> loadMoreSharedProblems(int roomId) async {
+    if (!sharedProblemsHasNext ||
+        isSharedProblemsLoadingMore ||
+        _sharedProblemsNextCursor == null) {
+      return;
+    }
+    isSharedProblemsLoadingMore = true;
+    notifyListeners();
+    try {
+      final page = await _service.fetchSharedProblems(
+        roomId,
+        cursor: _sharedProblemsNextCursor,
+      );
+      sharedProblems = [...sharedProblems, ...page.content];
+      _sharedProblemsNextCursor = page.nextCursor;
+      sharedProblemsHasNext = page.hasNext;
+    } finally {
+      isSharedProblemsLoadingMore = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> toggleSharedProblemReaction(
+    int sharedProblemId,
+    String emoji,
+  ) async {
+    final shared = sharedProblems
+        .where((s) => s.sharedProblemId == sharedProblemId)
+        .firstOrNull;
+    if (shared == null) return;
+    final emojiKey = _normalizeEmojiKey(emoji);
+    final roomId = selectedRoom?.roomId ?? _activeRoomId;
+    if (roomId == null) return;
+    try {
+      shared.reactions = await _service.toggleSharedProblemReaction(
+        roomId: roomId,
+        sharedProblemId: sharedProblemId,
+        emoji: emojiKey,
+      );
+    } catch (error, stackTrace) {
+      await _reportReactionFailure(error, stackTrace);
+      return;
+    }
+    AppAnalytics.logEvent('problem_reaction_toggled', {'emoji': emojiKey});
+    notifyListeners();
+  }
+
+  Future<void> fetchSharedProblemComments(int sharedProblemId) async {
+    final roomId = selectedRoom?.roomId ?? _activeRoomId;
+    if (roomId == null) return;
+    final all = <SharedProblemCommentModel>[];
+    int? cursor;
+    bool hasNext = true;
+    while (hasNext) {
+      final page = await _service.fetchSharedProblemComments(
+        roomId: roomId,
+        sharedProblemId: sharedProblemId,
+        cursor: cursor,
+        size: 50,
+      );
+      all.addAll(page.content);
+      cursor = page.nextCursor;
+      hasNext = page.hasNext && page.nextCursor != null;
+    }
+    sharedProblemComments[sharedProblemId] = all;
+    notifyListeners();
+  }
+
+  Future<void> createSharedProblemComment(
+    int sharedProblemId,
+    String content,
+  ) async {
+    final roomId = selectedRoom?.roomId ?? _activeRoomId;
+    if (roomId == null) return;
+    final comment = await _service.createSharedProblemComment(
+      roomId: roomId,
+      sharedProblemId: sharedProblemId,
+      content: content,
+    );
+    sharedProblemComments[sharedProblemId] = [
+      ...(sharedProblemComments[sharedProblemId] ?? const []),
+      comment,
+    ];
+    final shared = sharedProblems
+        .where((problem) => problem.sharedProblemId == sharedProblemId)
+        .firstOrNull;
+    if (shared != null) {
+      shared.commentCount = (shared.commentCount ?? 0) + 1;
+    }
+    notifyListeners();
+  }
+
+  Future<void> updateSharedProblemComment({
+    required int sharedProblemId,
+    required int commentId,
+    required String content,
+  }) async {
+    final roomId = selectedRoom?.roomId ?? _activeRoomId;
+    if (roomId == null) return;
+    final updated = await _service.updateSharedProblemComment(
+      roomId: roomId,
+      sharedProblemId: sharedProblemId,
+      commentId: commentId,
+      content: content,
+    );
+    sharedProblemComments[sharedProblemId] =
+        (sharedProblemComments[sharedProblemId] ?? const [])
+            .map(
+                (comment) => comment.commentId == commentId ? updated : comment)
+            .toList();
+    AppAnalytics.logEvent('comment_updated');
+    notifyListeners();
+  }
+
+  Future<void> deleteSharedProblemComment({
+    required int sharedProblemId,
+    required int commentId,
+  }) async {
+    final roomId = selectedRoom?.roomId ?? _activeRoomId;
+    if (roomId == null) return;
+    await _service.deleteSharedProblemComment(
+      roomId: roomId,
+      sharedProblemId: sharedProblemId,
+      commentId: commentId,
+    );
+    AppAnalytics.logEvent('comment_deleted');
+    sharedProblemComments[sharedProblemId] =
+        (sharedProblemComments[sharedProblemId] ?? const [])
+            .where((comment) => comment.commentId != commentId)
+            .toList();
+    final shared = sharedProblems
+        .where((problem) => problem.sharedProblemId == sharedProblemId)
+        .firstOrNull;
+    if (shared != null) {
+      final nextCount = (shared.commentCount ?? 1) - 1;
+      shared.commentCount = nextCount < 0 ? 0 : nextCount;
+    }
+    notifyListeners();
+  }
+
+  Future<void> toggleSharedProblemCommentReaction({
+    required int sharedProblemId,
+    required int commentId,
+    required String emoji,
+  }) async {
+    final comments = sharedProblemComments[sharedProblemId];
+    final comment =
+        comments?.where((c) => c.commentId == commentId).firstOrNull;
+    if (comment == null) return;
+    final roomId = selectedRoom?.roomId ?? _activeRoomId;
+    if (roomId == null) return;
+    final emojiKey = _normalizeEmojiKey(emoji);
+    comment.reactions = await _service.toggleSharedProblemCommentReaction(
+      roomId: roomId,
+      sharedProblemId: sharedProblemId,
+      commentId: commentId,
+      emoji: emojiKey,
+    );
+    AppAnalytics.logEvent('comment_reaction_toggled', {'emoji': emojiKey});
+    notifyListeners();
+  }
+
+  // ── E. 주간 리포트 ──
+
+  Future<void> fetchWeeklyReport(int roomId, {bool notify = true}) async {
+    final reports = await _service.fetchWeeklyReports(roomId: roomId);
+    weeklyReport = reports.firstOrNull;
+    if (notify) notifyListeners();
+  }
+
+  Future<void> markReportRead() async {
+    // API 호출 전 낙관적 업데이트 — 실패해도 이번 세션에서는 리포트가 다시 뜨지 않는다.
+    weeklyReport?.isRead = true;
+    // 읽었으니 목록의 배지도 같이 내린다. 상세를 열었다고 내리지는 않으므로
+    // (#258) 실제로 읽은 이 자리에서 내려야 목록이 서버와 같은 말을 한다.
+    _clearUnreadReportBadge(selectedRoom?.roomId ?? _activeRoomId);
+    notifyListeners();
+    final roomId = selectedRoom?.roomId ?? _activeRoomId;
+    final report = weeklyReport;
+    if (roomId != null && report != null) {
+      try {
+        await _service.markWeeklyReportRead(
+          roomId: roomId,
+          reportId: report.reportId,
+        );
+      } catch (_) {}
+    }
+  }
+
+  // ── F. 목표 설정 ──
+
+  Future<void> setMyGoal(int goal) async {
+    final roomId = selectedRoom?.roomId ?? _activeRoomId;
+    if (roomId == null) return;
+    final weeklyGoal = goal == 0 ? null : goal;
+    final result = await _service.setMyGoal(
+      roomId: roomId,
+      weeklyGoal: weeklyGoal,
+    );
+    myWeeklyGoal = result.weeklyGoal;
+
+    if (selectedRoom != null) {
+      final updatedMembers = selectedRoom!.members.map((m) {
+        if (m.userId != currentUserId) return m;
+        return StudyRoomMemberModel(
+          userId: m.userId,
+          name: m.name,
+          totalStudyLevel: m.totalStudyLevel,
+          currentStreak: m.currentStreak,
+          weeklyProblemCount: m.weeklyProblemCount,
+          weeklyPracticeCount: m.weeklyPracticeCount,
+          todayPracticeCount: m.todayPracticeCount,
+          practicedToday: m.practicedToday,
+          weeklyGoal: result.weeklyGoal,
+          goalProgress: result.goalProgress,
+        );
+      }).toList();
+      selectedRoom = selectedRoom!.copyWith(members: updatedMembers);
+    }
+    notifyListeners();
+  }
+}

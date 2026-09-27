@@ -1,0 +1,42 @@
+<svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <title>밀린 복습 처리</title>
+  <defs>
+    <linearGradient id="frog" x1=".15" y1="0" x2=".78" y2="1">
+      <stop offset="0" stop-color="#E9FFD2"/><stop offset=".52" stop-color="#C8EDA5"/><stop offset="1" stop-color="#91C978"/>
+    </linearGradient>
+    <radialGradient id="eye" cx=".32" cy=".24" r=".82">
+      <stop offset="0" stop-color="#5A4637"/><stop offset=".46" stop-color="#2A201C"/><stop offset="1" stop-color="#171311"/>
+    </radialGradient>
+    <linearGradient id="paper" x1=".2" y1="0" x2=".72" y2="1">
+      <stop offset="0" stop-color="#FFFDF3"/><stop offset=".62" stop-color="#FFF0D2"/><stop offset="1" stop-color="#E8CFA9"/>
+    </linearGradient>
+    <linearGradient id="blue" x1=".12" y1="0" x2=".84" y2="1">
+      <stop offset="0" stop-color="#90C4EE"/><stop offset=".55" stop-color="#679DD4"/><stop offset="1" stop-color="#456FA9"/>
+    </linearGradient>
+    <linearGradient id="coral" x1=".14" y1="0" x2=".82" y2="1">
+      <stop offset="0" stop-color="#F8C0AF"/><stop offset=".56" stop-color="#E9948F"/><stop offset="1" stop-color="#C96D75"/>
+    </linearGradient>
+    <linearGradient id="purple" x1=".15" y1="0" x2=".82" y2="1">
+      <stop offset="0" stop-color="#C9B9EA"/><stop offset=".57" stop-color="#9A84CB"/><stop offset="1" stop-color="#7463A8"/>
+    </linearGradient>
+    <linearGradient id="teal" x1=".14" y1="0" x2=".82" y2="1">
+      <stop offset="0" stop-color="#A7DFC5"/><stop offset=".55" stop-color="#70BA94"/><stop offset="1" stop-color="#468D70"/>
+    </linearGradient>
+    <linearGradient id="gold" x1=".15" y1="0" x2=".78" y2="1">
+      <stop offset="0" stop-color="#FFE8A4"/><stop offset=".54" stop-color="#EAC36D"/><stop offset="1" stop-color="#C8903F"/>
+    </linearGradient>
+    <linearGradient id="night" x1=".12" y1="0" x2=".84" y2="1">
+      <stop offset="0" stop-color="#8A94CB"/><stop offset=".58" stop-color="#5D6FAE"/><stop offset="1" stop-color="#3F4D7C"/>
+    </linearGradient>
+  </defs>
+  
+    <circle cx="23" cy="26" r="18" fill="url(#paper)" stroke="#B99568" stroke-width="1.4"/>
+    <path d="M23 26V14.2M23 26l7.2 4.2" stroke="#304C63" stroke-width="2.15" stroke-linecap="round"/>
+    <circle cx="23" cy="26" r="2.1" fill="url(#blue)"/>
+    <path d="M14.5 8.5 10 4M31.5 8.5 36 4" stroke="#58707A" stroke-width="2.3" stroke-linecap="round"/>
+    <path d="M7.5 25.5c0-8.2 5.8-15.1 13.5-16.7" stroke="#FFF" stroke-width="1.2" stroke-linecap="round" opacity=".76"/>
+    <circle cx="38" cy="12" r="7.5" fill="url(#coral)" stroke="#AA6268" stroke-width="1.25"/>
+    <path d="M38 8.4v4.6M38 15.9v.05" stroke="#FFF" stroke-width="2" stroke-linecap="round"/>
+    <path d="M16 36.2h13.5" stroke="#D6B98E" stroke-width="1.2" stroke-linecap="round"/>
+  
+</svg>

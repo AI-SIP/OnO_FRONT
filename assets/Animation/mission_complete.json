@@ -1,0 +1,12 @@
+{
+  "name": "mission_complete",
+  "canvas": { "width": 512, "height": 512 },
+  "layerUsage": "transparent-effect-overlay",
+  "loop": false,
+  "durationMs": 1280,
+  "animatedWebp": "mission_complete.webp",
+  "spritesheet": { "file": "spritesheet.png", "columns": 4, "rows": 3, "frameWidth": 512, "frameHeight": 512 },
+  "frameCount": 12,
+  "frameDurationsMs": [70, 70, 70, 70, 80, 80, 80, 80, 90, 100, 130, 360]
+}
+

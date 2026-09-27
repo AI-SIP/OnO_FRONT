@@ -1,4 +1,3 @@
-import 'package:intl/intl.dart';
 import 'package:ono/Model/PracticeNote/PracticeNotificationModel.dart';
 
 class PracticeNoteDetailModel {
@@ -7,6 +6,7 @@ class PracticeNoteDetailModel {
   int practiceCount;
   final DateTime createdAt;
   final DateTime? lastSolvedAt;
+  final String? lastSessionMoodEmojiKey;
   final PracticeNotificationModel? practiceNotificationModel;
   List<int> problemIdList = [];
 
@@ -19,6 +19,7 @@ class PracticeNoteDetailModel {
     required this.practiceCount,
     required this.createdAt,
     required this.lastSolvedAt,
+    this.lastSessionMoodEmojiKey,
     this.practiceNotificationModel,
     required this.problemIdList,
   });
@@ -38,15 +39,10 @@ class PracticeNoteDetailModel {
       lastSolvedAt: json['lastSolvedAt'] != null
           ? DateTime.parse(json['lastSolvedAt'])
           : null,
+      lastSessionMoodEmojiKey: json['lastSessionMoodEmojiKey']?.toString(),
       practiceNotificationModel: practiceNotificationModel,
       problemIdList: problemIdList,
     );
-  }
-
-  // 날짜 포맷팅 함수
-  String? _formatDateTime(DateTime? dateTime) {
-    if (dateTime == null) return null;
-    return DateFormat('yyyy-MM-dd').format(dateTime);
   }
 
   void addPracticeCount() {

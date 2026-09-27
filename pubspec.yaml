@@ -16,7 +16,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 3.6.0+67
+version: 4.1.0+74
 
 environment:
   sdk: '>=3.3.3 <4.0.0'
@@ -46,8 +46,12 @@ dependencies:
   flutter_dotenv: ^5.1.0
   logging: ^1.2.0
   cached_network_image: ^3.4.0
-  image_cropper: ^8.0.1
+  image_cropper: ^12.2.1
   camera: ^0.11.0+2
+
+  # 문서 모드. 안드로이드는 ML Kit, iOS 는 VisionKit 의 문서 스캐너를 띄운다.
+  # 종이 테두리를 찾아 원근을 펴고 그림자를 걷어 내는 일을 OS 가 대신 해 준다.
+  cunning_document_scanner: ^3.0.2
   image: ^3.0.1
   share_plus: ^10.0.2
   path_provider: ^2.1.4
@@ -56,20 +60,46 @@ dependencies:
   kakao_flutter_sdk: ^1.9.6
   sentry_flutter: ^8.14.1
   url_launcher_ios: ^6.3.1
-  firebase_core: ^3.5.0
-  firebase_analytics: ^11.3.2
-  firebase_messaging: ^15.2.6
+  firebase_core: ^4.0.0
+  firebase_analytics: ^12.0.0
+  firebase_messaging: ^16.0.0
   image_gallery_saver_plus: ^4.0.1
   flutter_tex: ^4.0.9
-  animated_text_kit: ^4.2.2
   flutter_svg: ^2.0.10+1
   flutter_local_notifications: ^18.0.0
   timezone: ^0.9.4
   device_info_plus: ^11.4.0
 
+  # 앱 버전을 읽어 모든 API 요청에 X-App-Version 으로 실어 보낸다.
+  # 서버가 구버전 앱을 가려내 XP 자동 적립 여부를 정하는 데 쓴다.
+  package_info_plus: ^9.0.1
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
+
+  # E2E 테스트. 진짜 앱을 시뮬레이터에 띄워 dev 서버에 붙인다. integration_test/ 참고.
+  integration_test:
+    sdk: flutter
+
+  # OS 화면(사진 선택 등)까지 누르는 E2E 테스트. patrol_test/ 참고. 실행에는 patrol_cli 가 필요하다.
+  patrol: ^4.9.0
+
+  # 테스트용 mock 라이브러리. 코드 생성(build_runner)이 필요 없다.
+  mocktail: ^1.0.4
+
+  # 테스트에서 플랫폼 채널 구현을 가짜로 바꿔 끼우기 위해 직접 참조한다.
+  # (transitive 로 이미 들어와 있지만 명시하지 않으면 analyzer 가 경고한다)
+  firebase_core_platform_interface: ^8.0.0
+  firebase_analytics_platform_interface: ^6.0.0
+  flutter_secure_storage_platform_interface: ^1.1.2
+  camera_platform_interface: ^2.11.0
+  plugin_platform_interface: ^2.1.8
+
+  # 골든 테스트. 글자를 네모로 그리는 CI 용 이미지와 진짜 폰트로 그리는 로컬 확인용
+  # 이미지를 한 테스트에서 같이 만든다. CI(Ubuntu)와 로컬(macOS)의 폰트 렌더링이 달라서
+  # 진짜 폰트 이미지는 커밋하지 않고 CI 용만 커밋해 비교한다.
+  alchemist: ^0.14.0
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is
@@ -94,7 +124,13 @@ flutter:
     - assets/GuideScreen/
     - assets/Logo/
     - assets/SocialLogin/
-    - assets/FrogCharacter/
+    - assets/Cosmetic/
+    - assets/Reward/
+    - assets/ProfileFrame/
+    - assets/MissionIcon/
+    - assets/Medal/
+    - assets/Animation/
+    - assets/emoji/
     - assets/no_image.png
 
   fonts:
@@ -143,3 +179,12 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/custom-fonts/#from-packages
+
+# Patrol E2E 설정. patrol_test/README.md 참고.
+patrol:
+  app_name: OnO
+  test_directory: patrol_test
+  android:
+    package_name: com.ono.app
+  ios:
+    bundle_id: com.aisip.OnO

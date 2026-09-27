@@ -3,6 +3,7 @@ import 'package:flutter/cupertino.dart';
 import '../../../Module/Text/StandardText.dart';
 import '../../../Module/Theme/ThemeHandler.dart';
 import 'ImageGallerySection.dart';
+import '../../../Module/Design/AppRadius.dart';
 
 Widget buildImageSection(
     BuildContext ctx, List<String> urls, String label, ThemeHandler theme) {
@@ -12,7 +13,7 @@ Widget buildImageSection(
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
           color: theme.primaryColor.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(10)),
+          borderRadius: BorderRadius.circular(AppRadius.medium)),
       child: Center(
           child: StandardText(
               text: '$label가 없습니다.',

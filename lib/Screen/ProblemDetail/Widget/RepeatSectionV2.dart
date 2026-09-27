@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart';
 import 'package:ono/Module/Text/StandardLightText.dart';
 import 'package:ono/Module/Text/UnderlinedText.dart';
@@ -9,13 +8,24 @@ import '../../../Model/Problem/AnswerStatus.dart';
 import '../../../Model/Problem/ImprovementType.dart';
 import '../../../Model/Problem/ProblemModel.dart';
 import '../../../Model/Problem/ProblemSolveModel.dart';
+import '../../../Module/Emoji/OnoEmojiImage.dart';
 import '../../../Module/Dialog/LoadingDialog.dart';
 import '../../../Module/Dialog/SnackBarDialog.dart';
 import '../../../Module/Image/DisplayImage.dart';
 import '../../../Module/Image/FullScreenImage.dart';
+import '../../../Module/Text/mobile_font_size.dart';
 import '../../../Module/Text/StandardText.dart';
+import '../../../Module/Theme/ClayIcon.dart';
 import '../../../Module/Theme/ThemeHandler.dart';
 import '../../../Service/Api/Problem/ProblemSolveService.dart';
+import '../../../Module/Motion/AppHaptic.dart';
+import '../../../Module/Motion/AppMotion.dart';
+import '../../../Module/Motion/AppearTransition.dart';
+import '../../../Module/Motion/PressableScale.dart';
+import '../../../Module/Motion/TossPageRoute.dart';
+import '../../../Module/Motion/TossDialog.dart';
+import '../../../Module/Design/AppColors.dart';
+import '../../../Module/Design/AppRadius.dart';
 
 class RepeatSectionV2 extends StatefulWidget {
   final ProblemModel problem;
@@ -131,21 +141,21 @@ class _RepeatSectionV2State extends State<RepeatSectionV2>
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          SvgPicture.asset(
-                            'assets/Icon/PencilDetail.svg',
+                          const ClayIcon(
+                            'assets/Icon/PencilDetail.png',
                             width: 100,
                             height: 100,
                           ),
                           const SizedBox(height: 16),
-                          const StandardText(
+                          StandardText(
                             text: '아직 복습 기록이 없습니다.',
-                            fontSize: 16,
+                            fontSize: MobileFontSize.reduced(context, 16),
                             color: Colors.black,
                           ),
                           const SizedBox(height: 8),
-                          const StandardText(
+                          StandardText(
                             text: '문제를 복습하고 기록을 남겨보세요!',
-                            fontSize: 14,
+                            fontSize: MobileFontSize.reduced(context, 14),
                             color: Colors.black,
                           ),
                         ],
@@ -178,13 +188,20 @@ class _RepeatSectionV2State extends State<RepeatSectionV2>
           itemBuilder: (context, index) {
             final solve = latestFirst[index];
             final displayIndex = index + 1; // 최신 기록이 1회차
-            return _ProblemSolveCard(
-              solve: solve,
-              index: displayIndex,
-              iconColor: widget.iconColor,
-              isExpanded: _expandedStates[solve.problemSolveId] ?? false,
-              onToggle: (value) => _toggleExpanded(solve.problemSolveId, value),
-              onRefreshAsync: refreshAsync,
+            // 기록이 한꺼번에 툭 나타나는 대신 위에서부터 차례로 들어온다.
+            // 아래쪽까지 지연을 매기면 마지막 카드가 한참 뒤에 뜨므로
+            // 여섯 번째부터는 같은 시점에 들어오게 묶는다.
+            return AppearTransition(
+              delay: AppMotion.stagger * (index < 6 ? index : 6),
+              child: _ProblemSolveCard(
+                solve: solve,
+                index: displayIndex,
+                iconColor: widget.iconColor,
+                isExpanded: _expandedStates[solve.problemSolveId] ?? false,
+                onToggle: (value) =>
+                    _toggleExpanded(solve.problemSolveId, value),
+                onRefreshAsync: refreshAsync,
+              ),
             );
           },
         );
@@ -209,7 +226,7 @@ class _RepeatSectionV2State extends State<RepeatSectionV2>
             child: Container(
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(16.0),
+                borderRadius: BorderRadius.circular(AppRadius.large),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withOpacity(0.05),
@@ -224,15 +241,18 @@ class _RepeatSectionV2State extends State<RepeatSectionV2>
                 separatorBuilder: (_, __) => const SizedBox(height: 10),
                 itemBuilder: (context, index) {
                   final solve = latestFirst[index];
-                  return _TabletSolveListItem(
-                    solve: solve,
-                    index: index + 1,
-                    isSelected: solve.problemSolveId == _selectedSolveId,
-                    onTap: () {
-                      setState(() {
-                        _selectedSolveId = solve.problemSolveId;
-                      });
-                    },
+                  return AppearTransition(
+                    delay: AppMotion.stagger * (index < 6 ? index : 6),
+                    child: _TabletSolveListItem(
+                      solve: solve,
+                      index: index + 1,
+                      isSelected: solve.problemSolveId == _selectedSolveId,
+                      onTap: () {
+                        setState(() {
+                          _selectedSolveId = solve.problemSolveId;
+                        });
+                      },
+                    ),
                   );
                 },
               ),
@@ -333,7 +353,7 @@ class _ProblemSolveCard extends StatelessWidget {
       child: Container(
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(16.0),
+          borderRadius: BorderRadius.circular(AppRadius.large),
           border: Border.all(
             color: statusColor.withOpacity(0.3),
             width: 2,
@@ -350,10 +370,9 @@ class _ProblemSolveCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // 헤더
-            InkWell(
+            PressableScale(
+              haptic: HapticLevel.selection,
               onTap: () => onToggle(!isExpanded),
-              borderRadius:
-                  const BorderRadius.vertical(top: Radius.circular(16.0)),
               child: Container(
                 padding: const EdgeInsets.fromLTRB(16.0, 16.0, 8.0, 16.0),
                 decoration: BoxDecoration(
@@ -368,7 +387,7 @@ class _ProblemSolveCard extends StatelessWidget {
                       padding: const EdgeInsets.all(8.0),
                       decoration: BoxDecoration(
                         color: statusColor.withOpacity(0.15),
-                        borderRadius: BorderRadius.circular(8.0),
+                        borderRadius: BorderRadius.circular(AppRadius.small),
                       ),
                       child: Icon(_getStatusIcon(solve.answerStatus),
                           color: statusColor, size: 22),
@@ -384,9 +403,9 @@ class _ProblemSolveCard extends StatelessWidget {
                             children: [
                               StandardText(
                                 text: '$index회차',
-                                fontSize: 16,
+                                fontSize: MobileFontSize.reduced(context, 16),
                                 fontWeight: FontWeight.bold,
-                                color: Colors.black87,
+                                color: AppColors.textPrimary,
                               ),
                               const SizedBox(width: 8),
                               Container(
@@ -394,7 +413,8 @@ class _ProblemSolveCard extends StatelessWidget {
                                     horizontal: 8, vertical: 3),
                                 decoration: BoxDecoration(
                                   color: statusColor.withOpacity(0.15),
-                                  borderRadius: BorderRadius.circular(12),
+                                  borderRadius:
+                                      BorderRadius.circular(AppRadius.medium),
                                 ),
                                 child: StandardText(
                                   text: solve.answerStatus.displayName,
@@ -403,6 +423,15 @@ class _ProblemSolveCard extends StatelessWidget {
                                   color: statusColor,
                                 ),
                               ),
+                              // 회차마다 기분이 따로 남는다. 안 고른 회차도
+                              // 있어서 있을 때만 그린다.
+                              if (solve.moodEmojiKey != null) ...[
+                                const SizedBox(width: 8),
+                                OnoEmojiImage(
+                                  emojiKey: solve.moodEmojiKey,
+                                  size: 22,
+                                ),
+                              ],
                             ],
                           ),
                           const SizedBox(height: 6),
@@ -425,9 +454,11 @@ class _ProblemSolveCard extends StatelessWidget {
 
                     // 확장 아이콘
                     if (showExpandIcon)
-                      Icon(
-                        isExpanded ? Icons.expand_less : Icons.expand_more,
-                        color: statusColor,
+                      AnimatedRotation(
+                        turns: isExpanded ? 0.5 : 0.0,
+                        duration: AppMotion.normal,
+                        curve: AppMotion.emphasized,
+                        child: Icon(Icons.expand_more, color: statusColor),
                       ),
                     if (showExpandIcon) const SizedBox(width: 8),
                     // 메뉴 버튼
@@ -447,9 +478,20 @@ class _ProblemSolveCard extends StatelessWidget {
               ),
             ),
 
-            // 상세 내용
-            if (isExpanded)
-              _buildExpandedContent(context, themeProvider, statusColor),
+            // 상세 내용. 붙였다 뗐다 하면 툭툭 끊겨서, 높이가 늘어나는 동안
+            // 내용이 옅게 들어오도록 바꿨다.
+            AnimatedCrossFade(
+              firstChild: const SizedBox(width: double.infinity, height: 0),
+              secondChild:
+                  _buildExpandedContent(context, themeProvider, statusColor),
+              crossFadeState: isExpanded
+                  ? CrossFadeState.showSecond
+                  : CrossFadeState.showFirst,
+              duration: AppMotion.normal,
+              sizeCurve: AppMotion.emphasized,
+              firstCurve: AppMotion.exit,
+              secondCurve: AppMotion.enter,
+            ),
           ],
         ),
       ),
@@ -466,6 +508,7 @@ class _ProblemSolveCard extends StatelessWidget {
           // 소요 시간
           if (solve.timeSpentSeconds != null)
             _buildInfoRow(
+              context,
               Icons.timer,
               '소요 시간',
               _formatTimeSpent(solve.timeSpentSeconds!),
@@ -491,11 +534,11 @@ class _ProblemSolveCard extends StatelessWidget {
                       color: themeProvider.primaryColor, size: 18),
                 ),
                 const SizedBox(width: 8),
-                const StandardText(
+                StandardText(
                   text: '개선된 점',
-                  fontSize: 15,
+                  fontSize: MobileFontSize.reduced(context, 15),
                   fontWeight: FontWeight.w500,
-                  color: Colors.black87,
+                  color: AppColors.textPrimary,
                 ),
               ],
             ),
@@ -515,8 +558,8 @@ class _ProblemSolveCard extends StatelessWidget {
                     Expanded(
                       child: StandardLightText(
                         text: improvement.description,
-                        fontSize: 14,
-                        color: Colors.black87,
+                        fontSize: MobileFontSize.reduced(context, 14),
+                        color: AppColors.textPrimary,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -543,11 +586,11 @@ class _ProblemSolveCard extends StatelessWidget {
                       color: themeProvider.primaryColor, size: 18),
                 ),
                 const SizedBox(width: 8),
-                const StandardText(
+                StandardText(
                   text: '복습 메모',
-                  fontSize: 15,
+                  fontSize: MobileFontSize.reduced(context, 15),
                   fontWeight: FontWeight.w500,
-                  color: Colors.black87,
+                  color: AppColors.textPrimary,
                 ),
               ],
             ),
@@ -557,13 +600,13 @@ class _ProblemSolveCard extends StatelessWidget {
               padding: const EdgeInsets.all(12.0),
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(8.0),
-                border: Border.all(color: Colors.grey[300]!, width: 1),
+                borderRadius: BorderRadius.circular(AppRadius.small),
+                border: Border.all(color: AppColors.border),
               ),
               child: UnderlinedText(
                 text: solve.reflection!,
-                fontSize: 16,
-                color: Colors.black87,
+                fontSize: MobileFontSize.reduced(context, 16),
+                color: AppColors.textPrimary,
               ),
             ),
             const SizedBox(height: 20),
@@ -585,11 +628,11 @@ class _ProblemSolveCard extends StatelessWidget {
                       color: themeProvider.primaryColor, size: 18),
                 ),
                 const SizedBox(width: 8),
-                const StandardText(
+                StandardText(
                   text: '풀이 이미지',
-                  fontSize: 15,
+                  fontSize: MobileFontSize.reduced(context, 15),
                   fontWeight: FontWeight.w500,
-                  color: Colors.black87,
+                  color: AppColors.textPrimary,
                 ),
                 const Spacer(),
                 Container(
@@ -597,7 +640,7 @@ class _ProblemSolveCard extends StatelessWidget {
                       const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
                     color: themeProvider.primaryColor.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(999),
+                    borderRadius: BorderRadius.circular(AppRadius.full),
                   ),
                   child: StandardText(
                     text: '${solve.imageUrls.length}장',
@@ -620,21 +663,22 @@ class _ProblemSolveCard extends StatelessWidget {
     );
   }
 
-  Widget _buildInfoRow(IconData icon, String label, String value, Color color) {
+  Widget _buildInfoRow(BuildContext context, IconData icon, String label,
+      String value, Color color) {
     return Row(
       children: [
         Icon(icon, color: color, size: 18),
         const SizedBox(width: 8),
         StandardText(
           text: '$label: ',
-          fontSize: 14,
+          fontSize: MobileFontSize.reduced(context, 14),
           fontWeight: FontWeight.bold,
           color: color,
         ),
         StandardText(
           text: value,
-          fontSize: 14,
-          color: Colors.black87,
+          fontSize: MobileFontSize.reduced(context, 14),
+          color: AppColors.textPrimary,
         ),
       ],
     );
@@ -642,12 +686,12 @@ class _ProblemSolveCard extends StatelessWidget {
 
   void _showOptionsDialog(
       BuildContext parentContext, ThemeHandler themeProvider) {
-    showDialog(
+    showTossDialog(
       context: parentContext,
       builder: (dialogContext) => Dialog(
         backgroundColor: Colors.white,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppRadius.large),
         ),
         child: Container(
           padding: const EdgeInsets.all(24),
@@ -661,7 +705,7 @@ class _ProblemSolveCard extends StatelessWidget {
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
                       color: themeProvider.primaryColor.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(AppRadius.small),
                     ),
                     child: Icon(
                       Icons.settings,
@@ -670,11 +714,11 @@ class _ProblemSolveCard extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 12),
-                  const StandardText(
+                  StandardText(
                     text: '복습 기록 관리',
-                    fontSize: 18,
+                    fontSize: MobileFontSize.reduced(parentContext, 18),
                     fontWeight: FontWeight.w600,
-                    color: Colors.black87,
+                    color: AppColors.textPrimary,
                   ),
                 ],
               ),
@@ -693,7 +737,7 @@ class _ProblemSolveCard extends StatelessWidget {
               //       backgroundColor:
               //           themeProvider.primaryColor.withOpacity(0.1),
               //       shape: RoundedRectangleBorder(
-              //         borderRadius: BorderRadius.circular(8),
+              //         borderRadius: BorderRadius.circular(AppRadius.small),
               //       ),
               //     ),
               //     child: Row(
@@ -726,7 +770,7 @@ class _ProblemSolveCard extends StatelessWidget {
                         horizontal: 16, vertical: 12),
                     backgroundColor: Colors.red.withOpacity(0.1),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(AppRadius.small),
                     ),
                   ),
                   child: const Row(
@@ -755,13 +799,13 @@ class _ProblemSolveCard extends StatelessWidget {
                         horizontal: 16, vertical: 12),
                     backgroundColor: Colors.grey[100],
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(AppRadius.small),
                     ),
                   ),
-                  child: const StandardText(
+                  child: StandardText(
                     text: '취소',
-                    fontSize: 15,
-                    color: Colors.black87,
+                    fontSize: MobileFontSize.reduced(parentContext, 15),
+                    color: AppColors.textPrimary,
                   ),
                 ),
               ),
@@ -774,12 +818,12 @@ class _ProblemSolveCard extends StatelessWidget {
 
   void _showDeleteConfirmDialog(
       BuildContext parentContext, ThemeHandler themeProvider) {
-    showDialog(
+    showTossDialog(
       context: parentContext,
       builder: (dialogContext) => Dialog(
         backgroundColor: Colors.white,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppRadius.large),
         ),
         child: Container(
           padding: const EdgeInsets.all(24),
@@ -793,7 +837,7 @@ class _ProblemSolveCard extends StatelessWidget {
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
                       color: Colors.red.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(AppRadius.small),
                     ),
                     child: const Icon(
                       Icons.delete_forever,
@@ -802,20 +846,20 @@ class _ProblemSolveCard extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 12),
-                  const StandardText(
+                  StandardText(
                     text: '삭제 확인',
-                    fontSize: 18,
+                    fontSize: MobileFontSize.reduced(parentContext, 18),
                     fontWeight: FontWeight.w600,
-                    color: Colors.black87,
+                    color: AppColors.textPrimary,
                   ),
                 ],
               ),
               const SizedBox(height: 20),
               // 내용
-              const StandardText(
+              StandardText(
                 text: '이 복습 기록을 정말 삭제하시겠습니까?',
-                fontSize: 15,
-                color: Colors.black87,
+                fontSize: MobileFontSize.reduced(parentContext, 15),
+                color: AppColors.textPrimary,
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 24),
@@ -830,13 +874,13 @@ class _ProblemSolveCard extends StatelessWidget {
                             horizontal: 12, vertical: 12),
                         backgroundColor: Colors.grey[100],
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(AppRadius.small),
                         ),
                       ),
-                      child: const StandardText(
+                      child: StandardText(
                         text: '취소',
-                        fontSize: 14,
-                        color: Colors.black87,
+                        fontSize: MobileFontSize.reduced(parentContext, 14),
+                        color: AppColors.textPrimary,
                       ),
                     ),
                   ),
@@ -852,7 +896,7 @@ class _ProblemSolveCard extends StatelessWidget {
                             horizontal: 12, vertical: 12),
                         backgroundColor: Colors.red,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(AppRadius.small),
                         ),
                       ),
                       child: const StandardText(
@@ -868,15 +912,6 @@ class _ProblemSolveCard extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
-
-  // 수정 핸들러
-  void _handleEdit(BuildContext context, ThemeHandler themeProvider) {
-    SnackBarDialog.showSnackBar(
-      context: context,
-      message: '수정 기능은 준비 중입니다.',
-      backgroundColor: themeProvider.primaryColor,
     );
   }
 
@@ -947,15 +982,14 @@ class _TabletSolveListItem extends StatelessWidget {
     final borderColor =
         isSelected ? statusColor.withOpacity(0.7) : Colors.grey[300]!;
 
-    return InkWell(
+    return PressableScale(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(12.0),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 180),
         padding: const EdgeInsets.all(12.0),
         decoration: BoxDecoration(
           color: isSelected ? statusColor.withOpacity(0.08) : Colors.white,
-          borderRadius: BorderRadius.circular(12.0),
+          borderRadius: BorderRadius.circular(AppRadius.medium),
           border: Border.all(color: borderColor, width: isSelected ? 2 : 1),
         ),
         child: Row(
@@ -964,7 +998,7 @@ class _TabletSolveListItem extends StatelessWidget {
               padding: const EdgeInsets.all(8.0),
               decoration: BoxDecoration(
                 color: statusColor.withOpacity(0.15),
-                borderRadius: BorderRadius.circular(8.0),
+                borderRadius: BorderRadius.circular(AppRadius.small),
               ),
               child: Icon(_getStatusIcon(solve.answerStatus),
                   color: statusColor, size: 18),
@@ -978,9 +1012,9 @@ class _TabletSolveListItem extends StatelessWidget {
                     children: [
                       StandardText(
                         text: '$index회차',
-                        fontSize: 14,
+                        fontSize: MobileFontSize.reduced(context, 14),
                         fontWeight: FontWeight.bold,
-                        color: Colors.black87,
+                        color: AppColors.textPrimary,
                       ),
                       const SizedBox(width: 6),
                       Container(
@@ -988,7 +1022,7 @@ class _TabletSolveListItem extends StatelessWidget {
                             horizontal: 6, vertical: 2),
                         decoration: BoxDecoration(
                           color: statusColor.withOpacity(0.15),
-                          borderRadius: BorderRadius.circular(10),
+                          borderRadius: BorderRadius.circular(AppRadius.medium),
                         ),
                         child: StandardText(
                           text: solve.answerStatus.displayName,
@@ -997,6 +1031,10 @@ class _TabletSolveListItem extends StatelessWidget {
                           color: statusColor,
                         ),
                       ),
+                      if (solve.moodEmojiKey != null) ...[
+                        const SizedBox(width: 6),
+                        OnoEmojiImage(emojiKey: solve.moodEmojiKey, size: 18),
+                      ],
                     ],
                   ),
                   const SizedBox(height: 4),
@@ -1079,7 +1117,7 @@ class _ImageSliderState extends State<_ImageSlider> {
           height: screenHeight * 0.3,
           decoration: BoxDecoration(
             color: widget.primaryColor.withOpacity(0.05),
-            borderRadius: BorderRadius.circular(12.0),
+            borderRadius: BorderRadius.circular(AppRadius.medium),
             border: Border.all(
               color: widget.primaryColor.withOpacity(0.2),
               width: 2,
@@ -1090,16 +1128,19 @@ class _ImageSliderState extends State<_ImageSlider> {
             itemCount: widget.imageUrls.length,
             onPageChanged: (i) => setState(() => _current = i),
             itemBuilder: (context, i) {
-              return GestureDetector(
+              return PressableScale(
+                haptic: HapticLevel.none,
                 onTap: () => Navigator.push(
                   context,
-                  MaterialPageRoute(
-                    builder: (_) =>
-                        FullScreenImage(imagePath: widget.imageUrls[i]),
+                  TossPageRoute(
+                    builder: (_) => FullScreenImage(
+                      imagePaths: widget.imageUrls,
+                      initialIndex: i,
+                    ),
                   ),
                 ),
                 child: ClipRRect(
-                  borderRadius: BorderRadius.circular(10.0),
+                  borderRadius: BorderRadius.circular(AppRadius.medium),
                   child: DisplayImage(
                     imagePath: widget.imageUrls[i],
                     fit: BoxFit.contain,

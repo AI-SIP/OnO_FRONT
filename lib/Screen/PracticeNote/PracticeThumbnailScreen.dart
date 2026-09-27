@@ -1,19 +1,39 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart';
-import 'package:ono/Module/Dialog/LoadingDialog.dart';
 import 'package:provider/provider.dart';
 
+import '../../Provider/CosmeticProvider.dart';
+import '../User/Widget/FrogCharacter.dart';
 import '../../Model/PracticeNote/PracticeNoteThumbnailModel.dart';
+import '../../Module/Emoji/OnoEmojiCatalog.dart';
+import '../../Module/Emoji/OnoEmojiImage.dart';
 import '../../Module/Text/StandardText.dart';
+import '../../Module/Text/mobile_font_size.dart';
+import '../../Module/Theme/ClayIcon.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/PracticeNoteProvider.dart';
-import '../../Util/AppSnackBar.dart';
-import 'PracticeDetailScreen.dart';
+import '../Tutorial/TutorialTargets.dart';
+import 'PracticeDetailLoader.dart';
 import 'PracticeProblemSelectionScreen.dart';
+import '../../Module/Motion/AppMotion.dart';
+import '../../Module/Motion/AppearTransition.dart';
+import '../../Module/Motion/AppHaptic.dart';
+import '../../Module/Motion/PressableScale.dart';
+import '../../Module/Motion/Skeleton.dart';
+import '../../Module/Motion/TossPageRoute.dart';
+import '../../Module/Motion/TossDialog.dart';
+import '../../Module/Design/AppColors.dart';
+import '../../Module/Design/AppRadius.dart';
+import '../../Module/Design/AppToast.dart';
+import '../../Util/AppAnalytics.dart';
 
 class PracticeThumbnailScreen extends StatefulWidget {
-  const PracticeThumbnailScreen({super.key});
+  final TutorialTargets? tutorialTargets;
+
+  const PracticeThumbnailScreen({
+    super.key,
+    this.tutorialTargets,
+  });
 
   @override
   _ProblemPracticeScreen createState() => _ProblemPracticeScreen();
@@ -71,16 +91,19 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
     return Scaffold(
       appBar: _buildAppBar(themeProvider),
       backgroundColor: Colors.white,
-      body: RefreshIndicator(
-        onRefresh: _refreshPracticeThumbnails,
-        child: Consumer<ProblemPracticeProvider>(
-          builder: (context, provider, child) {
-            if (provider.practiceThumbnails.isEmpty && !provider.isLoading) {
-              return _buildEmptyState(themeProvider);
-            } else {
-              return _buildPracticeListView(provider, themeProvider);
-            }
-          },
+      body: SizedBox.expand(
+        key: widget.tutorialTargets?.practiceListKey,
+        child: RefreshIndicator(
+          onRefresh: _refreshPracticeThumbnails,
+          child: Consumer<ProblemPracticeProvider>(
+            builder: (context, provider, child) {
+              if (provider.practiceThumbnails.isEmpty && !provider.isLoading) {
+                return _buildEmptyState(themeProvider);
+              } else {
+                return _buildPracticeListView(provider, themeProvider);
+              }
+            },
+          ),
         ),
       ),
       bottomNavigationBar: _isSelectionMode
@@ -145,6 +168,7 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
 
     final openTime = DateTime.now();
     showModalBottomSheet(
+      sheetAnimationStyle: AppMotion.sheetStyle,
       backgroundColor: Colors.transparent,
       context: context,
       isDismissible: false,
@@ -192,7 +216,8 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
                             color: themeProvider.primaryColor.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius:
+                                BorderRadius.circular(AppRadius.small),
                           ),
                           child: Icon(
                             Icons.edit_note,
@@ -203,9 +228,9 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
                         const SizedBox(width: 12),
                         StandardText(
                           text: '복습 세트 편집하기',
-                          fontSize: 18,
+                          fontSize: MobileFontSize.reduced(context, 18),
                           fontWeight: FontWeight.w600,
-                          color: Colors.black87,
+                          color: AppColors.textPrimary,
                         ),
                       ],
                     ),
@@ -252,15 +277,14 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
     Color? titleColor,
     required VoidCallback onTap,
   }) {
-    return InkWell(
+    return PressableScale(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
           color: Colors.grey[50],
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.grey[200]!, width: 1),
+          borderRadius: BorderRadius.circular(AppRadius.medium),
+          border: Border.all(color: AppColors.border),
         ),
         child: Row(
           children: [
@@ -276,7 +300,7 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
             Expanded(
               child: StandardText(
                 text: title,
-                fontSize: 16,
+                fontSize: MobileFontSize.reduced(context, 16),
                 color: titleColor ?? Colors.black87,
               ),
             ),
@@ -299,7 +323,7 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
                 backgroundColor: Colors.grey[300],
                 padding: const EdgeInsets.symmetric(vertical: 8),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(AppRadius.small),
                 ),
               ),
               onPressed: () {
@@ -322,7 +346,7 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
                 backgroundColor: Colors.red,
                 padding: const EdgeInsets.symmetric(vertical: 8),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(AppRadius.small),
                 ),
               ),
               onPressed: _selectedPracticeIds.isNotEmpty
@@ -359,15 +383,13 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
   }
 
   Future<void> _showDeletePracticeDialog(List<int> deletePracticeIds) async {
-    final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
-
-    return showDialog(
+    return showTossDialog(
       context: context,
       builder: (context) {
         return Dialog(
           backgroundColor: Colors.white,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(AppRadius.large),
           ),
           child: Container(
             padding: const EdgeInsets.all(24),
@@ -381,7 +403,7 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
                         color: Colors.red.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(AppRadius.small),
                       ),
                       child: const Icon(
                         Icons.delete_forever,
@@ -390,20 +412,20 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
                       ),
                     ),
                     const SizedBox(width: 12),
-                    const StandardText(
+                    StandardText(
                       text: '복습 세트 삭제',
-                      fontSize: 18,
+                      fontSize: MobileFontSize.reduced(context, 18),
                       fontWeight: FontWeight.w600,
-                      color: Colors.black87,
+                      color: AppColors.textPrimary,
                     ),
                   ],
                 ),
                 const SizedBox(height: 20),
                 // 내용
-                const StandardText(
+                StandardText(
                   text: '정말로 이 복습 세트를 삭제하시겠습니까?',
-                  fontSize: 15,
-                  color: Colors.black87,
+                  fontSize: MobileFontSize.reduced(context, 15),
+                  color: AppColors.textPrimary,
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 24),
@@ -420,13 +442,14 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
                               horizontal: 16, vertical: 10),
                           backgroundColor: Colors.grey[100],
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius:
+                                BorderRadius.circular(AppRadius.small),
                           ),
                         ),
-                        child: const StandardText(
+                        child: StandardText(
                           text: '취소',
-                          fontSize: 15,
-                          color: Colors.black87,
+                          fontSize: MobileFontSize.reduced(context, 15),
+                          color: AppColors.textPrimary,
                         ),
                       ),
                     ),
@@ -440,30 +463,27 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
                               context,
                               listen: false);
                           await provider.deletePractices(deletePracticeIds);
+                          AppAnalytics.logEvent('practice_set_deleted', {
+                            'count': deletePracticeIds.length,
+                            'source': 'list',
+                          });
 
                           setState(() {
                             _isSelectionMode = false;
                             _selectedPracticeIds.clear();
                           });
 
-                          AppSnackBar.messengerKey.currentState?.showSnackBar(
-                            SnackBar(
-                              content: const StandardText(
-                                text: '복습 세트가 삭제되었습니다!',
-                                fontSize: 14,
-                                color: Colors.white,
-                              ),
-                              backgroundColor: themeProvider.primaryColor,
-                              duration: const Duration(seconds: 2),
-                            ),
-                          );
+                          // 다이얼로그를 닫은 뒤라 이 자리의 context 는 이미
+                          // 죽어 있다. 넘기지 않고 앱 전체 Overlay 에 맡긴다.
+                          AppToast.success('복습 세트가 삭제되었습니다!');
                         },
                         style: TextButton.styleFrom(
                           padding: const EdgeInsets.symmetric(
                               horizontal: 16, vertical: 10),
                           backgroundColor: Colors.red,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius:
+                                BorderRadius.circular(AppRadius.small),
                           ),
                         ),
                         child: const StandardText(
@@ -484,7 +504,12 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
   }
 
   Widget _buildLoadingIndicator() {
-    return const Center(child: CircularProgressIndicator());
+    return const SkeletonList(
+      itemCount: 4,
+      itemHeight: 96,
+      spacing: 16,
+      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+    );
   }
 
   Widget _buildEmptyState(ThemeHandler themeProvider) {
@@ -497,15 +522,15 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               const SizedBox(height: 40),
-              SvgPicture.asset(
-                'assets/Icon/BigGreenFrog.svg',
-                width: 90,
-                height: 90,
+              // 빈 자리를 지키는 것도 내가 꾸민 개구리다. 배경 파츠는 뺀다.
+              FrogLayerStack(
+                layers: context.watch<CosmeticProvider>().layersWithoutBackdrop,
+                size: 90,
               ),
               const SizedBox(height: 40),
-              const StandardText(
+              StandardText(
                 text: '복습 세트에 오답노트를 담아\n 편리하게 시험을 준비하세요!',
-                fontSize: 16,
+                fontSize: MobileFontSize.reduced(context, 16),
                 color: Colors.black,
                 textAlign: TextAlign.center,
               ),
@@ -520,7 +545,7 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
                     vertical: 8,
                   ),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(15),
+                    borderRadius: BorderRadius.circular(AppRadius.large),
                   ),
                 ),
                 child: const StandardText(
@@ -536,11 +561,19 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
     );
   }
 
+  /// 목록에서 하나씩 들어오게 할 항목 수. 첫 화면에 보이는 만큼이다.
+  static const int _staggeredItemLimit = 8;
+
   Widget _buildPracticeListView(
       ProblemPracticeProvider provider, ThemeHandler themeProvider) {
     final thumbnails = provider.practiceThumbnails;
     final isLoadingMore = provider.isLoading;
     final hasMore = provider.hasNext;
+
+    // 처음 불러오는 중이면 화면 가운데 스피너 대신 목록 모양을 보여준다.
+    if (thumbnails.isEmpty && isLoadingMore) {
+      return _buildLoadingIndicator();
+    }
 
     return ListView.builder(
       controller: _scrollController,
@@ -548,7 +581,8 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
       padding: const EdgeInsets.symmetric(vertical: 20),
       itemCount: thumbnails.length + (isLoadingMore || hasMore ? 1 : 0),
       itemBuilder: (context, index) {
-        // 로딩 인디케이터
+        // 더 불러오는 중임을 알리는 자리. 목록 아래에 잠깐 보이는 것이라
+        // 스켈레톤보다 작은 표시가 낫다.
         if (index == thumbnails.length) {
           return const Padding(
             padding: EdgeInsets.all(16.0),
@@ -557,7 +591,12 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
         }
 
         final practice = thumbnails[index];
-        return _buildPracticeItem(practice, themeProvider);
+        // 첫 화면에 보이는 것만 하나씩 들어온다.
+        return AppearTransition(
+          enabled: index < _staggeredItemLimit,
+          delay: AppMotion.stagger * index,
+          child: _buildPracticeItem(practice, themeProvider),
+        );
       },
     );
   }
@@ -566,7 +605,8 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
       PracticeNoteThumbnails practice, ThemeHandler themeProvider) {
     final isSelected = _selectedPracticeIds.contains(practice.practiceId);
 
-    return GestureDetector(
+    return PressableScale(
+      haptic: HapticLevel.none,
       onTap: () {
         if (_isSelectionMode) {
           setState(() {
@@ -575,20 +615,22 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
                 : _selectedPracticeIds.add(practice.practiceId);
           });
         } else {
-          _navigateToPracticeDetail(practice.practiceId);
+          _navigateToPracticeDetail(practice);
         }
       },
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         child: Container(
           decoration: _buildBoxDecoration(isSelected, themeProvider),
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(12),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               _buildIconContainer(isSelected, themeProvider),
               const SizedBox(width: 16),
-              _buildPracticeInfo(practice, themeProvider),
+              _buildPracticeInfo(practice),
+              const SizedBox(width: 12),
+              _buildPracticeMeta(practice, themeProvider),
             ],
           ),
         ),
@@ -596,23 +638,35 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
     );
   }
 
-  void _navigateToPracticeDetail(int practiceId) async {
+  /// 복습 세트 화면이 열려 있는 동안 켜 둔다. 화면이 넘어가는 애니메이션
+  /// 사이에 한 번 더 눌려도 두 번 쌓이지 않게 한다.
+  bool _openingPractice = false;
+
+  void _navigateToPracticeDetail(PracticeNoteThumbnails practice) async {
+    if (_openingPractice) return;
+    _openingPractice = true;
+
     final practiceProvider =
         Provider.of<ProblemPracticeProvider>(context, listen: false);
-    LoadingDialog.show(context, '복습 세트 로딩 중...');
+    final practiceId = practice.practiceId;
 
-    // 상세 정보 조회 및 이동
-    await practiceProvider.fetchPracticeNote(practiceId);
-    await practiceProvider.moveToPractice(practiceId);
-    LoadingDialog.hide(context);
-
-    final result = await Navigator.push<bool>(
-      context,
-      MaterialPageRoute(
-        builder: (context) => PracticeDetailScreen(
-            practice: practiceProvider.currentPracticeNote!),
-      ),
-    );
+    // 불러오기를 기다리지 않고 화면부터 넘긴다. 세트는 넘어간 화면 안에서
+    // 불러온다. 기다리는 동안 목록이 그대로 있으면 다른 세트를 또 눌러 두
+    // 화면이 겹쳐 쌓였다.
+    final bool? result;
+    try {
+      result = await Navigator.push<bool>(
+        context,
+        TossPageRoute(
+          builder: (context) => PracticeDetailLoader(
+            practiceId: practiceId,
+            title: practice.practiceTitle,
+          ),
+        ),
+      );
+    } finally {
+      _openingPractice = false;
+    }
 
     // 복습을 완료한 경우(result == true)에만 해당 썸네일 업데이트
     if (result == true) {
@@ -627,7 +681,7 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
       color: isSelected
           ? themeProvider.primaryColor.withOpacity(0.1)
           : Colors.white,
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(AppRadius.medium),
       boxShadow: [
         BoxShadow(
           color: Colors.grey.withOpacity(0.2),
@@ -642,9 +696,9 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
   Widget _buildIconContainer(bool isSelected, ThemeHandler themeProvider) {
     return Container(
       width: 50,
-      height: 50,
+      height: 70,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(AppRadius.small),
         color: isSelected
             ? themeProvider.primaryColor
             : themeProvider.primaryColor.withOpacity(0.1),
@@ -652,8 +706,8 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
       child: Center(
         child: isSelected
             ? const Icon(Icons.check, color: Colors.white)
-            : SvgPicture.asset(
-                'assets/Icon/RainbowNote.svg',
+            : const ClayIcon(
+                'assets/Icon/RainbowNote.png',
                 width: 40,
                 height: 40,
               ),
@@ -661,45 +715,109 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
     );
   }
 
-  Widget _buildPracticeInfo(
-      PracticeNoteThumbnails practice, ThemeHandler themeProvider) {
+  Widget _buildPracticeInfo(PracticeNoteThumbnails practice) {
+    final titleFontSize = MediaQuery.of(context).size.width < 600 ? 15.0 : 16.0;
+
     return Expanded(
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           StandardText(
             text: practice.practiceTitle.isNotEmpty
                 ? practice.practiceTitle
                 : "제목 없음",
-            fontSize: 18,
+            fontSize: titleFontSize,
             color: Colors.black,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 5),
           Row(
             children: [
-              practice.practiceCount >= 3
-                  ? _buildTag('복습 완료', themeProvider, highlight: true)
-                  : _buildTag('${practice.practiceCount}회 복습', themeProvider),
-              const SizedBox(width: 8),
-              ..._buildStatusIcons(practice.practiceCount),
+              Flexible(
+                child: StandardText(
+                  text:
+                      '마지막 복습 날짜: ${formatDateTime(practice.lastSolvedAt) ?? '복습 기록 없음'}',
+                  fontSize: 11,
+                  color: Colors.grey,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              ..._buildLastMood(practice),
             ],
-          ),
-          const SizedBox(height: 8),
-          StandardText(
-            text:
-                '마지막 복습 날짜: ${formatDateTime(practice.lastSolvedAt) ?? '복습 기록 없음'}',
-            fontSize: 12,
-            color: Colors.grey,
           ),
         ],
       ),
     );
   }
 
+  /// 지난 복습을 끝내고 고른 기분. 마지막 복습 날짜 바로 뒤에 붙는다.
+  ///
+  /// 상세 화면 위쪽에 따로 칸을 두었더니 통계와 문제 목록 사이에 끼어
+  /// 자리만 차지했다. 목록으로 옮기면서도 줄을 하나 더 쓰면 카드가 길어져서,
+  /// 날짜 줄 끝에 그림만 둔다. 복습을 마치며 직접 고른 그림이라 이름 없이도
+  /// 알아본다. 이름은 길게 누르면 뜨고 스크린 리더도 읽는다.
+  /// 서버가 이 앱이 모르는 키를 보내면 [OnoEmojiCatalog.byKey] 가 null 을
+  /// 주는데, 그때는 그리지 않는다.
+  List<Widget> _buildLastMood(PracticeNoteThumbnails practice) {
+    final key = practice.lastSessionMoodEmojiKey;
+    final emoji = key == null ? null : OnoEmojiCatalog.byKey(key);
+    if (emoji == null) return const [];
+
+    return [
+      // 4 로 두면 날짜 끝 글자에 그림이 붙어 보여서 조금 띄운다.
+      const SizedBox(width: 8),
+      Tooltip(
+        message: '지난 소감: ${emoji.label}',
+        child: OnoEmojiImage(emoji: emoji, size: 18),
+      ),
+    ];
+  }
+
+  Widget _buildPracticeMeta(
+      PracticeNoteThumbnails practice, ThemeHandler themeProvider) {
+    const frogIconBoxWidth = 68.0;
+
+    // 지난 복습 소감은 왼쪽 날짜 아래에 둔다. 여기는 몇 회 복습했는지만 본다.
+    return Semantics(
+      label: practice.practiceCount >= 3
+          ? '복습 완료'
+          : '${practice.practiceCount}회 복습',
+      child: SizedBox(
+        width: frogIconBoxWidth,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            practice.practiceCount >= 3
+                ? _buildTag('복습 완료', themeProvider,
+                    highlight: true, width: frogIconBoxWidth)
+                : _buildTag('${practice.practiceCount}회 복습', themeProvider,
+                    width: frogIconBoxWidth),
+            const SizedBox(height: 7),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              children: _buildStatusIcons(practice.practiceCount),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildTag(String text, ThemeHandler themeProvider,
-      {bool highlight = false}) {
+      {bool highlight = false, double? width}) {
+    final isMobile = MediaQuery.of(context).size.width < 600;
+
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      width: width,
+      padding: EdgeInsets.symmetric(
+        horizontal: width == null ? (isMobile ? 7 : 8) : 0,
+        vertical: isMobile ? 3 : 4,
+      ),
       decoration: BoxDecoration(
         color: highlight
             ? themeProvider.primaryColor
@@ -708,27 +826,33 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
       ),
       child: StandardText(
         text: text,
-        fontSize: 12,
+        fontSize: isMobile ? 11 : 12,
         color: highlight ? Colors.white : themeProvider.primaryColor,
+        textAlign: TextAlign.center,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
       ),
     );
   }
 
   List<Widget> _buildStatusIcons(int practiceCount) {
     List<String> icons = [
-      'assets/Icon/SmallGreenFrog.svg',
-      'assets/Icon/SmallYellowFrog.svg',
-      'assets/Icon/SmallPinkFrog.svg'
+      'assets/Icon/SmallGreenFrog.png',
+      'assets/Icon/SmallYellowFrog.png',
+      'assets/Icon/SmallPinkFrog.png'
     ];
 
     return List<Widget>.generate(3, (index) {
       return Padding(
-        padding: const EdgeInsets.only(right: 4.0),
-        child: SvgPicture.asset(
+        padding: EdgeInsets.only(right: index == 2 ? 0 : 4.0),
+        child: ClayIcon(
           icons[index],
           width: 20,
           height: 20,
-          color: index < practiceCount ? null : Colors.white,
+          // 아직 안 한 회차는 개구리를 하얗게 덮어 빈자리로 보이게 한다.
+          // SvgPicture 의 color 와 같은 자리다. 풀컬러 그림이라 색이 입혀지는
+          // 게 아니라 실루엣만 남고 통째로 하얘진다. 그게 노리던 것이다.
+          tint: index < practiceCount ? null : Colors.white,
         ),
       );
     });
@@ -741,12 +865,6 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
     return DateFormat('yyyy/MM/dd').format(dateTime);
   }
 
-  Future<void> _fetchAllPracticeContents() async {
-    final provider =
-        Provider.of<ProblemPracticeProvider>(context, listen: false);
-    await provider.fetchAllPracticeContents();
-  }
-
   Future<void> _refreshPracticeThumbnails() async {
     final provider =
         Provider.of<ProblemPracticeProvider>(context, listen: false);
@@ -756,7 +874,7 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
   Future<void> _navigateToPracticeCreate() async {
     await Navigator.push(
       context,
-      MaterialPageRoute(
+      TossPageRoute(
         builder: (context) => const PracticeProblemSelectionScreen(),
       ),
     );

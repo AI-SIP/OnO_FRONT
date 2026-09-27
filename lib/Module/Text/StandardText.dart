@@ -10,6 +10,13 @@ class StandardText extends StatelessWidget {
   final TextOverflow overflow;
   final int? maxLines;
 
+  /// 줄 높이. 기본 1.8 은 여러 줄 본문에 맞춘 값이다.
+  ///
+  /// 숫자 한 줄을 몇 개 쌓는 자리에서는 이 여백이 빈 줄처럼 끼어들어 간격을
+  /// 눈으로 맞출 수 없게 만든다. 그런 곳에서만 1.2 쯤으로 좁히고 요소 사이
+  /// 간격은 여백 위젯으로 준다.
+  final double height;
+
   const StandardText({
     super.key,
     required this.text,
@@ -20,6 +27,7 @@ class StandardText extends StatelessWidget {
     this.textAlign = TextAlign.start,
     this.overflow = TextOverflow.clip,
     this.maxLines,
+    this.height = 1.8,
   });
 
   @override
@@ -39,7 +47,7 @@ class StandardText extends StatelessWidget {
       fontSize: fontSize,
       fontFamily: fontFamily,
       fontWeight: fontWeight,
-      height: 1.8,
+      height: height,
     );
   }
 }

@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import '../../../Module/Text/StandardText.dart';
 import '../../../Module/Theme/ThemeHandler.dart';
+import '../../../Module/Motion/PressableScale.dart';
+import '../../../Module/Design/AppRadius.dart';
+import '../../../Module/Design/AppColors.dart';
 
 class SettingMenuButtons extends StatelessWidget {
   final ThemeHandler themeProvider;
-  final VoidCallback onNameEditTap;
   final VoidCallback onGuideTap;
   final VoidCallback onFeedbackTap;
   final VoidCallback onTermsTap;
@@ -14,7 +16,6 @@ class SettingMenuButtons extends StatelessWidget {
   const SettingMenuButtons({
     super.key,
     required this.themeProvider,
-    required this.onNameEditTap,
     required this.onGuideTap,
     required this.onFeedbackTap,
     required this.onTermsTap,
@@ -35,7 +36,7 @@ class SettingMenuButtons extends StatelessWidget {
       padding: EdgeInsets.all(screenHeight * 0.015),
       decoration: BoxDecoration(
         color: Colors.grey[50],
-        borderRadius: BorderRadius.circular(15),
+        borderRadius: BorderRadius.circular(AppRadius.large),
         border: Border.all(
           color: Colors.grey[300]!,
           width: 1,
@@ -49,13 +50,6 @@ class SettingMenuButtons extends StatelessWidget {
             title: '복습 알림',
             value: notificationEnabled,
             onChanged: onNotificationChanged,
-          ),
-          Divider(height: screenHeight * 0.02, color: Colors.grey[300]),
-          _buildMenuItem(
-            context: context,
-            icon: Icons.edit,
-            title: '이름 수정',
-            onTap: onNameEditTap,
           ),
           Divider(height: screenHeight * 0.02, color: Colors.grey[300]),
           _buildMenuItem(
@@ -105,7 +99,7 @@ class SettingMenuButtons extends StatelessWidget {
             child: StandardText(
               text: title,
               fontSize: 14,
-              color: Colors.black87,
+              color: AppColors.textPrimary,
             ),
           ),
           Transform.scale(
@@ -113,7 +107,8 @@ class SettingMenuButtons extends StatelessWidget {
             child: Switch(
               value: value,
               activeThumbColor: themeProvider.primaryColor,
-              activeTrackColor: themeProvider.primaryColor.withValues(alpha: 0.5),
+              activeTrackColor:
+                  themeProvider.primaryColor.withValues(alpha: 0.5),
               inactiveTrackColor: Colors.grey.shade300,
               inactiveThumbColor: Colors.grey,
               materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -134,9 +129,8 @@ class SettingMenuButtons extends StatelessWidget {
   }) {
     double screenHeight = MediaQuery.of(context).size.height;
 
-    return InkWell(
+    return PressableScale(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
       child: Padding(
         padding: EdgeInsets.symmetric(
           vertical: screenHeight * 0.008,
@@ -154,7 +148,7 @@ class SettingMenuButtons extends StatelessWidget {
               child: StandardText(
                 text: title,
                 fontSize: 14,
-                color: Colors.black87,
+                color: AppColors.textPrimary,
               ),
             ),
             if (showThemeColor)

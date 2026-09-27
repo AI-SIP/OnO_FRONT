@@ -1,0 +1,12 @@
+{
+  "name": "equip_effect",
+  "canvas": { "width": 512, "height": 512 },
+  "layerUsage": "transparent-effect-overlay",
+  "loop": false,
+  "durationMs": 840,
+  "animatedWebp": "equip_effect.webp",
+  "spritesheet": { "file": "spritesheet.png", "columns": 4, "rows": 3, "frameWidth": 512, "frameHeight": 512 },
+  "frameCount": 12,
+  "frameDurationMs": 70
+}
+

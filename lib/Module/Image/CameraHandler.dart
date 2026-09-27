@@ -1,13 +1,16 @@
-import 'dart:developer';
-
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:provider/provider.dart';
 
-import '../Text/StandardText.dart';
-import '../Theme/ThemeHandler.dart';
+import '../Motion/TossPageRoute.dart';
+import 'CameraCapture.dart';
+import 'CameraScreen.dart';
 
+export 'CameraCapture.dart';
+
+/// 촬영 화면을 띄우고 찍힌 사진을 돌려주는 것까지만 한다.
+///
+/// 화면 자체는 [CameraScreen] 에 있다. 예전에는 둘이 한 파일에 있었는데,
+/// 화면이 커지면서 핸들러가 어디 있는지 찾기 어려워져 나눴다.
 class CameraHandler {
   CameraController? _controller;
   List<CameraDescription>? _availableCameras;
@@ -20,16 +23,29 @@ class CameraHandler {
   }
 
   // Launch the camera screen and return the captured image
-  Future<XFile?> takePicture(BuildContext context) async {
-    if (_availableCameras == null || _availableCameras!.isEmpty) {
-      log("No cameras available.");
+  //
+  // [multiple] 이면 여러 장 모드로 연다. 담아 두고 계속 찍다가 완료를 눌러야
+  // 나온다. [maxShots] 는 그때 담을 수 있는 최대 장수다.
+  Future<CameraCapture?> takePicture(
+    BuildContext context, {
+    bool multiple = false,
+    int maxShots = 1,
+  }) async {
+    final cameras = _availableCameras;
+    if (cameras == null || cameras.isEmpty) {
+      debugPrint("No cameras available.");
       return null;
     }
 
-    final camera = _availableCameras!.first;
+    // 전후면 전환을 화면 안에서 하므로 목록을 통째로 넘긴다. 어느 것으로
+    // 시작할지는 화면이 정한다.
     return Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => CameraScreen(camera: camera),
+      TossPageRoute(
+        builder: (context) => CameraScreen(
+          cameras: cameras,
+          multiple: multiple,
+          maxShots: maxShots,
+        ),
       ),
     );
   }
@@ -37,195 +53,5 @@ class CameraHandler {
   // Dispose camera controller
   void dispose() {
     _controller?.dispose();
-  }
-}
-
-class CameraScreen extends StatefulWidget {
-  final CameraDescription camera;
-
-  const CameraScreen({super.key, required this.camera});
-
-  @override
-  _CameraScreenState createState() => _CameraScreenState();
-}
-
-class _CameraScreenState extends State<CameraScreen> {
-  late CameraController _controller;
-  Future<void>? _initializeControllerFuture;
-
-  @override
-  void initState() {
-    super.initState();
-
-    // 화면 방향을 세로로 고정
-    SystemChrome.setPreferredOrientations([
-      DeviceOrientation.portraitUp,
-    ]);
-
-    _controller = CameraController(
-      widget.camera,
-      ResolutionPreset.high,
-    );
-    _initializeControllerFuture = _controller.initialize();
-  }
-
-  @override
-  void dispose() {
-    SystemChrome.setPreferredOrientations([
-      DeviceOrientation.portraitUp,
-      DeviceOrientation.portraitDown,
-      DeviceOrientation.landscapeLeft,
-      DeviceOrientation.landscapeRight,
-    ]);
-
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final themeProvider = Provider.of<ThemeHandler>(context);
-    final safeBottom = MediaQuery.of(context).padding.bottom;
-
-    return Scaffold(
-      backgroundColor: Colors.black,
-      body: Stack(
-        children: [
-          FutureBuilder<void>(
-            future: _initializeControllerFuture,
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.done) {
-                return Center(
-                  child: AspectRatio(
-                    aspectRatio: _controller.value.aspectRatio,
-                    child: OverflowBox(
-                      maxHeight: MediaQuery.of(context).size.height,
-                      maxWidth: MediaQuery.of(context).size.width,
-                      child: CameraPreview(_controller),
-                    ),
-                  ),
-                );
-              } else {
-                return const Center(child: CircularProgressIndicator());
-              }
-            },
-          ),
-
-          // 상단 안내 영역
-          SafeArea(
-            bottom: false,
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-              child: Row(
-                children: [
-                  InkWell(
-                    onTap: () => Navigator.of(context).pop(),
-                    borderRadius: BorderRadius.circular(12),
-                    child: Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.88),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Icon(
-                        Icons.close_rounded,
-                        color: Colors.black87,
-                        size: 22,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Container(
-                      padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [
-                            Colors.white.withValues(alpha: 0.93),
-                            themeProvider.primaryColor.withValues(alpha: 0.12),
-                          ],
-                        ),
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.camera_alt_rounded,
-                            color: themeProvider.primaryColor,
-                            size: 18,
-                          ),
-                          const SizedBox(width: 8),
-                          const Expanded(
-                            child: StandardText(
-                              text: '이미지를 촬영해주세요!',
-                              color: Colors.black87,
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-
-          // 하단 중앙 촬영 버튼
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: safeBottom + 24,
-            child: Center(
-              child: InkWell(
-                onTap: () async {
-                  try {
-                    await _initializeControllerFuture;
-                    final image = await _controller.takePicture();
-                    if (!context.mounted) return;
-                    Navigator.pop(context, image);
-                  } catch (e) {
-                    log(e.toString());
-                  }
-                },
-                borderRadius: BorderRadius.circular(42),
-                child: Container(
-                  width: 76,
-                  height: 76,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.95),
-                      width: 3,
-                    ),
-                    color: Colors.black.withValues(alpha: 0.25),
-                  ),
-                  child: Center(
-                    child: Container(
-                      width: 58,
-                      height: 58,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: themeProvider.primaryColor,
-                      ),
-                      child: const Icon(
-                        Icons.camera_alt_rounded,
-                        color: Colors.white,
-                        size: 30,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
   }
 }

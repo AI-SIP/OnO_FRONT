@@ -5,6 +5,7 @@ import '../../Model/Tag/TagModel.dart';
 import '../Image/DisplayImage.dart';
 import '../Text/StandardText.dart';
 import '../Theme/ThemeHandler.dart';
+import '../Design/AppRadius.dart';
 
 class ProblemThumbnailCard extends StatelessWidget {
   final String title;
@@ -16,6 +17,16 @@ class ProblemThumbnailCard extends StatelessWidget {
   final bool isSelected;
   final Widget? trailing;
   final EdgeInsetsGeometry padding;
+  final double imageWidth;
+  final double imageHeight;
+  final double contentGap;
+  final double trailingGap;
+  final double titleFontSize;
+  final int titleMaxLines;
+  final double tagFontSize;
+  final EdgeInsetsGeometry tagPadding;
+  final double tagSpacing;
+  final double tagRunSpacing;
 
   const ProblemThumbnailCard({
     super.key,
@@ -28,6 +39,16 @@ class ProblemThumbnailCard extends StatelessWidget {
     this.isSelected = false,
     this.trailing,
     this.padding = const EdgeInsets.all(12),
+    this.imageWidth = 50,
+    this.imageHeight = 70,
+    this.contentGap = 16,
+    this.trailingGap = 12,
+    this.titleFontSize = 16,
+    this.titleMaxLines = 1,
+    this.tagFontSize = 10,
+    this.tagPadding = const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+    this.tagSpacing = 6,
+    this.tagRunSpacing = 6,
   });
 
   @override
@@ -36,7 +57,7 @@ class ProblemThumbnailCard extends StatelessWidget {
       padding: padding,
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppRadius.medium),
         boxShadow: [
           BoxShadow(
             color: Colors.grey.withValues(alpha: 0.2),
@@ -50,9 +71,9 @@ class ProblemThumbnailCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           _buildImage(),
-          const SizedBox(width: 16),
+          SizedBox(width: contentGap),
           Expanded(child: _buildTextColumn()),
-          const SizedBox(width: 12),
+          SizedBox(width: trailingGap),
           trailing ??
               _buildSolveMeta(
                 solveCount,
@@ -66,11 +87,11 @@ class ProblemThumbnailCard extends StatelessWidget {
 
   Widget _buildImage() {
     return SizedBox(
-      width: 50,
-      height: 70,
+      width: imageWidth,
+      height: imageHeight,
       child: Container(
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(AppRadius.small),
           border: Border.all(
             color: Colors.grey.shade300,
             width: 0.8,
@@ -96,14 +117,14 @@ class ProblemThumbnailCard extends StatelessWidget {
         StandardText(
           text: title,
           color: Colors.black,
-          fontSize: 16,
-          maxLines: 1,
+          fontSize: titleFontSize,
+          maxLines: titleMaxLines,
           overflow: TextOverflow.ellipsis,
         ),
         const SizedBox(height: 8),
         Wrap(
-          spacing: 6,
-          runSpacing: 6,
+          spacing: tagSpacing,
+          runSpacing: tagRunSpacing,
           children: tags.isNotEmpty
               ? tags.map((tag) => _buildTag('#${tag.name}')).toList()
               : [_buildEmptyTag()],
@@ -114,10 +135,10 @@ class ProblemThumbnailCard extends StatelessWidget {
 
   Widget _buildTag(String text) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      padding: tagPadding,
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(AppRadius.small),
         border: Border.all(
           color: themeProvider.primaryColor,
           width: 1,
@@ -125,7 +146,7 @@ class ProblemThumbnailCard extends StatelessWidget {
       ),
       child: StandardText(
         text: text,
-        fontSize: 10,
+        fontSize: tagFontSize,
         color: themeProvider.primaryColor,
       ),
     );
@@ -133,10 +154,10 @@ class ProblemThumbnailCard extends StatelessWidget {
 
   Widget _buildEmptyTag() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      padding: tagPadding,
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(AppRadius.small),
         border: Border.all(
           color: Colors.grey.shade300,
           width: 1,
@@ -144,7 +165,7 @@ class ProblemThumbnailCard extends StatelessWidget {
       ),
       child: StandardText(
         text: '태그 없음',
-        fontSize: 10,
+        fontSize: tagFontSize,
         color: Colors.grey.shade400,
       ),
     );
@@ -174,7 +195,7 @@ class ProblemThumbnailCard extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
               decoration: BoxDecoration(
                 color: Colors.grey.shade50,
-                borderRadius: BorderRadius.circular(7),
+                borderRadius: BorderRadius.circular(AppRadius.small),
                 border: Border.all(color: Colors.grey.shade200),
               ),
               child: Row(
@@ -203,7 +224,7 @@ class ProblemThumbnailCard extends StatelessWidget {
                 color: lastSolvedDateText != null
                     ? themeProvider.primaryColor.withValues(alpha: 0.07)
                     : Colors.grey.shade100,
-                borderRadius: BorderRadius.circular(7),
+                borderRadius: BorderRadius.circular(AppRadius.small),
               ),
               child: lastSolvedDateText != null
                   ? Column(

@@ -6,10 +6,16 @@ import '../../../Model/Problem/ProblemModel.dart';
 import '../../../Module/Image/DisplayImage.dart';
 import '../../../Module/Image/FullScreenImage.dart';
 import '../../../Module/Text/HandWriteText.dart';
+import '../../../Module/Text/mobile_font_size.dart';
 import '../../../Module/Text/StandardText.dart';
 import '../../../Module/Text/UnderlinedText.dart';
-import '../../../Module/Theme/ThemeHandler.dart';
 import '../../../Provider/ProblemsProvider.dart';
+import '../../../Module/Motion/AppHaptic.dart';
+import '../../../Module/Motion/PressableScale.dart';
+import '../../../Module/Motion/TossPageRoute.dart';
+import '../../../Module/Motion/TossDialog.dart';
+import '../../../Module/Design/AppRadius.dart';
+import '../../../Module/Design/AppColors.dart';
 
 Widget buildRepeatSection(
     BuildContext ctx, ProblemModel problem, Color iconColor) {
@@ -38,23 +44,27 @@ Widget buildRepeatSection(
                     '${idx + 1}. 복습 날짜 : ${DateFormat('yyyy년 MM월 dd일').format(solve.createdAt)}',
                 fontSize: 18),
             const SizedBox(height: 10),
-            GestureDetector(
+            PressableScale(
+              haptic: HapticLevel.none,
               onTap: () => Navigator.push(
                   ctx,
-                  MaterialPageRoute(
-                      builder: (_) =>
-                          FullScreenImage(imagePath: solve.imageUrl))),
+                  TossPageRoute(
+                      builder: (_) => FullScreenImage(
+                            imagePaths: list
+                                .map((e) => e.imageUrl)
+                                .toList(growable: false),
+                            initialIndex: idx,
+                          ))),
               onLongPress: () async {
                 final problemsProvider =
                     Provider.of<ProblemsProvider>(ctx, listen: false);
-                final themeProvider =
-                    Provider.of<ThemeHandler>(ctx, listen: false);
-                final should = await showDialog<bool>(
+                final should = await showTossDialog<bool>(
                     context: ctx,
                     builder: (_) => Dialog(
                           backgroundColor: Colors.white,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
+                            borderRadius:
+                                BorderRadius.circular(AppRadius.large),
                           ),
                           child: Container(
                             padding: const EdgeInsets.all(24),
@@ -68,7 +78,8 @@ Widget buildRepeatSection(
                                       padding: const EdgeInsets.all(8),
                                       decoration: BoxDecoration(
                                         color: Colors.red.withOpacity(0.1),
-                                        borderRadius: BorderRadius.circular(8),
+                                        borderRadius: BorderRadius.circular(
+                                            AppRadius.small),
                                       ),
                                       child: const Icon(
                                         Icons.delete_forever,
@@ -77,20 +88,20 @@ Widget buildRepeatSection(
                                       ),
                                     ),
                                     const SizedBox(width: 12),
-                                    const StandardText(
+                                    StandardText(
                                       text: '삭제 확인',
-                                      fontSize: 18,
+                                      fontSize: MobileFontSize.reduced(ctx, 18),
                                       fontWeight: FontWeight.w600,
-                                      color: Colors.black87,
+                                      color: AppColors.textPrimary,
                                     ),
                                   ],
                                 ),
                                 const SizedBox(height: 20),
                                 // 내용
-                                const StandardText(
+                                StandardText(
                                   text: '이 복습 이미지를 정말 삭제하시겠습니까?',
-                                  fontSize: 15,
-                                  color: Colors.black87,
+                                  fontSize: MobileFontSize.reduced(ctx, 15),
+                                  color: AppColors.textPrimary,
                                   textAlign: TextAlign.center,
                                 ),
                                 const SizedBox(height: 24),
@@ -99,32 +110,37 @@ Widget buildRepeatSection(
                                   children: [
                                     Expanded(
                                       child: TextButton(
-                                        onPressed: () => Navigator.pop(ctx, false),
+                                        onPressed: () =>
+                                            Navigator.pop(ctx, false),
                                         style: TextButton.styleFrom(
                                           padding: const EdgeInsets.symmetric(
                                               horizontal: 12, vertical: 8),
                                           backgroundColor: Colors.grey[100],
                                           shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(8),
+                                            borderRadius: BorderRadius.circular(
+                                                AppRadius.small),
                                           ),
                                         ),
-                                        child: const StandardText(
+                                        child: StandardText(
                                           text: '취소',
-                                          fontSize: 14,
-                                          color: Colors.black87,
+                                          fontSize:
+                                              MobileFontSize.reduced(ctx, 14),
+                                          color: AppColors.textPrimary,
                                         ),
                                       ),
                                     ),
                                     const SizedBox(width: 8),
                                     Expanded(
                                       child: TextButton(
-                                        onPressed: () => Navigator.pop(ctx, true),
+                                        onPressed: () =>
+                                            Navigator.pop(ctx, true),
                                         style: TextButton.styleFrom(
                                           padding: const EdgeInsets.symmetric(
                                               horizontal: 12, vertical: 8),
                                           backgroundColor: Colors.red,
                                           shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(8),
+                                            borderRadius: BorderRadius.circular(
+                                                AppRadius.small),
                                           ),
                                         ),
                                         child: const StandardText(
@@ -150,7 +166,7 @@ Widget buildRepeatSection(
                 height: MediaQuery.of(ctx).size.height * 0.5,
                 decoration: BoxDecoration(
                     color: iconColor.withOpacity(0.05),
-                    borderRadius: BorderRadius.circular(10)),
+                    borderRadius: BorderRadius.circular(AppRadius.medium)),
                 child: DisplayImage(
                     imagePath: solve.imageUrl, fit: BoxFit.contain),
               ),

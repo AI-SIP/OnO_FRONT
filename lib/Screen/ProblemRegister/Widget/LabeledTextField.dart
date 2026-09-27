@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../../Module/Text/mobile_font_size.dart';
 import '../../../Module/Text/StandardText.dart';
 import '../../../Module/Theme/ThemeHandler.dart';
+import '../../../Module/Design/AppColors.dart';
+import '../../../Module/Design/AppRadius.dart';
 
 class LabeledTextField extends StatelessWidget {
   final String label;
@@ -10,6 +13,7 @@ class LabeledTextField extends StatelessWidget {
   final IconData? icon;
   final TextEditingController controller;
   final int maxLines;
+  final int? maxLength;
   final bool showClearButton;
   final ValueChanged<String>? onChanged;
 
@@ -20,6 +24,7 @@ class LabeledTextField extends StatelessWidget {
     this.icon,
     required this.controller,
     this.maxLines = 1,
+    this.maxLength,
     this.showClearButton = false,
     this.onChanged,
   });
@@ -36,8 +41,8 @@ class LabeledTextField extends StatelessWidget {
           padding: const EdgeInsets.all(16.0),
           decoration: BoxDecoration(
             color: Colors.grey[50],
-            borderRadius: BorderRadius.circular(12.0),
-            border: Border.all(color: Colors.grey[200]!, width: 1),
+            borderRadius: BorderRadius.circular(AppRadius.medium),
+            border: Border.all(color: AppColors.border),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -48,7 +53,7 @@ class LabeledTextField extends StatelessWidget {
                     padding: const EdgeInsets.all(8.0),
                     decoration: BoxDecoration(
                       color: themeProvider.primaryColor.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(8.0),
+                      borderRadius: BorderRadius.circular(AppRadius.small),
                     ),
                     child: Icon(
                       icon ?? Icons.label,
@@ -59,9 +64,9 @@ class LabeledTextField extends StatelessWidget {
                   const SizedBox(width: 12),
                   StandardText(
                     text: label,
-                    fontSize: 16,
+                    fontSize: MobileFontSize.reduced(context, 16),
                     fontWeight: FontWeight.w500,
-                    color: Colors.black87,
+                    color: AppColors.textPrimary,
                   ),
                   if (showClearButton) ...[
                     const Spacer(),
@@ -90,20 +95,20 @@ class LabeledTextField extends StatelessWidget {
                 controller: controller,
                 onChanged: onChanged,
                 style: standardTextStyle.copyWith(
-                  color: Colors.black87,
-                  fontSize: 15,
+                  color: AppColors.textPrimary,
+                  fontSize: MobileFontSize.reduced(context, 15),
                 ),
                 decoration: InputDecoration(
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppRadius.medium),
                     borderSide: BorderSide(color: Colors.grey[300]!, width: 1),
                   ),
                   enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppRadius.medium),
                     borderSide: BorderSide(color: Colors.grey[300]!, width: 1),
                   ),
                   focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppRadius.medium),
                     borderSide: BorderSide(
                       color: themeProvider.primaryColor.withOpacity(0.5),
                       width: 2,
@@ -120,8 +125,13 @@ class LabeledTextField extends StatelessWidget {
                     horizontal: 16,
                     vertical: maxLines > 1 ? 16 : 14,
                   ),
+                  counterStyle: standardTextStyle.copyWith(
+                    color: Colors.grey[500],
+                    fontSize: 12,
+                  ),
                 ),
                 maxLines: maxLines,
+                maxLength: maxLength,
               ),
             ],
           ),

@@ -2,10 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../Model/StudyCalendar/StudyCalendarModel.dart';
+import '../../../Module/Motion/AnimatedCountText.dart';
+import '../../../Module/Motion/AppHaptic.dart';
+import '../../../Module/Motion/PressableScale.dart';
+import '../../../Module/Motion/Skeleton.dart';
 import '../../../Module/Text/StandardText.dart';
 import '../../../Module/Theme/ThemeHandler.dart';
 import '../../../Service/Api/StudyCalendar/StudyCalendarService.dart';
+import '../../../Util/AppClock.dart';
 import '../LearningCalendarScreen.dart';
+import '../../../Module/Motion/TossPageRoute.dart';
+import '../../../Module/Design/AppColors.dart';
+import '../../../Module/Design/AppRadius.dart';
 
 class StreakCard extends StatefulWidget {
   final ThemeHandler themeProvider;
@@ -51,7 +59,8 @@ class _StreakCardState extends State<StreakCard> {
     final prefs = await SharedPreferences.getInstance();
     if (!mounted) return;
     setState(() {
-      _isCalendarExpanded = prefs.getBool(_calendarExpandedKey) ?? tabletDefault;
+      _isCalendarExpanded =
+          prefs.getBool(_calendarExpandedKey) ?? tabletDefault;
     });
   }
 
@@ -68,12 +77,12 @@ class _StreakCardState extends State<StreakCard> {
   void _openCalendarDetail() {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) => const LearningCalendarScreen()),
+      TossPageRoute(builder: (_) => const LearningCalendarScreen()),
     );
   }
 
   Future<void> _loadCalendarData() async {
-    final now = DateTime.now();
+    final now = AppClock.now();
     try {
       final data = await StudyCalendarService().getStudyCalendar(
         year: now.year,
@@ -113,11 +122,11 @@ class _StreakCardState extends State<StreakCard> {
       ),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(15),
-        border: Border.all(color: Colors.grey[300]!, width: 1),
+        borderRadius: BorderRadius.circular(AppRadius.large),
+        border: Border.all(color: AppColors.border),
         boxShadow: [
           BoxShadow(
-            color: primaryColor.withValues(alpha:0.1),
+            color: primaryColor.withValues(alpha: 0.1),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -133,9 +142,8 @@ class _StreakCardState extends State<StreakCard> {
             _buildStreakBanner(primaryColor, isTablet: isTablet),
             if (!_isCalendarLoading && _calendarData != null) ...[
               SizedBox(height: isTabletLandscape ? 18 : 12),
-              InkWell(
+              PressableScale(
                 onTap: _openCalendarDetail,
-                borderRadius: BorderRadius.circular(8),
                 child: AnimatedSize(
                   duration: const Duration(milliseconds: 220),
                   curve: Curves.easeInOut,
@@ -159,7 +167,10 @@ class _StreakCardState extends State<StreakCard> {
               ),
             ],
             if (_isCalendarExpanded) ...[
-              if (isTabletLandscape) const Spacer() else const SizedBox(height: 12),
+              if (isTabletLandscape)
+                const Spacer()
+              else
+                const SizedBox(height: 12),
               _buildFooterStats(primaryColor, isTablet: isTablet),
             ],
           ],
@@ -173,18 +184,18 @@ class _StreakCardState extends State<StreakCard> {
     Color primaryColor, {
     bool isTablet = false,
   }) {
-    final calendarYear = _calendarData?.year ?? DateTime.now().year;
-    final calendarMonth = _calendarData?.month ?? DateTime.now().month;
+    final calendarYear = _calendarData?.year ?? AppClock.now().year;
+    final calendarMonth = _calendarData?.month ?? AppClock.now().month;
 
-    return InkWell(
+    return PressableScale(
+      haptic: HapticLevel.selection,
       onTap: _toggleCalendarExpanded,
-      borderRadius: BorderRadius.circular(8),
       child: Row(
         children: [
           StandardText(
             text: '$calendarYear년 $calendarMonth월 학습 달력',
             fontSize: isTablet ? 18.0 : 15.0,
-            color: Colors.black87,
+            color: AppColors.textPrimary,
             fontWeight: FontWeight.w600,
           ),
           const Spacer(),
@@ -193,7 +204,7 @@ class _StreakCardState extends State<StreakCard> {
                 ? Icons.keyboard_arrow_up
                 : Icons.keyboard_arrow_down,
             size: isTablet ? 26.0 : 20.0,
-            color: Colors.black38,
+            color: AppColors.textTertiary,
           ),
         ],
       ),
@@ -202,45 +213,47 @@ class _StreakCardState extends State<StreakCard> {
 
   Widget _buildStreakBanner(Color primaryColor, {bool isTablet = false}) {
     if (_isCalendarLoading) {
-      return SizedBox(
+      return SkeletonBox(
         height: isTablet ? 80.0 : 64.0,
-        child: Center(
-          child: CircularProgressIndicator(
-            color: primaryColor,
-            strokeWidth: 2,
-          ),
-        ),
+        borderRadius: 10,
       );
     }
 
     final currentStreak = _calendarData?.currentStreak;
 
-    return InkWell(
+    return PressableScale(
       onTap: _openCalendarDetail,
-      borderRadius: BorderRadius.circular(10),
       child: Container(
         padding: EdgeInsets.symmetric(
           horizontal: isTablet ? 16.0 : 12.0,
           vertical: isTablet ? 12.0 : 8.0,
         ),
         decoration: BoxDecoration(
-          color: primaryColor.withValues(alpha:0.07),
-          borderRadius: BorderRadius.circular(10),
+          color: primaryColor.withValues(alpha: 0.07),
+          borderRadius: BorderRadius.circular(AppRadius.medium),
         ),
         child: Row(
           children: [
             const SizedBox(width: 6),
-            StandardText(
-              text: currentStreak != null ? '$currentStreak' : '--',
-              fontSize: isTablet ? 28.0 : 21.0,
-              fontWeight: FontWeight.w700,
-              color: primaryColor,
-            ),
+            if (currentStreak != null)
+              AnimatedCountText(
+                value: currentStreak,
+                fontSize: isTablet ? 28.0 : 21.0,
+                fontWeight: FontWeight.w700,
+                color: primaryColor,
+              )
+            else
+              StandardText(
+                text: '--',
+                fontSize: isTablet ? 28.0 : 21.0,
+                fontWeight: FontWeight.w700,
+                color: primaryColor,
+              ),
             const SizedBox(width: 4),
             StandardText(
               text: '일 연속 학습중',
               fontSize: isTablet ? 15.0 : 12.0,
-              color: Colors.black54,
+              color: AppColors.textSecondary,
             ),
             const Spacer(),
             Icon(
@@ -274,7 +287,7 @@ class _StreakCardState extends State<StreakCard> {
     final double maxDotSize = isTablet ? 20.0 : 12.0;
     final double dotSize = ((availableWidth / 7) * 0.6).clamp(0.0, maxDotSize);
 
-    final now = DateTime.now();
+    final now = AppClock.now();
     final calendarData = _calendarData!;
     final firstDayOfMonth = DateTime(calendarData.year, calendarData.month, 1);
     final firstWeekdayOffset = firstDayOfMonth.weekday % 7;
@@ -405,19 +418,20 @@ class _StreakCardState extends State<StreakCard> {
             StandardText(
               text: '이번 달 최장 복습: ${bestStreak != null ? '$bestStreak일' : '--'}',
               fontSize: fontSize,
-              color: Colors.black54,
+              color: AppColors.textSecondary,
             ),
           ],
         ),
         Row(
           children: [
             Icon(Icons.calendar_today_outlined,
-                size: iconSize - 1, color: Colors.black38),
+                size: iconSize - 1, color: AppColors.textTertiary),
             const SizedBox(width: 4),
             StandardText(
-              text: '복습 일수: ${thisMonthStudyDays != null ? '$thisMonthStudyDays일' : '--'}',
+              text:
+                  '복습 일수: ${thisMonthStudyDays != null ? '$thisMonthStudyDays일' : '--'}',
               fontSize: fontSize,
-              color: Colors.black54,
+              color: AppColors.textSecondary,
             ),
           ],
         ),

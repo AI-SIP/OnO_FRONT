@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import '../../../Module/Image/DisplayImage.dart';
 import '../../../Module/Image/FullScreenImage.dart';
 import '../../../Module/Theme/ThemeHandler.dart';
+import '../../../Module/Motion/AppHaptic.dart';
+import '../../../Module/Motion/PressableScale.dart';
+import '../../../Module/Motion/TossPageRoute.dart';
+import '../../../Module/Design/AppRadius.dart';
 
 class ImageGallerySection extends StatefulWidget {
   final List<String> imageUrls;
@@ -54,22 +58,25 @@ class _ImageGallerySectionState extends State<ImageGallerySection> {
           height: imageHeight,
           decoration: BoxDecoration(
               color: widget.color.withOpacity(0.05),
-              borderRadius: BorderRadius.circular(10)),
+              borderRadius: BorderRadius.circular(AppRadius.medium)),
           child: PageView.builder(
             controller: _controller,
             itemCount: widget.imageUrls.length,
             onPageChanged: (i) => setState(() => _current = i),
             itemBuilder: (context, i) {
-              return GestureDetector(
+              return PressableScale(
+                haptic: HapticLevel.none,
                 onTap: () => Navigator.push(
                   context,
-                  MaterialPageRoute(
-                    builder: (_) =>
-                        FullScreenImage(imagePath: widget.imageUrls[i]),
+                  TossPageRoute(
+                    builder: (_) => FullScreenImage(
+                      imagePaths: widget.imageUrls,
+                      initialIndex: i,
+                    ),
                   ),
                 ),
                 child: ClipRRect(
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(AppRadius.medium),
                   child: DisplayImage(
                     imagePath: widget.imageUrls[i],
                     fit: BoxFit.contain,
@@ -89,7 +96,8 @@ class _ImageGallerySectionState extends State<ImageGallerySection> {
               separatorBuilder: (_, __) => const SizedBox(width: 8),
               itemBuilder: (context, i) {
                 final isSelected = _current == i;
-                return GestureDetector(
+                return PressableScale(
+                  haptic: HapticLevel.none,
                   onTap: () {
                     _controller.animateToPage(
                       i,
@@ -102,7 +110,7 @@ class _ImageGallerySectionState extends State<ImageGallerySection> {
                     width: screenWidth > 600 ? 88 : 76,
                     padding: const EdgeInsets.all(2),
                     decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(AppRadius.medium),
                       border: Border.all(
                         color: isSelected
                             ? widget.themeProvider.primaryColor
@@ -112,7 +120,7 @@ class _ImageGallerySectionState extends State<ImageGallerySection> {
                       ),
                     ),
                     child: ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(AppRadius.small),
                       child: DisplayImage(
                         imagePath: widget.imageUrls[i],
                         fit: BoxFit.cover,

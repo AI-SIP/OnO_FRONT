@@ -1,4 +1,3 @@
-import 'dart:developer';
 import 'dart:io';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
@@ -18,6 +17,7 @@ import '../../Module/Theme/GridPainter.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import '../../Util/AppErrorReporter.dart';
 import '../../Util/AppSnackBar.dart';
+import '../../Module/Design/AppRadius.dart';
 
 class AnswerShareScreen extends StatefulWidget {
   final ProblemModel problem;
@@ -238,7 +238,7 @@ class _AnswerShareScreenState extends State<AnswerShareScreen> {
         width: mediaQuery.size.width * 0.9,
         decoration: BoxDecoration(
           color: themeProvider.primaryColor.withOpacity(0.1), // 배경색 추가
-          borderRadius: BorderRadius.circular(10), // 모서리 둥글게 설정
+          borderRadius: BorderRadius.circular(AppRadius.medium), // 모서리 둥글게 설정
         ),
         child: AspectRatio(
           aspectRatio: 0.8, // 원하는 비율로 이미지의 높이를 조정
@@ -306,7 +306,7 @@ class _AnswerShareScreenState extends State<AnswerShareScreen> {
           ),
         );
       } else {
-        log('Invalid box size, defaulting to basic share...');
+        debugPrint('Invalid box size, defaulting to basic share...');
         await Share.shareXFiles(
           [xFile],
           text: '내 오답노트야! 어때?\n\nOnO 다운로드: https://ono-prod.seungminki.shop',
@@ -318,8 +318,8 @@ class _AnswerShareScreenState extends State<AnswerShareScreen> {
         Navigator.pop(context);
       }
     } catch (e, stackTrace) {
-      log('이미지 공유 실패: $e');
-      log('스택 트레이스: $stackTrace');
+      debugPrint('이미지 공유 실패: $e');
+      debugPrint('스택 트레이스: $stackTrace');
       await AppErrorReporter.report(
         e,
         stackTrace,

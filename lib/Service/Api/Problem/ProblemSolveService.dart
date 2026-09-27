@@ -1,6 +1,6 @@
-import 'dart:developer';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 import '../../../Config/AppConfig.dart';
@@ -10,12 +10,15 @@ import '../../../Model/Problem/ProblemSolveUpdateDto.dart';
 import '../HttpService.dart';
 
 class ProblemSolveService {
-  final HttpService httpService = HttpService();
+  final HttpService httpService;
+
+  ProblemSolveService({HttpService? httpService})
+      : httpService = httpService ?? HttpService();
   final baseUrl = "${AppConfig.baseUrl}/api/problem-solves";
 
   // 특정 복습 기록 조회
   Future<ProblemSolveModel> getProblemSolve(int problemSolveId) async {
-    log('problem-solve-id: $problemSolveId find start');
+    debugPrint('problem-solve-id: $problemSolveId find start');
     final data = await httpService.sendRequest(
       method: 'GET',
       url: '$baseUrl/$problemSolveId',
@@ -79,22 +82,18 @@ class ProblemSolveService {
     required int problemSolveId,
     required List<File> images,
   }) async {
-    // File 리스트를 MultipartFile 리스트로 변환
-    final List<http.MultipartFile> multipartFiles = [];
-    for (var imageFile in images) {
-      multipartFiles.add(
-        await http.MultipartFile.fromPath(
-          'images', // 서버의 @RequestParam 이름과 동일
-          imageFile.path,
-        ),
-      );
-    }
-
     await httpService.sendRequest(
       method: 'POST',
       url: '$baseUrl/$problemSolveId/images',
       isMultipart: true,
-      files: multipartFiles,
+      // 토큰 갱신 후 재시도할 때 파일을 다시 읽어야 한다.
+      filesBuilder: () async => [
+        for (final imageFile in images)
+          await http.MultipartFile.fromPath(
+            'images', // 서버의 @RequestParam 이름과 동일
+            imageFile.path,
+          ),
+      ],
     );
   }
 
@@ -109,7 +108,7 @@ class ProblemSolveService {
 
   // 복습 기록 삭제
   Future<void> deleteProblemSolve(int problemSolveId) async {
-    log('problem-solve-id: $problemSolveId delete start');
+    debugPrint('problem-solve-id: $problemSolveId delete start');
     await httpService.sendRequest(
       method: 'DELETE',
       url: '$baseUrl/$problemSolveId',

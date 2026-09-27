@@ -1,17 +1,26 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
 
 import '../../Model/Problem/ProblemModel.dart';
 import '../../Model/Tag/TagModel.dart';
 import '../../Module/Problem/ProblemThumbnailCard.dart';
 import '../../Module/Text/StandardText.dart';
+import '../../Module/Theme/ClayIcon.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/ProblemsProvider.dart';
 import '../../Service/Api/Tag/TagService.dart';
 import '../ProblemDetail/ProblemDetailScreen.dart';
+import '../../Module/Motion/AppMotion.dart';
+import '../../Module/Motion/AppearTransition.dart';
+import '../../Module/Motion/AppHaptic.dart';
+import '../../Module/Motion/PressableScale.dart';
+import '../../Module/Motion/Skeleton.dart';
+import '../../Module/Motion/TossPageRoute.dart';
+import '../../Module/Design/AppColors.dart';
+import '../../Module/Design/AppRadius.dart';
+import '../../Util/AppAnalytics.dart';
 
 enum _SearchMode { tag, title }
 
@@ -53,6 +62,7 @@ class _TagProblemSearchScreenState extends State<TagProblemSearchScreen> {
   @override
   void initState() {
     super.initState();
+    AppAnalytics.logScreenView('TagProblemSearchScreen');
     _selectedProblems.addAll(widget.initialSelectedProblems);
     _scrollController.addListener(_onScroll);
     _queryController.addListener(_onQueryChanged);
@@ -155,6 +165,14 @@ class _TagProblemSearchScreenState extends State<TagProblemSearchScreen> {
         cursor: isInitial ? null : _cursor,
         size: 20,
       );
+      if (isInitial) {
+        // 검색어는 보내지 않는다. 무엇으로 찾고 몇 개가 나오는지만 본다.
+        AppAnalytics.logEvent('problem_search', {
+          'mode': 'tag',
+          'result_count': response.content.length,
+          'has_next': response.hasNext,
+        });
+      }
       if (!mounted) return;
       setState(() {
         if (isInitial) {
@@ -207,6 +225,14 @@ class _TagProblemSearchScreenState extends State<TagProblemSearchScreen> {
         cursor: isInitial ? null : _cursor,
         size: 20,
       );
+      if (isInitial) {
+        // 검색어는 보내지 않는다. 무엇으로 찾고 몇 개가 나오는지만 본다.
+        AppAnalytics.logEvent('problem_search', {
+          'mode': 'title',
+          'result_count': response.content.length,
+          'has_next': response.hasNext,
+        });
+      }
       if (!mounted) return;
       setState(() {
         if (isInitial) {
@@ -289,12 +315,13 @@ class _TagProblemSearchScreenState extends State<TagProblemSearchScreen> {
     Widget modeChip({
       required _SearchMode mode,
       required String label,
+      required IconData icon,
     }) {
       final selected = _mode == mode;
       return Expanded(
-        child: InkWell(
+        child: PressableScale(
+          haptic: HapticLevel.selection,
           onTap: () => _switchMode(mode),
-          borderRadius: BorderRadius.circular(10),
           child: Container(
             height: 38,
             alignment: Alignment.center,
@@ -302,18 +329,31 @@ class _TagProblemSearchScreenState extends State<TagProblemSearchScreen> {
               color: selected
                   ? themeProvider.primaryColor.withOpacity(0.08)
                   : Colors.white,
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(AppRadius.medium),
               border: Border.all(
                 color:
                     selected ? themeProvider.primaryColor : Colors.grey[300]!,
                 width: 1,
               ),
             ),
-            child: StandardText(
-              text: label,
-              fontSize: 13,
-              color: selected ? themeProvider.primaryColor : Colors.grey[700]!,
-              fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  icon,
+                  size: 15,
+                  color:
+                      selected ? themeProvider.primaryColor : Colors.grey[600],
+                ),
+                const SizedBox(width: 6),
+                StandardText(
+                  text: label,
+                  fontSize: 13,
+                  color:
+                      selected ? themeProvider.primaryColor : Colors.grey[700]!,
+                  fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+                ),
+              ],
             ),
           ),
         ),
@@ -324,9 +364,17 @@ class _TagProblemSearchScreenState extends State<TagProblemSearchScreen> {
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 8),
       child: Row(
         children: [
-          modeChip(mode: _SearchMode.tag, label: '태그로 검색'),
+          modeChip(
+            mode: _SearchMode.tag,
+            label: '태그로 검색',
+            icon: Icons.sell_outlined,
+          ),
           const SizedBox(width: 8),
-          modeChip(mode: _SearchMode.title, label: '제목으로 검색'),
+          modeChip(
+            mode: _SearchMode.title,
+            label: '제목으로 검색',
+            icon: Icons.search_rounded,
+          ),
         ],
       ),
     );
@@ -342,7 +390,7 @@ class _TagProblemSearchScreenState extends State<TagProblemSearchScreen> {
         onSubmitted: (value) => _searchByTitle(value.trim(), isInitial: true),
         style: baseTextStyle.copyWith(
           fontSize: 14,
-          color: Colors.black87,
+          color: AppColors.textPrimary,
           fontWeight: FontWeight.w500,
         ),
         decoration: InputDecoration(
@@ -357,15 +405,15 @@ class _TagProblemSearchScreenState extends State<TagProblemSearchScreen> {
           contentPadding:
               const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(AppRadius.medium),
             borderSide: BorderSide(color: Colors.grey[300]!, width: 1),
           ),
           enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(AppRadius.medium),
             borderSide: BorderSide(color: Colors.grey[300]!, width: 1),
           ),
           focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(AppRadius.medium),
             borderSide: BorderSide(
               color: themeProvider.primaryColor.withOpacity(0.5),
               width: 1.5,
@@ -379,8 +427,8 @@ class _TagProblemSearchScreenState extends State<TagProblemSearchScreen> {
   Widget _buildTagFilterBar(ThemeHandler themeProvider) {
     if (_isLoadingTags) {
       return const Padding(
-        padding: EdgeInsets.symmetric(vertical: 20),
-        child: CircularProgressIndicator(),
+        padding: EdgeInsets.fromLTRB(20, 10, 20, 8),
+        child: SkeletonBox(height: 34, borderRadius: 17),
       );
     }
 
@@ -392,8 +440,8 @@ class _TagProblemSearchScreenState extends State<TagProblemSearchScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           decoration: BoxDecoration(
             color: Colors.grey[50],
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: Colors.grey[300]!, width: 1),
+            borderRadius: BorderRadius.circular(AppRadius.medium),
+            border: Border.all(color: AppColors.border),
           ),
           child: StandardText(
             text: '생성된 태그가 없습니다.',
@@ -414,9 +462,9 @@ class _TagProblemSearchScreenState extends State<TagProblemSearchScreen> {
             final selected = tag.tagId == _selectedTagId;
             return Padding(
               padding: const EdgeInsets.only(right: 8),
-              child: InkWell(
+              child: PressableScale(
+                haptic: HapticLevel.selection,
                 onTap: () => _loadTagProblems(tag.tagId, isInitial: true),
-                borderRadius: BorderRadius.circular(8),
                 child: Container(
                   padding:
                       const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
@@ -424,7 +472,7 @@ class _TagProblemSearchScreenState extends State<TagProblemSearchScreen> {
                     color: selected
                         ? themeProvider.primaryColor.withOpacity(0.08)
                         : Colors.white,
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(AppRadius.small),
                     border: Border.all(
                       color: selected
                           ? themeProvider.primaryColor
@@ -449,19 +497,28 @@ class _TagProblemSearchScreenState extends State<TagProblemSearchScreen> {
     );
   }
 
+  /// 검색 결과에서 하나씩 들어오게 할 항목 수.
+  static const int _staggeredItemLimit = 8;
+
   Widget _buildProblemList(ThemeHandler themeProvider) {
     if (_isLoadingProblems && _problems.isEmpty) {
-      return const Center(child: CircularProgressIndicator());
+      return const SkeletonList(
+        itemCount: 5,
+        itemHeight: 88,
+        spacing: 12,
+        padding: EdgeInsets.fromLTRB(20, 4, 20, 20),
+      );
     }
 
     if (_problems.isEmpty) {
       if (_mode == _SearchMode.title && _currentQuery.isEmpty) {
-        return const Center(
-          child: StandardText(
-            text: '검색어를 입력해주세요.',
-            fontSize: 15,
-            color: Colors.black,
-          ),
+        // 문구만 덩그러니 있으면 화면이 비어 보인다. 다른 빈 화면처럼
+        // 그림을 두되, 검색 안내라 연필 대신 돋보기를 쓴다. 둘 다 같은 손으로
+        // 빚은 점토 그림이라 나란히 놓아도 결이 맞는다.
+        return _buildEmptyState(
+          '검색어를 입력해주세요.',
+          iconAsset: 'assets/Icon/Search.png',
+          detail: '오답노트 제목의 일부만 넣어도 찾을 수 있어요.',
         );
       }
       final emptyText =
@@ -482,35 +539,53 @@ class _TagProblemSearchScreenState extends State<TagProblemSearchScreen> {
         }
 
         final problem = _problems[index];
-        return _buildProblemTile(problem, themeProvider);
+        // 검색 결과가 툭 나타나지 않고 하나씩 들어온다.
+        return AppearTransition(
+          enabled: index < _staggeredItemLimit,
+          delay: AppMotion.stagger * index,
+          child: _buildProblemTile(problem, themeProvider),
+        );
       },
     );
   }
 
-  Widget _buildEmptyState(String message) {
+  /// [iconAsset] 을 주면 기본 연필 대신 그 그림을 그린다. [detail] 은 그 아래
+  /// 덧붙이는 한 줄이다.
+  Widget _buildEmptyState(String message, {String? iconAsset, String? detail}) {
     return LayoutBuilder(
       builder: (context, constraints) => SingleChildScrollView(
         child: ConstrainedBox(
           constraints: BoxConstraints(minHeight: constraints.maxHeight),
           child: Center(
-            child: Transform.translate(
-              offset: const Offset(0, -28),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  SvgPicture.asset(
-                    'assets/Icon/PencilDetail.svg',
-                    width: 100,
-                    height: 100,
-                  ),
-                  const SizedBox(height: 16),
-                  StandardText(
-                    text: message,
-                    color: Colors.black,
-                    fontSize: 16,
-                  ),
-                ],
+            child: AppearTransition(
+              offset: 12,
+              child: Transform.translate(
+                offset: const Offset(0, -28),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    ClayIcon(
+                      iconAsset ?? 'assets/Icon/PencilDetail.png',
+                      width: 100,
+                      height: 100,
+                    ),
+                    const SizedBox(height: 16),
+                    StandardText(
+                      text: message,
+                      color: AppColors.textPrimary,
+                      fontSize: 16,
+                    ),
+                    if (detail != null) ...[
+                      const SizedBox(height: 6),
+                      StandardText(
+                        text: detail,
+                        color: AppColors.textTertiary,
+                        fontSize: 13,
+                      ),
+                    ],
+                  ],
+                ),
               ),
             ),
           ),
@@ -527,6 +602,7 @@ class _TagProblemSearchScreenState extends State<TagProblemSearchScreen> {
     final isSelected = _isSelected(problem);
     final title =
         problem.reference?.isNotEmpty == true ? problem.reference! : '제목 없음';
+    final isMobile = MediaQuery.of(context).size.width < 600;
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
@@ -536,9 +612,10 @@ class _TagProblemSearchScreenState extends State<TagProblemSearchScreen> {
             _toggleProblemSelection(problem);
             return;
           }
+          AppAnalytics.logEvent('search_result_open', {'mode': _mode.name});
           await Navigator.push(
             context,
-            MaterialPageRoute(
+            TossPageRoute(
               builder: (_) => ProblemDetailScreen(problemId: problem.problemId),
             ),
           );
@@ -550,6 +627,12 @@ class _TagProblemSearchScreenState extends State<TagProblemSearchScreen> {
           solveCount: problem.solveCount,
           lastSolvedAt: problem.lastSolvedAt,
           themeProvider: themeProvider,
+          titleFontSize: isMobile ? 15 : 16,
+          tagFontSize: isMobile ? 9 : 10,
+          tagPadding: EdgeInsets.symmetric(
+            horizontal: isMobile ? 6 : 8,
+            vertical: isMobile ? 2 : 3,
+          ),
           trailing: widget.selectable
               ? Icon(
                   isSelected ? Icons.check_circle : Icons.circle_outlined,
@@ -576,7 +659,7 @@ class _TagProblemSearchScreenState extends State<TagProblemSearchScreen> {
         style: ElevatedButton.styleFrom(
           backgroundColor: themeProvider.primaryColor,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(15),
+            borderRadius: BorderRadius.circular(AppRadius.large),
           ),
           padding: const EdgeInsets.all(10),
         ),

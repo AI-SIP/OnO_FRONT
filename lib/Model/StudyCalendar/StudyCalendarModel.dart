@@ -31,7 +31,8 @@ class StudyCalendarModel {
   DailyStudyRecord? recordFor(int day) {
     try {
       return records.firstWhere(
-        (r) => r.date.day == day && r.date.month == month && r.date.year == year,
+        (r) =>
+            r.date.day == day && r.date.month == month && r.date.year == year,
       );
     } catch (_) {
       return null;
@@ -46,6 +47,7 @@ class DailyStudyRecord {
   final int noteWriteCount;
   final int studyMinutes;
   final List<String> reviewedItems;
+  final String? moodEmojiKey;
 
   const DailyStudyRecord({
     required this.date,
@@ -54,6 +56,7 @@ class DailyStudyRecord {
     required this.noteWriteCount,
     required this.studyMinutes,
     required this.reviewedItems,
+    this.moodEmojiKey,
   });
 
   factory DailyStudyRecord.fromJson(Map<String, dynamic> json) {
@@ -66,6 +69,7 @@ class DailyStudyRecord {
       reviewedItems: (json['reviewedItems'] as List<dynamic>? ?? [])
           .map((e) => e.toString())
           .toList(),
+      moodEmojiKey: json['moodEmojiKey']?.toString(),
     );
   }
 

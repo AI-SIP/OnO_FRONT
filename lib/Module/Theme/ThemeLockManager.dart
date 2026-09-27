@@ -77,6 +77,22 @@ class ThemeLockManager {
     '블랙',
   ];
 
+  /// 격자의 열 수. 열 하나가 능력치 하나다.
+  static const int categoryCount = 4;
+
+  /// 격자의 행 수. 행 하나가 해금 단계다.
+  static const int tierCount = 6;
+
+  /// 테마의 총 개수.
+  static const int themeCount = categoryCount * tierCount;
+
+  /// [rowIndex] 행 [categoryIndex] 열에 놓이는 테마의 인덱스.
+  ///
+  /// [getCategoryIndex] / [getRowIndex] 의 반대 방향이다. 화면이 격자를
+  /// 행이 아니라 **열(능력치) 단위로** 그리기 때문에 필요하다.
+  static int themeIndexAt(int rowIndex, int categoryIndex) =>
+      rowIndex * categoryCount + categoryIndex;
+
   /// 인덱스로 카테고리(열) 구하기
   /// 1, 5, 9, 13, 17, 21 → 0 (출석)
   /// 2, 6, 10, 14, 18, 22 → 1 (노트작성)
@@ -139,6 +155,46 @@ class ThemeLockManager {
     return userLevel >= requiredLevel;
   }
 
+  /// 이 능력치의 지금 레벨.
+  ///
+  /// 유저 정보가 없으면 0 으로 본다. [isThemeUnlocked] 가 유저 정보가 없을 때를
+  /// 잠금으로 보는 것과 같은 기준이다. **해금 판정은 여기서 하지 않는다.**
+  /// 판정은 [isThemeUnlocked] 한 곳에만 있다.
+  static int getCurrentLevel(int categoryIndex, UserInfoModel? userInfo) {
+    if (userInfo == null) return 0;
+
+    switch (categoryIndex) {
+      case 0:
+        return userInfo.attendanceLevel;
+      case 1:
+        return userInfo.noteWriteLevel;
+      case 2:
+        return userInfo.problemPracticeLevel;
+      case 3:
+        return userInfo.notePracticeLevel;
+      default:
+        return 0;
+    }
+  }
+
+  /// 이 테마를 열기까지 남은 레벨. 이미 열려 있으면 0.
+  static int getRemainingLevel(int themeIndex, UserInfoModel? userInfo) {
+    if (isThemeUnlocked(themeIndex, userInfo)) return 0;
+
+    final requiredLevel = getRequiredLevel(getRowIndex(themeIndex));
+    final currentLevel =
+        getCurrentLevel(getCategoryIndex(themeIndex), userInfo);
+    final remaining = requiredLevel - currentLevel;
+
+    return remaining > 0 ? remaining : 0;
+  }
+
+  /// 단계(행)를 짧게 부르는 이름. 격자 왼쪽에 세로로 붙는다.
+  static String getTierLabel(int rowIndex) {
+    if (rowIndex == 0) return '기본';
+    return 'Lv.${getRequiredLevel(rowIndex)}';
+  }
+
   /// 테마 색상 가져오기
   static Color getThemeColor(int themeIndex) {
     return themeColors[themeIndex];
@@ -175,29 +231,12 @@ class ThemeLockManager {
     if (rowIndex == 0) return '잠금 해제됨';
 
     String categoryName = getCategoryName(categoryIndex);
-    int currentLevel = 0;
-
-    if (userInfo != null) {
-      switch (categoryIndex) {
-        case 0:
-          currentLevel = userInfo.attendanceLevel;
-          break;
-        case 1:
-          currentLevel = userInfo.noteWriteLevel;
-          break;
-        case 2:
-          currentLevel = userInfo.problemPracticeLevel;
-          break;
-        case 3:
-          currentLevel = userInfo.notePracticeLevel;
-          break;
-      }
-    }
+    int currentLevel = getCurrentLevel(categoryIndex, userInfo);
 
     if (currentLevel >= requiredLevel) {
       return '잠금 해제됨';
     }
 
-    return '$categoryName Lv.$requiredLevel 필요\n(현재 ${categoryName} 레벨: Lv.$currentLevel)';
+    return '$categoryName Lv.$requiredLevel 필요\n(현재 $categoryName 레벨: Lv.$currentLevel)';
   }
 }

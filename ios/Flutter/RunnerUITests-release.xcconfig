@@ -1,0 +1,4 @@
+// Patrol UI 테스트 번들(RunnerUITests) 설정. CocoaPods 설정에 더해 Flutter 가 만든
+// Generated.xcconfig 를 읽어야 xcode_backend.sh 가 FLUTTER_BUILD_DIR 같은 값을 찾는다.
+#include? "Pods/Target Support Files/Pods-Runner-RunnerUITests/Pods-Runner-RunnerUITests.release.xcconfig"
+#include "Generated.xcconfig"

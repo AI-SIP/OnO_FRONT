@@ -1,0 +1,378 @@
+import 'dart:async';
+import 'dart:convert';
+import 'dart:io';
+import 'dart:typed_data';
+
+import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:ono/Module/Theme/ThemeHandler.dart';
+import 'package:ono/Screen/User/Widget/FrogMotion.dart';
+import 'package:ono/Provider/AchievementProvider.dart';
+import 'package:ono/Provider/CosmeticProvider.dart';
+import 'package:ono/Provider/FoldersProvider.dart';
+import 'package:ono/Provider/MissionProvider.dart';
+import 'package:ono/Provider/PracticeNoteProvider.dart';
+import 'package:ono/Provider/ProblemsProvider.dart';
+import 'package:ono/Provider/ReviewDueProvider.dart';
+import 'package:ono/Provider/ScreenIndexProvider.dart';
+import 'package:ono/Provider/StudyRoomProvider.dart';
+import 'package:ono/Provider/TutorialProvider.dart';
+import 'package:ono/Provider/UserProvider.dart';
+import 'package:ono/Util/AppNavigator.dart';
+import 'package:ono/Util/AppSnackBar.dart';
+import 'package:provider/provider.dart';
+
+import 'cosmetic_catalog_fixture.dart';
+import 'firebase_analytics_stub.dart';
+import 'secure_storage_stub.dart';
+import 'test_setup.dart';
+
+/// 위젯 테스트 파일의 main() 맨 앞에서 한 번 부른다.
+///
+/// ```dart
+/// void main() {
+///   setUpOnoWidgetTest();
+///
+///   testWidgets('로그인 화면이 뜬다', (tester) async {
+///     await pumpOnoWidget(tester, const LoginScreen());
+///     expect(find.text('로그인'), findsOneWidget);
+///   });
+/// }
+/// ```
+///
+/// [setUpOnoTest] 가 하는 일에 더해, 위젯을 그릴 때 플랫폼 채널을 타는 것들을
+/// 가짜로 바꿔 끼운다. FirebaseAnalytics 와 FlutterSecureStorage(ThemeHandler 가
+/// 생성자에서 색상을 읽는다)가 그 대상이다.
+///
+/// 개구리의 반복 모션(대기, 눈 깜빡임)도 여기서 끈다. `pumpAndSettle` 은
+/// 예약된 프레임이 없어질 때까지 펌프하는데 이 둘은 끝나지 않는다. 개구리는
+/// 앱 곳곳에 서 있어서, 켜 둔 채로는 개구리를 그리는 화면의 테스트가 전부
+/// 타임아웃난다. 반복 모션 자체를 확인하는 테스트만 스스로 다시 켠다.
+void setUpOnoWidgetTest() {
+  setUpOnoTest();
+  stubFirebaseAnalytics();
+  stubSecureStorage();
+  setUp(() => FrogMotion.loopsEnabled = false);
+  tearDown(() => FrogMotion.loopsEnabled = true);
+}
+
+/// 화면 크기 프리셋. 반응형이 1차 환경이라 둘 다 돌려 보는 게 좋다.
+class OnoSurface {
+  /// 아이폰 14 세로. 기본값.
+  static const phone = Size(390, 844);
+
+  /// 작은 폰. 글자가 넘치는지 볼 때.
+  static const smallPhone = Size(320, 640);
+
+  /// 아이패드 세로. 600 이상이면 앱이 태블릿 레이아웃으로 분기한다.
+  static const tablet = Size(834, 1194);
+}
+
+/// 앱과 같은 Provider 트리와 MaterialApp 으로 감싸서 [child] 를 띄운다.
+///
+/// Provider 는 넘기지 않으면 진짜 구현을 기본 생성자로 만든다. 그러면 안에서
+/// 진짜 Service 가 만들어져 네트워크를 타므로, **화면이 실제로 읽는 Provider 는
+/// 반드시 넘겨라.** mock 서비스를 물린 진짜 Provider 를 넘기는 쪽이 편하다.
+///
+/// ```dart
+/// final problemService = MockProblemService();
+/// when(() => problemService.getProblemCount())
+///     .thenAnswer((_) async => 3);
+///
+/// await pumpOnoWidget(
+///   tester,
+///   const SomeScreen(),
+///   problemsProvider: ProblemsProvider(problemService: problemService),
+/// );
+/// ```
+Future<void> pumpOnoWidget(
+  WidgetTester tester,
+  Widget child, {
+  ProblemsProvider? problemsProvider,
+  FoldersProvider? foldersProvider,
+  ProblemPracticeProvider? practiceProvider,
+  UserProvider? userProvider,
+  StudyRoomProvider? studyRoomProvider,
+  ReviewDueProvider? reviewDueProvider,
+  MissionProvider? missionProvider,
+  TutorialProvider? tutorialProvider,
+  ScreenIndexProvider? screenIndexProvider,
+  CosmeticProvider? cosmeticProvider,
+  AchievementProvider? achievementProvider,
+  ThemeHandler? themeHandler,
+  Size surfaceSize = OnoSurface.phone,
+  List<NavigatorObserver> navigatorObservers = const [],
+  Map<String, WidgetBuilder> routes = const {},
+
+  /// false 로 두면 pumpAndSettle 대신 pump 한 번만 한다.
+  /// 화면에 끝나지 않는 애니메이션(로딩 인디케이터 등)이 있으면 settle 이 타임아웃난다.
+  bool settle = true,
+}) async {
+  await setSurfaceSize(tester, surfaceSize);
+
+  // 옷장은 서버에서 받아야 채워진다. 안 넘기면 가짜 서버에서 한 번 받아 둔다.
+  // 빈 옷장을 기본으로 두면 개구리가 그려지는 화면 열일곱 군데의 테스트가
+  // 전부 맨 개구리만 보게 된다.
+  final cosmetic = cosmeticProvider ?? await loadedCosmeticProvider();
+
+  await tester.pumpWidget(
+    buildOnoApp(
+      child,
+      problemsProvider: problemsProvider,
+      foldersProvider: foldersProvider,
+      practiceProvider: practiceProvider,
+      userProvider: userProvider,
+      studyRoomProvider: studyRoomProvider,
+      reviewDueProvider: reviewDueProvider,
+      missionProvider: missionProvider,
+      tutorialProvider: tutorialProvider,
+      screenIndexProvider: screenIndexProvider,
+      cosmeticProvider: cosmetic,
+      achievementProvider: achievementProvider,
+      themeHandler: themeHandler,
+      navigatorObservers: navigatorObservers,
+      routes: routes,
+    ),
+  );
+
+  if (settle) {
+    await tester.pumpAndSettle();
+  } else {
+    await tester.pump();
+  }
+}
+
+/// [pumpOnoWidget] 이 띄우는 Provider 트리와 MaterialApp 을 위젯으로만 만든다.
+///
+/// 펌프는 부르는 쪽이 한다. 골든 테스트처럼 다른 틀(alchemist)이 펌프를 맡는
+/// 자리에서 같은 트리를 쓰려고 떼어 냈다. 옷장은 서버에서 받아야 채워지는데
+/// 여기서는 기다릴 수 없으므로 [cosmeticProvider] 는 반드시 넘긴다.
+Widget buildOnoApp(
+  Widget child, {
+  required CosmeticProvider cosmeticProvider,
+  ProblemsProvider? problemsProvider,
+  FoldersProvider? foldersProvider,
+  ProblemPracticeProvider? practiceProvider,
+  UserProvider? userProvider,
+  StudyRoomProvider? studyRoomProvider,
+  ReviewDueProvider? reviewDueProvider,
+  MissionProvider? missionProvider,
+  TutorialProvider? tutorialProvider,
+  ScreenIndexProvider? screenIndexProvider,
+  AchievementProvider? achievementProvider,
+  ThemeHandler? themeHandler,
+  List<NavigatorObserver> navigatorObservers = const [],
+  Map<String, WidgetBuilder> routes = const {},
+}) {
+  final problems = problemsProvider ?? ProblemsProvider();
+  final folders =
+      foldersProvider ?? FoldersProvider(problemsProvider: problems);
+  final practice =
+      practiceProvider ?? ProblemPracticeProvider(problemsProvider: problems);
+
+  return MultiProvider(
+    providers: [
+      ChangeNotifierProvider<ProblemsProvider>.value(value: problems),
+      ChangeNotifierProvider<FoldersProvider>.value(value: folders),
+      ChangeNotifierProvider<ProblemPracticeProvider>.value(value: practice),
+      ChangeNotifierProvider<UserProvider>.value(
+        value: userProvider ?? UserProvider(problems, folders, practice),
+      ),
+      ChangeNotifierProvider<ThemeHandler>.value(
+        value: themeHandler ?? ThemeHandler(),
+      ),
+      ChangeNotifierProvider<ScreenIndexProvider>.value(
+        value: screenIndexProvider ?? ScreenIndexProvider(),
+      ),
+      ChangeNotifierProvider<ReviewDueProvider>.value(
+        value: reviewDueProvider ?? ReviewDueProvider(),
+      ),
+      ChangeNotifierProvider<MissionProvider>.value(
+        value: missionProvider ?? MissionProvider(),
+      ),
+      ChangeNotifierProvider<TutorialProvider>.value(
+        value: tutorialProvider ?? TutorialProvider(),
+      ),
+      ChangeNotifierProvider<StudyRoomProvider>.value(
+        value: studyRoomProvider ?? StudyRoomProvider(),
+      ),
+      ChangeNotifierProvider<CosmeticProvider>.value(
+        value: cosmeticProvider,
+      ),
+      // 훈장은 안 넘기면 빈 채로 둔다. 이 프로바이더는 누가 부르기 전까지
+      // 서버에 묻지 않으므로, 옷장 탭처럼 훈장 줄만 있는 화면은 이것으로
+      // 충분하다.
+      ChangeNotifierProvider<AchievementProvider>.value(
+        value: achievementProvider ?? AchievementProvider(),
+      ),
+    ],
+    child: Builder(
+      builder: (context) {
+        final theme = Provider.of<ThemeHandler>(context);
+        return MaterialApp(
+          // 앱과 같은 키를 물려야 알림이 실제로 뜬다. 알림이 SnackBar 에서
+          // 위에서 내려오는 AppToast 로 바뀌면서 Navigator 의 Overlay 를
+          // 쓰게 되어, navigatorKey 도 함께 물려야 한다.
+          scaffoldMessengerKey: AppSnackBar.messengerKey,
+          navigatorKey: AppNavigator.navigatorKey,
+          navigatorObservers: navigatorObservers,
+          routes: routes,
+          theme: ThemeData(
+            colorScheme: ColorScheme.fromSeed(seedColor: theme.primaryColor),
+            primaryColor: theme.primaryColor,
+            useMaterial3: true,
+            dialogTheme: const DialogThemeData(
+              constraints: BoxConstraints(maxWidth: 420),
+            ),
+          ),
+          debugShowCheckedModeBanner: false,
+          home: child,
+        );
+      },
+    ),
+  );
+}
+
+/// [child] 를 [platform] 기기에서 띄운 것처럼 테마의 플랫폼을 바꿔 감싼다.
+///
+/// 화면이 `Theme.of(context).platform` 으로 갈리는 경우에 쓴다. 앱 테마는 플랫폼을
+/// 따로 정하지 않아서 기기에서는 `defaultTargetPlatform` 과 같다.
+/// `debugDefaultTargetPlatformOverride` 와 달리 테스트가 끝날 때 되돌릴 것이 없다.
+Widget onTargetPlatform(TargetPlatform platform, Widget child) {
+  return Builder(
+    builder: (context) => Theme(
+      data: Theme.of(context).copyWith(platform: platform),
+      child: child,
+    ),
+  );
+}
+
+/// 기기에서 "동작 줄이기"를 켠 것처럼 만든다.
+///
+/// 미션 화면처럼 **끝나지 않는 연출**(받을 수 있는 카드의 펄스, 개구리의
+/// 들썩임)이 있는 화면은 이걸 켜지 않으면 `pumpAndSettle` 이 영영 끝나지
+/// 않는다. 접근성 설정을 흉내 내는 것이라 화면 코드에 테스트용 갈래를 만들지
+/// 않아도 되고, `MediaQuery` 로 내려가므로 `Navigator` 로 띄운 화면에도 적용된다.
+///
+/// `pumpOnoWidget` 보다 먼저 부른다.
+void disableAnimationsForTest(WidgetTester tester) {
+  tester.binding.platformDispatcher.accessibilityFeaturesTestValue =
+      const FakeAccessibilityFeatures(disableAnimations: true);
+  addTearDown(
+    tester.binding.platformDispatcher.clearAccessibilityFeaturesTestValue,
+  );
+}
+
+/// 테스트 화면 크기를 바꾼다. 테스트가 끝나면 자동으로 되돌린다.
+Future<void> setSurfaceSize(WidgetTester tester, Size size) async {
+  tester.view.physicalSize = size;
+  tester.view.devicePixelRatio = 1.0;
+  addTearDown(() {
+    tester.view.resetPhysicalSize();
+    tester.view.resetDevicePixelRatio();
+  });
+}
+
+/// 1x1 투명 PNG. 네트워크 이미지 응답으로 돌려준다.
+final Uint8List kTransparentPngBytes = base64Decode(
+  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==',
+);
+
+/// [body] 안에서 일어나는 모든 네트워크 이미지 요청에 투명 PNG 를 돌려준다.
+///
+/// `Image.network` 와 `CachedNetworkImage` 는 테스트 환경에서 실제 HTTP 를
+/// 시도하고 400 을 받아 `EXCEPTION CAUGHT BY IMAGE RESOURCE SERVICE` 로 테스트를
+/// 깨뜨린다. 이미지를 그리는 화면은 이걸로 감싼다.
+///
+/// ```dart
+/// await withMockedNetworkImages(() async {
+///   await pumpOnoWidget(tester, const SomeScreen());
+/// });
+/// ```
+Future<T> withMockedNetworkImages<T>(Future<T> Function() body) {
+  return HttpOverrides.runZoned(
+    body,
+    createHttpClient: (_) => _FakeImageHttpClient(),
+  );
+}
+
+// ── 아래는 네트워크 이미지 가짜 응답 구현 ────────────────────────────
+
+class _FakeImageHttpClient implements HttpClient {
+  @override
+  bool autoUncompress = true;
+  @override
+  Duration idleTimeout = const Duration(seconds: 15);
+  @override
+  Duration? connectionTimeout;
+  @override
+  int? maxConnectionsPerHost;
+  @override
+  String? userAgent;
+
+  @override
+  Future<HttpClientRequest> getUrl(Uri url) async => _FakeImageRequest();
+
+  @override
+  Future<HttpClientRequest> openUrl(String method, Uri url) async =>
+      _FakeImageRequest();
+
+  @override
+  void close({bool force = false}) {}
+
+  @override
+  noSuchMethod(Invocation invocation) => throw UnsupportedError(
+      '테스트에서 지원하지 않는 HttpClient 호출: ${invocation.memberName}');
+}
+
+class _FakeImageRequest implements HttpClientRequest {
+  @override
+  final HttpHeaders headers = _FakeHttpHeaders();
+
+  @override
+  Future<HttpClientResponse> close() async => _FakeImageResponse();
+
+  @override
+  Future<HttpClientResponse> get done async => _FakeImageResponse();
+
+  @override
+  noSuchMethod(Invocation invocation) => null;
+}
+
+class _FakeImageResponse implements HttpClientResponse {
+  @override
+  int get statusCode => HttpStatus.ok;
+
+  @override
+  int get contentLength => kTransparentPngBytes.length;
+
+  @override
+  HttpClientResponseCompressionState get compressionState =>
+      HttpClientResponseCompressionState.notCompressed;
+
+  @override
+  final HttpHeaders headers = _FakeHttpHeaders();
+
+  @override
+  StreamSubscription<List<int>> listen(
+    void Function(List<int> event)? onData, {
+    Function? onError,
+    void Function()? onDone,
+    bool? cancelOnError,
+  }) {
+    return Stream<List<int>>.value(kTransparentPngBytes).listen(
+      onData,
+      onError: onError,
+      onDone: onDone,
+      cancelOnError: cancelOnError,
+    );
+  }
+
+  @override
+  noSuchMethod(Invocation invocation) => null;
+}
+
+class _FakeHttpHeaders implements HttpHeaders {
+  @override
+  noSuchMethod(Invocation invocation) => null;
+}

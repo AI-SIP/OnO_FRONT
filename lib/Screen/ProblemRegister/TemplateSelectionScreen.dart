@@ -1,9 +1,6 @@
-import 'dart:developer';
-
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:flutter_svg/svg.dart';
 import 'package:ono/Module/Dialog/LoadingDialog.dart';
 import 'package:ono/Module/Image/ColorPicker/ImageCoordinatePickerHandler.dart';
 import 'package:ono/Module/Text/UnderlinedText.dart';
@@ -13,11 +10,14 @@ import '../../Model/Common/LoginStatus.dart';
 import '../../Model/Problem/ProblemModel.dart';
 import '../../Model/Problem/TemplateType.dart';
 import '../../Module/Dialog/SnackBarDialog.dart';
-import '../../Module/Image/ColorPicker/ImageColorPickerHandler.dart';
 import '../../Module/Image/ImagePickerHandler.dart';
 import '../../Module/Text/StandardText.dart';
+import '../../Module/Theme/ClayIcon.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/UserProvider.dart';
+import '../../Module/Motion/AppHaptic.dart';
+import '../../Module/Motion/PressableScale.dart';
+import '../../Module/Design/AppRadius.dart';
 
 class TemplateSelectionScreen extends StatefulWidget {
   const TemplateSelectionScreen({super.key});
@@ -84,7 +84,8 @@ class _TemplateSelectionScreenState extends State<TemplateSelectionScreen> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: List.generate(TemplateType.values.length, (index) {
-        return GestureDetector(
+        return PressableScale(
+          haptic: HapticLevel.selection,
           onTap: () {
             setState(() {
               _selectedIndex = index;
@@ -109,10 +110,10 @@ class _TemplateSelectionScreenState extends State<TemplateSelectionScreen> {
                         : Colors.grey,
                     width: 2,
                   ),
-                  borderRadius: BorderRadius.circular(15.0),
+                  borderRadius: BorderRadius.circular(AppRadius.large),
                 ),
                 child: Center(
-                  child: SvgPicture.asset(
+                  child: ClayIcon(
                     TemplateType.values[index].templateDetailImage,
                     width: 30,
                     height: 30,
@@ -177,10 +178,9 @@ class _TemplateSelectionScreenState extends State<TemplateSelectionScreen> {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        SvgPicture.asset(
+        ClayIcon(
           templateType.templateDetailImage,
           height: screenHeight * 0.18,
-          fit: BoxFit.contain,
         ),
         const SizedBox(height: 20),
         StandardText(
@@ -274,7 +274,7 @@ class _TemplateSelectionScreenState extends State<TemplateSelectionScreen> {
           style: ElevatedButton.styleFrom(
             backgroundColor: themeProvider.primaryColor,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(15),
+              borderRadius: BorderRadius.circular(AppRadius.large),
             ),
             padding: const EdgeInsets.symmetric(vertical: 10), // 버튼 높이
           ),
@@ -298,7 +298,7 @@ class _TemplateSelectionScreenState extends State<TemplateSelectionScreen> {
           color: isActive ? themeProvider.primaryColor : Colors.grey,
           width: 2,
         ),
-        borderRadius: BorderRadius.circular(15),
+        borderRadius: BorderRadius.circular(AppRadius.large),
       ),
       child: StandardText(
         text: text,
@@ -332,11 +332,10 @@ class _TemplateSelectionScreenState extends State<TemplateSelectionScreen> {
 
         if (templateType == TemplateType.clean ||
             templateType == TemplateType.special) {
-          final colorPickerHandler = ImageColorPickerHandler();
           final coordinatePickerHandler = ImageCoordinatePickerHandler();
           coordinatePickerResult = await coordinatePickerHandler
               .showCoordinatePicker(context, pickedFile.path);
-          log(coordinatePickerResult.toString());
+          debugPrint(coordinatePickerResult.toString());
         }
 
         if (templateType == TemplateType.simple ||

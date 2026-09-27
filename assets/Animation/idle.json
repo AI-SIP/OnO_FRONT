@@ -1,0 +1,21 @@
+{
+  "name": "idle",
+  "canvas": { "width": 512, "height": 512 },
+  "layerUsage": "whole-cosmetic-stack-transform",
+  "transformOriginAlignment": [0.0, 0.67],
+  "loop": true,
+  "durationMs": 1520,
+  "animatedWebpPreview": "idle.webp",
+  "spritesheet": { "file": "spritesheet.png", "columns": 4, "rows": 2, "frameWidth": 512, "frameHeight": 512 },
+  "keyframes": [
+    { "t": 0.000, "translateY": 0, "scaleX": 1.000, "scaleY": 1.000 },
+    { "t": 0.143, "translateY": -1, "scaleX": 0.999, "scaleY": 1.002 },
+    { "t": 0.286, "translateY": -2, "scaleX": 0.998, "scaleY": 1.004 },
+    { "t": 0.429, "translateY": -3, "scaleX": 0.997, "scaleY": 1.006 },
+    { "t": 0.571, "translateY": -2, "scaleX": 0.998, "scaleY": 1.004 },
+    { "t": 0.714, "translateY": -1, "scaleX": 0.999, "scaleY": 1.002 },
+    { "t": 0.857, "translateY": 0, "scaleX": 1.000, "scaleY": 1.000 },
+    { "t": 1.000, "translateY": 0, "scaleX": 1.000, "scaleY": 1.000 }
+  ]
+}
+

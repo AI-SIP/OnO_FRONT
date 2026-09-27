@@ -7,7 +7,10 @@ import '../../../Config/AppConfig.dart';
 import '../HttpService.dart';
 
 class FolderService {
-  final HttpService httpService = HttpService();
+  final HttpService httpService;
+
+  FolderService({HttpService? httpService})
+      : httpService = httpService ?? HttpService();
   final baseUrl = "${AppConfig.baseUrl}/api/folders";
 
   Future<FolderModel> fetchFolder(

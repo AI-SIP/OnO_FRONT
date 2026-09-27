@@ -23,8 +23,18 @@ class ErrorMessageMapper {
         return ErrorMessages.invalidAccessToken;
       case 2001:
         return ErrorMessages.fileUploadFailed;
+      case 2002:
+        return ErrorMessages.fileNotFound;
+      case 2003:
+        return ErrorMessages.invalidImageFile;
+      case 2004:
+        return ErrorMessages.fileSizeExceeded;
+      case 2005:
+        return ErrorMessages.uploadRateLimitExceeded;
       case 3001:
         return ErrorMessages.userNotFound;
+      case 3002:
+        return ErrorMessages.invalidUserIdentifier;
       case 4001:
         return ErrorMessages.problemNotFound;
       case 4002:
@@ -33,10 +43,20 @@ class ErrorMessageMapper {
         return ErrorMessages.problemSolveImageAlreadyRegistered;
       case 4004:
         return ErrorMessages.problemAnalysisNotFound;
+      case 4005:
+        return ErrorMessages.analysisRateLimitExceeded;
+      case 4006:
+        return ErrorMessages.problemMemoTooLong;
+      case 4007:
+        return ErrorMessages.problemReferenceTooLong;
+      case 4008:
+        return ErrorMessages.problemFolderIdRequired;
       case 4021:
         return ErrorMessages.problemSolveNotFound;
       case 4022:
         return ErrorMessages.problemSolveUserUnmatched;
+      case 4023:
+        return ErrorMessages.problemSolveInvalidInput;
       case 5001:
         return ErrorMessages.folderNotFound;
       case 5002:
@@ -47,12 +67,24 @@ class ErrorMessageMapper {
         return ErrorMessages.rootFolderCannotRemove;
       case 5005:
         return ErrorMessages.rootFolderCannotUpdate;
+      case 5006:
+        return ErrorMessages.invalidParentFolder;
       case 6001:
         return ErrorMessages.practiceNoteNotFound;
+      case 6002:
+        return ErrorMessages.practiceNoteUserUnmatched;
+      case 6003:
+        return ErrorMessages.practiceNoteWeekDaysRequired;
       case 7001:
         return ErrorMessages.missionTypeNotFound;
       case 7002:
         return ErrorMessages.missionUserNotFound;
+      case 7010:
+        return ErrorMessages.missionProgressNotFound;
+      case 7011:
+        return ErrorMessages.missionNotCompleted;
+      case 7012:
+        return ErrorMessages.missionAlreadyClaimed;
       case 8001:
         return ErrorMessages.fcmTokenNotFound;
       case 8002:
@@ -67,6 +99,64 @@ class ErrorMessageMapper {
         return ErrorMessages.tagUserUnmatched;
       case 9005:
         return ErrorMessages.tagLimitExceeded;
+      case 10001:
+        return ErrorMessages.studyRoomNotFound;
+      case 10002:
+        return ErrorMessages.studyRoomForbidden;
+      case 10003:
+        return ErrorMessages.studyRoomHostOnly;
+      case 10004:
+        return ErrorMessages.studyRoomFull;
+      case 10005:
+        return ErrorMessages.studyRoomLimitExceeded;
+      case 10006:
+        return ErrorMessages.inviteCodeInvalid;
+      case 10007:
+        return ErrorMessages.inviteCodeExpired;
+      case 10008:
+        return ErrorMessages.alreadyStudyRoomMember;
+      case 10009:
+        return ErrorMessages.challengeNotFound;
+      case 10010:
+        return ErrorMessages.challengeLimitExceeded;
+      case 10011:
+        return ErrorMessages.sessionAlreadyActive;
+      case 10012:
+        return ErrorMessages.sessionNotFound;
+      case 10013:
+        return ErrorMessages.sharedProblemNotFound;
+      case 10014:
+        return ErrorMessages.weeklyReportNotFound;
+      case 10015:
+        return ErrorMessages.invalidReactionEmoji;
+      case 10016:
+        return ErrorMessages.invalidStudyRoomRequest;
+      case 10017:
+        return ErrorMessages.sharedProblemCommentNotFound;
+      case 10018:
+        return ErrorMessages.invalidSharedProblemComment;
+      case 10019:
+        return ErrorMessages.sharedProblemCommentForbidden;
+      case 10020:
+        return ErrorMessages.alreadySharedProblem;
+      case 11001:
+        return ErrorMessages.invalidEmojiKey;
+      case 12001:
+        return ErrorMessages.calendarRecordNotFound;
+      case 12002:
+        return ErrorMessages.invalidDateFormat;
+      case 13001:
+        return ErrorMessages.feedbackNotFound;
+      case 14001:
+        return ErrorMessages.noticeNotFound;
+      case 14002:
+        return ErrorMessages.noticeTitleInvalid;
+      case 14003:
+        return ErrorMessages.noticeContentInvalid;
+      case 14004:
+        return ErrorMessages.noticeDurationInvalid;
+      case 14005:
+        return ErrorMessages.noticeTypeRequired;
       default:
         return null;
     }

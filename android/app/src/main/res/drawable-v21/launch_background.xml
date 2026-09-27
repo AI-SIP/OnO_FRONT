@@ -1,12 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Modify this file to customize your launch splash screen -->
+<!--
+    실제로 거의 모든 기기가 보는 것은 이쪽이다. 원래 ?android:colorBackground 라
+    밝은 모드에서는 흰색, 어두운 모드에서는 검은색이 깔렸고 그다음 뜨는 연두색
+    스플래시와 어긋났다. 두 곳 다 같은 색을 쓰도록 고정한다.
+-->
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:drawable="?android:colorBackground" />
-
-    <!-- You can insert your own image assets here -->
-    <!-- <item>
-        <bitmap
-            android:gravity="center"
-            android:src="@mipmap/launch_image" />
-    </item> -->
+    <item android:drawable="@color/launch_background" />
 </layer-list>

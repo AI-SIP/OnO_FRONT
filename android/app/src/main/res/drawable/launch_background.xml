@@ -1,12 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Modify this file to customize your launch splash screen -->
+<!--
+    앱이 뜨는 동안 깔리는 바탕이다. 개구리는 여기서 그리지 않는다.
+    Flutter 스플래시가 개구리를 위에서 떨어뜨리며 자리를 잡게 하는데,
+    같은 그림을 여기서 먼저 그려 두면 그 순간 개구리가 한 번 튀어 보인다.
+-->
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:drawable="@android:color/white" />
-
-    <!-- You can insert your own image assets here -->
-    <!-- <item>
-        <bitmap
-            android:gravity="center"
-            android:src="@mipmap/launch_image" />
-    </item> -->
+    <item android:drawable="@color/launch_background" />
 </layer-list>

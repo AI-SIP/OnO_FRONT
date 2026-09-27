@@ -1,0 +1,62 @@
+{
+  "weekly": {
+    "periodLabel": "이번 주",
+    "startDate": "2026-02-23",
+    "endDate": "2026-03-01",
+    "noteWriteCount": 5,
+    "notePracticeCount": 3,
+    "reviewCount": 12,
+    "averageAccuracy": 0.82,
+    "consecutiveLearningDays": 4,
+    "averageStudyTimeMinutes": 35.5,
+    "trend": [
+      {"label": "월", "reviewCount": 2},
+      {"label": "화", "reviewCount": 4}
+    ],
+    "weakAreas": [
+      {"topic": "이차방정식", "wrongCount": 3}
+    ]
+  },
+  "monthly": {
+    "periodLabel": "이번 달",
+    "startDate": "2026-02-01",
+    "endDate": "2026-02-28",
+    "noteWriteCount": 20,
+    "notePracticeCount": 15,
+    "reviewCount": 48,
+    "averageAccuracy": 0.78,
+    "consecutiveLearningDays": 10,
+    "averageStudyTimeMinutes": 40.2,
+    "trend": [],
+    "weakAreas": []
+  },
+  "total": {
+    "periodLabel": "전체",
+    "startDate": null,
+    "endDate": null,
+    "noteWriteCount": 120,
+    "notePracticeCount": 90,
+    "reviewCount": 300,
+    "averageAccuracy": 0.75,
+    "consecutiveLearningDays": 10,
+    "averageStudyTimeMinutes": 38.0,
+    "trend": [],
+    "weakAreas": []
+  },
+  "weeklyComparison": {
+    "basePeriod": "이번 주",
+    "compareTo": "지난 주",
+    "reviewCountChangeRate": 0.2,
+    "averageAccuracyChangeRate": 0.05,
+    "consecutiveLearningDaysChangeRate": 0.1,
+    "averageStudyTimeChangeRate": -0.03
+  },
+  "monthlyComparison": null,
+  "recommendations": {
+    "strengths": ["꾸준한 복습 습관"],
+    "gaps": ["이차방정식 반복 오답"],
+    "actions": ["이차방정식 문제 5개 더 풀기"],
+    "nextWeekGoal": "복습 15회 달성하기",
+    "confidence": 0.9
+  }
+}

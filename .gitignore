@@ -126,5 +126,18 @@ lib/generated_plugin_registrant.dart
 
 # End of https://www.toptal.com/developers/gitignore/api/flutter
 
+# Claude Code local settings (machine-specific)
+.claude/settings.local.json
+.claude/memory/
+
 # Internal docs
 docs/
+
+# 골든 테스트. 글자를 가린 goldens/ci/ 만 커밋한다. 진짜 폰트로 그린
+# goldens/<os>/ 는 OS 마다 다르게 나오고, failures/ 는 실패했을 때 남는 diff 다.
+test/**/goldens/*
+!test/**/goldens/ci/
+test/**/failures/
+
+# Patrol 이 테스트를 돌릴 때마다 만드는 진입점. 커밋하지 않는다.
+patrol_test/test_bundle.dart

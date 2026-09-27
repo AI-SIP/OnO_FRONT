@@ -1,15 +1,13 @@
-import 'dart:developer';
-
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart';
 import 'package:ono/Model/Common/LoginStatus.dart';
 import 'package:ono/Model/Folder/FolderModel.dart';
 import 'package:ono/Model/Folder/FolderThumbnailModel.dart';
 import 'package:ono/Model/Problem/ProblemRegisterModel.dart';
 import 'package:ono/Module/Dialog/SnackBarDialog.dart';
+import 'package:ono/Module/Theme/ClayIcon.dart';
 import 'package:ono/Module/Theme/NoteIconHandler.dart';
 import 'package:ono/Provider/FoldersProvider.dart';
 import 'package:ono/Provider/ProblemsProvider.dart';
@@ -21,9 +19,17 @@ import '../../Exception/ApiException.dart';
 import '../../Module/Dialog/LoadingDialog.dart';
 import '../../Module/Image/DisplayImage.dart';
 import '../../Module/Problem/ProblemThumbnailCard.dart';
+import '../../Module/Text/mobile_font_size.dart';
 import '../../Module/Text/StandardText.dart';
+import '../../Module/Motion/AppHaptic.dart';
+import '../../Module/Motion/AppMotion.dart';
+import '../../Module/Motion/AppearTransition.dart';
+import '../../Module/Motion/PressableScale.dart';
+import '../../Module/Motion/Skeleton.dart';
+import '../../Module/Motion/TossPageRoute.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import '../../Module/Util/FolderPickerDialog.dart';
+import '../../Provider/MissionProvider.dart';
 import '../../Provider/ReviewDueProvider.dart';
 import '../../Provider/UserProvider.dart';
 import '../../Util/AppErrorReporter.dart';
@@ -31,13 +37,23 @@ import '../ProblemDetail/ProblemDetailScreen.dart';
 import '../ProblemRegister/MultiProblemRegisterScreen.dart';
 import '../ProblemRegister/ProblemRegisterScreen.dart';
 import '../ProblemSearch/TagProblemSearchScreen.dart';
+import '../Mission/TodayMissionCard.dart';
 import '../ReviewDue/ReviewDueScreen.dart';
-import 'UserGuideScreen.dart';
+import '../Tutorial/TutorialTargets.dart';
+import '../../Module/Motion/TossDialog.dart';
+import '../../Module/Design/AppColors.dart';
+import '../../Module/Design/AppRadius.dart';
+import 'package:ono/Util/AppAnalytics.dart';
 
 class DirectoryScreen extends StatefulWidget {
   final int? folderId; // 이 화면이 표시할 폴더 ID
+  final TutorialTargets? tutorialTargets;
 
-  const DirectoryScreen({super.key, this.folderId});
+  const DirectoryScreen({
+    super.key,
+    this.folderId,
+    this.tutorialTargets,
+  });
 
   @override
   _DirectoryScreenState createState() => _DirectoryScreenState();
@@ -45,7 +61,10 @@ class DirectoryScreen extends StatefulWidget {
 
 class _DirectoryScreenState extends State<DirectoryScreen> {
   static const double _dialogMaxWidth = 420;
-  bool modalShown = false;
+  // 공책을 지우면 서버가 안에 든 공책과 오답노트까지 함께 지운다. 하위 공책의
+  // 오답노트 수는 클라이언트가 정확히 모르므로 개수 없이 범위만 알린다.
+  static const String _folderDeleteScopeMessage =
+      '안에 있는 공책과 오답노트도 함께 삭제되며, 되돌릴 수 없습니다.';
   bool _isSelectionMode = false; // 선택 모드 활성화 여부
   final List<int> _selectedFolderIds = []; // 선택된 폴더 ID 리스트
   final List<int> _selectedProblemIds = []; // 선택된 문제 ID 리스트
@@ -75,6 +94,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
   // 새로고침 중복 실행 방지
   bool _isRefreshing = false;
   bool _isQuickCreateOpen = false;
+  bool _isDragTrashVisible = false;
 
   @override
   void initState() {
@@ -86,19 +106,13 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     _scrollController.addListener(_onScroll);
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      final userProvider = Provider.of<UserProvider>(context, listen: false);
-
       // 이 화면의 폴더 데이터 로드
       await _loadFolderData();
 
+      if (!mounted) return;
       if (widget.folderId == null) {
         Provider.of<ReviewDueProvider>(context, listen: false).fetchReviewDue();
-      }
-
-      if (!modalShown && userProvider.isFirstLogin && widget.folderId == null) {
-        modalShown = true;
-        userProvider.changeIsFirstLogin();
-        _showUserGuideModal();
+        Provider.of<MissionProvider>(context, listen: false).fetchMissions();
       }
     });
   }
@@ -182,12 +196,12 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
         _loadMoreProblemsLocal(targetFolderId),
       ]);
     } on UnauthorizedException catch (e) {
-      log('Directory auth failure: $e');
+      debugPrint('Directory auth failure: $e');
       if (mounted) {
         await Provider.of<UserProvider>(context, listen: false).resetUserInfo();
       }
     } on ApiException catch (e) {
-      log('Directory API failure: $e');
+      debugPrint('Directory API failure: $e');
       if (mounted) {
         SnackBarDialog.showSnackBar(
           context: context,
@@ -196,7 +210,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
         );
       }
     } catch (e) {
-      log('Directory load failure: $e');
+      debugPrint('Directory load failure: $e');
       if (mounted) {
         SnackBarDialog.showSnackBar(
           context: context,
@@ -239,7 +253,8 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
         final cachedHasNext =
             foldersProvider.getSubfolderHasNextForFolder(folderId);
 
-        log('✅ Using cached subfolders for folder $folderId (${cachedSubfolders.length} items)');
+        debugPrint(
+            '✅ Using cached subfolders for folder $folderId (${cachedSubfolders.length} items)');
         if (mounted) {
           setState(() {
             _localSubfolders.addAll(cachedSubfolders);
@@ -255,7 +270,8 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
       }
 
       // 캐시에 없는 경우 서버 요청
-      log('📡 Fetching subfolders from server for folder $folderId (cursor: $_subfolderNextCursor)');
+      debugPrint(
+          '📡 Fetching subfolders from server for folder $folderId (cursor: $_subfolderNextCursor)');
 
       // 서버에서 직접 조회
       final response = await foldersProvider.folderService.getSubfoldersV2(
@@ -279,12 +295,14 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
           _localSubfolders, // 누적된 전체 데이터 저장
           response.nextCursor,
           response.hasNext);
-      log('💾 Saved total ${_localSubfolders.length} subfolders to cache for folder $folderId');
+      debugPrint(
+          '💾 Saved total ${_localSubfolders.length} subfolders to cache for folder $folderId');
 
-      log('Loaded ${response.content.length} subfolders from server for folder $folderId');
+      debugPrint(
+          'Loaded ${response.content.length} subfolders from server for folder $folderId');
     } catch (e, stackTrace) {
-      log('Error loading subfolders locally: $e');
-      log(stackTrace.toString());
+      debugPrint('Error loading subfolders locally: $e');
+      debugPrint(stackTrace.toString());
       await AppErrorReporter.report(
         e,
         stackTrace,
@@ -307,19 +325,6 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     }
   }
 
-  // Provider 캐시에 하위 폴더 저장 (첫 페이지용)
-  Future<void> _saveSubfoldersToProviderCache(
-    int folderId,
-    List<FolderThumbnailModel> subfolders,
-    int? nextCursor,
-    bool hasNext,
-  ) async {
-    final foldersProvider =
-        Provider.of<FoldersProvider>(context, listen: false);
-    foldersProvider.saveSubfoldersToCache(
-        folderId, subfolders, nextCursor, hasNext);
-  }
-
   // Provider 캐시에 하위 폴더 누적 저장 (모든 페이지용)
   Future<void> _appendSubfoldersToProviderCache(
     int folderId,
@@ -327,23 +332,11 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     int? nextCursor,
     bool hasNext,
   ) async {
+    if (!mounted) return;
     final foldersProvider =
         Provider.of<FoldersProvider>(context, listen: false);
     foldersProvider.saveSubfoldersToCache(
         folderId, allSubfolders, nextCursor, hasNext);
-  }
-
-  // Provider 캐시에 문제 저장 (첫 페이지용)
-  Future<void> _saveProblemsToProviderCache(
-    int folderId,
-    List<ProblemModel> problems,
-    int? nextCursor,
-    bool hasNext,
-  ) async {
-    final foldersProvider =
-        Provider.of<FoldersProvider>(context, listen: false);
-    foldersProvider.saveProblemsToCache(
-        folderId, problems, nextCursor, hasNext);
   }
 
   // Provider 캐시에 문제 누적 저장 (모든 페이지용)
@@ -353,6 +346,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     int? nextCursor,
     bool hasNext,
   ) async {
+    if (!mounted) return;
     final foldersProvider =
         Provider.of<FoldersProvider>(context, listen: false);
     foldersProvider.saveProblemsToCache(
@@ -383,7 +377,8 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
         final cachedHasNext =
             foldersProvider.getProblemHasNextForFolder(folderId);
 
-        log('✅ Using cached problems for folder $folderId (${cachedProblems.length} items)');
+        debugPrint(
+            '✅ Using cached problems for folder $folderId (${cachedProblems.length} items)');
         if (mounted) {
           setState(() {
             _localProblems.addAll(cachedProblems);
@@ -399,7 +394,8 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
       }
 
       // 캐시에 없는 경우 서버 요청
-      log('📡 Fetching problems from server for folder $folderId (cursor: $_problemNextCursor)');
+      debugPrint(
+          '📡 Fetching problems from server for folder $folderId (cursor: $_problemNextCursor)');
       final problemsProvider =
           Provider.of<ProblemsProvider>(context, listen: false);
       final response = await problemsProvider.loadMoreFolderProblemsV2(
@@ -423,12 +419,14 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
           _localProblems, // 누적된 전체 데이터 저장
           response.nextCursor,
           response.hasNext);
-      log('💾 Saved total ${_localProblems.length} problems to cache for folder $folderId');
+      debugPrint(
+          '💾 Saved total ${_localProblems.length} problems to cache for folder $folderId');
 
-      log('Loaded ${response.content.length} problems from server for folder $folderId');
+      debugPrint(
+          'Loaded ${response.content.length} problems from server for folder $folderId');
     } catch (e, stackTrace) {
-      log('Error loading problems locally: $e');
-      log(stackTrace.toString());
+      debugPrint('Error loading problems locally: $e');
+      debugPrint(stackTrace.toString());
       await AppErrorReporter.report(
         e,
         stackTrace,
@@ -451,39 +449,6 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     }
   }
 
-  void _showUserGuideModal() async {
-    FirebaseAnalytics.instance.logEvent(name: 'show_user_guide_modal');
-
-    final openTime = DateTime.now();
-    await showModalBottomSheet(
-      context: context,
-      isScrollControlled: true, // 스크롤 가능 모달 설정
-      backgroundColor: Colors.transparent, // 투명 배경
-      isDismissible: false,
-      builder: (BuildContext context) {
-        return TapRegion(
-            onTapOutside: (_) {
-              // Workaround for iPadOS 26.1 bug: https://github.com/flutter/flutter/issues/177992
-              if (DateTime.now().difference(openTime) <
-                  const Duration(milliseconds: 500)) {
-                return;
-              }
-              if (Navigator.canPop(context)) {
-                Navigator.pop(context);
-              }
-            },
-            child: FractionallySizedBox(
-              heightFactor: 0.6, // 화면 높이의 50% 차지
-              child: UserGuideScreen(
-                onFinish: () {
-                  Navigator.of(context).pop(); // 모달 닫기
-                },
-              ),
-            ));
-      },
-    );
-  }
-
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -499,21 +464,22 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
           !_isRefreshing) {
         _lastRootFolderRefreshTimestamp =
             foldersProvider.rootFolderRefreshTimestamp;
-        log('🔄 Root folder refresh detected in didChangeDependencies! (timestamp: $_lastRootFolderRefreshTimestamp)');
+        debugPrint(
+            '🔄 Root folder refresh detected in didChangeDependencies! (timestamp: $_lastRootFolderRefreshTimestamp)');
 
         _isRefreshing = true;
 
         // 비동기 작업 실행
         WidgetsBinding.instance.addPostFrameCallback((_) async {
           if (mounted) {
-            log('🔄 Starting _loadFolderData...');
+            debugPrint('🔄 Starting _loadFolderData...');
             await _loadFolderData();
             if (mounted) {
               setState(() {
                 _isRefreshing = false;
               });
             }
-            log('✅ Root folder refresh completed!');
+            debugPrint('✅ Root folder refresh completed!');
           }
         });
       }
@@ -527,30 +493,58 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     final foldersProvider = Provider.of<FoldersProvider>(context);
     final reviewDueProvider = Provider.of<ReviewDueProvider>(context);
 
+    final body = !(authService.isLoggedIn == LoginStatus.login)
+        ? _buildLoginPrompt(themeProvider)
+        : RefreshIndicator(
+            onRefresh: () async {
+              // 홈에서 당겨 새로고침하면 미션도 같이 다시 읽는다. 프로바이더는
+              // await 전에 잡아 둔다. 새로고침이 끝난 뒤의 context 는 이미
+              // 사라졌을 수 있다.
+              final missionProvider = widget.folderId == null
+                  ? Provider.of<MissionProvider>(context, listen: false)
+                  : null;
+              await fetchFoldersAndProblems();
+              await missionProvider?.fetchMissions();
+            },
+            // 좌우 여백은 목록 안쪽에 둔다. 목록은 제 영역 밖을 잘라내서,
+            // 바깥에 여백을 두면 폴더에 끌어다 댈 때 커지는 강조 테두리의
+            // 양옆이 잘렸다.
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: _pagePadding),
+              child: Column(
+                children: [
+                  Padding(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: _pagePadding),
+                    child: Column(
+                      children: [
+                        // 미션 조회에 실패했거나 미션이 없으면 카드가 스스로
+                        // 숨는다.
+                        if (widget.folderId == null) const TodayMissionCard(),
+                        if (widget.folderId == null &&
+                            reviewDueProvider.dueCount > 0)
+                          _buildReviewDueBadge(
+                              context, reviewDueProvider, themeProvider),
+                      ],
+                    ),
+                  ),
+                  _buildFolderAndProblemGrid(themeProvider),
+                ],
+              ),
+            ),
+          );
+
     return PopScope(
         canPop: true,
         child: Scaffold(
           backgroundColor: Colors.white,
           appBar: _buildAppBar(themeProvider, foldersProvider), // 상단 AppBar 추가
-          body: !(authService.isLoggedIn == LoginStatus.login)
-              ? _buildLoginPrompt(themeProvider)
-              : RefreshIndicator(
-                  onRefresh: () async {
-                    await fetchFoldersAndProblems();
-                  },
-                  child: Padding(
-                    padding: const EdgeInsets.all(20),
-                    child: Column(
-                      children: [
-                        if (widget.folderId == null &&
-                            reviewDueProvider.dueCount > 0)
-                          _buildReviewDueBadge(
-                              context, reviewDueProvider, themeProvider),
-                        _buildFolderAndProblemGrid(themeProvider),
-                      ],
-                    ),
-                  ),
-                ),
+          body: Stack(
+            children: [
+              body,
+              if (_isDragTrashVisible) _buildDragTrashTarget(),
+            ],
+          ),
           floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
           floatingActionButton:
               (authService.isLoggedIn == LoginStatus.login && !_isSelectionMode)
@@ -589,7 +583,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                   onPressed: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(
+                      TossPageRoute(
                         builder: (_) => const TagProblemSearchScreen(),
                       ),
                     );
@@ -620,13 +614,20 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     );
   }
 
+  /// 목록에서 하나씩 들어오게 할 항목 수. 첫 화면에 보이는 만큼이다.
+  static const int _staggeredItemLimit = 8;
+
+  /// 홈 화면 둘레의 여백.
+  static const double _pagePadding = 20;
+
   Widget _buildQuickCreateFab(ThemeHandler themeProvider) {
     return Column(
+      key: widget.tutorialTargets?.directoryCreateFabKey,
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
         AnimatedSwitcher(
-          duration: const Duration(milliseconds: 180),
+          duration: AppMotion.fast,
           child: _isQuickCreateOpen
               ? Padding(
                   padding: const EdgeInsets.only(bottom: 12),
@@ -670,9 +671,9 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
               : const SizedBox.shrink(),
         ),
         AnimatedSwitcher(
-          duration: const Duration(milliseconds: 220),
-          switchInCurve: Curves.easeOutCubic,
-          switchOutCurve: Curves.easeInCubic,
+          duration: AppMotion.normal,
+          switchInCurve: AppMotion.enter,
+          switchOutCurve: AppMotion.exit,
           layoutBuilder: (currentChild, previousChildren) {
             return Stack(
               alignment: Alignment.centerRight,
@@ -744,42 +745,38 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     required ThemeHandler themeProvider,
     required Future<void> Function() onTap,
   }) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.grey[200]!, width: 1),
-            boxShadow: const [
-              BoxShadow(
-                color: Color(0x1A000000),
-                blurRadius: 10,
-                offset: Offset(0, 4),
-              ),
-            ],
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                icon,
-                size: 18,
-                color: themeProvider.primaryColor,
-              ),
-              const SizedBox(width: 8),
-              StandardText(
-                text: label,
-                fontSize: 14,
-                color: Colors.black87,
-                fontWeight: FontWeight.w600,
-              ),
-            ],
-          ),
+    return PressableScale(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(AppRadius.medium),
+          border: Border.all(color: AppColors.border),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x1A000000),
+              blurRadius: 10,
+              offset: Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
+              size: 18,
+              color: themeProvider.primaryColor,
+            ),
+            const SizedBox(width: 8),
+            StandardText(
+              text: label,
+              fontSize: 14,
+              color: AppColors.textPrimary,
+              fontWeight: FontWeight.w600,
+            ),
+          ],
         ),
       ),
     );
@@ -795,6 +792,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
             Provider.of<FoldersProvider>(context, listen: false);
         await foldersProvider.createFolder(folderName,
             parentFolderId: _currentFolder?.folderId);
+        FirebaseAnalytics.instance.logEvent(name: 'folder_created');
 
         // 현재 화면 새로고침
         await _loadFolderData();
@@ -804,7 +802,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
 
   Future<void> _navigateToSingleProblemRegisterInCurrentFolder() async {
     FirebaseAnalytics.instance
-        .logEvent(name: 'directory_create_single_problem_note_click');
+        .logEvent(name: 'directory_create_single_note_click');
 
     if (_currentFolder == null) return;
 
@@ -816,7 +814,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
 
     final result = await Navigator.push<bool>(
       context,
-      MaterialPageRoute(
+      TossPageRoute(
         builder: (context) => ProblemRegisterScreen(
           problemModel: null,
           isEditMode: false,
@@ -833,7 +831,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
 
   Future<void> _navigateToMultiProblemRegisterInCurrentFolder() async {
     FirebaseAnalytics.instance
-        .logEvent(name: 'directory_create_multi_problem_note_click');
+        .logEvent(name: 'directory_create_multi_note_click');
 
     if (_currentFolder == null) return;
 
@@ -845,7 +843,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
 
     final result = await Navigator.push<bool>(
       context,
-      MaterialPageRoute(
+      TossPageRoute(
         builder: (context) => MultiProblemRegisterScreen(
           initialFolderId: folderId,
         ),
@@ -865,6 +863,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
 
     final openTime = DateTime.now();
     showModalBottomSheet(
+      sheetAnimationStyle: AppMotion.sheetStyle,
       backgroundColor: Colors.transparent,
       context: context,
       isDismissible: false,
@@ -912,7 +911,8 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
                             color: themeProvider.primaryColor.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius:
+                                BorderRadius.circular(AppRadius.small),
                           ),
                           child: Icon(
                             Icons.edit_note,
@@ -923,9 +923,9 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                         const SizedBox(width: 12),
                         StandardText(
                           text: '공책 편집하기',
-                          fontSize: 20,
+                          fontSize: MobileFontSize.reduced(context, 20),
                           fontWeight: FontWeight.w600,
-                          color: Colors.black87,
+                          color: AppColors.textPrimary,
                         ),
                       ],
                     ),
@@ -960,12 +960,12 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                     _buildActionItem(
                       icon: Icons.drive_file_move_outline,
                       iconColor: themeProvider.primaryColor,
-                      title: '공책 위치 변경하기',
+                      title: '공책 정리하기',
                       onTap: () {
                         Navigator.pop(context);
                         FirebaseAnalytics.instance.logEvent(
                             name: 'directory_path_change_button_click');
-                        _showMoveFolderDialog(foldersProvider);
+                        _showMoveFolderDialog();
                       },
                     ),
                     const SizedBox(height: 8),
@@ -1001,15 +1001,14 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     Color? titleColor,
     required VoidCallback onTap,
   }) {
-    return InkWell(
+    return PressableScale(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
           color: Colors.grey[50],
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.grey[200]!, width: 1),
+          borderRadius: BorderRadius.circular(AppRadius.medium),
+          border: Border.all(color: AppColors.border),
         ),
         child: Row(
           children: [
@@ -1029,7 +1028,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
             Expanded(
               child: StandardText(
                 text: title,
-                fontSize: 16,
+                fontSize: MobileFontSize.reduced(context, 16),
                 color: titleColor ?? Colors.black87,
               ),
             ),
@@ -1060,7 +1059,9 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     final foldersProvider =
         Provider.of<FoldersProvider>(context, listen: false);
     try {
-      await foldersProvider.updateFolder(newName, _currentFolder!.folderId, null);
+      await foldersProvider.updateFolder(
+          newName, _currentFolder!.folderId, null);
+      AppAnalytics.logEvent('folder_renamed');
     } on ApiException catch (e) {
       if (mounted) {
         SnackBarDialog.showSnackBar(
@@ -1077,129 +1078,17 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
   }
 
   // 폴더 이동 다이얼로그 출력
-  Future<void> _showMoveFolderDialog(FoldersProvider foldersProvider) async {
-    // 루트 폴더인지 확인
-    if (_currentFolder?.parentFolder?.folderId == null) {
-      _showCannotMoveRootFolderDialog();
-      return;
-    }
-
-    final int? selectedFolderId = await showDialog<int?>(
+  Future<void> _showMoveFolderDialog() async {
+    await showTossDialog<int?>(
       context: context,
-      builder: (context) => const FolderPickerDialog(),
+      builder: (context) => FolderPickerDialog(
+        initialFolderId: _currentFolder?.folderId,
+        isManagementMode: true,
+      ),
     );
 
-    if (selectedFolderId != null) {
-      final oldParentFolderId = _currentFolder?.parentFolder?.folderId;
-      final currentFolderId = _currentFolder!.folderId;
-
-      // 부모 폴더 변경
-      await foldersProvider.updateFolder(
-        _currentFolder!.folderName,
-        currentFolderId,
-        selectedFolderId,
-      );
-
-      // 기존 부모/새 부모/현재 폴더 캐시를 모두 무효화해 즉시 반영
-      if (oldParentFolderId != null) {
-        await foldersProvider.refreshFolder(oldParentFolderId);
-      }
-      await foldersProvider.refreshFolder(selectedFolderId);
-      await foldersProvider.refreshFolder(currentFolderId);
-
-      if (!mounted) return;
-
-      // 현재 화면 데이터 다시 로드
-      await _loadFolderData();
-
-      SnackBarDialog.showSnackBar(
-        context: context,
-        message: '공책 위치가 변경되었습니다.',
-        backgroundColor: Theme.of(context).primaryColor,
-      );
-    }
-  }
-
-  // 루트 폴더 위치 변경 시 경고 다이얼로그 출력
-  Future<void> _showCannotMoveRootFolderDialog() async {
-    final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
-
-    await showDialog(
-      context: context,
-      builder: (context) {
-        return _buildPhoneWidthDialog(
-          Dialog(
-            backgroundColor: Colors.white,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Container(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // 헤더
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: Colors.orange.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: const Icon(
-                          Icons.warning,
-                          color: Colors.orange,
-                          size: 20,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      const StandardText(
-                        text: '공책 위치 변경 불가',
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.black87,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-                  // 내용
-                  const StandardText(
-                    text: '책장의 위치를 변경할 수 없습니다.',
-                    fontSize: 15,
-                    color: Colors.black87,
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 24),
-                  // 버튼
-                  SizedBox(
-                    width: double.infinity,
-                    child: TextButton(
-                      onPressed: () {
-                        Navigator.pop(context);
-                      },
-                      style: TextButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 8),
-                        backgroundColor: themeProvider.primaryColor,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
-                      child: const StandardText(
-                        text: '확인',
-                        fontSize: 14,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
-    );
+    if (!mounted) return;
+    await _loadFolderData();
   }
 
   Widget _buildLoginPrompt(ThemeHandler themeProvider) {
@@ -1223,7 +1112,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     final standardTextStyle = const StandardText(text: '').getTextStyle();
     final openTime = DateTime.now();
 
-    await showDialog(
+    await showTossDialog(
       context: context,
       barrierDismissible: false,
       builder: (dialogContext) {
@@ -1242,7 +1131,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
             Dialog(
               backgroundColor: Colors.white,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(AppRadius.large),
               ),
               child: Container(
                 padding: const EdgeInsets.all(24),
@@ -1257,7 +1146,8 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
                             color: themeProvider.primaryColor.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius:
+                                BorderRadius.circular(AppRadius.small),
                           ),
                           child: Icon(
                             Icons.edit,
@@ -1268,9 +1158,9 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                         const SizedBox(width: 12),
                         StandardText(
                           text: dialogTitle,
-                          fontSize: 20,
+                          fontSize: MobileFontSize.reduced(dialogContext, 20),
                           fontWeight: FontWeight.w600,
-                          color: Colors.black87,
+                          color: AppColors.textPrimary,
                         ),
                       ],
                     ),
@@ -1280,29 +1170,29 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                       controller: folderNameController,
                       autofocus: true,
                       style: standardTextStyle.copyWith(
-                        color: Colors.black87,
-                        fontSize: 15,
+                        color: AppColors.textPrimary,
+                        fontSize: MobileFontSize.reduced(dialogContext, 15),
                       ),
                       decoration: InputDecoration(
                         hintText: '공책 이름을 입력하세요',
                         hintStyle: standardTextStyle.copyWith(
                           color: Colors.grey[400],
-                          fontSize: 14,
+                          fontSize: MobileFontSize.reduced(dialogContext, 14),
                         ),
                         fillColor: Colors.grey[50],
                         filled: true,
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(AppRadius.medium),
                           borderSide:
                               BorderSide(color: Colors.grey[300]!, width: 1),
                         ),
                         enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(AppRadius.medium),
                           borderSide:
                               BorderSide(color: Colors.grey[300]!, width: 1),
                         ),
                         focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(AppRadius.medium),
                           borderSide: BorderSide(
                             color: themeProvider.primaryColor.withOpacity(0.5),
                             width: 2,
@@ -1328,13 +1218,14 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                                 horizontal: 12, vertical: 8),
                             backgroundColor: Colors.grey[100],
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
+                              borderRadius:
+                                  BorderRadius.circular(AppRadius.small),
                             ),
                           ),
-                          child: const StandardText(
+                          child: StandardText(
                             text: '취소',
-                            fontSize: 14,
-                            color: Colors.black87,
+                            fontSize: MobileFontSize.reduced(dialogContext, 14),
+                            color: AppColors.textPrimary,
                           ),
                         ),
                         const SizedBox(width: 8),
@@ -1350,7 +1241,8 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                                 horizontal: 12, vertical: 8),
                             backgroundColor: themeProvider.primaryColor,
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
+                              borderRadius:
+                                  BorderRadius.circular(AppRadius.small),
                             ),
                           ),
                           child: const StandardText(
@@ -1373,97 +1265,118 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
 
   Widget _buildFolderAndProblemGrid(ThemeHandler themeProvider) {
     return Expanded(
+        key: widget.tutorialTargets?.folderListKey,
         child: Column(
-      children: [
-        Expanded(
-          child: Builder(
-            builder: (context) {
-              // 로컬 상태 사용 (Provider와 독립적)
-              var currentSubfolders = _localSubfolders;
-              var currentProblems = _localProblems;
-              final isLoadingMore = _isLoadingSubfolders || _isLoadingProblems;
+          children: [
+            Expanded(
+              child: Builder(
+                builder: (context) {
+                  // 로컬 상태 사용 (Provider와 독립적)
+                  var currentSubfolders = _localSubfolders;
+                  var currentProblems = _localProblems;
+                  final isLoadingMore =
+                      _isLoadingSubfolders || _isLoadingProblems;
 
-              // 초기 로딩 중이면 로딩 인디케이터 표시
-              if (_isInitialLoading) {
-                return const Center(
-                  child: CircularProgressIndicator(),
-                );
-              }
+                  // 초기 로딩 중이면 로딩 인디케이터 표시
+                  if (_isInitialLoading) {
+                    return const SkeletonList(
+                      itemCount: 5,
+                      itemHeight: 96,
+                      spacing: 16,
+                      padding: EdgeInsets.symmetric(
+                          horizontal: _pagePadding + 16, vertical: 8),
+                    );
+                  }
 
-              // 로딩 완료 후에도 데이터가 없으면 빈 화면 표시
-              if (currentSubfolders.isEmpty && currentProblems.isEmpty) {
-                return SingleChildScrollView(
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  child: SizedBox(
-                    height: MediaQuery.of(context).size.height * 0.7,
-                    child: Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          SvgPicture.asset(
-                            'assets/Icon/GreenNote.svg', // 아이콘 경로
-                            width: 100, // 적절한 크기 설정
-                            height: 100,
+                  // 로딩 완료 후에도 데이터가 없으면 빈 화면 표시
+                  if (currentSubfolders.isEmpty && currentProblems.isEmpty) {
+                    return SingleChildScrollView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      padding:
+                          const EdgeInsets.symmetric(horizontal: _pagePadding),
+                      child: SizedBox(
+                        height: MediaQuery.of(context).size.height * 0.7,
+                        child: Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const ClayIcon(
+                                'assets/Icon/GreenNote.png', // 아이콘 경로
+                                width: 100, // 적절한 크기 설정
+                                height: 100,
+                              ),
+                              const SizedBox(height: 40), // 아이콘과 텍스트 사이 간격
+                              const StandardText(
+                                text: '작성한 오답노트를\n공책에 저장해 관리하세요!',
+                                fontSize: 16,
+                                color: Colors.black,
+                                textAlign: TextAlign.center,
+                              ),
+                              const SizedBox(
+                                height: 30,
+                              ),
+                              StandardText(
+                                text: '우측 하단 + 추가 버튼으로 새 오답노트를 작성할 수 있어요.',
+                                fontSize: 13,
+                                color: Colors.grey[600]!,
+                                textAlign: TextAlign.center,
+                              ),
+                            ],
                           ),
-                          const SizedBox(height: 40), // 아이콘과 텍스트 사이 간격
-                          const StandardText(
-                            text: '작성한 오답노트를\n공책에 저장해 관리하세요!',
-                            fontSize: 16,
-                            color: Colors.black,
-                            textAlign: TextAlign.center,
-                          ),
-                          const SizedBox(
-                            height: 30,
-                          ),
-                          StandardText(
-                            text: '우측 하단 + 추가 버튼으로 새 오답노트를 작성할 수 있어요.',
-                            fontSize: 13,
-                            color: Colors.grey[600]!,
-                            textAlign: TextAlign.center,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                );
-              }
-
-              final totalItems =
-                  currentSubfolders.length + currentProblems.length;
-              final hasMore = _subfolderHasNext || _problemHasNext;
-
-              return ListView.builder(
-                controller: _scrollController,
-                physics: const AlwaysScrollableScrollPhysics(),
-                itemCount: totalItems + (isLoadingMore || hasMore ? 1 : 0),
-                itemBuilder: (context, index) {
-                  // 로딩 인디케이터 표시
-                  if (index == totalItems) {
-                    return const Padding(
-                      padding: EdgeInsets.all(16.0),
-                      child: Center(
-                        child: CircularProgressIndicator(),
+                        ),
                       ),
                     );
                   }
 
-                  if (index < currentSubfolders.length) {
-                    var subfolder = currentSubfolders[index];
-                    return _buildFolderTile(subfolder, themeProvider, index);
-                  } else {
-                    var problem =
-                        currentProblems[index - currentSubfolders.length];
-                    return _buildProblemTile(problem, themeProvider);
-                  }
+                  final totalItems =
+                      currentSubfolders.length + currentProblems.length;
+                  final hasMore = _subfolderHasNext || _problemHasNext;
+
+                  return ListView.builder(
+                    controller: _scrollController,
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: _pagePadding),
+                    itemCount: totalItems + (isLoadingMore || hasMore ? 1 : 0),
+                    itemBuilder: (context, index) {
+                      // 로딩 인디케이터 표시
+                      if (index == totalItems) {
+                        return const Padding(
+                          padding: EdgeInsets.all(16.0),
+                          child: Center(
+                            child: CircularProgressIndicator(),
+                          ),
+                        );
+                      }
+
+                      final tile = index < currentSubfolders.length
+                          ? _buildFolderTile(
+                              currentSubfolders[index], themeProvider, index)
+                          : _buildProblemTile(
+                              currentProblems[index - currentSubfolders.length],
+                              themeProvider);
+
+                      // 첫 화면에 보이는 것만 하나씩 들어온다. 아래쪽까지
+                      // 지연을 매기면 스크롤해 내려갔을 때 항목이 뒤늦게
+                      // 나타나서 오히려 거슬린다.
+                      return AppearTransition(
+                        enabled: index < _staggeredItemLimit,
+                        delay: AppMotion.stagger * index,
+                        child: tile,
+                      );
+                    },
+                  );
                 },
-              );
-            },
-          ),
-        ),
-        if (_isSelectionMode) _buildBottomActionButtons(themeProvider),
-      ],
-    ));
+              ),
+            ),
+            if (_isSelectionMode)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: _pagePadding),
+                child: _buildBottomActionButtons(themeProvider),
+              ),
+          ],
+        ));
   }
 
   Widget _buildFolderTile(
@@ -1471,7 +1384,8 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     final isSelected = _selectedFolderIds.contains(folder.folderId);
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0), // 아이템 간 간격 추가
-      child: GestureDetector(
+      child: PressableScale(
+        haptic: HapticLevel.none,
         onTap: () {
           // 폴더를 클릭했을 때 해당 폴더로 이동
           FirebaseAnalytics.instance
@@ -1490,7 +1404,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
           } else {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) {
+              TossPageRoute(builder: (context) {
                 return DirectoryScreen(folderId: folder.folderId);
               }),
             ).then((_) {
@@ -1501,15 +1415,14 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
         },
         child: LongPressDraggable<FolderThumbnailModel>(
           data: folder,
-          feedback: Material(
-            child: SizedBox(
-              width: 50,
-              height: 70,
-              child: SvgPicture.asset(
-                NoteIconHandler.getNoteIcon(index), // 헬퍼 클래스로 아이콘 설정
-                width: 50,
-                height: 50,
-              ),
+          dragAnchorStrategy: pointerDragAnchorStrategy,
+          feedback: _DragFeedbackCard(
+            color: themeProvider.primaryColor,
+            title: folder.folderName.isNotEmpty ? folder.folderName : '제목 없음',
+            leading: ClayIcon(
+              NoteIconHandler.getNoteIcon(index),
+              width: 34,
+              height: 34,
             ),
           ),
           childWhenDragging: Opacity(
@@ -1518,6 +1431,22 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
           ),
           onDragStarted: () {
             HapticFeedback.lightImpact();
+            setState(() {
+              _isDragTrashVisible = true;
+              _isQuickCreateOpen = false;
+            });
+          },
+          onDragEnd: (_) {
+            if (!mounted) return;
+            setState(() {
+              _isDragTrashVisible = false;
+            });
+          },
+          onDraggableCanceled: (_, __) {
+            if (!mounted) return;
+            setState(() {
+              _isDragTrashVisible = false;
+            });
           },
           child: DragTarget<ProblemModel>(
             onAcceptWithDetails: (details) async {
@@ -1528,14 +1457,25 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
               );
               await _moveProblemToFolder(problemRegisterModel);
             },
-            builder: (context, candidateData, rejectedData) {
+            builder: (context, problemCandidates, rejectedData) {
               return DragTarget<FolderThumbnailModel>(
+                onWillAcceptWithDetails: (details) =>
+                    details.data.folderId != folder.folderId,
                 onAcceptWithDetails: (details) async {
                   // 폴더를 드롭하면 자식 폴더로 이동
                   await _moveFolderToNewParent(details.data, folder.folderId);
                 },
-                builder: (context, candidateData, rejectedData) {
-                  return _folderTileContent(folder, themeProvider, index);
+                builder: (context, folderCandidates, rejectedData) {
+                  // 끌고 온 것이 이 공책 위에 있으면 받을 수 있다는 것을
+                  // 보여 준다. 그동안 candidateData 를 받아만 두고 쓰지
+                  // 않아서 어디에 놓아야 할지 알 수 없었다.
+                  final isHovering = problemCandidates.isNotEmpty ||
+                      folderCandidates.isNotEmpty;
+                  return _DropHighlight(
+                    active: isHovering,
+                    color: themeProvider.primaryColor,
+                    child: _folderTileContent(folder, themeProvider, index),
+                  );
                 },
               );
             },
@@ -1548,11 +1488,15 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
   Widget _folderTileContent(
       FolderThumbnailModel folder, ThemeHandler themeProvider, int index) {
     final isSelected = _selectedFolderIds.contains(folder.folderId);
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 600;
+    final titleFontSize = isMobile ? 15.0 : 16.0;
+    final horizontalGap = screenWidth < 360 ? 12.0 : 20.0;
     return Container(
       padding: const EdgeInsets.all(12.0),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppRadius.medium),
         boxShadow: [
           BoxShadow(
             color: Colors.grey.withOpacity(0.2),
@@ -1570,17 +1514,17 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
             height: 70,
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(8.0),
+              borderRadius: BorderRadius.circular(AppRadius.small),
             ),
             child: isSelected
                 ? const Icon(Icons.check, color: Colors.red)
-                : SvgPicture.asset(
+                : ClayIcon(
                     NoteIconHandler.getNoteIcon(index),
                     width: 30,
                     height: 30,
                   ),
           ),
-          const SizedBox(width: 20),
+          SizedBox(width: horizontalGap),
           Expanded(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -1591,9 +1535,63 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                       ? folder.folderName
                       : '제목 없음',
                   color: Colors.black,
-                  fontSize: 18,
+                  fontSize: titleFontSize,
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
                 ),
               ],
+            ),
+          ),
+          const SizedBox(width: 10),
+          _buildFolderProblemCountBadge(folder, themeProvider),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFolderProblemCountBadge(
+    FolderThumbnailModel folder,
+    ThemeHandler themeProvider,
+  ) {
+    final countText = NumberFormat.compact(locale: 'ko_KR')
+        .format(folder.problemCount < 0 ? 0 : folder.problemCount);
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isSmallPhone = screenWidth < 360;
+
+    return Container(
+      constraints: BoxConstraints(
+        minWidth: isSmallPhone ? 48 : 58,
+        maxWidth: isSmallPhone ? 64 : 84,
+      ),
+      padding: EdgeInsets.symmetric(
+        horizontal: isSmallPhone ? 8 : 10,
+        vertical: 7,
+      ),
+      decoration: BoxDecoration(
+        color: themeProvider.primaryColor.withValues(alpha: 0.09),
+        borderRadius: BorderRadius.circular(AppRadius.small),
+        border: Border.all(
+          color: themeProvider.primaryColor.withValues(alpha: 0.18),
+        ),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            Icons.description_outlined,
+            size: isSmallPhone ? 13 : 14,
+            color: themeProvider.primaryColor,
+          ),
+          const SizedBox(width: 4),
+          Flexible(
+            child: StandardText(
+              text: '$countText개',
+              fontSize: isSmallPhone ? 11 : 12,
+              color: themeProvider.primaryColor,
+              fontWeight: FontWeight.w700,
+              overflow: TextOverflow.ellipsis,
+              maxLines: 1,
             ),
           ),
         ],
@@ -1611,7 +1609,8 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0), // 아이템 간 간격 추가
-      child: GestureDetector(
+      child: PressableScale(
+        haptic: HapticLevel.none,
         onTap: () {
           FirebaseAnalytics.instance
               .logEvent(name: 'move_to_problem', parameters: {
@@ -1632,16 +1631,17 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
         },
         child: LongPressDraggable<ProblemModel>(
           data: problem,
-          feedback: Material(
-            child: SizedBox(
-              width: 50,
-              height: 70,
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(8.0),
-                child: DisplayImage(
-                  imagePath: imageUrl,
-                  fit: BoxFit.cover,
-                ),
+          dragAnchorStrategy: pointerDragAnchorStrategy,
+          feedback: _DragFeedbackCard(
+            color: themeProvider.primaryColor,
+            title: problem.reference?.isNotEmpty == true
+                ? problem.reference!
+                : '제목 없음',
+            leading: ClipRRect(
+              borderRadius: BorderRadius.circular(AppRadius.small),
+              child: DisplayImage(
+                imagePath: imageUrl,
+                fit: BoxFit.cover,
               ),
             ),
           ),
@@ -1651,6 +1651,22 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
           ),
           onDragStarted: () {
             HapticFeedback.lightImpact();
+            setState(() {
+              _isDragTrashVisible = true;
+              _isQuickCreateOpen = false;
+            });
+          },
+          onDragEnd: (_) {
+            if (!mounted) return;
+            setState(() {
+              _isDragTrashVisible = false;
+            });
+          },
+          onDraggableCanceled: (_, __) {
+            if (!mounted) return;
+            setState(() {
+              _isDragTrashVisible = false;
+            });
           },
           child: DragTarget<FolderThumbnailModel>(
             onAcceptWithDetails: (details) async {
@@ -1661,7 +1677,11 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
               await _moveProblemToFolder(problemRegisterModel);
             },
             builder: (context, candidateData, rejectedData) {
-              return _problemTileContent(problem, themeProvider);
+              return _DropHighlight(
+                active: candidateData.isNotEmpty,
+                color: themeProvider.primaryColor,
+                child: _problemTileContent(problem, themeProvider),
+              );
             },
           ),
         ),
@@ -1677,6 +1697,8 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
         : null;
     final title =
         problem.reference?.isNotEmpty == true ? problem.reference! : '제목 없음';
+    final isMobile = MediaQuery.of(context).size.width < 600;
+    final titleFontSize = isMobile ? 15.0 : 16.0;
 
     return ProblemThumbnailCard(
       title: title,
@@ -1686,6 +1708,76 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
       lastSolvedAt: problem.lastSolvedAt,
       themeProvider: themeProvider,
       isSelected: isSelected,
+      titleFontSize: titleFontSize,
+      tagFontSize: isMobile ? 9 : 10,
+      tagPadding: EdgeInsets.symmetric(
+        horizontal: isMobile ? 6 : 8,
+        vertical: isMobile ? 2 : 3,
+      ),
+    );
+  }
+
+  Widget _buildDragTrashTarget() {
+    final bottomPadding = MediaQuery.of(context).padding.bottom + 18;
+
+    return Positioned(
+      left: 0,
+      right: 0,
+      bottom: bottomPadding,
+      child: Center(
+        child: DragTarget<Object>(
+          onWillAcceptWithDetails: (details) =>
+              details.data is FolderThumbnailModel ||
+              details.data is ProblemModel,
+          onAcceptWithDetails: (details) async {
+            HapticFeedback.mediumImpact();
+            await _deleteDraggedItem(details.data);
+          },
+          builder: (context, candidateData, rejectedData) {
+            final isActive = candidateData.isNotEmpty;
+            final backgroundColor = isActive ? Colors.red : Colors.grey[700]!;
+
+            return AnimatedScale(
+              duration: const Duration(milliseconds: 140),
+              scale: isActive ? 1.12 : 1,
+              curve: Curves.easeOutBack,
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 160),
+                width: 72,
+                height: 72,
+                decoration: BoxDecoration(
+                  color: backgroundColor,
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: isActive
+                          ? const Color(0x55F44336)
+                          : const Color(0x33000000),
+                      blurRadius: isActive ? 20 : 14,
+                      offset: const Offset(0, 6),
+                    ),
+                  ],
+                ),
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 140),
+                  transitionBuilder: (child, animation) {
+                    return FadeTransition(
+                      opacity: animation,
+                      child: ScaleTransition(scale: animation, child: child),
+                    );
+                  },
+                  child: Icon(
+                    isActive ? Icons.delete_forever : Icons.delete_outline,
+                    key: ValueKey(isActive),
+                    color: Colors.white,
+                    size: isActive ? 34 : 32,
+                  ),
+                ),
+              ),
+            );
+          },
+        ),
+      ),
     );
   }
 
@@ -1702,7 +1794,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
               style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.grey[300],
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(AppRadius.small),
                   ),
                   padding: const EdgeInsets.symmetric(vertical: 8)),
               onPressed: () {
@@ -1726,7 +1818,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
               style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.red,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(AppRadius.small),
                   ),
                   padding: const EdgeInsets.symmetric(vertical: 8)),
               onPressed: selectedCount > 0 ? _confirmDelete : () {},
@@ -1761,82 +1853,162 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
   }
 
   Future<void> _deleteSelectedItems() async {
-    if (_currentFolder == null) return;
+    final folderIds = List<int>.from(_selectedFolderIds);
+    final problemIds = List<int>.from(_selectedProblemIds);
+    final deleted = await _deleteItems(
+      folderIds: folderIds,
+      problemIds: problemIds,
+      loadingMessage: '폴더 정리 중...',
+      successMessage: '선택된 항목이 삭제되었습니다!',
+      errorMessage: '항목 삭제 중 오류가 발생했습니다.',
+    );
+
+    if (!deleted || !mounted) return;
+
+    AppAnalytics.logEvent('items_deleted', {
+      'folder_count': folderIds.length,
+      'problem_count': problemIds.length,
+      'source': 'selection',
+    });
+
+    setState(() {
+      _isSelectionMode = false;
+      _selectedFolderIds.clear();
+      _selectedProblemIds.clear();
+    });
+  }
+
+  Future<void> _deleteDraggedItem(Object item) async {
+    final folderIds = <int>[];
+    final problemIds = <int>[];
+    String successMessage;
+    String confirmMessage;
+
+    if (item is FolderThumbnailModel) {
+      folderIds.add(item.folderId);
+      successMessage = '${item.folderName} 공책을 삭제했어요.';
+      final folderName = item.folderName.isNotEmpty ? item.folderName : '제목 없음';
+      confirmMessage = '\'$folderName\' 공책을 정말 삭제하시겠습니까?\n'
+          '$_folderDeleteScopeMessage';
+    } else if (item is ProblemModel) {
+      problemIds.add(item.problemId);
+      successMessage = '오답노트를 삭제했어요.';
+      confirmMessage = '정말로 이 오답노트를 삭제하시겠습니까?';
+    } else {
+      return;
+    }
+
+    // 휴지통에 놓자마자 지우면 잘못 놓았을 때 되돌릴 수 없다. 공책은 안에 든
+    // 공책과 오답노트까지 서버에서 지워지므로 한 번 더 묻는다. (#233)
+    final confirmed = await _showDeleteConfirmDialog(message: confirmMessage);
+    if (!confirmed || !mounted) return;
+
+    final deleted = await _deleteItems(
+      folderIds: folderIds,
+      problemIds: problemIds,
+      loadingMessage: '삭제 중...',
+      successMessage: successMessage,
+      errorMessage: '삭제 중 오류가 발생했습니다.',
+    );
+    if (!deleted) return;
+    AppAnalytics.logEvent('items_deleted', {
+      'folder_count': folderIds.length,
+      'problem_count': problemIds.length,
+      'source': 'drag',
+    });
+  }
+
+  Future<bool> _deleteItems({
+    required List<int> folderIds,
+    required List<int> problemIds,
+    required String loadingMessage,
+    required String successMessage,
+    required String errorMessage,
+  }) async {
+    if (_currentFolder == null || (folderIds.isEmpty && problemIds.isEmpty)) {
+      return false;
+    }
 
     final foldersProvider =
         Provider.of<FoldersProvider>(context, listen: false);
     final problemsProvider =
         Provider.of<ProblemsProvider>(context, listen: false);
 
-    // 로딩 다이얼로그 표시
-    LoadingDialog.show(context, '폴더 정리 중...');
+    LoadingDialog.show(context, loadingMessage);
 
     try {
-      // 선택된 폴더 삭제
-      if (_selectedFolderIds.isNotEmpty) {
-        await foldersProvider.deleteFolders(_selectedFolderIds);
+      if (folderIds.isNotEmpty) {
+        await foldersProvider.deleteFolders(folderIds);
       }
 
-      // 선택된 문제 삭제
-      if (_selectedProblemIds.isNotEmpty) {
-        await problemsProvider.deleteProblems(_selectedProblemIds);
+      if (problemIds.isNotEmpty) {
+        await problemsProvider.deleteProblems(problemIds);
       }
 
-      // 캐시 삭제 후 새로고침 (삭제된 항목이 화면에서 사라지도록)
       await foldersProvider.refreshFolder(_currentFolder!.folderId);
 
-      // 로딩 다이얼로그 닫기
       if (mounted) {
         LoadingDialog.hide(context);
       }
+
+      if (!mounted) return true;
 
       setState(() {
-        _isSelectionMode = false;
-        _selectedFolderIds.clear();
-        _selectedProblemIds.clear();
+        _localSubfolders.removeWhere(
+          (folder) => folderIds.contains(folder.folderId),
+        );
+        _localProblems.removeWhere(
+          (problem) => problemIds.contains(problem.problemId),
+        );
       });
 
-      // 삭제 성공 메시지
-      if (mounted) {
-        SnackBarDialog.showSnackBar(
-          context: context,
-          message: '선택된 항목이 삭제되었습니다!',
-          backgroundColor: Theme.of(context).primaryColor,
-        );
-      }
+      SnackBarDialog.showSnackBar(
+        context: context,
+        message: successMessage,
+        backgroundColor: Theme.of(context).primaryColor,
+      );
 
-      // 데이터 다시 로드
       await _loadFolderData();
+      return true;
     } catch (e) {
-      // 로딩 다이얼로그 닫기
       if (mounted) {
         LoadingDialog.hide(context);
       }
 
-      // 에러 처리
-      log('Error deleting items: $e');
+      debugPrint('Error deleting items: $e');
       if (mounted) {
         SnackBarDialog.showSnackBar(
           context: context,
-          message: '항목 삭제 중 오류가 발생했습니다.',
+          message: errorMessage,
           backgroundColor: Colors.red,
         );
       }
+      return false;
     }
   }
 
-  void _confirmDelete() {
-    final theme = Provider.of<ThemeHandler>(context, listen: false);
+  Future<void> _confirmDelete() async {
+    final message = _selectedFolderIds.isNotEmpty
+        ? '선택한 항목을 정말 삭제하시겠습니까?\n$_folderDeleteScopeMessage'
+        : '선택한 항목을 정말 삭제하시겠습니까?';
+    final confirmed = await _showDeleteConfirmDialog(message: message);
+    if (!confirmed || !mounted) return;
+    _deleteSelectedItems();
+  }
 
-    showDialog(
+  /// 삭제 확인 창. 삭제를 누르면 true, 취소하거나 바깥을 눌러 닫으면 false.
+  Future<bool> _showDeleteConfirmDialog({required String message}) async {
+    final confirmed = await showTossDialog<bool>(
       context: context,
       builder: (dialogContext) => _buildPhoneWidthDialog(
         Dialog(
           backgroundColor: Colors.white,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(AppRadius.large),
           ),
-          child: Container(
+          // 가로 화면이나 글자를 크게 키운 작은 폰에서 높이가 모자라면 잘리지
+          // 않고 스크롤되게 한다.
+          child: SingleChildScrollView(
             padding: const EdgeInsets.all(24),
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -1848,7 +2020,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
                         color: Colors.red.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(AppRadius.small),
                       ),
                       child: const Icon(
                         Icons.delete_forever,
@@ -1861,16 +2033,16 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                       text: '삭제 확인',
                       fontSize: 18,
                       fontWeight: FontWeight.w600,
-                      color: Colors.black87,
+                      color: AppColors.textPrimary,
                     ),
                   ],
                 ),
                 const SizedBox(height: 20),
                 // 내용
-                const StandardText(
-                  text: '선택한 항목을 정말 삭제하시겠습니까?',
+                StandardText(
+                  text: message,
                   fontSize: 15,
-                  color: Colors.black87,
+                  color: AppColors.textPrimary,
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 24),
@@ -1879,35 +2051,34 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                   children: [
                     Expanded(
                       child: TextButton(
-                        onPressed: () => Navigator.of(dialogContext).pop(),
+                        onPressed: () => Navigator.of(dialogContext).pop(false),
                         style: TextButton.styleFrom(
                           padding: const EdgeInsets.symmetric(
                               horizontal: 12, vertical: 8),
                           backgroundColor: Colors.grey[100],
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius:
+                                BorderRadius.circular(AppRadius.small),
                           ),
                         ),
                         child: const StandardText(
                           text: '취소',
                           fontSize: 14,
-                          color: Colors.black87,
+                          color: AppColors.textPrimary,
                         ),
                       ),
                     ),
                     const SizedBox(width: 8),
                     Expanded(
                       child: TextButton(
-                        onPressed: () {
-                          Navigator.of(dialogContext).pop();
-                          _deleteSelectedItems();
-                        },
+                        onPressed: () => Navigator.of(dialogContext).pop(true),
                         style: TextButton.styleFrom(
                           padding: const EdgeInsets.symmetric(
                               horizontal: 12, vertical: 8),
                           backgroundColor: Colors.red,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius:
+                                BorderRadius.circular(AppRadius.small),
                           ),
                         ),
                         child: const StandardText(
@@ -1925,6 +2096,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
         ),
       ),
     );
+    return confirmed == true;
   }
 
   Widget _buildPhoneWidthDialog(Widget child) {
@@ -1943,14 +2115,9 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
   Future<void> _moveFolderToNewParent(
       FolderThumbnailModel folder, int? newParentFolderId) async {
     if (newParentFolderId == null) {
-      log('New parent folder ID is null.');
+      debugPrint('New parent folder ID is null.');
       return;
     }
-
-    FirebaseAnalytics.instance.logEvent(name: 'folder_move', parameters: {
-      'folder_id': folder.folderId,
-      'target_folder_id': newParentFolderId,
-    });
 
     final foldersProvider =
         Provider.of<FoldersProvider>(context, listen: false);
@@ -1958,6 +2125,11 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     // 폴더 업데이트 (서버 + 메타데이터 갱신)
     await foldersProvider.updateFolder(
         folder.folderName, folder.folderId, newParentFolderId);
+    // 옮기기가 끝난 뒤에 남긴다. 예전에는 요청 전에 남겨서 실패도 셌다.
+    AppAnalytics.logEvent('folder_move', {
+      'folder_id': folder.folderId,
+      'target_folder_id': newParentFolderId,
+    });
 
     // 출발지 폴더 캐시 갱신 (이동한 폴더가 목록에서 사라지도록)
     if (_currentFolder != null) {
@@ -1982,14 +2154,9 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
   Future<void> _moveProblemToFolder(
       ProblemRegisterModel problemRegisterModel) async {
     if (problemRegisterModel.folderId == null) {
-      log('Problem ID or folderId is null. Cannot move the problem.');
+      debugPrint('Problem ID or folderId is null. Cannot move the problem.');
       return; // 문제 ID 또는 폴더 ID가 null이면 실행하지 않음
     }
-
-    FirebaseAnalytics.instance.logEvent(name: 'problem_path_edit', parameters: {
-      'problem_id': problemRegisterModel.problemId!,
-      'target_folder_id': problemRegisterModel.folderId!,
-    });
 
     final problemsProvider =
         Provider.of<ProblemsProvider>(context, listen: false);
@@ -1998,6 +2165,10 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
 
     // 문제 업데이트 (서버 + ProblemsProvider 캐시 갱신)
     await problemsProvider.updateProblem(problemRegisterModel);
+    AppAnalytics.logEvent('problem_path_edit', {
+      'problem_id': problemRegisterModel.problemId,
+      'target_folder_id': problemRegisterModel.folderId,
+    });
 
     // 출발지 폴더 캐시 갱신 (이동한 문제가 목록에서 사라지도록)
     if (_currentFolder != null) {
@@ -2028,7 +2199,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
           .map((problem) => ProblemThumbnailModel.fromProblem(problem))
           .toList();
     } else {
-      log('No problems loaded');
+      debugPrint('No problems loaded');
       return [];
     }
   }
@@ -2050,7 +2221,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
   void navigateToProblemDetail(BuildContext context, int problemId) {
     Navigator.push(
       context,
-      MaterialPageRoute(
+      TossPageRoute(
         builder: (context) => ProblemDetailScreen(problemId: problemId),
       ),
     ).then((value) async {
@@ -2076,20 +2247,21 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
-      child: InkWell(
+      child: PressableScale(
         onTap: () {
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (_) => const ReviewDueScreen()),
+            TossPageRoute(builder: (_) => const ReviewDueScreen()),
           );
         },
-        borderRadius: BorderRadius.circular(15),
         child: Container(
           padding: const EdgeInsets.all(14),
+          constraints:
+              const BoxConstraints(minHeight: TodayMissionCard.minHeight),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(15),
-            border: Border.all(color: Colors.grey[300]!, width: 1),
+            borderRadius: BorderRadius.circular(AppRadius.large),
+            border: Border.all(color: AppColors.border),
             boxShadow: [
               BoxShadow(
                 color: themeProvider.primaryColor.withValues(alpha: 0.1),
@@ -2104,7 +2276,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
                   color: themeProvider.primaryColor.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppRadius.medium),
                 ),
                 child: Icon(
                   Icons.auto_stories_outlined,
@@ -2117,29 +2289,10 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      children: [
-                        const StandardText(
-                          text: '추천 복습 문제',
-                          fontSize: 14,
-                          color: Colors.black87,
-                        ),
-                        const SizedBox(width: 6),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 7, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: themeProvider.primaryColor,
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: StandardText(
-                            text: '${reviewDueProvider.dueCount}개',
-                            fontSize: 10,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ],
+                    const StandardText(
+                      text: '추천 복습 문제',
+                      fontSize: 14,
+                      color: AppColors.textPrimary,
                     ),
                     if (overdueCount > 0) ...[
                       const SizedBox(height: 2),
@@ -2152,10 +2305,145 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                   ],
                 ),
               ),
+              // 개수는 누르면 가는 곳 바로 앞에 둔다. 위 오늘의 미션 카드의
+              // 받기 태그와 같은 자리다.
+              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                decoration: BoxDecoration(
+                  color: themeProvider.primaryColor,
+                  borderRadius: BorderRadius.circular(AppRadius.medium),
+                ),
+                child: StandardText(
+                  text: '${reviewDueProvider.dueCount}개',
+                  fontSize: 10,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.white,
+                ),
+              ),
+              const SizedBox(width: 8),
               Icon(Icons.chevron_right, size: 20, color: Colors.grey[400]),
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// 공책이나 오답노트를 꾹 눌러 끌 때 손가락에 붙어 다니는 카드.
+///
+/// 전에는 기본 Material 의 흰 네모 위에 아이콘이나 사진만 50x70 으로 떠서,
+/// 무엇을 들고 있는지도 잘 안 보이고 모서리가 각져 화면에서 동떨어져 보였다.
+/// 목록 칸과 같은 둥근 카드에 그림과 이름을 담고, 손에 든 것처럼 살짝
+/// 기울여 그림자를 띄운다. 손가락에 가리지 않게 손끝 위쪽에 둔다.
+class _DragFeedbackCard extends StatelessWidget {
+  final Widget leading;
+  final String title;
+  final Color color;
+
+  const _DragFeedbackCard({
+    required this.leading,
+    required this.title,
+    required this.color,
+  });
+
+  static const double _width = 200;
+  static const double _height = 60;
+
+  @override
+  Widget build(BuildContext context) {
+    // pointerDragAnchorStrategy 는 손끝을 카드의 왼쪽 위에 둔다. 카드를
+    // 가운데로 옮기고 손끝보다 조금 위로 띄운다.
+    return Transform.translate(
+      offset: const Offset(-_width / 2, -_height - 20),
+      child: Transform.rotate(
+        angle: -0.05,
+        child: Material(
+          color: Colors.transparent,
+          child: Container(
+            width: _width,
+            height: _height,
+            padding: const EdgeInsets.symmetric(horizontal: 10),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(AppRadius.large),
+              border:
+                  Border.all(color: color.withValues(alpha: 0.5), width: 1.5),
+              boxShadow: [
+                BoxShadow(
+                  color: color.withValues(alpha: 0.25),
+                  blurRadius: 18,
+                  offset: const Offset(0, 8),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                SizedBox(width: 40, height: 40, child: Center(child: leading)),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: StandardText(
+                    text: title,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                Icon(Icons.open_with_rounded, size: 18, color: color),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// 끌고 온 것을 여기에 놓을 수 있다는 것을 알린다.
+///
+/// 손가락 아래에 무엇이 놓일지 보이지 않으면 어디에 떨어뜨려야 할지 알 수
+/// 없다. 테두리를 두르고 살짝 키워서 이 자리가 받는 자리임을 보여 준다.
+class _DropHighlight extends StatelessWidget {
+  /// 지금 이 위에 무언가 올라와 있는지.
+  final bool active;
+
+  final Color color;
+  final Widget child;
+
+  const _DropHighlight({
+    required this.active,
+    required this.color,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedScale(
+      scale: active ? 1.03 : 1.0,
+      duration: AppMotion.fast,
+      curve: AppMotion.standard,
+      child: AnimatedContainer(
+        duration: AppMotion.fast,
+        curve: AppMotion.standard,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(AppRadius.medium),
+          border: Border.all(
+            color: active ? color : Colors.transparent,
+            width: 2,
+          ),
+          boxShadow: active
+              ? [
+                  BoxShadow(
+                    color: color.withValues(alpha: 0.28),
+                    blurRadius: 14,
+                  ),
+                ]
+              : null,
+        ),
+        child: child,
       ),
     );
   }

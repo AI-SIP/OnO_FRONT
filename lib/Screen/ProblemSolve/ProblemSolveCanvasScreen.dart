@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
-import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:flutter/gestures.dart';
@@ -12,19 +11,26 @@ import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 
 import '../../Module/Dialog/SnackBarDialog.dart';
+import '../../Module/Text/mobile_font_size.dart';
 import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
+import '../../Util/AppAnalytics.dart';
 import 'ProblemSolveRegisterScreen.dart';
+import '../../Module/Motion/AppHaptic.dart';
+import '../../Module/Motion/PressableScale.dart';
+import '../../Module/Motion/TossPageRoute.dart';
+import '../../Module/Design/AppRadius.dart';
+import '../../Module/Design/AppColors.dart';
 
 class ProblemSolveCanvasScreen extends StatefulWidget {
   final int problemId;
-  final String problemImageUrl;
+  final List<String> problemImageUrls;
   final VoidCallback onRefresh;
 
   const ProblemSolveCanvasScreen({
     super.key,
     required this.problemId,
-    required this.problemImageUrl,
+    required this.problemImageUrls,
     required this.onRefresh,
   });
 
@@ -44,21 +50,34 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
   final GlobalKey _captureKey = GlobalKey();
   final TransformationController _transformationController =
       TransformationController();
-  final List<_DrawStroke> _strokes = [];
+  late final List<List<_DrawStroke>> _strokesByImage;
+  late final List<bool> _imageReadyStates;
+  late final List<bool> _imageErrorStates;
+  late final List<Size?> _imageNaturalSizes;
   _DrawStroke? _currentStroke;
   Timer? _timer;
   int _activePointers = 0;
+  int _currentImageIndex = 0;
   int _elapsedSeconds = 0;
   bool _isSubmitting = false;
-  bool _isImageReady = false;
   Size _canvasSize = Size.zero;
-  Size? _imageNaturalSize;
   Color _penColor = Colors.black87;
   double _penWidth = 4.0;
   double _eraserWidth = 18.0;
   _CanvasTool _selectedTool = _CanvasTool.pen;
   _CanvasTool _previousTool = _CanvasTool.pen;
   Offset? _cursorPosition; // canvas-space position for eraser cursor overlay
+
+  // Analytics 용. 도구를 바꿀 때마다 남기면 이벤트가 너무 많아서, 한 번 푸는
+  // 동안 무엇을 썼는지 모아 두었다가 제출하거나 나갈 때 한 번에 남긴다.
+  final Set<String> _usedTools = {_CanvasTool.pen.name};
+  bool _usedStylus = false;
+  bool _usedStylusButton = false;
+  bool _changedColor = false;
+  bool _changedWidth = false;
+  int _undoCount = 0;
+  bool _cleared = false;
+  bool _submitted = false;
 
   static const _pencilChannel = MethodChannel('com.aisip.ono/pencil_events');
 
@@ -80,8 +99,17 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
   @override
   void initState() {
     super.initState();
+    AppAnalytics.logScreenView('ProblemSolveCanvasScreen');
+    _strokesByImage =
+        List.generate(widget.problemImageUrls.length, (_) => <_DrawStroke>[]);
+    _imageReadyStates =
+        List.generate(widget.problemImageUrls.length, (_) => false);
+    _imageErrorStates =
+        List.generate(widget.problemImageUrls.length, (_) => false);
+    _imageNaturalSizes =
+        List.generate(widget.problemImageUrls.length, (_) => null);
     _startTimer();
-    _loadImageNaturalSize();
+    _loadImageNaturalSize(_currentImageIndex);
     _subscribeToPencilEvents();
   }
 
@@ -89,22 +117,37 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
     if (!Platform.isIOS) return;
     _pencilChannel.setMethodCallHandler((call) async {
       if (call.method == 'doubleTap' && mounted) {
+        _usedStylusButton = true;
         setState(() => _toggleToLastTool());
       }
     });
   }
 
-  void _loadImageNaturalSize() {
-    final stream = NetworkImage(widget.problemImageUrl)
+  List<_DrawStroke> get _currentStrokes => _strokesByImage[_currentImageIndex];
+
+  bool get _isCurrentImageReady => _imageReadyStates[_currentImageIndex];
+
+  bool get _hasImageLoadError => _imageErrorStates.contains(true);
+
+  String get _currentImageUrl => widget.problemImageUrls[_currentImageIndex];
+
+  void _loadImageNaturalSize(int imageIndex) {
+    if (_imageNaturalSizes[imageIndex] != null) return;
+
+    final stream = NetworkImage(widget.problemImageUrls[imageIndex])
         .resolve(ImageConfiguration.empty);
     stream.addListener(ImageStreamListener((info, _) {
       if (mounted) {
         setState(() {
-          _imageNaturalSize = Size(
+          _imageNaturalSizes[imageIndex] = Size(
             info.image.width.toDouble(),
             info.image.height.toDouble(),
           );
         });
+      }
+    }, onError: (_, __) {
+      if (mounted) {
+        setState(() => _imageErrorStates[imageIndex] = true);
       }
     }));
   }
@@ -120,6 +163,8 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
 
   @override
   void dispose() {
+    // 풀다가 제출하지 않고 나간 것. 어디까지 쓰다 그만두는지 본다.
+    if (!_submitted) _logCanvasSession('canvas_abandon');
     if (Platform.isIOS) _pencilChannel.setMethodCallHandler(null);
     _timer?.cancel();
     _transformationController.dispose();
@@ -129,7 +174,7 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
   // Computes the actual displayed rect of the image within the canvas
   // (accounting for BoxFit.contain letterboxing/pillarboxing).
   Rect _computeImageRect(Size canvasSize) {
-    final imgSize = _imageNaturalSize;
+    final imgSize = _imageNaturalSizes[_currentImageIndex];
     if (imgSize == null || canvasSize == Size.zero) {
       return Rect.fromLTWH(0, 0, canvasSize.width, canvasSize.height);
     }
@@ -186,12 +231,12 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
           ),
           IconButton(
             tooltip: '되돌리기',
-            onPressed: _strokes.isEmpty ? null : _undoLastStroke,
+            onPressed: _currentStrokes.isEmpty ? null : _undoLastStroke,
             icon: Icon(Icons.undo, color: themeProvider.primaryColor),
           ),
           IconButton(
             tooltip: '전체 지우기',
-            onPressed: _strokes.isEmpty ? null : _clearStrokes,
+            onPressed: _currentStrokes.isEmpty ? null : _clearStrokes,
             icon: Icon(Icons.delete_outline, color: themeProvider.primaryColor),
           ),
         ],
@@ -213,6 +258,8 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
                     });
                   }
                   final imageRect = _computeImageRect(newSize);
+                  final imageIndex = _currentImageIndex;
+                  final imageUrl = _currentImageUrl;
                   return InteractiveViewer(
                     transformationController: _transformationController,
                     minScale: 1,
@@ -222,9 +269,13 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
                     boundaryMargin: const EdgeInsets.all(80),
                     child: Listener(
                       onPointerDown: (event) {
+                        if (event.kind == PointerDeviceKind.stylus) {
+                          _usedStylus = true;
+                        }
                         // Apple Pencil 2 flat-side tap / S Pen secondary button
                         if (event.kind == PointerDeviceKind.stylus &&
                             event.buttons & kSecondaryStylusButton != 0) {
+                          _usedStylusButton = true;
                           setState(() => _toggleToLastTool());
                           return;
                         }
@@ -232,6 +283,7 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
                         final forceErase =
                             event.kind == PointerDeviceKind.stylus &&
                                 event.buttons & kPrimaryStylusButton != 0;
+                        if (forceErase) _usedStylusButton = true;
                         _handlePointerDown(event.localPosition, imageRect,
                             forceErase: forceErase);
                       },
@@ -247,8 +299,7 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
                             event.kind == PointerDeviceKind.stylus &&
                                 event.buttons & kPrimaryStylusButton != 0;
                         if (_isEraserTool || forceErase) {
-                          setState(
-                              () => _cursorPosition = event.localPosition);
+                          setState(() => _cursorPosition = event.localPosition);
                         }
                       },
                       onPointerUp: (_) => _handlePointerEnd(),
@@ -256,61 +307,63 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
                       child: Stack(
                         children: [
                           RepaintBoundary(
-                        key: _captureKey,
-                        child: Container(
-                          width: constraints.maxWidth,
-                          height: constraints.maxHeight,
-                          color: Colors.white,
-                          child: Stack(
-                            fit: StackFit.expand,
-                            children: [
-                              Image.network(
-                                widget.problemImageUrl,
-                                fit: BoxFit.contain,
-                                frameBuilder: (
-                                  context,
-                                  child,
-                                  frame,
-                                  wasSynchronouslyLoaded,
-                                ) {
-                                  if (wasSynchronouslyLoaded || frame != null) {
-                                    _markImageReady();
-                                  }
-                                  return child;
-                                },
-                                loadingBuilder:
-                                    (context, child, loadingProgress) {
-                                  if (loadingProgress == null) return child;
-                                  return Center(
-                                    child: CircularProgressIndicator(
-                                      color: themeProvider.primaryColor,
+                            key: _captureKey,
+                            child: Container(
+                              width: constraints.maxWidth,
+                              height: constraints.maxHeight,
+                              color: Colors.white,
+                              child: Stack(
+                                fit: StackFit.expand,
+                                children: [
+                                  Image.network(
+                                    imageUrl,
+                                    fit: BoxFit.contain,
+                                    frameBuilder: (
+                                      context,
+                                      child,
+                                      frame,
+                                      wasSynchronouslyLoaded,
+                                    ) {
+                                      if (wasSynchronouslyLoaded ||
+                                          frame != null) {
+                                        _markImageReady(imageIndex);
+                                      }
+                                      return child;
+                                    },
+                                    loadingBuilder:
+                                        (context, child, loadingProgress) {
+                                      if (loadingProgress == null) return child;
+                                      return Center(
+                                        child: CircularProgressIndicator(
+                                          color: themeProvider.primaryColor,
+                                        ),
+                                      );
+                                    },
+                                    errorBuilder: (context, error, stackTrace) {
+                                      _markImageError(imageIndex);
+                                      return Center(
+                                        child: StandardText(
+                                          text: '문제 이미지를 불러오지 못했습니다.',
+                                          fontSize: 14,
+                                          color: themeProvider.primaryColor,
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                  CustomPaint(
+                                    size: Size(
+                                      constraints.maxWidth,
+                                      constraints.maxHeight,
                                     ),
-                                  );
-                                },
-                                errorBuilder: (context, error, stackTrace) {
-                                  return Center(
-                                    child: StandardText(
-                                      text: '문제 이미지를 불러오지 못했습니다.',
-                                      fontSize: 14,
-                                      color: themeProvider.primaryColor,
+                                    painter: _DrawingPainter(
+                                      strokes: _currentStrokes,
+                                      imageRect: imageRect,
                                     ),
-                                  );
-                                },
+                                  ),
+                                ],
                               ),
-                              CustomPaint(
-                                size: Size(
-                                  constraints.maxWidth,
-                                  constraints.maxHeight,
-                                ),
-                                painter: _DrawingPainter(
-                                  strokes: _strokes,
-                                  imageRect: imageRect,
-                                ),
-                              ),
-                            ],
+                            ),
                           ),
-                        ),
-                      ),
                           // Eraser cursor overlay — outside RepaintBoundary so
                           // it does not appear in the captured screenshot.
                           if (_isEraserTool && _cursorPosition != null)
@@ -332,6 +385,7 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
               ),
             ),
           ),
+          _buildImageNavigation(themeProvider),
           _buildToolbar(themeProvider),
           _buildSubmitButton(themeProvider),
         ],
@@ -367,8 +421,7 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
                         label: '이동',
                         isSelected: _selectedTool == _CanvasTool.move,
                         themeProvider: themeProvider,
-                        onTap: () =>
-                            setState(() => _setTool(_CanvasTool.move)),
+                        onTap: () => setState(() => _setTool(_CanvasTool.move)),
                       ),
                       const SizedBox(width: 8),
                       _buildToolModeButton(
@@ -376,8 +429,7 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
                         label: '펜',
                         isSelected: _selectedTool == _CanvasTool.pen,
                         themeProvider: themeProvider,
-                        onTap: () =>
-                            setState(() => _setTool(_CanvasTool.pen)),
+                        onTap: () => setState(() => _setTool(_CanvasTool.pen)),
                       ),
                       const SizedBox(width: 8),
                       _buildToolModeButton(
@@ -420,11 +472,11 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
           const SizedBox(height: 10),
           Row(
             children: [
-              const StandardText(
+              StandardText(
                 text: '굵기',
-                fontSize: 13,
+                fontSize: MobileFontSize.reduced(context, 13),
                 fontWeight: FontWeight.w600,
-                color: Colors.black87,
+                color: AppColors.textPrimary,
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -447,6 +499,7 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
                     onChanged: _selectedTool == _CanvasTool.move
                         ? null
                         : (value) => setState(() {
+                              _changedWidth = true;
                               if (_isEraserTool) {
                                 _eraserWidth = value;
                               } else {
@@ -473,6 +526,94 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
     );
   }
 
+  Widget _buildImageNavigation(ThemeHandler themeProvider) {
+    if (widget.problemImageUrls.length <= 1) {
+      return const SizedBox.shrink();
+    }
+
+    return Container(
+      padding: const EdgeInsets.fromLTRB(18, 6, 18, 10),
+      color: Colors.white,
+      child: Row(
+        children: [
+          _buildImageMoveButton(
+            icon: Icons.chevron_left,
+            label: '이전',
+            enabled: _currentImageIndex > 0 && !_isSubmitting,
+            themeProvider: themeProvider,
+            onTap: () => _moveToImage(_currentImageIndex - 1),
+          ),
+          Expanded(
+            child: Center(
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                decoration: BoxDecoration(
+                  color: themeProvider.primaryColor.withOpacity(0.08),
+                  borderRadius: BorderRadius.circular(AppRadius.full),
+                  border: Border.all(
+                    color: themeProvider.primaryColor.withOpacity(0.18),
+                    width: 1,
+                  ),
+                ),
+                child: StandardText(
+                  text:
+                      '${_currentImageIndex + 1} / ${widget.problemImageUrls.length}',
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: themeProvider.primaryColor,
+                ),
+              ),
+            ),
+          ),
+          _buildImageMoveButton(
+            icon: Icons.chevron_right,
+            label: '다음',
+            enabled: _currentImageIndex < widget.problemImageUrls.length - 1 &&
+                !_isSubmitting,
+            themeProvider: themeProvider,
+            onTap: () => _moveToImage(_currentImageIndex + 1),
+            isTrailingIcon: true,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildImageMoveButton({
+    required IconData icon,
+    required String label,
+    required bool enabled,
+    required ThemeHandler themeProvider,
+    required VoidCallback onTap,
+    bool isTrailingIcon = false,
+  }) {
+    final color = enabled ? themeProvider.primaryColor : Colors.grey[400]!;
+    final children = [
+      Icon(icon, color: color, size: 20),
+      const SizedBox(width: 3),
+      StandardText(
+        text: label,
+        fontSize: 13,
+        fontWeight: FontWeight.w600,
+        color: color,
+      ),
+    ];
+
+    return TextButton(
+      onPressed: enabled ? onTap : null,
+      style: TextButton.styleFrom(
+        minimumSize: const Size(72, 38),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: isTrailingIcon ? children.reversed.toList() : children,
+      ),
+    );
+  }
+
   Widget _buildToolModeButton({
     required IconData icon,
     required String label,
@@ -482,9 +623,8 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
   }) {
     final color = isSelected ? themeProvider.primaryColor : Colors.grey[600]!;
 
-    return InkWell(
+    return PressableScale(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(10),
       child: Container(
         height: 38,
         padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -492,7 +632,7 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
           color: isSelected
               ? themeProvider.primaryColor.withOpacity(0.12)
               : Colors.grey[100],
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(AppRadius.medium),
           border: Border.all(
             color: isSelected
                 ? themeProvider.primaryColor.withOpacity(0.35)
@@ -519,12 +659,13 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
   Widget _buildColorButton(Color color) {
     final isSelected = _selectedTool == _CanvasTool.pen && _penColor == color;
 
-    return InkWell(
+    return PressableScale(
+      haptic: HapticLevel.selection,
       onTap: () => setState(() {
+        if (color != _penColor) _changedColor = true;
         _penColor = color;
         _setTool(_CanvasTool.pen);
       }),
-      borderRadius: BorderRadius.circular(19),
       child: Container(
         width: 38,
         height: 38,
@@ -554,22 +695,27 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
         width: double.infinity,
         height: 50,
         child: ElevatedButton(
-          onPressed: _isSubmitting || !_isImageReady
-              ? null
-              : () => _submit(themeProvider),
+          onPressed:
+              _isSubmitting || !_isCurrentImageReady || _hasImageLoadError
+                  ? null
+                  : () => _submit(themeProvider),
           style: ElevatedButton.styleFrom(
             backgroundColor: themeProvider.primaryColor,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(AppRadius.large),
             ),
             elevation: 0,
           ),
           child: StandardText(
             text: _isSubmitting
                 ? '풀이 이미지 저장 중...'
-                : _isImageReady
-                    ? '풀이 제출하기'
-                    : '문제 이미지 불러오는 중...',
+                : _hasImageLoadError
+                    ? '문제 이미지를 불러오지 못했습니다'
+                    : _isCurrentImageReady
+                        ? widget.problemImageUrls.length > 1
+                            ? '전체 풀이 제출하기'
+                            : '풀이 제출하기'
+                        : '문제 이미지 불러오는 중...',
             fontSize: 16,
             fontWeight: FontWeight.bold,
             color: Colors.white,
@@ -583,14 +729,14 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
       _selectedTool == _CanvasTool.pixelEraser ||
       _selectedTool == _CanvasTool.strokeEraser;
 
-  double get _currentStrokeWidth =>
-      _isEraserTool ? _eraserWidth : _penWidth;
+  double get _currentStrokeWidth => _isEraserTool ? _eraserWidth : _penWidth;
 
   String _widthLabel(double width) {
     return width < 1 ? width.toStringAsFixed(1) : width.round().toString();
   }
 
   void _setTool(_CanvasTool tool) {
+    _usedTools.add(tool.name);
     if (tool != _selectedTool) {
       _previousTool = _selectedTool;
       _selectedTool = tool;
@@ -656,7 +802,7 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
         width: _currentStrokeWidth,
         isEraser: _selectedTool == _CanvasTool.pixelEraser,
       );
-      _strokes.add(_currentStroke!);
+      _currentStrokes.add(_currentStroke!);
     });
   }
 
@@ -683,7 +829,7 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
     );
 
     setState(() {
-      _strokes.removeWhere((stroke) {
+      _currentStrokes.removeWhere((stroke) {
         if (stroke.isEraser) return false;
         return _isPointNearStrokeCanvas(
             canvasPoint, stroke, eraseRadius, imageRect);
@@ -745,19 +891,38 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
   }
 
   void _undoLastStroke() {
+    _undoCount++;
     setState(() {
-      if (_strokes.isNotEmpty) {
-        _strokes.removeLast();
+      if (_currentStrokes.isNotEmpty) {
+        _currentStrokes.removeLast();
       }
     });
   }
 
   void _clearStrokes() {
-    setState(_strokes.clear);
+    _cleared = true;
+    setState(_currentStrokes.clear);
   }
 
   void _resetZoom() {
     _transformationController.value = Matrix4.identity();
+  }
+
+  void _moveToImage(int imageIndex) {
+    if (imageIndex < 0 ||
+        imageIndex >= widget.problemImageUrls.length ||
+        imageIndex == _currentImageIndex) {
+      return;
+    }
+
+    _finishStroke();
+    _loadImageNaturalSize(imageIndex);
+    setState(() {
+      _currentImageIndex = imageIndex;
+      _activePointers = 0;
+      _cursorPosition = null;
+    });
+    _resetZoom();
   }
 
   // Points are stored in image-normalized coordinates, so no re-scaling needed
@@ -770,64 +935,74 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
     _canvasSize = newSize;
   }
 
-  void _markImageReady() {
-    if (_isImageReady) return;
+  void _markImageReady(int imageIndex) {
+    if (_imageReadyStates[imageIndex]) return;
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted && !_isImageReady) {
-        setState(() => _isImageReady = true);
+      if (mounted && !_imageReadyStates[imageIndex]) {
+        setState(() {
+          _imageReadyStates[imageIndex] = true;
+          _imageErrorStates[imageIndex] = false;
+        });
       }
     });
   }
 
+  void _markImageError(int imageIndex) {
+    if (_imageErrorStates[imageIndex]) return;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && !_imageErrorStates[imageIndex]) {
+        setState(() => _imageErrorStates[imageIndex] = true);
+      }
+    });
+  }
+
+  /// 한 번 푼 동안 캔버스를 어떻게 썼는지 남긴다. 지우개 두 가지, 색, 굵기,
+  /// 스타일러스 버튼 같은 기능이 실제로 쓰이는지를 여기서 본다.
+  void _logCanvasSession(String name) {
+    final strokes = _strokesByImage.expand((s) => s).where((s) => !s.isEraser);
+    AppAnalytics.logEvent(name, {
+      'duration_sec': _elapsedSeconds,
+      'image_count': widget.problemImageUrls.length,
+      'stroke_count': strokes.length,
+      'tools': (_usedTools.toList()..sort()).join(','),
+      'used_stylus': _usedStylus,
+      'stylus_button': _usedStylusButton,
+      'color_changed': _changedColor,
+      'width_changed': _changedWidth,
+      'undo_count': _undoCount,
+      'cleared': _cleared,
+    });
+  }
+
   Future<void> _submit(ThemeHandler themeProvider) async {
-    if (!_isImageReady) return;
+    if (!_isCurrentImageReady || _hasImageLoadError) return;
 
     setState(() => _isSubmitting = true);
 
     try {
-      await WidgetsBinding.instance.endOfFrame;
-      if (!mounted) return;
-
-      final boundary = _captureKey.currentContext?.findRenderObject()
-          as RenderRepaintBoundary?;
-      if (boundary == null) {
-        throw StateError('capture boundary is not ready');
-      }
-
-      final image = await boundary.toImage(pixelRatio: 2);
-      ByteData? byteData;
-      try {
-        byteData = await image.toByteData(format: ui.ImageByteFormat.png);
-      } finally {
-        image.dispose();
-      }
-      if (byteData == null) {
-        throw StateError('failed to create image data');
-      }
-
-      final directory = await getTemporaryDirectory();
-      final file = File(
-        '${directory.path}/problem_solve_${widget.problemId}_${DateTime.now().millisecondsSinceEpoch}.png',
-      );
-      await file.writeAsBytes(byteData.buffer.asUint8List(), flush: true);
-
+      final files = await _captureAllSolutionImages();
       _timer?.cancel();
 
       if (!mounted) return;
 
       final result = await Navigator.push(
         context,
-        MaterialPageRoute(
+        TossPageRoute(
           builder: (context) => ProblemSolveRegisterScreen(
             problemId: widget.problemId,
             onRefresh: widget.onRefresh,
-            initialSolutionImages: [file],
+            initialSolutionImages: files,
             initialTimeSpentSeconds: _elapsedSeconds,
           ),
         ),
       );
 
+      if (result == true) {
+        _submitted = true;
+        _logCanvasSession('canvas_submit');
+      }
       if (result == true && mounted) {
         Navigator.of(context).pop(true);
       } else if (mounted) {
@@ -844,6 +1019,74 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
       );
       setState(() => _isSubmitting = false);
     }
+  }
+
+  Future<List<File>> _captureAllSolutionImages() async {
+    final originalIndex = _currentImageIndex;
+    final directory = await getTemporaryDirectory();
+    final files = <File>[];
+
+    for (var index = 0; index < widget.problemImageUrls.length; index++) {
+      if (!mounted) throw StateError('canvas screen is not mounted');
+
+      if (_currentImageIndex != index) {
+        _moveToImage(index);
+      }
+
+      await _waitForImageReady(index);
+      await WidgetsBinding.instance.endOfFrame;
+
+      final file = await _captureCurrentCanvas(directory, index);
+      files.add(file);
+    }
+
+    if (mounted && _currentImageIndex != originalIndex) {
+      _moveToImage(originalIndex);
+    }
+
+    return files;
+  }
+
+  Future<void> _waitForImageReady(int imageIndex) async {
+    for (var attempt = 0; attempt < 80; attempt++) {
+      if (!mounted) throw StateError('canvas screen is not mounted');
+      if (_imageErrorStates[imageIndex]) {
+        throw StateError('problem image failed to load');
+      }
+      if (_imageReadyStates[imageIndex]) return;
+
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+      await WidgetsBinding.instance.endOfFrame;
+    }
+
+    throw StateError('problem image load timed out');
+  }
+
+  Future<File> _captureCurrentCanvas(
+      Directory directory, int imageIndex) async {
+    final boundary = _captureKey.currentContext?.findRenderObject()
+        as RenderRepaintBoundary?;
+    if (boundary == null) {
+      throw StateError('capture boundary is not ready');
+    }
+
+    final image = await boundary.toImage(pixelRatio: 2);
+    ByteData? byteData;
+    try {
+      byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+    } finally {
+      image.dispose();
+    }
+    if (byteData == null) {
+      throw StateError('failed to create image data');
+    }
+
+    final file = File(
+      '${directory.path}/problem_solve_${widget.problemId}_${imageIndex}_${DateTime.now().millisecondsSinceEpoch}.png',
+    );
+    await file.writeAsBytes(byteData.buffer.asUint8List(), flush: true);
+
+    return file;
   }
 
   String _formatElapsedTime(int totalSeconds) {

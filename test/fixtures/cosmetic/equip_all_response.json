@@ -1,0 +1,9 @@
+{
+  "data": {
+    "equipped": {
+      "BACKGROUND": "bg_spring",
+      "BAG": "back_backpack_navy"
+    },
+    "unequippedSlots": ["HEAD"]
+  }
+}

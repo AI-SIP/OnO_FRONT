@@ -1,0 +1,5 @@
+tags:
+  # alchemist 의 goldenTest 가 붙이는 태그. 골든만 돌리거나 빼고 돌릴 때 쓴다.
+  #   flutter test --tags golden
+  #   flutter test --exclude-tags golden
+  golden:

@@ -1,0 +1,177 @@
+{
+  "data": {
+    "baseImageUrl": "assets/Cosmetic/BASE.png",
+    "baseLayerOrder": 300,
+    "slots": [
+      {
+        "slot": "BACKGROUND",
+        "layerOrder": 100,
+        "nameKo": "배경",
+        "composited": true
+      },
+      {
+        "slot": "OUTFIT",
+        "layerOrder": 400,
+        "nameKo": "옷",
+        "composited": true
+      },
+      {
+        "slot": "BAG",
+        "layerOrder": 450,
+        "nameKo": "가방",
+        "composited": true
+      },
+      {
+        "slot": "HEAD",
+        "layerOrder": 700,
+        "nameKo": "머리",
+        "composited": true
+      },
+      {
+        "slot": "HAND",
+        "layerOrder": 800,
+        "nameKo": "손",
+        "composited": true
+      },
+      {
+        "slot": "FRAME",
+        "layerOrder": 1000,
+        "nameKo": "프레임",
+        "composited": false
+      }
+    ],
+    "items": [
+      {
+        "itemKey": "bg_spring",
+        "slot": "BACKGROUND",
+        "nameKo": "봄",
+        "imageUrl": "assets/Cosmetic/bg_spring.png",
+        "requiredLevel": 2,
+        "requiredAbility": "ATTENDANCE",
+        "setId": null,
+        "setNameKo": null,
+        "conflictsWith": [],
+        "owned": true,
+        "fullBody": false,
+        "layerOrder": null
+      },
+      {
+        "itemKey": "frame_spring",
+        "slot": "FRAME",
+        "nameKo": "봄 테두리",
+        "imageUrl": "assets/ProfileFrame/frame_spring.svg",
+        "requiredLevel": 3,
+        "requiredAbility": "ATTENDANCE",
+        "setId": null,
+        "setNameKo": null,
+        "conflictsWith": [],
+        "owned": true,
+        "fullBody": false,
+        "layerOrder": null
+      },
+      {
+        "itemKey": "bag_mini_backpack",
+        "slot": "BAG",
+        "nameKo": "미니 백팩",
+        "imageUrl": "assets/Cosmetic/bag_mini_backpack.png",
+        "requiredLevel": 2,
+        "requiredAbility": "NOTE_WRITE",
+        "setId": null,
+        "setNameKo": null,
+        "conflictsWith": [],
+        "owned": true,
+        "fullBody": false,
+        "layerOrder": null
+      },
+      {
+        "itemKey": "back_backpack_navy",
+        "slot": "BAG",
+        "nameKo": "남색 배낭",
+        "imageUrl": "assets/Cosmetic/back_backpack_navy.png",
+        "requiredLevel": 5,
+        "requiredAbility": "NOTE_WRITE",
+        "setId": null,
+        "setNameKo": null,
+        "conflictsWith": [],
+        "owned": true,
+        "fullBody": false,
+        "layerOrder": 200
+      },
+      {
+        "itemKey": "outfit_hoodie",
+        "slot": "OUTFIT",
+        "nameKo": "후드티",
+        "imageUrl": "assets/Cosmetic/outfit_hoodie.png",
+        "requiredLevel": 8,
+        "requiredAbility": "NOTE_PRACTICE",
+        "setId": null,
+        "setNameKo": null,
+        "conflictsWith": [],
+        "owned": false,
+        "fullBody": true,
+        "layerOrder": null
+      },
+      {
+        "itemKey": "hat_crown",
+        "slot": "HEAD",
+        "nameKo": "왕관",
+        "imageUrl": "assets/Cosmetic/hat_crown.png",
+        "requiredLevel": 19,
+        "requiredAbility": null,
+        "setId": null,
+        "setNameKo": null,
+        "conflictsWith": ["hat_graduate"],
+        "owned": false,
+        "fullBody": false,
+        "layerOrder": null
+      },
+      {
+        "itemKey": "hat_graduate",
+        "slot": "HEAD",
+        "nameKo": "학사모",
+        "imageUrl": "assets/Cosmetic/hat_graduate.png",
+        "requiredLevel": 20,
+        "requiredAbility": null,
+        "setId": "graduate",
+        "setNameKo": "학사 세트",
+        "conflictsWith": [],
+        "owned": false,
+        "fullBody": false,
+        "layerOrder": null
+      },
+      {
+        "itemKey": "outfit_graduate",
+        "slot": "OUTFIT",
+        "nameKo": "학사복",
+        "imageUrl": "assets/Cosmetic/outfit_graduate.png",
+        "requiredLevel": 20,
+        "requiredAbility": null,
+        "setId": "graduate",
+        "setNameKo": "학사 세트",
+        "conflictsWith": [],
+        "owned": false,
+        "fullBody": true,
+        "layerOrder": null
+      },
+      {
+        "itemKey": "prop_diploma",
+        "slot": "HAND",
+        "nameKo": "졸업장",
+        "imageUrl": "assets/Cosmetic/prop_diploma.png",
+        "requiredLevel": 20,
+        "requiredAbility": null,
+        "setId": "graduate",
+        "setNameKo": "학사 세트",
+        "conflictsWith": [],
+        "owned": false,
+        "fullBody": false,
+        "layerOrder": null
+      }
+    ],
+    "equipped": {
+      "BACKGROUND": "bg_spring",
+      "BAG": "back_backpack_navy",
+      "FRAME": "frame_spring"
+    }
+  }
+}
