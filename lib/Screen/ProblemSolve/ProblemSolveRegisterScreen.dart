@@ -16,6 +16,7 @@ import '../../Provider/PracticeNoteProvider.dart';
 import '../../Provider/ProblemsProvider.dart';
 import '../../Provider/UserProvider.dart';
 import '../../Service/Api/Problem/ProblemSolveService.dart';
+import '../../Service/HomeWidget/HomeWidgetSyncService.dart';
 import '../../Util/AppAnalytics.dart';
 import 'ProblemSolveRegisterTemplate.dart';
 import '../../Module/Design/AppRadius.dart';
@@ -206,6 +207,9 @@ class _ProblemSolveRegisterScreenState
       // 실패하는데, 기다리면 저장이 끝난 뒤에도 GET 타임아웃(30초)만큼
       // 로딩이 더 떠 있는다. 미션은 늦게 맞아도 되지만 저장은 그렇지 않다.
       unawaited(missionProvider.fetchMissions());
+
+      // 홈 화면 위젯의 오늘 칸과 복습 수를 새로 맞춘다. 기다리지 않는다.
+      unawaited(HomeWidgetSyncService.instance.sync(force: true));
 
       LoadingDialog.hide(context);
 

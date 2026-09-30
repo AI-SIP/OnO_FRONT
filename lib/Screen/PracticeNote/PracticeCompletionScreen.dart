@@ -19,6 +19,7 @@ import '../../Module/Motion/AppearTransition.dart';
 import '../../Module/Design/AppColors.dart';
 import '../../Module/Design/AppRadius.dart';
 import '../../Module/Design/AppToast.dart';
+import '../../Service/HomeWidget/HomeWidgetSyncService.dart';
 import '../../Util/AppAnalytics.dart';
 
 class PracticeCompletionScreen extends StatefulWidget {
@@ -274,6 +275,9 @@ class _PracticeCompletionScreenState extends State<PracticeCompletionScreen> {
                   // 1차에서는 행동 응답에 미션 진행도가 실려 오지 않는다. 세트를
                   // 끝낸 뒤 다시 조회해야 미션이 바로 반영된다.
                   unawaited(missionProvider.fetchMissions());
+                  // 홈 화면 위젯의 오늘 칸과 복습 수를 새로 맞춘다. 기다리지
+                  // 않는다.
+                  unawaited(HomeWidgetSyncService.instance.sync(force: true));
                   // 2번 pop: PracticeCompletionScreen -> PracticeDetailScreen -> PracticeThumbnailScreen
                   // 두 번째 pop에서 true를 반환하여 썸네일 업데이트 신호 전달
                   if (navigator.canPop()) {

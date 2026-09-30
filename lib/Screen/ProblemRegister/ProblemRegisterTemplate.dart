@@ -24,6 +24,7 @@ import '../../Provider/UserProvider.dart';
 import '../../Service/Api/FileUpload/FileUploadService.dart';
 import '../../Service/Api/Problem/ProblemService.dart';
 import '../../Service/Api/Tag/TagService.dart';
+import '../../Service/HomeWidget/HomeWidgetSyncService.dart';
 import '../../Util/AppErrorReporter.dart';
 import 'TagSelectionScreen.dart';
 import 'Widget/DatePickerWidget.dart';
@@ -1146,6 +1147,9 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
       answerImageUrls: _existingAnswerImageUrls,
       tagIds: _selectedTagIds.toList(),
     );
+
+    // 홈 화면 위젯의 오늘 칸을 새로 맞춘다. 기다리지 않는다.
+    unawaited(HomeWidgetSyncService.instance.sync(force: true));
 
     // 등록 후 분석/캐시 갱신은 후처리이므로 실패해도 등록 성공을 막지 않습니다.
     await _runPostSaveTask(

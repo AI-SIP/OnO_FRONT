@@ -26,6 +26,7 @@ import '../Exception/ApiException.dart';
 import '../Screen/Onboarding/LoginScreen.dart';
 import '../Module/Motion/TossPageRoute.dart';
 import '../Service/Api/HttpService.dart';
+import '../Service/HomeWidget/HomeWidgetSyncService.dart';
 import '../Service/SocialLogin/AppleAuthService.dart';
 import '../Service/SocialLogin/GoogleAuthService.dart';
 import 'ProblemsProvider.dart';
@@ -649,6 +650,9 @@ class UserProvider with ChangeNotifier {
     // 비우지 않으면 다른 계정으로 로그인한 첫 화면에 앞 사람이 받은 훈장의
     // 축하가 뜬다. 기기에 적어 둔 축하거리까지 같이 지운다.
     achievementProvider?.clear();
+    // 비우지 않으면 홈 화면 위젯에 앞 사람의 연속 일수와 학습 기록, 프로필이
+    // 그대로 남는다. 위젯 저장소를 쓰는 일이라 기다리지 않는다.
+    unawaited(HomeWidgetSyncService.instance.clear());
     notifyListeners();
   }
 

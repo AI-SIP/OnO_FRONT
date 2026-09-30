@@ -10,6 +10,7 @@ import '../Module/Cosmetic/CosmeticAssetGuard.dart';
 import '../Module/Debug/DebugCosmeticPreset.dart';
 import '../Module/Debug/DebugLevels.dart';
 import '../Service/Api/Cosmetic/CosmeticService.dart';
+import '../Service/HomeWidget/HomeWidgetSyncService.dart';
 
 /// 옷장을 아직 받았는지.
 enum CosmeticLoadState {
@@ -447,6 +448,8 @@ class CosmeticProvider with ChangeNotifier {
     _confirm(result.equipped);
     _noticeUnequipped(result.unequippedSlots);
     notifyListeners();
+    // 홈 화면 위젯의 프로필 그림도 새 차림으로 다시 찍는다. 기다리지 않는다.
+    HomeWidgetSyncService.instance.refreshProfile();
     return true;
   }
 
@@ -536,6 +539,8 @@ class CosmeticProvider with ChangeNotifier {
     _confirm(result.equipped);
     _noticeUnequipped(result.unequippedSlots);
     notifyListeners();
+    // 홈 화면 위젯의 프로필 그림도 새 차림으로 다시 찍는다. 기다리지 않는다.
+    HomeWidgetSyncService.instance.refreshProfile();
     return true;
   }
 

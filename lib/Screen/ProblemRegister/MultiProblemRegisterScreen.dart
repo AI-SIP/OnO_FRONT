@@ -29,6 +29,7 @@ import '../../Provider/UserProvider.dart';
 import '../../Service/Api/FileUpload/FileUploadService.dart';
 import '../../Service/Api/Problem/ProblemService.dart';
 import '../../Service/Api/Tag/TagService.dart';
+import '../../Service/HomeWidget/HomeWidgetSyncService.dart';
 import '../../Util/AppAnalytics.dart';
 import '../../Util/AppErrorReporter.dart';
 import 'TagSelectionScreen.dart';
@@ -1983,6 +1984,9 @@ class _MultiProblemRegisterScreenState
     required UserProvider userProvider,
     required FoldersProvider foldersProvider,
   }) async {
+    // 홈 화면 위젯의 오늘 칸을 새로 맞춘다. 기다리지 않는다.
+    unawaited(HomeWidgetSyncService.instance.sync(force: true));
+
     await Future.wait(
       registeredProblemIds.map(
         (problemId) => _runPostSaveTask(
