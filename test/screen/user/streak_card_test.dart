@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:ono/Module/Theme/ThemeHandler.dart';
 import 'package:ono/Screen/User/LearningCalendarScreen.dart';
 import 'package:ono/Screen/User/Widget/StreakCard.dart';
+import 'package:ono/Util/AppClock.dart';
 
 import '../../helpers/helpers.dart';
 
@@ -46,43 +47,73 @@ void main() {
     );
   }
 
-  testWidgets('데이터 로딩에 실패해도 헤더와 스트릭 배너가 보인다', (tester) async {
-    await pumpStreakCard(tester);
+  group('weekOfMonth 는 일요일 시작 주로 그 달의 몇 번째 주인지 센다', () {
+    test('2026-09-30 은 9월 5주차다', () {
+      expect(weekOfMonth(DateTime(2026, 9, 30)), 5);
+    });
 
-    expect(find.textContaining('학습 달력'), findsOneWidget);
-    expect(find.text('--'), findsOneWidget);
-    expect(find.textContaining('일 연속 학습중'), findsOneWidget);
+    test('1일이 일요일인 달은 7일까지가 1주차다', () {
+      // 2026-02-01 은 일요일
+      expect(weekOfMonth(DateTime(2026, 2, 1)), 1);
+      expect(weekOfMonth(DateTime(2026, 2, 7)), 1);
+      expect(weekOfMonth(DateTime(2026, 2, 8)), 2);
+      expect(weekOfMonth(DateTime(2026, 2, 28)), 4);
+    });
+
+    test('1일이 토요일인 달은 1일 하루가 1주차이고 말일이 6주차일 수 있다', () {
+      // 2026-08-01 은 토요일
+      expect(weekOfMonth(DateTime(2026, 8, 1)), 1);
+      expect(weekOfMonth(DateTime(2026, 8, 2)), 2);
+      expect(weekOfMonth(DateTime(2026, 8, 31)), 6);
+    });
+
+    test('윤년 2월 29일', () {
+      // 2028-02-01 은 화요일
+      expect(weekOfMonth(DateTime(2028, 2, 29)), 5);
+    });
   });
 
-  testWidgets('헤더를 탭하면 달력이 펼쳐지고 하단 통계가 보인다', (tester) async {
+  testWidgets('데이터 로딩에 실패해도 제목과 이번 달 몇 주차인지가 보인다', (tester) async {
     await pumpStreakCard(tester);
+    final now = AppClock.now();
 
-    expect(find.textContaining('이번 달 최장 복습'), findsNothing);
-
-    await tester.tap(find.textContaining('학습 달력'));
-    await tester.pumpAndSettle();
-
-    expect(find.textContaining('이번 달 최장 복습: --'), findsOneWidget);
-    expect(find.textContaining('복습 일수: --'), findsOneWidget);
+    expect(find.text('학습 달력'), findsOneWidget);
+    expect(find.text('${now.month}월 ${weekOfMonth(now)}주차'), findsOneWidget);
+    // 화살표는 제목 줄 오른쪽 끝 하나뿐이다.
+    expect(find.byIcon(Icons.chevron_right), findsOneWidget);
   });
 
-  testWidgets('헤더를 다시 탭하면 접힌다', (tester) async {
+  testWidgets('한 달 보기를 탭하면 펼쳐지고 접기 버튼으로 바뀐다', (tester) async {
     await pumpStreakCard(tester);
 
-    await tester.tap(find.textContaining('학습 달력'));
-    await tester.pumpAndSettle();
-    expect(find.textContaining('이번 달 최장 복습'), findsOneWidget);
+    expect(find.text('접기'), findsNothing);
 
-    await tester.tap(find.textContaining('학습 달력'));
+    await tester.tap(find.text('한 달 보기'));
     await tester.pumpAndSettle();
-    expect(find.textContaining('이번 달 최장 복습'), findsNothing);
+
+    expect(find.text('접기'), findsOneWidget);
+    // 조회에 실패했으면 펼쳐도 달력 대신 안내만 남는다.
+    expect(find.text('기록을 불러오지 못했어요'), findsOneWidget);
   });
 
-  testWidgets('스트릭 배너를 탭하면 학습 달력 화면으로 이동한다', (tester) async {
+  testWidgets('접기를 탭하면 접힌다', (tester) async {
+    await pumpStreakCard(tester);
+
+    await tester.tap(find.text('한 달 보기'));
+    await tester.pumpAndSettle();
+    expect(find.text('접기'), findsOneWidget);
+
+    await tester.tap(find.text('접기'));
+    await tester.pumpAndSettle();
+    expect(find.text('한 달 보기'), findsOneWidget);
+    expect(find.text('접기'), findsNothing);
+  });
+
+  testWidgets('제목 줄을 탭하면 학습 달력 화면으로 이동한다', (tester) async {
     final observer = _RecordingNavigatorObserver();
     await pumpStreakCard(tester, navigatorObservers: [observer]);
 
-    await tester.tap(find.textContaining('일 연속 학습중'));
+    await tester.tap(find.text('학습 달력'));
     await tester.pumpAndSettle();
 
     expect(observer.pushedRoutes, greaterThanOrEqualTo(1));

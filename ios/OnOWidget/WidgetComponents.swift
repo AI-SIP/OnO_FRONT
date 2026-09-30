@@ -69,7 +69,7 @@ private struct NotebookRules: View {
           y += Paper.ruleSpacing
         }
       }
-      .stroke(Paper.rule, lineWidth: 1)
+      .stroke(Paper.notebookRule, lineWidth: 1)
     }
   }
 }
@@ -91,15 +91,16 @@ private struct MaskingTape: View {
 
 // MARK: - 글씨
 
-struct HandText: View {
+/// 한 줄 글씨. 글꼴은 [WidgetFont] 에서 고른다(손글씨는 연속 일수와 월 제목에만).
+struct InkText: View {
   let text: String
-  let size: CGFloat
+  let font: Font
   let color: Color
   var minimumScale: CGFloat = 0.6
 
-  init(_ text: String, size: CGFloat, color: Color, minimumScale: CGFloat = 0.6) {
+  init(_ text: String, font: Font, color: Color, minimumScale: CGFloat = 0.6) {
     self.text = text
-    self.size = size
+    self.font = font
     self.color = color
     self.minimumScale = minimumScale
   }
@@ -107,21 +108,21 @@ struct HandText: View {
   var body: some View {
     // 글자는 줄여서라도 한 줄에 둔다(명세서 「UI 반응형 고려사항」).
     Text(text)
-      .font(WidgetFont.hand(size))
+      .font(font)
       .foregroundColor(color)
       .lineLimit(1)
       .minimumScaleFactor(minimumScale)
   }
 }
 
-/// 형광펜을 칠한 글씨. 글자 아래 45% 높이에 테마 색 40% 띠를 깐다.
+/// 형광펜을 칠한 복습 문구. 글자 아래 45% 높이에 테마 색 40% 띠를 깐다. 글씨는 시스템 글꼴 semibold.
 struct HighlightText: View {
   let text: String
   let size: CGFloat
   let palette: WidgetPalette
 
   var body: some View {
-    HandText(text, size: size, color: palette.ink, minimumScale: 0.7)
+    InkText(text, font: WidgetFont.digits(size, .semibold), color: palette.ink, minimumScale: 0.7)
       .padding(.horizontal, 2)
       .background(
         GeometryReader { geometry in
@@ -177,14 +178,14 @@ struct BareFrog: View {
 /// 요일 머리줄. 일요일부터 시작한다.
 struct WeekdayHeader: View {
   let color: Color
-  var size: CGFloat = 12
+  var size: CGFloat = 10
 
   static let labels = ["일", "월", "화", "수", "목", "금", "토"]
 
   var body: some View {
     HStack(spacing: 0) {
       ForEach(WeekdayHeader.labels, id: \.self) { label in
-        HandText(label, size: size, color: color)
+        InkText(label, font: WidgetFont.text(size, .medium), color: color)
           .frame(maxWidth: .infinity)
       }
     }
@@ -246,12 +247,10 @@ private struct DayCircle: View {
       }
       if showNumber {
         Text("\(cell.day)")
-          .font(WidgetFont.hand(fontSize))
+          .font(WidgetFont.digits(fontSize))
           .foregroundColor(numberColor)
           .lineLimit(1)
           .minimumScaleFactor(0.5)
-          // 손글씨 폰트 숫자가 살짝 위로 떠 보여서 시안처럼 1pt 내린다.
-          .padding(.top, 1)
       }
     }
     .frame(width: size, height: size)
@@ -266,7 +265,7 @@ private struct DayCircle: View {
   }
 }
 
-/// 소형의 이번 주 한 줄. 요일 글자 아래 지름 15 점을 둔다.
+/// 소형의 이번 주 한 줄. 요일 글자(10) 아래 지름 15 점을 둔다. 글자 줄 높이는 손글씨 12 때와 같은 12.
 struct WeekDots: View {
   let cells: [DayCell]
   let palette: WidgetPalette
@@ -275,7 +274,11 @@ struct WeekDots: View {
     HStack(spacing: 0) {
       ForEach(cells) { cell in
         VStack(spacing: 3) {
-          HandText(WeekdayHeader.labels[cell.id % 7], size: 12, color: palette.inkSoft)
+          InkText(
+            WeekdayHeader.labels[cell.id % 7], font: WidgetFont.text(10, .medium),
+            color: palette.inkSoft
+          )
+          .frame(height: 12)
           dot(for: cell)
             .frame(width: 15, height: 15)
         }

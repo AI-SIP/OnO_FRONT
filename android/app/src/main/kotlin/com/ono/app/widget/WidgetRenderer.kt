@@ -29,6 +29,9 @@ internal enum class WidgetSize(val key: String, val layout: Int, val designWidth
  * 스냅샷 하나로 위젯 한 개의 RemoteViews 를 만든다.
  *
  * 글자와 달력은 전부 [WidgetPainter] 비트맵이고, 레이아웃 XML 은 자리(여백, 누르는 영역)만 잡는다.
+ * 손글씨는 연속 일수 큰 줄과 달력 월 제목에만 쓰고 나머지 글자는 시스템 글꼴이다.
+ * 시스템 글꼴은 손글씨보다 2~4dp 작게 쓰되, 줄 상자 높이(크기 x lineHeight)는 손글씨 때 값을 그대로 둬서
+ * 레이아웃이 흔들리지 않게 한다.
  * 비트맵 크기는 위젯 옵션의 실제 dp 크기로 정한다. 런처마다 칸 크기가 달라서 시안 크기로 그리면
  * 늘어나거나 잘린다.
  */
@@ -153,8 +156,9 @@ internal object WidgetRenderer {
                 R.id.widget_header_text,
                 p.textBlock(
                     listOf(
-                        TextLine(streak, 30f, ink.ink, 1.0f),
-                        TextLine("연속으로 공부 중", 14f, ink.soft, 1.2f, 2f),
+                        TextLine(streak, 30f, ink.ink, 1.0f, face = WidgetFace.HAND),
+                        // 줄 상자 16.8dp (손글씨 14 x 1.2 때와 같다)
+                        TextLine("연속으로 공부 중", 12f, ink.soft, 1.4f, 2f),
                     ),
                     inner - profileDp - 10f, center = false,
                 ),
@@ -166,7 +170,7 @@ internal object WidgetRenderer {
             // 소형은 복습 수 하나만 적는다. 밀린 문제 수까지 붙이면 칸이 좁아 복잡해 보인다.
             rv.setImageViewBitmap(
                 R.id.widget_review,
-                p.reviewLine(due, 17f, null, 13f, WidgetInk.OVERDUE, sideAtEnd = false, widthDp = inner),
+                p.reviewLine(due, 14f, 1.1f * 17f, null, 11f, WidgetInk.OVERDUE, sideAtEnd = false, widthDp = inner),
             )
             rv.setContentDescription(R.id.widget_review, due)
         } else {
@@ -175,7 +179,7 @@ internal object WidgetRenderer {
             rv.setImageViewBitmap(R.id.widget_signed_out_frog, p.profile(null, 56f))
             rv.setImageViewBitmap(
                 R.id.widget_signed_out_text,
-                p.textBlock(listOf(TextLine(emptyMessageSmall(model), 15f, ink.ink, 1.35f)), inner, center = true, wrapLines = true),
+                p.textBlock(listOf(TextLine(emptyMessageSmall(model), 13f, ink.ink, 1.45f)), inner, center = true, wrapLines = true),
             )
             rv.setContentDescription(R.id.widget_signed_out_text, emptyMessage(model))
         }
@@ -198,8 +202,8 @@ internal object WidgetRenderer {
                 R.id.widget_header_text,
                 p.textBlock(
                     listOf(
-                        TextLine(streak, 32f, ink.ink, 1.0f),
-                        TextLine("연속으로 공부 중", 14f, ink.soft, 1.2f, 2f),
+                        TextLine(streak, 32f, ink.ink, 1.0f, face = WidgetFace.HAND),
+                        TextLine("연속으로 공부 중", 12f, ink.soft, 1.4f, 2f),
                     ),
                     left, center = false,
                 ),
@@ -209,13 +213,13 @@ internal object WidgetRenderer {
             rv.setViewVisibility(R.id.widget_review, View.VISIBLE)
             rv.setImageViewBitmap(
                 R.id.widget_review,
-                p.reviewLine(due, 16f, null, 0f, 0, sideAtEnd = false, widthDp = left),
+                p.reviewLine(due, 14f, 1.1f * 16f, null, 0f, 0, sideAtEnd = false, widthDp = left),
             )
             rv.setContentDescription(R.id.widget_review, due)
         } else {
             rv.setImageViewBitmap(
                 R.id.widget_header_text,
-                p.textBlock(listOf(TextLine(emptyMessage(model), 15f, ink.ink, 1.35f)), left, center = false, wrapLines = true),
+                p.textBlock(listOf(TextLine(emptyMessage(model), 13f, ink.ink, 1.45f)), left, center = false, wrapLines = true),
             )
             rv.setContentDescription(R.id.widget_header_text, emptyMessage(model))
             rv.setViewVisibility(R.id.widget_review, View.GONE)
@@ -250,7 +254,7 @@ internal object WidgetRenderer {
         if (s == null) {
             rv.setImageViewBitmap(
                 R.id.widget_header_text,
-                p.textBlock(listOf(TextLine(emptyMessage(model), 16f, ink.ink, 1.2f)), headerW, center = false, wrapLines = true),
+                p.textBlock(listOf(TextLine(emptyMessage(model), 13f, ink.ink, 1.4f)), headerW, center = false, wrapLines = true),
             )
             rv.setContentDescription(R.id.widget_header_text, emptyMessage(model))
             // 복습 칸이 없으면 점선만 맨 아래 홀로 남아 어색해서 같이 숨긴다.
@@ -264,7 +268,10 @@ internal object WidgetRenderer {
         rv.setImageViewBitmap(
             R.id.widget_header_text,
             p.textBlock(
-                listOf(TextLine(headline, 28f, ink.ink, 1.0f), TextLine(sub, 14f, ink.soft, 1.2f, 3f)),
+                listOf(
+                    TextLine(headline, 28f, ink.ink, 1.0f, face = WidgetFace.HAND),
+                    TextLine(sub, 12f, ink.soft, 1.4f, 3f),
+                ),
                 headerW, center = false,
             ),
         )
@@ -280,7 +287,7 @@ internal object WidgetRenderer {
         val side = if (s.dueCount > 0 && s.overdueCount > 0) "밀린 문제 ${s.overdueCount}개" else null
         rv.setImageViewBitmap(
             R.id.widget_review,
-            p.reviewLine(title, 18f, side, 13f, ink.soft, sideAtEnd = true, widthDp = inner),
+            p.reviewLine(title, 14f, reviewLineH, side, 11f, ink.soft, sideAtEnd = true, widthDp = inner),
         )
         rv.setContentDescription(R.id.widget_review, listOfNotNull(title, side).joinToString(", "))
         rv.setOnClickPendingIntent(R.id.widget_review_section, launch(context, "onowidget://review-due?homeWidget&size=large"))
@@ -291,7 +298,7 @@ internal object WidgetRenderer {
             rv.setViewVisibility(R.id.widget_all_done, View.VISIBLE)
             rv.setImageViewBitmap(
                 R.id.widget_all_done,
-                p.textBlock(listOf(TextLine(ALL_DONE_LARGE, 17f, ink.ink, 1.2f)), inner, center = true),
+                p.textBlock(listOf(TextLine(ALL_DONE_LARGE, 13f, ink.ink, 1.2f * 17f / 13f)), inner, center = true),
             )
             rv.setContentDescription(R.id.widget_all_done, ALL_DONE_LARGE)
             return

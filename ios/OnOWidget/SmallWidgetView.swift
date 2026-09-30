@@ -23,15 +23,15 @@ struct SmallWidgetView: View {
       HStack(spacing: 10) {
         ProfileSticker(image: profile, size: 46)
         VStack(alignment: .leading, spacing: 2) {
-          HandText("\(state.streak)일째", size: 30, color: palette.ink, minimumScale: 0.5)
-          HandText("연속으로 공부 중", size: 14, color: palette.inkSoft)
+          InkText("\(state.streak)일째", font: WidgetFont.hand(30), color: palette.ink, minimumScale: 0.5)
+          InkText("연속으로 공부 중", font: WidgetFont.text(12, .medium), color: palette.inkSoft)
         }
       }
       WeekDots(cells: state.cells(weeks: 1), palette: palette)
         .padding(.top, 12)
       Spacer(minLength: 4)
       // 소형은 복습 수 하나만 적는다. 밀린 문제 수까지 붙이면 칸이 좁아 복잡해 보인다.
-      HighlightText(text: state.shortDueText, size: 17, palette: palette)
+      HighlightText(text: state.shortDueText, size: 14, palette: palette)
     }
   }
 
@@ -41,7 +41,7 @@ struct SmallWidgetView: View {
         .frame(width: 56, height: 56)
         .rotationEffect(.degrees(-6))
       Text(state.emptyMessageSmall)
-        .font(WidgetFont.hand(15))
+        .font(WidgetFont.text(13, .medium))
         .foregroundColor(state.palette.ink)
         .multilineTextAlignment(.center)
         .lineSpacing(3)

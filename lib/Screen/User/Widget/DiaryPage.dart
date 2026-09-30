@@ -9,6 +9,7 @@ import '../../../Module/Motion/AppHaptic.dart';
 import '../../../Module/Motion/AppMotion.dart';
 import '../../../Module/Motion/PressableScale.dart';
 import '../../../Module/Text/StandardText.dart';
+import 'DiaryTheme.dart';
 import 'FrogCharacter.dart';
 
 /// 학습 달력에서 고른 날의 일기장 한 쪽이다.
@@ -20,6 +21,10 @@ import 'FrogCharacter.dart';
 ///
 /// 날짜마다 따로 두려면 바깥에서 날짜로 `key` 를 줘야 한다. 그래야 다른 날을
 /// 고르면 쓰던 상태가 따라오지 않는다.
+///
+/// [embedded] 를 켜면 학습 달력의 기록 장 안에 이어 붙는다. 이미 바깥 종이
+/// 위라서 자기 종이 카드와 테이프를 그리지 않고, 날짜와 기분도 기록 장 머리에
+/// 있으니 `오늘의 일기` 제목만 단다. 쓰기, 저장, 도장 흐름은 똑같다.
 class DiaryPage extends StatefulWidget {
   /// 저장된 일기. 아직 불러오는 중이면 null, 안 쓴 날이면 빈 문자열이다.
   final String? savedText;
@@ -41,6 +46,12 @@ class DiaryPage extends StatefulWidget {
   /// 쓰던 글을 그대로 둔 채 입력칸에 머문다.
   final Future<bool> Function(String text) onSave;
 
+  /// 기록 장 안에 끼워 넣는 모양인지.
+  final bool embedded;
+
+  /// [embedded] 일 때 제목과 보조 글씨에 쓰는 잉크. 없으면 테마 색에서 뽑는다.
+  final DiaryInk? ink;
+
   const DiaryPage({
     super.key,
     required this.savedText,
@@ -50,6 +61,8 @@ class DiaryPage extends StatefulWidget {
     required this.frogLayers,
     required this.onSave,
     this.moodEmojiKey,
+    this.embedded = false,
+    this.ink,
   });
 
   static const int maxLength = 300;
@@ -59,6 +72,7 @@ class DiaryPage extends StatefulWidget {
   static const Key saveButtonKey = Key('diary_save_button');
   static const Key cancelButtonKey = Key('diary_cancel_button');
   static const Key stampKey = Key('diary_stamp');
+  static const Key embeddedTitleKey = Key('diary_embedded_title');
 
   @override
   State<DiaryPage> createState() => _DiaryPageState();
@@ -166,6 +180,28 @@ class _DiaryPageState extends State<DiaryPage> {
       ),
     );
 
+    final animatedBody = reduced
+        // 동작 줄이기를 켰으면 AnimatedSize 를 아예 뺀다. 길이 0 으로 두면
+        // 자기 레이아웃 도중에 다시 레이아웃을 요청해 오류가 난다.
+        ? body
+        : AnimatedSize(
+            duration: AppMotion.normal,
+            curve: AppMotion.emphasized,
+            alignment: Alignment.topCenter,
+            child: body,
+          );
+
+    if (widget.embedded) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildEmbeddedHeader(mode),
+          const SizedBox(height: 6),
+          animatedBody,
+        ],
+      );
+    }
+
     return Stack(
       clipBehavior: Clip.none,
       children: [
@@ -194,17 +230,7 @@ class _DiaryPageState extends State<DiaryPage> {
             children: [
               _buildHeader(),
               const SizedBox(height: AppSpacing.md),
-              // 동작 줄이기를 켰으면 AnimatedSize 를 아예 뺀다. 길이 0 으로 두면
-              // 자기 레이아웃 도중에 다시 레이아웃을 요청해 오류가 난다.
-              if (reduced)
-                body
-              else
-                AnimatedSize(
-                  duration: AppMotion.normal,
-                  curve: AppMotion.emphasized,
-                  alignment: Alignment.topCenter,
-                  child: body,
-                ),
+              animatedBody,
             ],
           ),
         ),
@@ -227,6 +253,56 @@ class _DiaryPageState extends State<DiaryPage> {
             ),
           ),
         ),
+      ],
+    );
+  }
+
+  DiaryInk get _diaryInk => widget.ink ?? DiaryInk.of(widget.primaryColor);
+
+  bool get _isToday {
+    final now = DateTime.now();
+    return widget.date.year == now.year &&
+        widget.date.month == now.month &&
+        widget.date.day == now.day;
+  }
+
+  /// 기록 장 안에서 쓰는 머리. 읽는 쪽일 때만 오른쪽에 `고쳐 쓰기` 를 단다.
+  /// 아래 알약 버튼 대신 밑줄 글씨로 둔 것은, 이미 쓴 일기 옆에 버튼이
+  /// 크게 서 있으면 공책이 아니라 입력 양식처럼 보여서다.
+  Widget _buildEmbeddedHeader(_DiaryMode mode) {
+    final ink = _diaryInk;
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Expanded(
+          child: HandText(
+            _isToday ? '오늘의 일기' : '이 날의 일기',
+            key: DiaryPage.embeddedTitleKey,
+            size: 21,
+            color: ink.ink,
+          ),
+        ),
+        if (mode == _DiaryMode.reading)
+          PressableScale(
+            key: DiaryPage.editButtonKey,
+            onTap: _startWriting,
+            child: ConstrainedBox(
+              // 글씨는 작아도 손가락으로 누를 자리는 44 를 지킨다.
+              constraints: const BoxConstraints(minHeight: 44, minWidth: 44),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 2),
+                child: Center(
+                  widthFactor: 1,
+                  child: HandText(
+                    '고쳐 쓰기',
+                    size: 16,
+                    color: ink.soft,
+                    decoration: TextDecoration.underline,
+                  ),
+                ),
+              ),
+            ),
+          ),
       ],
     );
   }
@@ -296,6 +372,10 @@ class _DiaryPageState extends State<DiaryPage> {
         forceStrutHeight: true,
       );
 
+  /// 아직 안 쓴 칸의 안내 글씨. 기록 장 안에서는 회색 대신 흐린 잉크로 쓴다.
+  Color get _hintColor =>
+      widget.embedded ? _diaryInk.faint : AppColors.textDisabled;
+
   Widget _ruled({required double lineHeight, required Widget child}) {
     return ConstrainedBox(
       constraints: BoxConstraints(minHeight: lineHeight * _minLines),
@@ -320,7 +400,7 @@ class _DiaryPageState extends State<DiaryPage> {
               width: double.infinity,
               child: Text(
                 '이 날은 어떤 하루였나요?',
-                style: _bodyStyle.copyWith(color: AppColors.textDisabled),
+                style: _bodyStyle.copyWith(color: _hintColor),
                 strutStyle: _strut,
               ),
             ),
@@ -361,13 +441,15 @@ class _DiaryPageState extends State<DiaryPage> {
         Row(
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
-            _PillButton(
-              key: DiaryPage.editButtonKey,
-              icon: Icons.edit_outlined,
-              label: '고쳐 쓰기',
-              color: widget.primaryColor,
-              onTap: _startWriting,
-            ),
+            // 기록 장 안에서는 `고쳐 쓰기` 가 머리 오른쪽에 있다.
+            if (!widget.embedded)
+              _PillButton(
+                key: DiaryPage.editButtonKey,
+                icon: Icons.edit_outlined,
+                label: '고쳐 쓰기',
+                color: widget.primaryColor,
+                onTap: _startWriting,
+              ),
             const Spacer(),
             _FrogStamp(
               key: DiaryPage.stampKey,
@@ -405,7 +487,7 @@ class _DiaryPageState extends State<DiaryPage> {
                 null,
             decoration: InputDecoration.collapsed(
               hintText: '이 날은 어떤 하루였나요?',
-              hintStyle: _bodyStyle.copyWith(color: AppColors.textDisabled),
+              hintStyle: _bodyStyle.copyWith(color: _hintColor),
             ),
           ),
         ),
@@ -417,7 +499,8 @@ class _DiaryPageState extends State<DiaryPage> {
               builder: (_, value, __) => StandardText(
                 text: '${value.text.characters.length}/${DiaryPage.maxLength}',
                 fontSize: 11,
-                color: AppColors.textTertiary,
+                color:
+                    widget.embedded ? _diaryInk.soft : AppColors.textTertiary,
                 height: 1.2,
               ),
             ),
@@ -425,7 +508,7 @@ class _DiaryPageState extends State<DiaryPage> {
             _PillButton(
               key: DiaryPage.cancelButtonKey,
               label: '취소',
-              color: AppColors.textSecondary,
+              color: widget.embedded ? _diaryInk.soft : AppColors.textSecondary,
               onTap: _saving ? null : _cancel,
             ),
             const SizedBox(width: AppSpacing.sm),
