@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../Model/Cosmetic/CosmeticLoadoutModel.dart';
 import '../../Provider/CosmeticProvider.dart';
+import 'Widget/CalendarDaySheet.dart';
+import 'Widget/CalendarMonthSheet.dart';
 import 'Widget/DiaryPage.dart';
-import 'Widget/FrogCharacter.dart';
+import 'Widget/DiaryTheme.dart';
 import '../../Model/StudyCalendar/StudyCalendarModel.dart';
 import '../../Module/Emoji/OnoEmojiCategory.dart';
-import '../../Module/Emoji/OnoEmojiImage.dart';
 import '../../Module/Emoji/OnoEmojiPicker.dart';
 import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
@@ -15,18 +15,22 @@ import '../../Service/Api/StudyCalendar/StudyCalendarService.dart';
 import '../../Util/AppSnackBar.dart';
 import '../../Module/Motion/AppHaptic.dart';
 import '../../Module/Motion/PressableScale.dart';
-import '../../Module/Motion/AnimatedGauge.dart';
 import '../../Module/Motion/Skeleton.dart';
 import '../../Module/Motion/TossDialog.dart';
-import '../../Module/Motion/AppMotion.dart';
-import '../../Module/Motion/AppearTransition.dart';
 import '../../Module/Design/AppColors.dart';
-import '../../Module/Design/AppRadius.dart';
 import '../../Module/Design/AppToast.dart';
 import '../../Util/AppAnalytics.dart';
 
 class LearningCalendarScreen extends StatefulWidget {
-  const LearningCalendarScreen({super.key});
+  /// 테스트에서 가짜 서비스를 넣기 위한 것이다. 앱에서는 넘기지 않는다.
+  final StudyCalendarService? service;
+
+  const LearningCalendarScreen({super.key, this.service});
+
+  /// 연월 선택 창에서 달 칸과 연도 화살표를 찾는 키. 테스트에서 쓴다.
+  static Key monthPickerMonthKey(int month) => Key('month_picker_$month');
+  static const Key monthPickerPrevYearKey = Key('month_picker_prev_year');
+  static const Key monthPickerNextYearKey = Key('month_picker_next_year');
 
   @override
   State<LearningCalendarScreen> createState() => _LearningCalendarScreenState();
@@ -47,17 +51,12 @@ class _LearningCalendarScreenState extends State<LearningCalendarScreen> {
   Set<int> _diaryDays = const {};
   int _loadDiaryDaysSeq = 0;
 
-  final StudyCalendarService _service = StudyCalendarService();
+  late final StudyCalendarService _service =
+      widget.service ?? StudyCalendarService();
 
-  static const List<String> _weekdayLabels = [
-    '일',
-    '월',
-    '화',
-    '수',
-    '목',
-    '금',
-    '토'
-  ];
+  /// 마지막 달력 조회가 실패했는지. 머리 문장 자리에 `다시 불러오기` 를 띄운다.
+  bool _loadFailed = false;
+
   static const List<String> _dayOfWeekNames = [
     '일요일',
     '월요일',
@@ -172,11 +171,15 @@ class _LearningCalendarScreenState extends State<LearningCalendarScreen> {
         setState(() {
           _calendarData = data;
           _isLoading = false;
+          _loadFailed = false;
         });
       }
     } catch (_) {
       if (mounted) {
-        setState(() => _isLoading = false);
+        setState(() {
+          _isLoading = false;
+          _loadFailed = true;
+        });
         AppSnackBar.showError('학습 달력을 불러오지 못했어요.');
       }
     }
@@ -218,12 +221,26 @@ class _LearningCalendarScreenState extends State<LearningCalendarScreen> {
     return _year == now.year && _month == now.month;
   }
 
+  /// 두 장을 좌우로 펼칠지. 폭이 넉넉한 가로 태블릿에서만 편다. 세로
+  /// 태블릿은 폭이 900 에 못 미쳐 폰처럼 위아래로 쌓는다.
+  static bool _isSpread(BuildContext context, double width) =>
+      width >= 900 &&
+      MediaQuery.orientationOf(context) == Orientation.landscape;
+
+  /// 펼쳤을 때 왼쪽 달력 장의 폭. 시안 값이다.
+  static const double _spreadCalendarWidth = 560;
+
+  /// 쌓았을 때 두 장의 최대 폭. 세로 태블릿에서 종이가 화면 끝까지 늘어나면
+  /// 일기장이 아니라 게시판처럼 보인다.
+  static const double _stackedMaxWidth = 640;
+
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeHandler>(context);
+    final ink = DiaryInk.of(themeProvider.primaryColor);
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: ink.desk,
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
@@ -234,75 +251,124 @@ class _LearningCalendarScreenState extends State<LearningCalendarScreen> {
         ),
         iconTheme: const IconThemeData(color: AppColors.textPrimary),
       ),
-      body: _isLoading
-          ? const SkeletonList(
-              itemCount: 3,
-              itemHeight: 180,
-              spacing: 16,
-              padding: EdgeInsets.fromLTRB(16, 16, 16, 16),
-            )
-          : SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  _buildMonthNavigator(themeProvider),
-                  const Divider(height: 1),
-                  Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      children: [
-                        _buildWeekdayHeader(themeProvider),
-                        const SizedBox(height: 8),
-                        _buildCalendarGrid(themeProvider),
-                      ],
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final spread = _isSpread(context, constraints.maxWidth);
+          final padding = spread
+              ? const EdgeInsets.fromLTRB(28, 14, 28, 28)
+              : const EdgeInsets.fromLTRB(12, 14, 12, 28);
+          final first = _isLoading
+              ? _PaperSkeleton(ink: ink, height: 440, withHead: true)
+              : _buildMonthSheet(ink);
+          final second = _isLoading
+              ? _PaperSkeleton(ink: ink, height: 280)
+              : _buildDaySheet(ink, themeProvider);
+
+          // 두 장이 따로 스크롤하지 않고 화면 전체가 하나로 스크롤한다.
+          return SingleChildScrollView(
+            padding: padding,
+            child: spread
+                ? Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SizedBox(width: _spreadCalendarWidth, child: first),
+                      const SizedBox(width: 20),
+                      Expanded(child: second),
+                    ],
+                  )
+                : Center(
+                    child: ConstrainedBox(
+                      constraints:
+                          const BoxConstraints(maxWidth: _stackedMaxWidth),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [first, const SizedBox(height: 20), second],
+                      ),
                     ),
                   ),
-                  const Divider(),
-                  _buildStatsSection(themeProvider),
-                  const Divider(),
-                  _buildSelectedDayDetail(themeProvider),
-                  const SizedBox(height: 24),
-                ],
-              ),
-            ),
+          );
+        },
+      ),
     );
   }
 
-  Widget _buildMonthNavigator(ThemeHandler themeProvider) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          IconButton(
-            icon: const Icon(Icons.chevron_left),
-            onPressed: _prevMonth,
-            color: AppColors.textPrimary,
-          ),
-          PressableScale(
-            onTap: () => _showMonthPicker(themeProvider),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  StandardText(
-                      text: '$_year년 $_month월',
-                      fontSize: 16,
-                      color: AppColors.textPrimary),
-                  const SizedBox(width: 4),
-                  Icon(Icons.arrow_drop_down,
-                      size: 18, color: Colors.grey[600]),
-                ],
-              ),
-            ),
-          ),
-          IconButton(
-            icon: Icon(Icons.chevron_right,
-                color: _isCurrentMonth ? Colors.grey[300] : Colors.black87),
-            onPressed: _isCurrentMonth ? null : _nextMonth,
-          ),
-        ],
+  /// 달력을 못 불러왔으면 null. 실패한 뒤에 전 달의 결과가 남아 있어도
+  /// 그 숫자를 이 달 것처럼 적지 않게 여기서 한 번 거른다.
+  StudyCalendarModel? get _shownCalendar => _loadFailed ? null : _calendarData;
+
+  Widget _buildMonthSheet(DiaryInk ink) {
+    final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
+    return CalendarMonthSheet(
+      ink: ink,
+      year: _year,
+      month: _month,
+      today: DateTime.now(),
+      data: _shownCalendar,
+      selectedDay: _selectedDay,
+      diaryDays: _diaryDays,
+      large: MediaQuery.sizeOf(context).shortestSide >= 600,
+      onPrevMonth: _prevMonth,
+      onNextMonth: _isCurrentMonth ? null : _nextMonth,
+      onPickMonth: () => _showMonthPicker(themeProvider),
+      onRetry: _loadCalendar,
+      onDayTap: (day) {
+        final newDay = (_selectedDay == day) ? null : day;
+        setState(() {
+          _selectedDay = newDay;
+          _diaryText = null;
+        });
+        if (newDay != null) {
+          _loadDiary(_year, _month, newDay);
+        }
+      },
+    );
+  }
+
+  Widget _buildDaySheet(DiaryInk ink, ThemeHandler themeProvider) {
+    final day = _selectedDay;
+    if (day == null) {
+      // 날짜를 풀면 둘째 장이 통째로 사라져 태블릿 오른쪽이 텅 빈다. 무엇을
+      // 누르면 되는지 한 줄 적어 둔다.
+      return DiarySheet(
+        edgeColor: ink.edge,
+        child: HandText(
+          '날짜를 누르면 그날의 기록과 일기가 여기에 적혀요',
+          size: 17,
+          color: ink.soft,
+        ),
+      );
+    }
+
+    // 일기는 기기에만 있으므로 달력 조회에 실패해도 쓸 수 있어야 한다.
+    // 학습 기록은 조회가 된 때만 보인다.
+    final calendarData = _shownCalendar;
+    final record = calendarData?.recordFor(day);
+    final date = DateTime(_year, _month, day);
+    final weekdayName = _dayOfWeekNames[date.weekday % 7];
+    final now = DateTime.now();
+    final isToday =
+        date.year == now.year && date.month == now.month && date.day == now.day;
+
+    return CalendarDaySheet(
+      ink: ink,
+      date: date,
+      isToday: isToday,
+      weekdayName: weekdayName,
+      showRecord: calendarData != null,
+      record: record,
+      onMoodTap: record == null ? null : () => _showMoodPicker(record),
+      diary: DiaryPage(
+        // 날짜마다 쓰던 상태를 따로 둔다. 다른 날로 옮기면 입력칸이 닫힌다.
+        key: ValueKey('diary_${_year}_${_month}_$day'),
+        embedded: true,
+        ink: ink,
+        savedText: _diaryText,
+        date: date,
+        weekdayName: weekdayName,
+        moodEmojiKey: record?.moodEmojiKey,
+        frogLayers: context.watch<CosmeticProvider>().layersWithoutBackdrop,
+        primaryColor: themeProvider.primaryColor,
+        onSave: (text) => _saveDiary(_year, _month, day, text),
       ),
     );
   }
@@ -310,472 +376,126 @@ class _LearningCalendarScreenState extends State<LearningCalendarScreen> {
   void _showMonthPicker(ThemeHandler themeProvider) {
     int pickerYear = _year;
     final now = DateTime.now();
+    // 학습 달력 화면과 같은 종이, 테이프, 손글씨로 그린다. 흰 다이얼로그에
+    // 회색 칩이면 달력을 펼쳐 둔 일기장 위에 딴 물건이 뜬 것처럼 보였다.
+    final ink = DiaryInk.of(themeProvider.primaryColor);
 
     showTossDialog(
       context: context,
       builder: (ctx) {
         return StatefulBuilder(
           builder: (dialogContext, setDialogState) {
+            final canGoNextYear = pickerYear < now.year;
             return Dialog(
-              backgroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(AppRadius.large)),
-              child: Padding(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // 연도 선택
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        IconButton(
-                          icon: const Icon(Icons.chevron_left),
-                          onPressed: () => setDialogState(() => pickerYear--),
-                          color: AppColors.textPrimary,
-                        ),
-                        StandardText(
-                            text: '$pickerYear년',
-                            fontSize: 16,
-                            color: AppColors.textPrimary),
-                        IconButton(
-                          icon: Icon(
-                            Icons.chevron_right,
-                            color: pickerYear >= now.year
-                                ? Colors.grey[300]
-                                : Colors.black87,
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+              child: ConstrainedBox(
+                // 태블릿에서 달 칸이 옆으로 늘어나 흩어지지 않게 폭을 묶는다.
+                constraints: const BoxConstraints(maxWidth: 360),
+                child: DiarySheet(
+                  edgeColor: ink.edge,
+                  tapeColor: ink.tape,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // 연도 선택
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          _PickerArrow(
+                            key: LearningCalendarScreen.monthPickerPrevYearKey,
+                            label: '지난해',
+                            glyph: InkGlyph.chevronLeft,
+                            color: ink.ink,
+                            onTap: () => setDialogState(() => pickerYear--),
                           ),
-                          onPressed: pickerYear >= now.year
-                              ? null
-                              : () => setDialogState(() => pickerYear++),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    // 월 그리드 (4열 × 3행)
-                    GridView.builder(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 4,
-                        childAspectRatio: 1.6,
-                        mainAxisSpacing: 8,
-                        crossAxisSpacing: 8,
-                      ),
-                      itemCount: 12,
-                      itemBuilder: (_, index) {
-                        final month = index + 1;
-                        final isFuture = pickerYear > now.year ||
-                            (pickerYear == now.year && month > now.month);
-                        final isSelected =
-                            pickerYear == _year && month == _month;
-
-                        return PressableScale(
-                          haptic: HapticLevel.selection,
-                          onTap: isFuture
-                              ? null
-                              : () {
-                                  Navigator.pop(ctx);
-                                  setState(() {
-                                    _year = pickerYear;
-                                    _month = month;
-                                    _selectedDay = null;
-                                  });
-                                  _loadCalendar();
-                                },
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: isSelected
-                                  ? themeProvider.primaryColor
-                                  : Colors.grey[100],
-                              borderRadius:
-                                  BorderRadius.circular(AppRadius.small),
+                          const SizedBox(width: 12),
+                          HandText('$pickerYear년', size: 23, color: ink.ink),
+                          const SizedBox(width: 12),
+                          Opacity(
+                            opacity: canGoNextYear ? 1 : 0.3,
+                            child: _PickerArrow(
+                              key:
+                                  LearningCalendarScreen.monthPickerNextYearKey,
+                              label: '다음 해',
+                              glyph: InkGlyph.chevronRight,
+                              color: ink.ink,
+                              onTap: canGoNextYear
+                                  ? () => setDialogState(() => pickerYear++)
+                                  : null,
                             ),
-                            child: Center(
-                              child: StandardText(
-                                text: '$month월',
-                                fontSize: 13,
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      // 월 그리드 (4열 × 3행)
+                      GridView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 4,
+                          mainAxisExtent: 48,
+                          mainAxisSpacing: 12,
+                          crossAxisSpacing: 10,
+                        ),
+                        itemCount: 12,
+                        itemBuilder: (_, index) {
+                          final month = index + 1;
+                          final isFuture = pickerYear > now.year ||
+                              (pickerYear == now.year && month > now.month);
+                          final isSelected =
+                              pickerYear == _year && month == _month;
+                          final isThisMonth =
+                              pickerYear == now.year && month == now.month;
+
+                          return PressableScale(
+                            key: LearningCalendarScreen.monthPickerMonthKey(
+                                month),
+                            haptic: HapticLevel.selection,
+                            onTap: isFuture
+                                ? null
+                                : () {
+                                    Navigator.pop(ctx);
+                                    setState(() {
+                                      _year = pickerYear;
+                                      _month = month;
+                                      _selectedDay = null;
+                                    });
+                                    _loadCalendar();
+                                  },
+                            child: Container(
+                              alignment: Alignment.center,
+                              decoration: BoxDecoration(
                                 color: isSelected
-                                    ? Colors.white
-                                    : isFuture
-                                        ? Colors.grey[300]!
-                                        : Colors.black87,
+                                    ? ink.levelFill(2)
+                                    : Colors.transparent,
+                                borderRadius: BorderRadius.circular(24),
+                                border: isThisMonth && !isSelected
+                                    ? Border.all(color: ink.ink, width: 1.5)
+                                    : null,
+                              ),
+                              child: HandText(
+                                '$month월',
+                                size: 19,
+                                color: isFuture
+                                    ? ink.faint
+                                    : isSelected
+                                        ? ink.numberOn(2)
+                                        : ink.ink,
                               ),
                             ),
-                          ),
-                        );
-                      },
-                    ),
-                  ],
+                          );
+                        },
+                      ),
+                    ],
+                  ),
                 ),
               ),
             );
           },
         );
       },
-    );
-  }
-
-  Widget _buildWeekdayHeader(ThemeHandler themeProvider) {
-    return Row(
-      children: _weekdayLabels.map((label) {
-        return Expanded(
-          child: Center(
-            child: StandardText(
-              text: label,
-              fontSize: 12,
-              color: AppColors.textTertiary,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        );
-      }).toList(),
-    );
-  }
-
-  Widget _buildCalendarGrid(ThemeHandler themeProvider) {
-    // 공부한 날마다 찍히는 도장이 내가 꾸민 개구리다. 칸마다 Provider 를
-    // 읽으면 서른 번 넘게 구독하게 되므로 여기서 한 번만 읽어 내려 준다.
-    final frogLayers = context.watch<CosmeticProvider>().layersWithoutBackdrop;
-    final mq = MediaQuery.of(context);
-    final screenWidth = mq.size.width;
-    final isTablet = mq.size.shortestSide >= 600;
-
-    // 셀 1개의 자연 크기: 전체 너비에서 그리드 패딩(32)과 셀 패딩(4×7) 제외
-    const double gridPadding = 32.0;
-    const double cellPadding = 4.0;
-    final double naturalCellSize =
-        (screenWidth - gridPadding) / 7 - cellPadding;
-    // 태블릿에서는 최대 72px로 제한
-    final double cellSize =
-        isTablet ? naturalCellSize.clamp(0.0, 72.0) : naturalCellSize;
-
-    final now = DateTime.now();
-    final firstWeekday = DateTime(_year, _month, 1).weekday % 7;
-    final daysInMonth = DateTime(_year, _month + 1, 0).day;
-    final totalCells = firstWeekday + daysInMonth;
-    final rows = (totalCells / 7).ceil();
-
-    return Column(
-      // 달력이 첫 주부터 한 줄씩 내려오며 그려진다. 한꺼번에 나타나면
-      // 어느 날에 기록이 있는지 눈이 따라가기 어렵다.
-      children: List.generate(rows, (rowIndex) {
-        return AppearTransition(
-          delay: AppMotion.stagger * rowIndex,
-          child: Row(
-            children: List.generate(7, (colIndex) {
-              final cellIndex = rowIndex * 7 + colIndex;
-              final day = cellIndex - firstWeekday + 1;
-
-              if (day < 1 || day > daysInMonth) {
-                return Expanded(
-                  child: SizedBox(height: cellSize + cellPadding),
-                );
-              }
-
-              final cellDate = DateTime(_year, _month, day);
-              final isFuture =
-                  cellDate.isAfter(DateTime(now.year, now.month, now.day));
-              final isToday = cellDate.year == now.year &&
-                  cellDate.month == now.month &&
-                  cellDate.day == now.day;
-
-              final record = _calendarData?.recordFor(day);
-              final intensity = record?.intensityLevel ?? 0;
-
-              return Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.all(2),
-                  child: Center(
-                    child: SizedBox(
-                      width: cellSize,
-                      height: cellSize,
-                      child: _CalendarCell(
-                        day: day,
-                        isToday: isToday,
-                        isFuture: isFuture,
-                        intensityLevel: intensity,
-                        moodEmojiKey: record?.moodEmojiKey,
-                        hasDiary: _diaryDays.contains(day),
-                        themeProvider: themeProvider,
-                        frogLayers: frogLayers,
-                        onTap: isFuture
-                            ? null
-                            : () {
-                                final newDay =
-                                    (_selectedDay == day) ? null : day;
-                                setState(() {
-                                  _selectedDay = newDay;
-                                  _diaryText = null;
-                                });
-                                if (newDay != null) {
-                                  _loadDiary(_year, _month, newDay);
-                                }
-                              },
-                      ),
-                    ),
-                  ),
-                ),
-              );
-            }),
-          ),
-        );
-      }),
-    );
-  }
-
-  Widget _buildStatChip(String label, String value, Color primaryColor) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 9),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(AppRadius.small),
-          border: Border.all(color: AppColors.border),
-        ),
-        child: Column(
-          children: [
-            StandardText(text: value, fontSize: 15, color: primaryColor),
-            const SizedBox(height: 2),
-            StandardText(
-                text: label, fontSize: 10, color: AppColors.textTertiary),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSelectedDayDetail(ThemeHandler themeProvider) {
-    if (_selectedDay == null) return const SizedBox.shrink();
-
-    // 일기는 기기에만 있으므로 달력 조회에 실패해도 쓸 수 있어야 한다.
-    // 학습 기록 박스만 조회가 된 때 보인다.
-    final calendarData = _calendarData;
-    final record = calendarData?.recordFor(_selectedDay!);
-    final weekdayIndex = DateTime(_year, _month, _selectedDay!).weekday % 7;
-    final weekdayName = _dayOfWeekNames[weekdayIndex];
-    final primaryColor = themeProvider.primaryColor;
-
-    final day = _selectedDay!;
-
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          if (calendarData != null) ...[
-            _buildDayRecordBox(record, weekdayName, themeProvider),
-            const SizedBox(height: 20),
-          ],
-          DiaryPage(
-            // 날짜마다 쓰던 상태를 따로 둔다. 다른 날로 옮기면 입력칸이 닫힌다.
-            key: ValueKey('diary_${_year}_${_month}_$day'),
-            savedText: _diaryText,
-            date: DateTime(_year, _month, day),
-            weekdayName: weekdayName,
-            moodEmojiKey: record?.moodEmojiKey,
-            frogLayers: context.watch<CosmeticProvider>().layersWithoutBackdrop,
-            primaryColor: primaryColor,
-            onSave: (text) => _saveDiary(_year, _month, day, text),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDayRecordBox(
-    DailyStudyRecord? record,
-    String weekdayName,
-    ThemeHandler themeProvider,
-  ) {
-    final primaryColor = themeProvider.primaryColor;
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.grey[50],
-        borderRadius: BorderRadius.circular(AppRadius.medium),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              StandardText(
-                text: '$_month월 $_selectedDay일 $weekdayName',
-                fontSize: 14,
-                color: primaryColor,
-              ),
-              PressableScale(
-                onTap: () => setState(() => _selectedDay = null),
-                child: Icon(Icons.close, size: 16, color: Colors.grey[400]),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          if (record == null || !record.hasStudied)
-            Center(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4),
-                child: StandardText(
-                  text: '이 날은 학습하지 않았어요',
-                  fontSize: 13,
-                  color: Colors.grey,
-                ),
-              ),
-            )
-          else ...[
-            _buildMoodSection(record, themeProvider),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                _buildStatChip('복습', '${record.reviewCount}회', primaryColor),
-                const SizedBox(width: 8),
-                _buildStatChip(
-                    '오답노트', '${record.noteWriteCount}개', primaryColor),
-                const SizedBox(width: 8),
-                _buildStatChip('학습', '${record.studyMinutes}분', primaryColor),
-              ],
-            ),
-            if (record.reviewedItems.isNotEmpty) ...[
-              const SizedBox(height: 12),
-              StandardText(
-                text: '복습한 항목',
-                fontSize: 11,
-                color: AppColors.textTertiary,
-              ),
-              const SizedBox(height: 6),
-              ...record.reviewedItems.map((item) => Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 3),
-                    child: Row(
-                      children: [
-                        Icon(Icons.article_outlined,
-                            size: 13, color: Colors.grey[400]),
-                        const SizedBox(width: 6),
-                        Expanded(
-                          child: StandardText(
-                            text: item,
-                            fontSize: 12,
-                            color: AppColors.textPrimary,
-                          ),
-                        ),
-                      ],
-                    ),
-                  )),
-            ],
-          ],
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStatsSection(ThemeHandler themeProvider) {
-    final currentStreak = _calendarData?.currentStreak;
-    final bestStreak = _calendarData?.bestStreak;
-    final studyDays = _calendarData?.thisMonthStudyDays;
-    final daysInMonth = DateTime(_year, _month + 1, 0).day;
-
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: _buildStreakCard(
-                  label: '현재 연속',
-                  emoji: '🔥',
-                  value: currentStreak != null ? '${currentStreak}일' : '--',
-                  color: themeProvider.primaryColor,
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: _buildStreakCard(
-                  label: '이번 달 최장 복습',
-                  emoji: '⭐',
-                  value: bestStreak != null ? '${bestStreak}일' : '--',
-                  color: Colors.amber,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              StandardText(
-                text: '이번 달 학습',
-                fontSize: 14,
-                color: AppColors.textPrimary,
-              ),
-              StandardText(
-                text: studyDays != null
-                    ? '${studyDays}일 / ${daysInMonth}일'
-                    : '--',
-                fontSize: 14,
-                color: AppColors.textSecondary,
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          AnimatedLinearGauge(
-            value: studyDays != null ? studyDays / daysInMonth : 0.0,
-            color: themeProvider.primaryColor.withOpacity(0.7),
-            backgroundColor: Colors.grey[200],
-            height: 10,
-            borderRadius: 8,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildMoodSection(
-      DailyStudyRecord record, ThemeHandler themeProvider) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(AppRadius.small),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Row(
-        children: [
-          StandardText(
-            text: '오늘의 감정',
-            fontSize: 12,
-            color: AppColors.textSecondary,
-          ),
-          const SizedBox(width: 10),
-          if (record.moodEmojiKey != null)
-            OnoEmojiImage(emojiKey: record.moodEmojiKey, size: 32)
-          else
-            StandardText(
-              text: '아직 없어요',
-              fontSize: 12,
-              color: Colors.grey,
-            ),
-          const Spacer(),
-          TextButton(
-            onPressed: () => _showMoodPicker(record),
-            style: TextButton.styleFrom(
-              foregroundColor: themeProvider.primaryColor,
-              padding: const EdgeInsets.symmetric(horizontal: 8),
-              minimumSize: const Size(0, 32),
-              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-            ),
-            child: StandardText(
-              text: record.moodEmojiKey == null ? '선택' : '변경',
-              fontSize: 12,
-              color: themeProvider.primaryColor,
-            ),
-          ),
-        ],
-      ),
     );
   }
 
@@ -808,187 +528,104 @@ class _LearningCalendarScreenState extends State<LearningCalendarScreen> {
       },
     );
   }
+}
 
-  Widget _buildStreakCard({
-    required String label,
-    required String emoji,
-    required String value,
-    required Color color,
-  }) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-      decoration: BoxDecoration(
-        color: Colors.grey[50],
-        borderRadius: BorderRadius.circular(AppRadius.medium),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          StandardText(
-            text: label,
-            fontSize: 12,
-            color: Colors.grey,
-          ),
-          const SizedBox(height: 4),
-          Row(
-            children: [
-              StandardText(
-                text: emoji,
-                fontSize: 20,
-                color: AppColors.textPrimary,
+/// 불러오는 동안 놓는 종이 한 장 모양의 자리. 회색 막대 대신 종이 위에 옅은
+/// 테마 색 자국처럼 보이게 해서, 다 불러온 뒤 같은 자리에 같은 종이가 놓인다.
+class _PaperSkeleton extends StatelessWidget {
+  final DiaryInk ink;
+  final double height;
+
+  /// 첫 장처럼 프로필과 문장 자리를 그릴지.
+  final bool withHead;
+
+  const _PaperSkeleton({
+    required this.ink,
+    required this.height,
+    this.withHead = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final base =
+        Color.alphaBlend(ink.theme.withValues(alpha: 0.08), DiaryPaper.paper);
+    final shine =
+        Color.alphaBlend(ink.theme.withValues(alpha: 0.03), DiaryPaper.paper);
+    Widget box({double? width, required double height, double radius = 8}) =>
+        SkeletonBox(
+          width: width,
+          height: height,
+          borderRadius: radius,
+          baseColor: base,
+          highlightColor: shine,
+        );
+
+    return DiarySheet(
+      edgeColor: ink.edge,
+      child: SizedBox(
+        height: height,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (withHead) ...[
+              Row(
+                children: [
+                  box(width: 58, height: 58, radius: 29),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        box(width: 150, height: 26),
+                        const SizedBox(height: 8),
+                        box(width: 180, height: 14),
+                      ],
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(width: 6),
-              StandardText(
-                text: value,
-                fontSize: 20,
-                color: color,
-              ),
+              const SizedBox(height: 22),
+            ] else ...[
+              box(width: 110, height: 26),
+              const SizedBox(height: 18),
             ],
-          ),
-        ],
+            Expanded(child: box(height: double.infinity, radius: 14)),
+          ],
+        ),
       ),
     );
   }
 }
 
-class _CalendarCell extends StatelessWidget {
-  final int day;
-  final bool isToday;
-  final bool isFuture;
-  final int intensityLevel;
-  final String? moodEmojiKey;
-
-  /// 이 날 일기를 썼는지. 오른쪽 위에 연필 표시를 단다.
-  final bool hasDiary;
-
-  final ThemeHandler themeProvider;
-
-  /// 공부한 날에 찍을 개구리. `CosmeticProvider.layersWithoutBackdrop` 이다.
-  final List<CosmeticLayerModel> frogLayers;
-
+/// 연월 선택 창의 연도 화살표. 누르는 자리는 44 를 지킨다.
+class _PickerArrow extends StatelessWidget {
+  final String label;
+  final InkGlyph glyph;
+  final Color color;
   final VoidCallback? onTap;
 
-  const _CalendarCell({
-    required this.day,
-    required this.isToday,
-    required this.isFuture,
-    required this.intensityLevel,
-    this.moodEmojiKey,
-    this.hasDiary = false,
-    required this.themeProvider,
-    required this.frogLayers,
-    this.onTap,
+  const _PickerArrow({
+    super.key,
+    required this.label,
+    required this.glyph,
+    required this.color,
+    required this.onTap,
   });
-
-  Color _getBackgroundColor() {
-    if (isToday && intensityLevel >= 1) return themeProvider.primaryColor;
-    if (isToday && intensityLevel == 0) return Colors.grey[100]!;
-    switch (intensityLevel) {
-      case 1:
-        return themeProvider.primaryColor.withOpacity(0.18);
-      case 2:
-        return themeProvider.primaryColor.withOpacity(0.45);
-      case 3:
-        return themeProvider.primaryColor.withOpacity(0.78);
-      default:
-        return Colors.grey[100]!;
-    }
-  }
-
-  List<BoxShadow>? _getBoxShadow() {
-    if (!isToday) return null;
-    // 오늘 + 학습: 흰색 링 (주제색 배경 위에서 잘 보임)
-    // 오늘 + 미학습: 주제색 링 (회색 배경 위에서 잘 보임)
-    final ringColor = intensityLevel >= 1
-        ? Colors.white.withOpacity(0.85)
-        : themeProvider.primaryColor;
-    return [
-      BoxShadow(
-        color: ringColor,
-        spreadRadius: 2,
-        blurRadius: 0,
-        offset: Offset.zero,
-      ),
-    ];
-  }
-
-  Color _getTextColor() {
-    if (isFuture) return Colors.grey[300]!;
-    if (isToday && intensityLevel == 0) return themeProvider.primaryColor;
-    if (intensityLevel == 0) return Colors.grey[400]!;
-    return Colors.white;
-  }
-
-  Widget _buildCellContent() {
-    if (intensityLevel > 0) {
-      return FractionallySizedBox(
-        widthFactor: 0.68,
-        heightFactor: 0.68,
-        // 공부한 날에 찍히는 도장도 내가 꾸민 개구리 얼굴이다. 칸이 작아
-        // 전신은 알아볼 수 없어서 얼굴만 잘라 쓴다. 칸에 이미 진하기 색이
-        // 깔려 있으므로 배경 파츠는 뺀다.
-        child: LayoutBuilder(
-          builder: (context, constraints) => FrogHeadAvatar(
-            layers: frogLayers,
-            size: constraints.biggest.shortestSide,
-          ),
-        ),
-      );
-    }
-    return StandardText(
-      text: '$day',
-      fontSize: 11,
-      color: _getTextColor(),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
-    final bgColor = _getBackgroundColor();
-
-    return PressableScale(
-      haptic: HapticLevel.selection,
-      onTap: onTap,
-      child: Container(
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: bgColor,
-          boxShadow: _getBoxShadow(),
-        ),
-        child: Stack(
-          clipBehavior: Clip.none,
-          children: [
-            Center(child: _buildCellContent()),
-            if (moodEmojiKey != null)
-              Positioned(
-                right: -1,
-                bottom: -1,
-                child: OnoEmojiImage(emojiKey: moodEmojiKey, size: 18),
-              ),
-            // 기분 스티커가 오른쪽 아래를 쓰므로 일기 표시는 오른쪽 위에 둔다.
-            if (hasDiary)
-              Positioned(
-                right: -2,
-                top: -2,
-                child: Container(
-                  width: 15,
-                  height: 15,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: themeProvider.primaryColor.withValues(alpha: 0.5),
-                    ),
-                  ),
-                  child: Icon(
-                    Icons.edit_rounded,
-                    size: 9,
-                    color: themeProvider.primaryColor,
-                  ),
-                ),
-              ),
-          ],
+    return Semantics(
+      label: label,
+      button: true,
+      enabled: onTap != null,
+      child: PressableScale(
+        onTap: onTap,
+        enabled: onTap != null,
+        semanticButton: false,
+        child: SizedBox(
+          width: 44,
+          height: 44,
+          child: Center(child: InkIcon(glyph, size: 18, color: color)),
         ),
       ),
     );
