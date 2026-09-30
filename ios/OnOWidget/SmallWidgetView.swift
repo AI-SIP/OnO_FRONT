@@ -30,13 +30,8 @@ struct SmallWidgetView: View {
       WeekDots(cells: state.cells(weeks: 1), palette: palette)
         .padding(.top, 12)
       Spacer(minLength: 4)
-      HStack(alignment: .firstTextBaseline, spacing: 6) {
-        HighlightText(text: state.shortDueText, size: 17, palette: palette)
-          .layoutPriority(1)
-        if state.dueCount > 0 && state.overdueCount > 0 {
-          HandText("밀린 \(state.overdueCount)", size: 13, color: palette.overdue)
-        }
-      }
+      // 소형은 복습 수 하나만 적는다. 밀린 문제 수까지 붙이면 칸이 좁아 복잡해 보인다.
+      HighlightText(text: state.shortDueText, size: 17, palette: palette)
     }
   }
 

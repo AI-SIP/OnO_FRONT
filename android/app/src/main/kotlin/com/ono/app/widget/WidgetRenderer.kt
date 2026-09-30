@@ -163,12 +163,12 @@ internal object WidgetRenderer {
             rv.setImageViewBitmap(R.id.widget_week, p.week(model, inner))
             rv.setContentDescription(R.id.widget_week, "이번 주 공부한 날")
             val due = dueText(model, s)
-            val overdue = if (s.dueCount > 0 && s.overdueCount > 0) "밀린 ${s.overdueCount}" else null
+            // 소형은 복습 수 하나만 적는다. 밀린 문제 수까지 붙이면 칸이 좁아 복잡해 보인다.
             rv.setImageViewBitmap(
                 R.id.widget_review,
-                p.reviewLine(due, 17f, overdue, 13f, WidgetInk.OVERDUE, sideAtEnd = false, widthDp = inner),
+                p.reviewLine(due, 17f, null, 13f, WidgetInk.OVERDUE, sideAtEnd = false, widthDp = inner),
             )
-            rv.setContentDescription(R.id.widget_review, listOfNotNull(due, overdue).joinToString(", "))
+            rv.setContentDescription(R.id.widget_review, due)
         } else {
             rv.setViewVisibility(R.id.widget_content, View.GONE)
             rv.setViewVisibility(R.id.widget_signed_out, View.VISIBLE)

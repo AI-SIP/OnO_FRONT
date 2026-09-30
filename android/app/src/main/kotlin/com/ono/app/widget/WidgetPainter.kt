@@ -134,7 +134,7 @@ internal class WidgetPainter(context: Context, private val scale: Float, private
 
     /**
      * 형광펜 복습 문구 한 줄. 글자 상자 아래 45% 에 테마 색 40% 띠를 깔고(좌우 2dp 여유),
-     * [side] 가 있으면 [sideAtEnd] 에 따라 바로 뒤(소형 `밀린 2`) 또는 오른쪽 끝(대형 `밀린 문제 2개`)에 적는다.
+     * [side] 가 있으면 [sideAtEnd] 에 따라 오른쪽 끝(대형 `밀린 문제 2개`)에 적는다. 지금은 대형만 쓴다.
      */
     fun reviewLine(
         text: String,
