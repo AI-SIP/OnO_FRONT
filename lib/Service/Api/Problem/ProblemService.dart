@@ -278,10 +278,13 @@ class ProblemService {
     );
   }
 
-  Future<ReviewDueResponse> getReviewDueProblems() async {
+  Future<ReviewDueResponse> getReviewDueProblems({
+    bool showErrorSnackBar = true,
+  }) async {
     final data = await httpService.sendRequest(
       method: 'GET',
       url: '${AppConfig.baseUrl}/api/problems/review-due',
+      showErrorSnackBar: showErrorSnackBar,
     );
     return ReviewDueResponse.fromJson(data as Map<String, dynamic>);
   }
