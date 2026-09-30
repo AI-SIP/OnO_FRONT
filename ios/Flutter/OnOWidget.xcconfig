@@ -1,0 +1,6 @@
+// 홈 화면 위젯 확장(OnOWidget) 설정. 확장은 Flutter 도 CocoaPods 도 쓰지 않아서 Pods xcconfig 는
+// 섞지 않고, 앱과 버전을 맞추려고 Flutter 가 만든 Generated.xcconfig 만 읽는다.
+// 확장의 CFBundleShortVersionString/CFBundleVersion 이 Runner 와 다르면 App Store 업로드가 거절된다.
+// Generated.xcconfig 가 없으면(flutter pub get 전) 버전이 빈 채로 빌드되지 않게 #include? 대신
+// #include 로 둬서 바로 실패하게 한다.
+#include "Generated.xcconfig"

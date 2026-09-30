@@ -16,6 +16,7 @@ import '../../../Module/User/ProfileAvatar.dart';
 import '../../../Provider/CosmeticProvider.dart';
 import '../../../Provider/UserProvider.dart';
 import '../../../Service/Api/FileUpload/FileUploadService.dart';
+import '../../../Service/HomeWidget/HomeWidgetSyncService.dart';
 
 /// 마이페이지 맨 위의 프로필 카드다.
 ///
@@ -138,6 +139,8 @@ class _ProfileEditCardState extends State<ProfileEditCard> {
       final imageUrl = await _fileUploadService.uploadImageFile(pickedFile);
       await userProvider.updateUserProfileImageUrl(imageUrl);
       FirebaseAnalytics.instance.logEvent(name: 'profile_image_updated');
+      // 홈 화면 위젯의 프로필 그림도 새 사진으로 다시 찍는다. 기다리지 않는다.
+      HomeWidgetSyncService.instance.refreshProfile();
     } catch (_) {
       if (!mounted) return;
       _showProfileSnackBar('프로필 이미지 변경에 실패했습니다. 다시 시도해주세요.');
@@ -152,6 +155,8 @@ class _ProfileEditCardState extends State<ProfileEditCard> {
     try {
       await userProvider.deleteUserProfileImage();
       FirebaseAnalytics.instance.logEvent(name: 'profile_image_reset');
+      // 홈 화면 위젯의 프로필 그림도 개구리로 다시 찍는다. 기다리지 않는다.
+      HomeWidgetSyncService.instance.refreshProfile();
     } catch (_) {
       if (!mounted) return;
       _showProfileSnackBar('기본 이미지 변경에 실패했습니다. 다시 시도해주세요.');

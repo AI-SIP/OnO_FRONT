@@ -52,6 +52,24 @@
                 <action android:name="FLUTTER_NOTIFICATION_CLICK" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
+
+            <!-- 홈 화면 위젯 탭. home_widget 의 HomeWidgetLaunchIntent 가 이 액션과 onowidget:// URL 로
+                 MainActivity 를 연다. 명시적 인텐트라 필터 없이도 열리지만, home_widget 예제와 계약서대로 등록해 둔다.
+                 VIEW/BROWSABLE 을 넣지 않아서 브라우저나 다른 앱이 onowidget:// 로 앱을 여는 길은 만들지 않는다. -->
+            <intent-filter>
+                <action android:name="es.antonborri.home_widget.action.LAUNCH" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:scheme="onowidget" />
+            </intent-filter>
+
+            <!-- Flutter 3.27 부터 이 값이 없으면 딥링크 처리가 켜진 것으로 본다. 그러면 위젯이 넘긴 onowidget:// URL 을
+                 엔진이 Navigator.pushNamed 로도 밀어 넣는데, 앱 onGenerateRoute 가 모르는 이름이라 예외가 난다
+                 (앱이 떠 있을 때 위젯을 누르면 onNewIntent -> pushRouteInformation).
+                 위젯 이동은 HomeWidgetRouter 가 home_widget 경로로만 처리하므로 엔진 딥링크는 끈다.
+                 지금까지 MainActivity 로 data 가 붙은 인텐트가 들어오는 곳이 없어 기존 동작에는 영향이 없다. -->
+            <meta-data
+                android:name="flutter_deeplinking_enabled"
+                android:value="false" />
         </activity>
         <!-- 카카오 로그인 커스텀 URL 스킴 설정 -->
         <activity
@@ -90,6 +108,54 @@
         <meta-data
             android:name="com.naver.sdk.clientName"
             android:value="@string/client_name"/>
+
+        <!-- 홈 화면 위젯. 클래스 이름은 docs/홈 화면 위젯/위젯_데이터_계약.md 와 같아야 한다
+             (Dart 가 HomeWidget.updateWidget(qualifiedAndroidName: ...) 으로 부른다). -->
+        <receiver
+            android:name=".widget.OnOSmallWidgetProvider"
+            android:exported="false"
+            android:label="@string/widget_small_label">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_small_info" />
+        </receiver>
+        <receiver
+            android:name=".widget.OnOMediumWidgetProvider"
+            android:exported="false"
+            android:label="@string/widget_medium_label">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_medium_info" />
+        </receiver>
+        <receiver
+            android:name=".widget.OnOLargeWidgetProvider"
+            android:exported="false"
+            android:label="@string/widget_large_label">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_large_info" />
+        </receiver>
+
+        <!-- 위젯 자정 갱신과 시각, 시간대 변경. 새 권한 없이 받을 수 있는 방송만 쓴다 (WidgetMidnight.kt). -->
+        <receiver
+            android:name=".widget.WidgetMidnightReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.TIME_SET" />
+                <action android:name="android.intent.action.TIMEZONE_CHANGED" />
+                <action android:name="android.intent.action.DATE_CHANGED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
+        </receiver>
 
 
     </application>

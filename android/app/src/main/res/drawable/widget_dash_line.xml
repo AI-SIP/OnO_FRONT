@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    대형 위젯의 달력과 복습 사이 점선 (#E6DAC3, 1.5dp). shape 의 dashWidth 는 하드웨어 가속에서
+    실선으로 그려지는 기기가 있어서 짧은 타일 PNG 를 가로로만 반복한다.
+-->
+<bitmap xmlns:android="http://schemas.android.com/apk/res/android"
+    android:src="@drawable/widget_dash_tile"
+    android:tileModeX="repeat"
+    android:tileModeY="clamp" />

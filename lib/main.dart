@@ -6,6 +6,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:home_widget/home_widget.dart';
 import 'package:kakao_flutter_sdk/kakao_flutter_sdk.dart';
 import 'package:ono/Model/Common/LoginStatus.dart';
 import 'package:ono/Module/Text/StandardText.dart';
@@ -44,6 +45,8 @@ import 'Util/SentryEnvironment.dart';
 import 'Util/NotificationService.dart';
 import 'Module/Notice/ServiceNoticeDialog.dart';
 import 'Service/Api/Notice/NoticeService.dart';
+import 'Service/HomeWidget/HomeWidgetRouter.dart';
+import 'Service/HomeWidget/HomeWidgetSyncService.dart';
 import 'Module/Motion/AppHaptic.dart';
 import 'Module/Motion/AppScrollBehavior.dart';
 import 'Module/Motion/BouncyNavIcon.dart';
@@ -122,6 +125,16 @@ Future<void> _bootstrapApp() async {
 
   await NotificationService.instance.init();
   FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
+
+  // 홈 화면 위젯과 같은 저장소(iOS App Group)를 쓰게 한다. 위젯은 있으면
+  // 좋은 것이라 실패해도 앱 실행을 막지 않는다.
+  try {
+    await HomeWidget.setAppGroupId(HomeWidgetSyncService.appGroupId);
+  } catch (error) {
+    debugPrint('HomeWidget.setAppGroupId failed: $error');
+  }
+  // 앱이 꺼진 상태에서 위젯을 눌러 열렸는지 읽어 둔다. 홈 화면이 뜬 뒤 옮긴다.
+  HomeWidgetRouter.instance.captureInitialLaunch();
 
   final kakaoNativeAppKey = dotenv.env['KAKAO_NATIVE_APP_KEY']?.trim();
   if (kakaoNativeAppKey == null || kakaoNativeAppKey.isEmpty) {
@@ -287,7 +300,12 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    // 앱이 떠 있을 때 홈 화면 위젯을 누르면 해당 화면으로 옮긴다.
+    HomeWidgetRouter.instance.listenClicks();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
+      _syncHomeWidget();
+      // 앱이 꺼진 상태에서 위젯으로 열렸으면 그 화면으로 옮긴다.
+      unawaited(HomeWidgetRouter.instance.processPending());
       await _prepareInitialTutorial();
       await _prepareServiceNotice();
     });
@@ -295,6 +313,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
 
   @override
   void dispose() {
+    HomeWidgetRouter.instance.stopListening();
     _detachTutorialFinishListener();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
@@ -392,9 +411,18 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
       // 로그아웃 상태에서는 부르지 않는다. 토큰이 없는 채로 요청을 보내면
       // 인증 실패 처리를 괜히 건드린다.
       if (userProvider.isLoggedIn == LoginStatus.login) {
+        _syncHomeWidget();
         await missionProvider.fetchMissions();
       }
     }
+  }
+
+  /// 홈 화면 위젯 값을 새로 맞춘다. 로그인 상태일 때만 부르고 기다리지 않는다.
+  void _syncHomeWidget() {
+    if (!mounted) return;
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    if (userProvider.isLoggedIn != LoginStatus.login) return;
+    unawaited(HomeWidgetSyncService.instance.sync());
   }
 
   @override

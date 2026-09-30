@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
+import '../../Service/HomeWidget/HomeWidgetSyncService.dart';
 import '../../Util/AppAnalytics.dart';
 import 'ThemeLockManager.dart';
 
@@ -41,6 +42,9 @@ class ThemeHandler with ChangeNotifier {
     // 바꾼 이벤트는 어디서 바꿨는지 아는 ThemeDialog 가 남긴다. 여기서는
     // 지금 쓰는 테마를 유저 속성으로 둬서, 어떤 색을 가장 많이 쓰는지 본다.
     AppAnalytics.setUserProperty(AppAnalytics.themeColorProperty, colorName);
+    // 홈 화면 위젯 글씨와 동그라미도 새 테마 색을 따르게 한다. 서버는 부르지
+    // 않고 색만 고쳐 쓴다.
+    HomeWidgetSyncService.instance.updateTheme(primaryColor);
     notifyListeners();
   }
 
