@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    minWidth/minHeight 는 Android 11 이하 런처가 쓰는 값이라 (70 x 칸 수 - 30)dp 공식으로 2x2 칸을 맞춘다.
+    Android 12 이상은 targetCellWidth/Height 를 먼저 본다.
+    updatePeriodMillis 는 0 이다. 앱이 값을 바꿀 때(HomeWidget.updateWidget)와 자정 알람(WidgetMidnight.kt)에만 다시 그린다.
+-->
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+    android:description="@string/widget_small_description"
+    android:initialLayout="@layout/widget_small"
+    android:minWidth="110dp"
+    android:minHeight="110dp"
+    android:minResizeWidth="110dp"
+    android:minResizeHeight="110dp"
+    android:previewImage="@drawable/widget_small_preview"
+    android:resizeMode="horizontal|vertical"
+    android:targetCellWidth="2"
+    android:targetCellHeight="2"
+    android:updatePeriodMillis="0"
+    android:widgetCategory="home_screen" />

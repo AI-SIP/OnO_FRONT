@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    홈 화면 위젯 종이 (소형, 중형). 22dp 간격 공책 줄을 타일 PNG 로 반복한다.
+    Android 12 미만에서는 위젯 뷰를 둥근 모서리로 자를 방법이 없어서, 줄이 모서리 곡선 밖으로
+    삐져나오지 않게 좌우 4dp, 아래 14dp 를 비워 둔다. 아래 14dp 는 원래 여백이라 줄이 없어도 티가 안 난다.
+    테두리는 줄 위에 한 번 더 그려서 줄 끝이 테두리를 덮지 않게 한다.
+-->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="#FFFCF5" />
+            <corners android:radius="28dp" />
+        </shape>
+    </item>
+    <item android:left="4dp" android:right="4dp" android:bottom="14dp">
+        <bitmap android:src="@drawable/widget_rule_tile" android:tileMode="repeat" />
+    </item>
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="#00000000" />
+            <stroke android:width="1dp" android:color="#F0E7D6" />
+            <corners android:radius="28dp" />
+        </shape>
+    </item>
+</layer-list>
