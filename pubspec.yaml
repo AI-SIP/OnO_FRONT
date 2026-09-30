@@ -73,6 +73,7 @@ dependencies:
   # 앱 버전을 읽어 모든 API 요청에 X-App-Version 으로 실어 보낸다.
   # 서버가 구버전 앱을 가려내 XP 자동 적립 여부를 정하는 데 쓴다.
   package_info_plus: ^9.0.1
+  home_widget: ^0.9.2+1
 
 dev_dependencies:
   flutter_test:
