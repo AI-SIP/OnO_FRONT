@@ -6,8 +6,23 @@ import android.os.Build
 import com.ono.app.R
 import java.io.File
 
+/** 위젯 글자에 쓰는 글꼴. 손글씨는 연속 일수 큰 줄과 달력 월 제목에만 쓴다. */
+internal enum class WidgetFace {
+    /** 손글씨 (연속 일수, `9월`) */
+    HAND,
+
+    /** 시스템 sans-serif. 추천 문제 제목처럼 긴 본문 */
+    TEXT,
+
+    /** 시스템 sans-serif-medium. 보조 문장, 요일, 날짜 숫자, 복습 문구, 배지, 안내 문구 */
+    MEDIUM,
+}
+
 /**
  * 위젯 손글씨 폰트(res/font/handwrite_widget.ttf, 계약서의 HandWriteWidget.ttf 서브셋).
+ *
+ * 문장, 요일, 날짜 숫자까지 손글씨로 쓰면 작은 글자가 뭉개져 읽기 어려워서 손글씨는 두 자리에만 쓰고
+ * 나머지는 시스템 글꼴([text], [medium])로 그린다. 시스템 글꼴도 비트맵에 그리는 것은 같다.
  *
  * 위젯 글자는 TextView 가 아니라 이 Typeface 로 비트맵에 그린다. 이유:
  * - 런처는 RemoteViews 를 우리 앱 리소스로 펼칠 때 `createApplicationContext(.., CONTEXT_RESTRICTED)` 를 쓴다
@@ -23,6 +38,15 @@ internal object WidgetFont {
 
     @Volatile
     private var cached: Typeface? = null
+
+    val text: Typeface by lazy { Typeface.create("sans-serif", Typeface.NORMAL) }
+    val medium: Typeface by lazy { Typeface.create("sans-serif-medium", Typeface.NORMAL) }
+
+    fun of(context: Context, face: WidgetFace): Typeface = when (face) {
+        WidgetFace.HAND -> get(context)
+        WidgetFace.TEXT -> text
+        WidgetFace.MEDIUM -> medium
+    }
 
     fun get(context: Context): Typeface {
         cached?.let { return it }

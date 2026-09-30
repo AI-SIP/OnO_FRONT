@@ -11,16 +11,20 @@ import kotlin.math.pow
  *
  * 검정, 회색 글씨는 파스텔 테마와 어울리지 않아서, 테마 색의 색상(hue)은 두고 채도와 밝기만 내린
  * "잉크 색"을 쓴다. 값은 계약서 디자인 토큰 그대로다 (iOS 위젯과 같은 식).
+ * 본문과 보조 잉크는 어느 테마에서도 종이와 대비가 4.5:1 이상 나오게 밝기를 잡는다.
  */
 internal class WidgetInk(val theme: Int) {
 
     private val hsl = toHsl(theme)
 
-    /** 본문: hue 유지, saturation = min(s, 0.5), lightness = 0.32 */
-    val ink: Int = fromHsl(hsl[0], min(hsl[1], 0.5f), 0.32f)
+    /** 본문: hue 유지, saturation = min(s, 0.5), lightness = 0.30 */
+    val ink: Int = fromHsl(hsl[0], min(hsl[1], 0.5f), 0.30f)
 
-    /** 보조: saturation = min(s, 0.35), lightness = 0.48 */
-    val soft: Int = fromHsl(hsl[0], min(hsl[1], 0.35f), 0.48f)
+    /**
+     * 보조: saturation = min(s, 0.35), lightness 0.45 에서 시작해 종이와 대비 4.5:1 이 될 때까지 0.01 씩 내린다.
+     * 노랑, 연두처럼 밝은 색상만 조금 더 진해지고 나머지 테마는 0.45 그대로다.
+     */
+    val soft: Int = softInk(hsl[0], min(hsl[1], 0.35f))
 
     /** 흐림: 지난달과 미래 날짜 숫자. 보조 잉크를 saturation 0.30 이하로, 알파 0.45 */
     val faint: Int = withAlpha(fromHsl(hsl[0], min(hsl[1], 0.30f), 0.48f), 0.45f)
@@ -56,6 +60,16 @@ internal class WidgetInk(val theme: Int) {
 
         /** 밀린 문제는 테마 색에 묻히지 않게 테라코타 하나로 고정한다. hsl(18, 50%, 44%) */
         val OVERDUE: Int = fromHsl(18f, 0.50f, 0.44f)
+
+        private fun softInk(h: Float, s: Float): Int {
+            var l = 0.45f
+            while (l > 0.30f) {
+                val c = fromHsl(h, s, l)
+                if (contrast(c, PAPER) >= 4.5) return c
+                l -= 0.01f
+            }
+            return fromHsl(h, s, 0.30f)
+        }
 
         fun withAlpha(color: Int, alpha: Float): Int =
             Color.argb((alpha * 255f + 0.5f).toInt(), Color.red(color), Color.green(color), Color.blue(color))

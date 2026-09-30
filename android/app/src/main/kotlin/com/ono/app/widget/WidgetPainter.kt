@@ -17,13 +17,17 @@ import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.roundToInt
 
-/** 비트맵에 적을 한 줄. 크기는 dp, lineHeight 는 글자 크기 배수(CSS line-height 와 같은 뜻). */
+/**
+ * 비트맵에 적을 한 줄. 크기는 dp, lineHeight 는 글자 크기 배수(CSS line-height 와 같은 뜻).
+ * 글꼴 기본값은 시스템 medium 이다. 손글씨는 연속 일수 큰 줄에만 [WidgetFace.HAND] 로 넘긴다.
+ */
 internal data class TextLine(
     val text: String,
     val sizeDp: Float,
     val color: Int,
     val lineHeight: Float = 1.2f,
     val gapBeforeDp: Float = 0f,
+    val face: WidgetFace = WidgetFace.MEDIUM,
 )
 
 /**
@@ -38,7 +42,6 @@ internal data class TextLine(
 internal class WidgetPainter(context: Context, private val scale: Float, private val ink: WidgetInk) {
 
     private val appContext = context.applicationContext
-    private val font = WidgetFont.get(context)
 
     private fun dp(v: Float): Float = v * scale
 
@@ -50,14 +53,17 @@ internal class WidgetPainter(context: Context, private val scale: Float, private
         return bmp to Canvas(bmp)
     }
 
-    private fun textPaint(sizeDp: Float, color: Int): TextPaint =
+    private fun textPaint(sizeDp: Float, color: Int, face: WidgetFace = WidgetFace.MEDIUM): TextPaint =
         TextPaint(Paint.ANTI_ALIAS_FLAG or Paint.SUBPIXEL_TEXT_FLAG).apply {
-            typeface = font
+            typeface = WidgetFont.of(appContext, face)
             textSize = dp(sizeDp)
             this.color = color
         }
 
-    /** 글자 크기 lh 배 줄 상자의 세로 가운데에 오는 기준선. 이 폰트는 ascent 0.796, descent 0.230 이라 줄 높이 1 에 거의 꽉 찬다. */
+    /**
+     * 글자 크기 lh 배 줄 상자의 세로 가운데에 오는 기준선. 손글씨는 ascent 0.796, descent 0.230 이라 줄 높이 1 에
+     * 거의 꽉 차고, 시스템 글꼴은 그보다 조금 크지만 가운데 맞춤이라 상자를 넘는 것은 빈 위아래 여백뿐이다.
+     */
     private fun baselineIn(paint: Paint, top: Float, boxHeight: Float): Float {
         val fm = paint.fontMetrics
         return top + (boxHeight - (fm.descent - fm.ascent)) / 2f - fm.ascent
@@ -110,16 +116,16 @@ internal class WidgetPainter(context: Context, private val scale: Float, private
             y += dp(line.gapBeforeDp)
             val box = dp(lineBox(line.sizeDp, line.lineHeight))
             if (wrapLines) {
-                val paint = textPaint(line.sizeDp, line.color)
+                val paint = textPaint(line.sizeDp, line.color, line.face)
                 for (part in wrap(paint, line.text, maxW)) {
-                    val p = textPaint(line.sizeDp, line.color)
+                    val p = textPaint(line.sizeDp, line.color, line.face)
                     rows.add(Row(fitted(p, part, maxW), p, y, box))
                     y += box
                 }
             } else {
                 // 연속 일수처럼 한 줄에 둬야 하는 글자라 절반까지 줄여서라도 말줄임(`12…`)을 피한다.
                 // 삼성 2x2 처럼 좁은 칸에서 세 자리 연속 일수가 들어가야 한다.
-                val p = textPaint(line.sizeDp, line.color)
+                val p = textPaint(line.sizeDp, line.color, line.face)
                 rows.add(Row(fitted(p, line.text, maxW, minFactor = 0.5f), p, y, box))
                 y += box
             }
@@ -133,12 +139,15 @@ internal class WidgetPainter(context: Context, private val scale: Float, private
     }
 
     /**
-     * 형광펜 복습 문구 한 줄. 글자 상자 아래 45% 에 테마 색 40% 띠를 깔고(좌우 2dp 여유),
+     * 형광펜 복습 문구 한 줄 (시스템 medium). 글자 상자 아래 45% 에 테마 색 40% 띠를 깔고(좌우 2dp 여유),
      * [side] 가 있으면 [sideAtEnd] 에 따라 오른쪽 끝(대형 `밀린 문제 2개`)에 적는다. 지금은 대형만 쓴다.
+     * 비트맵 높이는 [boxDp] 로 고정한다. 손글씨 시절 높이를 그대로 둬야 위젯 레이아웃이 흔들리지 않는다.
+     * 글자 상자는 그 안 세로 가운데에 둔다.
      */
     fun reviewLine(
         text: String,
         sizeDp: Float,
+        boxDp: Float,
         side: String?,
         sideSizeDp: Float,
         sideColor: Int,
@@ -147,7 +156,9 @@ internal class WidgetPainter(context: Context, private val scale: Float, private
     ): Bitmap {
         val maxW = dp(widthDp)
         val pad = dp(2f)
+        val outer = dp(max(boxDp, lineBox(sizeDp, 1.1f)))
         val box = dp(lineBox(sizeDp, 1.1f))
+        val boxTop = (outer - box) / 2f
         val main = textPaint(sizeDp, ink.ink)
         val sidePaint = if (side.isNullOrEmpty()) null else textPaint(sideSizeDp, sideColor)
         val sideW = sidePaint?.measureText(side) ?: 0f
@@ -155,10 +166,10 @@ internal class WidgetPainter(context: Context, private val scale: Float, private
         val mainText = fitted(main, text, maxW - pad * 2 - sideW - gap)
         val mainW = main.measureText(mainText)
 
-        val (bmp, c) = newCanvas(widthDp, box / scale)
+        val (bmp, c) = newCanvas(widthDp, outer / scale)
         val band = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = ink.highlight }
-        c.drawRect(0f, box * 0.55f, mainW + pad * 2, box, band)
-        val baseline = baselineIn(main, 0f, box)
+        c.drawRect(0f, boxTop + box * 0.55f, mainW + pad * 2, boxTop + box, band)
+        val baseline = baselineIn(main, boxTop, box)
         c.drawText(mainText, pad, baseline, main)
         if (sidePaint != null && side != null) {
             val x = if (sideAtEnd) maxW - sideW else pad * 2 + mainW + gap
@@ -167,7 +178,7 @@ internal class WidgetPainter(context: Context, private val scale: Float, private
         return bmp
     }
 
-    /** 대형 추천 한 줄 (높이 27): 12dp 둥근 네모 체크박스, 제목 15 한 줄 말줄임, 오른쪽 배지 13, 아래 공책 줄. */
+    /** 대형 추천 한 줄 (높이 27): 12dp 둥근 네모 체크박스, 제목 13 한 줄 말줄임, 오른쪽 배지 11, 아래 공책 줄. */
     fun recommendationRow(title: String, badge: String, badgeColor: Int, widthDp: Float): Bitmap {
         val h = 27f
         val (bmp, c) = newCanvas(widthDp, h)
@@ -182,9 +193,9 @@ internal class WidgetPainter(context: Context, private val scale: Float, private
         val half = dp(1.5f) / 2f
         c.drawRoundRect(RectF(half, cy - dp(6f) + half, dp(12f) - half, cy + dp(6f) - half), dp(3f), dp(3f), box)
 
-        val badgePaint = textPaint(13f, badgeColor)
+        val badgePaint = textPaint(11f, badgeColor)
         val badgeW = badgePaint.measureText(badge)
-        val titlePaint = textPaint(15f, ink.ink)
+        val titlePaint = textPaint(13f, ink.ink, WidgetFace.TEXT)
         val titleX = dp(12f + 8f)
         val titleMax = w - titleX - badgeW - dp(8f)
         val shown = TextUtils.ellipsize(title, titlePaint, max(0f, titleMax), TextUtils.TruncateAt.END).toString()
@@ -212,6 +223,9 @@ internal class WidgetPainter(context: Context, private val scale: Float, private
         val colW = w / 7f
         val designCell = dp(if (large) 22f else 20f)
         val pitchRatio = if (large) 0.88f else 0.8f
+        // 시스템 글꼴 크기. 요일은 중형 10 대형 11, 날짜 숫자는 칸 20 에 12(중형), 칸 22 에 13(대형).
+        val headDesign = if (large) 11f else 10f
+        val numRatio = if (large) 13f / 22f else 12f / 20f
 
         // 칸 지름. 제목과 요일 줄 높이(k 배)를 뺀 나머지를 줄 수로 나눈다.
         fun cellFor(k: Float): Pair<Float, Float> {
@@ -224,19 +238,19 @@ internal class WidgetPainter(context: Context, private val scale: Float, private
         val k = (cellFor(1f).first / designCell).coerceIn(0.85f, 1.35f)
         val (cell, pitch) = cellFor(k)
 
-        // 제목 줄: `9월`(19) + stale 이면 `어제까지 기록`(12, 보조). 기준선을 맞춘다.
+        // 제목 줄: 손글씨 `9월`(19) + stale 이면 `어제까지 기록`(시스템 10, 보조). 기준선을 맞춘다.
         val titleBox = dp(20f) * k
-        val title = textPaint(19f * k, ink.ink)
+        val title = textPaint(19f * k, ink.ink, WidgetFace.HAND)
         val titleBase = baselineIn(title, 0f, titleBox)
         c.drawText(model.monthTitle, 0f, titleBase, title)
         if (model.stale) {
-            val note = textPaint(12f * k, ink.soft)
+            val note = textPaint(10f * k, ink.soft)
             c.drawText("어제까지 기록", title.measureText(model.monthTitle) + dp(6f), titleBase, note)
         }
 
         val headTop = titleBox + gapTitle
         val headBox = dp(12f) * k
-        val headSizeDp = min(12f * k, colW / scale * 0.55f)
+        val headSizeDp = min(headDesign * k, colW / scale * 0.5f)
         val head = textPaint(headSizeDp, ink.soft)
         val headBase = baselineIn(head, headTop, headBox)
         for (i in 0 until 7) {
@@ -245,7 +259,7 @@ internal class WidgetPainter(context: Context, private val scale: Float, private
         }
 
         val gridTop = headTop + headBox + gapHead
-        val numSizePx = cell * 0.64f
+        val numSizePx = cell * numRatio
         val showNumbers = numSizePx / scale >= 9f
 
         val fill = Paint(Paint.ANTI_ALIAS_FLAG)
@@ -255,7 +269,7 @@ internal class WidgetPainter(context: Context, private val scale: Float, private
             color = ink.ink
         }
         val num = TextPaint(Paint.ANTI_ALIAS_FLAG or Paint.SUBPIXEL_TEXT_FLAG).apply {
-            typeface = font
+            typeface = WidgetFont.medium
             textSize = numSizePx
         }
 
@@ -278,8 +292,7 @@ internal class WidgetPainter(context: Context, private val scale: Float, private
                     else -> ink.ink
                 }
                 val label = cellInfo.date.dayOfMonth.toString()
-                // 시안은 숫자에 padding-top 1px 을 줘서 손글씨가 원 가운데보다 살짝 아래에 앉는다.
-                val base = baselineIn(num, cy - r, cell) + dp(0.5f)
+                val base = baselineIn(num, cy - r, cell)
                 c.drawText(label, cx - num.measureText(label) / 2f, base, num)
             }
         }
@@ -287,7 +300,7 @@ internal class WidgetPainter(context: Context, private val scale: Float, private
     }
 
     /**
-     * 소형 이번 주 한 줄: 요일(12, 보조) 밑에 지름 15 점 7개.
+     * 소형 이번 주 한 줄: 요일(시스템 10, 보조, 줄 높이 12) 밑에 지름 15 점 7개.
      * 공부한 날은 칠하고, 안 한 지난 날과 미래는 #E3D7C0 1.5dp 점선 원, 오늘은 잉크 테두리.
      */
     fun week(model: WidgetModel, widthDp: Float): Bitmap {
@@ -297,7 +310,7 @@ internal class WidgetPainter(context: Context, private val scale: Float, private
         val dotDp = min(15f, colW / scale - 2f).coerceAtLeast(8f)
         val (bmp, c) = newCanvas(widthDp, labelBox + gap + dotDp)
 
-        val label = textPaint(min(12f, colW / scale * 0.6f), ink.soft)
+        val label = textPaint(min(10f, colW / scale * 0.5f), ink.soft)
         val labelBase = baselineIn(label, 0f, dp(labelBox))
         val fill = Paint(Paint.ANTI_ALIAS_FLAG)
         val ring = Paint(Paint.ANTI_ALIAS_FLAG).apply {

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-    소형 위젯 (2x2). 글자는 전부 Kotlin 에서 손글씨 폰트로 그린 비트맵을 ImageView 에 넣는다.
+    소형 위젯 (2x2). 글자는 전부 Kotlin 에서 비트맵으로 그려 ImageView 에 넣는다(연속 일수만 손글씨, 나머지는 시스템 글꼴).
     런처가 RemoteViews 를 CONTEXT_RESTRICTED 로 펼쳐서 TextView 의 @font 가 적용되지 않기 때문이다.
     자세한 이유는 widget/WidgetFont.kt 주석.
     XML 기본 상태는 로그인 안내 화면이다. 첫 갱신 전에 잠깐 보이는 모습이 앞 사용자 기록이 되면 안 된다.
