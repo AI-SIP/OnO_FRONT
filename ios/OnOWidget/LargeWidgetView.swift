@@ -16,8 +16,8 @@ struct LargeWidgetView: View {
       header
         .frame(height: 50)
       CalendarColumn(
-        state: state, weeks: 5, rowGap: 3, designCell: 22, designFont: 14,
-        titleGap: 3, headerGap: 4
+        state: state, weeks: 5, rowGap: 3, designCell: 22, designFont: 13,
+        titleGap: 3, headerGap: 4, headerSize: 11
       )
       .padding(.top, 8)
       DashedRule()
@@ -41,14 +41,16 @@ struct LargeWidgetView: View {
       if state.loggedIn {
         ProfileSticker(image: profile, size: 50)
         VStack(alignment: .leading, spacing: 3) {
-          HandText("\(state.streak)일째 공부 중", size: 28, color: palette.ink, minimumScale: 0.5)
-          HandText("이번 달엔 \(state.monthStudyDays)일 공부했어요", size: 14, color: palette.inkSoft)
+          InkText("\(state.streak)일째 공부 중", font: WidgetFont.hand(28), color: palette.ink, minimumScale: 0.5)
+          InkText(
+            "이번 달엔 \(state.monthStudyDays)일 공부했어요", font: WidgetFont.text(12, .medium),
+            color: palette.inkSoft)
         }
       } else {
         BareFrog()
           .frame(width: 50, height: 50)
           .rotationEffect(.degrees(-6))
-        HandText(state.emptyMessage, size: 16, color: palette.ink)
+        InkText(state.emptyMessage, font: WidgetFont.text(13, .medium), color: palette.ink)
       }
       Spacer(minLength: 0)
     }
@@ -58,11 +60,11 @@ struct LargeWidgetView: View {
     VStack(alignment: .leading, spacing: 0) {
       Link(destination: DeepLink.reviewDue(size: "large")) {
         HStack(alignment: .firstTextBaseline) {
-          HighlightText(text: dueTitle, size: 18, palette: palette)
+          HighlightText(text: dueTitle, size: 14, palette: palette)
             .layoutPriority(1)
           Spacer(minLength: 6)
           if state.dueCount > 0 && state.overdueCount > 0 {
-            HandText("밀린 문제 \(state.overdueCount)개", size: 13, color: palette.inkSoft)
+            InkText("밀린 문제 \(state.overdueCount)개", font: WidgetFont.digits(11), color: palette.inkSoft)
           }
         }
         .frame(height: 20)
@@ -70,7 +72,7 @@ struct LargeWidgetView: View {
       .padding(.top, 7)
 
       if state.dueCount == 0 || state.recommendations.isEmpty {
-        HandText("내일 복습할 문제는 내일 알려 줄게요", size: 17, color: palette.ink)
+        InkText("내일 복습할 문제는 내일 알려 줄게요", font: WidgetFont.text(13, .medium), color: palette.ink)
           .frame(maxWidth: .infinity, maxHeight: .infinity)
       } else {
         VStack(spacing: 0) {
@@ -105,16 +107,16 @@ private struct RecommendationRow: View {
         .frame(width: 12, height: 12)
       // 제목은 줄이지 않고 한 줄 말줄임. 길이가 제각각이라 줄이면 줄마다 글자 크기가 달라 보인다.
       Text(item.title)
-        .font(WidgetFont.hand(15))
+        .font(WidgetFont.text(13))
         .foregroundColor(palette.ink)
         .lineLimit(1)
         .truncationMode(.tail)
         .frame(maxWidth: .infinity, alignment: .leading)
       if item.overdueDays > 0 {
-        HandText("\(item.overdueDays)일 밀림", size: 13, color: palette.overdue)
+        InkText("\(item.overdueDays)일 밀림", font: WidgetFont.digits(11), color: palette.overdue)
           .fixedSize()
       } else {
-        HandText("오늘", size: 13, color: palette.inkSoft)
+        InkText("오늘", font: WidgetFont.text(11, .medium), color: palette.inkSoft)
           .fixedSize()
       }
     }

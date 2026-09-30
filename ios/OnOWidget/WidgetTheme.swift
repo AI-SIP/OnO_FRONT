@@ -6,6 +6,8 @@ enum Paper {
   static let background = Color(hex: 0xFFFCF5)
   static let edge = Color(hex: 0xF0E7D6)
   static let rule = Color(hex: 0xF1E9D8)
+  /// 소형과 중형 바탕의 공책 줄. 글자와 겹쳐 지저분해 보여서 줄 색을 반만 칠한다.
+  static let notebookRule = rule.opacity(0.5)
   static let dashed = Color(hex: 0xE6DAC3)
   static let emptyDot = Color(hex: 0xE3D7C0)
   static let ruleSpacing: CGFloat = 22
@@ -14,6 +16,7 @@ enum Paper {
 
 /// 글씨 색은 검정과 회색 대신 테마 색에서 뽑은 잉크를 쓴다. 테마가 24가지라 색을 고정해 두면
 /// 파스텔 테마와 어울리지 않아서, 색상(hue)은 그대로 두고 채도와 밝기만 내린다.
+/// 본문과 보조 잉크는 어느 테마에서도 종이와 대비가 4.5:1 이상 나오게 밝기를 잡는다.
 struct WidgetPalette {
   let theme: Color
   let ink: Color
@@ -32,13 +35,13 @@ struct WidgetPalette {
     themeRGB = rgb
     theme = rgb.color
     let hsl = rgb.hsl
-    let inkRGB = RGB(hue: hsl.h, saturation: min(hsl.s, 0.5), lightness: 0.32)
+    let inkRGB = RGB(hue: hsl.h, saturation: min(hsl.s, 0.5), lightness: 0.30)
     ink = inkRGB.color
-    inkSoft = RGB(hue: hsl.h, saturation: min(hsl.s, 0.35), lightness: 0.48).color
+    inkSoft = WidgetPalette.softInk(hue: hsl.h, saturation: min(hsl.s, 0.35)).color
     inkFaint = RGB(hue: hsl.h, saturation: min(hsl.s, 0.30), lightness: 0.48).color.opacity(0.45)
 
     // 종이 위에 테마 색을 덮은 색과 잉크의 대비가 3:1 도 안 되고 흰 글씨가 더 잘 읽히면 흰 글씨로 쓴다.
-    let paper = RGB(r: 1, g: 0.988, b: 0.961)
+    let paper = WidgetPalette.paperRGB
     let white = RGB(r: 1, g: 1, b: 1)
     var levels = Set<Int>()
     for (level, alpha) in [(1, 0.30), (2, 0.55), (3, 0.85)] {
@@ -49,6 +52,20 @@ struct WidgetPalette {
       }
     }
     whiteTextLevels = levels
+  }
+
+  static let paperRGB = RGB(r: 1, g: 0.988, b: 0.961)
+
+  /// 보조 잉크. 밝기 0.45 에서 시작해 종이와 대비가 4.5:1 이 될 때까지 0.01 씩 내린다.
+  /// 노랑, 연두처럼 밝은 색상(hue)만 조금 더 진해지고 나머지 테마는 0.45 그대로다.
+  static func softInk(hue: Double, saturation: Double) -> RGB {
+    var lightness = 0.45
+    while lightness > 0.30 {
+      let candidate = RGB(hue: hue, saturation: saturation, lightness: lightness)
+      if candidate.contrast(with: paperRGB) >= 4.5 { return candidate }
+      lightness -= 0.01
+    }
+    return RGB(hue: hue, saturation: saturation, lightness: 0.30)
   }
 
   /// 공부한 날 동그라미. level 1~3 을 테마 색 30%, 55%, 85% 로 칠한다.
@@ -65,12 +82,24 @@ struct WidgetPalette {
   var highlighter: Color { theme.opacity(0.40) }
 }
 
-/// 전부 위젯 전용 손글씨 서브셋 폰트로 쓴다. Info.plist UIAppFonts 에 등록된 PostScript 이름.
+/// 손글씨는 연속 일수 큰 줄과 달력 월 제목 두 곳에만 쓴다. 문장, 요일, 날짜 숫자까지 손글씨로 쓰면
+/// 작은 글자가 뭉개져 읽기 어려워서 나머지는 전부 시스템 둥근 글꼴이다.
+/// 시스템 글꼴은 같은 pt 에서 손글씨보다 커 보여서 손글씨 자리보다 2~3pt 작게 쓴다(계약서 「크기별 내용」).
 enum WidgetFont {
+  /// Info.plist UIAppFonts 에 등록된 손글씨 서브셋 폰트의 PostScript 이름.
   static let postScriptName = "Ownglyph_ryurue-Rg"
 
   static func hand(_ size: CGFloat) -> Font {
     .custom(postScriptName, fixedSize: size)
+  }
+
+  static func text(_ size: CGFloat, _ weight: Font.Weight = .regular) -> Font {
+    .system(size: size, weight: weight, design: .rounded)
+  }
+
+  /// 숫자가 들어간 글자. 자릿수마다 폭이 같아 달력 칸과 숫자가 흔들리지 않는다.
+  static func digits(_ size: CGFloat, _ weight: Font.Weight = .medium) -> Font {
+    text(size, weight).monospacedDigit()
   }
 }
 

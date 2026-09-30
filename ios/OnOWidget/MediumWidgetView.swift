@@ -11,7 +11,7 @@ struct MediumWidgetView: View {
       leftColumn
         .frame(width: 118, alignment: .leading)
         .frame(maxHeight: .infinity, alignment: .topLeading)
-      CalendarColumn(state: state, weeks: 4, rowGap: 5, designCell: 20, designFont: 13)
+      CalendarColumn(state: state, weeks: 4, rowGap: 5, designCell: 20, designFont: 12)
     }
     .padding(EdgeInsets(top: 16, leading: 16, bottom: 12, trailing: 16))
     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
@@ -22,12 +22,12 @@ struct MediumWidgetView: View {
     if state.loggedIn {
       VStack(alignment: .leading, spacing: 0) {
         ProfileSticker(image: profile, size: 50)
-        HandText("\(state.streak)일째", size: 32, color: palette.ink, minimumScale: 0.5)
+        InkText("\(state.streak)일째", font: WidgetFont.hand(32), color: palette.ink, minimumScale: 0.5)
           .padding(.top, 8)
-        HandText("연속으로 공부 중", size: 14, color: palette.inkSoft)
+        InkText("연속으로 공부 중", font: WidgetFont.text(12, .medium), color: palette.inkSoft)
           .padding(.top, 2)
         Spacer(minLength: 4)
-        HighlightText(text: state.shortDueText, size: 16, palette: palette)
+        HighlightText(text: state.shortDueText, size: 14, palette: palette)
       }
     } else {
       VStack(alignment: .leading, spacing: 10) {
@@ -35,7 +35,7 @@ struct MediumWidgetView: View {
           .frame(width: 50, height: 50)
           .rotationEffect(.degrees(-6))
         Text(state.emptyMessage)
-          .font(WidgetFont.hand(15))
+          .font(WidgetFont.text(13, .medium))
           .foregroundColor(palette.ink)
           .lineSpacing(3)
           .minimumScaleFactor(0.7)
@@ -53,18 +53,20 @@ struct CalendarColumn: View {
   let designFont: CGFloat
   var titleGap: CGFloat = 4
   var headerGap: CGFloat = 5
+  /// 요일 글자 크기. 중형 10, 대형 11. 줄 높이는 12 그대로다.
+  var headerSize: CGFloat = 10
 
   var body: some View {
     let palette = state.palette
     VStack(alignment: .leading, spacing: 0) {
       HStack(alignment: .firstTextBaseline, spacing: 6) {
-        HandText(state.monthTitle, size: 19, color: palette.ink)
+        InkText(state.monthTitle, font: WidgetFont.hand(19), color: palette.ink)
         if state.stale {
-          HandText("어제까지 기록", size: 12, color: palette.inkSoft)
+          InkText("어제까지 기록", font: WidgetFont.text(10, .medium), color: palette.inkSoft)
         }
       }
       .frame(height: 20, alignment: .bottomLeading)
-      WeekdayHeader(color: palette.inkSoft)
+      WeekdayHeader(color: palette.inkSoft, size: headerSize)
         .frame(height: 12)
         .padding(.top, titleGap)
       StudyCalendarGrid(
