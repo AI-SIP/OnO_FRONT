@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>$(DEVELOPMENT_LANGUAGE)</string>
+	<key>CFBundleDisplayName</key>
+	<string>OnO</string>
+	<key>CFBundleExecutable</key>
+	<string>$(EXECUTABLE_NAME)</string>
+	<key>CFBundleIdentifier</key>
+	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>$(PRODUCT_NAME)</string>
+	<key>CFBundlePackageType</key>
+	<string>$(PRODUCT_BUNDLE_PACKAGE_TYPE)</string>
+	<!-- 확장 버전이 앱과 다르면 App Store 업로드가 거절된다. Runner Info.plist 와 같은
+	     Flutter 값을 쓰고, 값은 Flutter/OnOWidget.xcconfig 가 Generated.xcconfig 에서 가져온다. -->
+	<key>CFBundleShortVersionString</key>
+	<string>$(FLUTTER_BUILD_NAME)</string>
+	<key>CFBundleVersion</key>
+	<string>$(FLUTTER_BUILD_NUMBER)</string>
+	<key>NSExtension</key>
+	<dict>
+		<key>NSExtensionPointIdentifier</key>
+		<string>com.apple.widgetkit-extension</string>
+	</dict>
+	<!-- 위젯 전용 손글씨 서브셋 폰트. 앱 본체의 HandWrite.ttf(8.5MB)는 확장에서 보이지 않고,
+	     그대로 넣기엔 용량과 위젯 메모리 부담이 커서 위젯 글자만 남긴 파일을 따로 넣는다. -->
+	<key>UIAppFonts</key>
+	<array>
+		<string>HandWriteWidget.ttf</string>
+	</array>
+</dict>
+</plist>
