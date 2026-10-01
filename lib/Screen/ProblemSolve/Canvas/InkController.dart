@@ -78,6 +78,14 @@ class InkController {
     _pingLive(stroke);
   }
 
+  /// 직선 보정한 획의 끝점을 옮긴다.
+  void moveLiveStrokeEnd(Offset normalized) {
+    final stroke = _liveStroke;
+    if (stroke == null) return;
+    stroke.moveEnd(normalized);
+    _pingLive(stroke);
+  }
+
   void endStroke() {
     final stroke = _liveStroke;
     if (stroke == null) return;
@@ -131,6 +139,18 @@ class InkController {
     } else {
       _live.ping();
     }
+  }
+
+  /// 제출할 때 캡처할 페이지 번호. 문제 이미지 [imageCount] 장은 필기가
+  /// 없어도 모두 넣고, 그 뒤 연습장 [scratchCount] 장 중 필기가 있는 것만
+  /// 넣는다.
+  List<int> pagesToCapture(
+      {required int imageCount, required int scratchCount}) {
+    return [
+      for (var i = 0; i < imageCount; i++) i,
+      for (var i = imageCount; i < imageCount + scratchCount; i++)
+        if (pages[i].hasInk) i,
+    ];
   }
 
   /// [page] 의 확정된 획을 녹화한 그림. 획이나 이미지 자리가 바뀌었을 때만

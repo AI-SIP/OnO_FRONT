@@ -236,4 +236,154 @@ void main() {
       image.dispose();
     });
   });
+
+  testWidgets('연습장으로 바꾸면 모눈 종이에 쓰고, 되돌리기는 연습장 쪽에 걸린다', (tester) async {
+    await withMockedNetworkImages(() async {
+      await _pumpCanvas(tester);
+      final area = _canvasArea(tester);
+      await _drawLine(tester, area.topLeft + const Offset(40, 60));
+      expect(find.text('1 / 1'), findsOneWidget);
+
+      await tester.tap(find.text('연습장'));
+      await tester.pump();
+      expect(find.text('1 / 1'), findsOneWidget);
+      // 연습장은 아직 비어서 되돌릴 게 없다.
+      expect(_canUndo(tester), isFalse);
+
+      await _drawLine(
+          tester, _canvasArea(tester).topLeft + const Offset(40, 60));
+      expect(_canUndo(tester), isTrue);
+
+      await tester.tap(find.byTooltip('연습장 추가'));
+      await tester.pump();
+      expect(find.text('2 / 2'), findsOneWidget);
+      expect(_canUndo(tester), isFalse);
+
+      // 문제로 돌아오면 문제에 쓴 획이 그대로 있다.
+      await tester.tap(find.text('문제'));
+      await tester.pump();
+      expect(_canUndo(tester), isTrue);
+    });
+  });
+
+  testWidgets('연습장은 다섯 장까지 더할 수 있다', (tester) async {
+    await withMockedNetworkImages(() async {
+      await _pumpCanvas(tester);
+      await tester.tap(find.text('연습장'));
+      await tester.pump();
+
+      for (var i = 0; i < 6; i++) {
+        await tester.tap(find.byTooltip('연습장 추가'), warnIfMissed: false);
+        await tester.pump();
+      }
+
+      expect(find.text('5 / 5'), findsOneWidget);
+      final add = tester.widget<IconButton>(
+          find.widgetWithIcon(IconButton, Icons.add_box_outlined));
+      expect(add.onPressed, isNull);
+    });
+  });
+
+  testWidgets('그은 채로 잠깐 멈추면 곧은 선이 되고 끝점을 계속 옮길 수 있다', (tester) async {
+    await withMockedNetworkImages(() async {
+      await _pumpCanvas(tester);
+      final area = _canvasArea(tester);
+      final pen = await tester.startGesture(area.topLeft + const Offset(40, 80),
+          kind: PointerDeviceKind.stylus);
+      // 구불구불하게 긋는다.
+      for (var i = 1; i <= 12; i++) {
+        await pen.moveBy(Offset(10, i.isEven ? 12 : -12));
+        await tester.pump();
+      }
+      await tester.pump(const Duration(milliseconds: 600));
+      // 직선이 된 뒤 더 움직이면 끝점만 따라온다.
+      await pen.moveBy(const Offset(30, 0));
+      await tester.pump();
+      await pen.up();
+      await tester.pump();
+
+      expect(_canUndo(tester), isTrue);
+      expect(tester.takeException(), isNull);
+    });
+  });
+
+  testWidgets('두 손가락 탭은 되돌리기, 세 손가락 탭은 다시 실행', (tester) async {
+    await withMockedNetworkImages(() async {
+      await _pumpCanvas(tester);
+      final area = _canvasArea(tester);
+      await _drawLine(tester, area.topLeft + const Offset(40, 60));
+      expect(_canUndo(tester), isTrue);
+
+      Future<void> tapWith(int fingers) async {
+        final gestures = <TestGesture>[];
+        for (var i = 0; i < fingers; i++) {
+          gestures.add(await tester.startGesture(
+              area.center + Offset(i * 30.0, 0),
+              kind: PointerDeviceKind.touch));
+        }
+        await tester.pump(const Duration(milliseconds: 50));
+        for (final g in gestures) {
+          await g.up();
+        }
+        await tester.pump();
+      }
+
+      await tapWith(2);
+      expect(_canUndo(tester), isFalse);
+      expect(_canRedo(tester), isTrue);
+
+      await tapWith(3);
+      expect(_canUndo(tester), isTrue);
+      expect(_canRedo(tester), isFalse);
+    });
+  });
+
+  testWidgets('형광펜으로 그을 수 있다', (tester) async {
+    await withMockedNetworkImages(() async {
+      await _pumpCanvas(tester);
+      await tester.tap(find.text('형광펜'));
+      await tester.pump();
+
+      await _drawLine(
+          tester, _canvasArea(tester).topLeft + const Offset(40, 60));
+
+      expect(_canUndo(tester), isTrue);
+    });
+  });
+
+  testWidgets('태블릿 가로에서는 문제와 연습장을 나란히 두고 마지막으로 쓴 쪽이 지금 페이지다', (tester) async {
+    await withMockedNetworkImages(() async {
+      await pumpOnoWidget(
+        tester,
+        ProblemSolveCanvasScreen(
+          problemId: 1,
+          problemImageUrls: const ['https://test.ono.local/p0.png'],
+          onRefresh: () {},
+        ),
+        surfaceSize: const Size(1194, 834),
+        settle: false,
+      );
+      await tester.pump(const Duration(milliseconds: 500));
+
+      final viewers = find.byType(InteractiveViewer);
+      expect(viewers, findsNWidgets(2));
+      // 위쪽 전환 버튼 대신 양쪽 머리에 이름이 있다.
+      expect(find.text('문제'), findsOneWidget);
+      expect(find.text('연습장'), findsOneWidget);
+
+      final scratch = tester.getRect(viewers.at(1));
+      await _drawLine(tester, scratch.topLeft + const Offset(40, 60));
+      expect(_canUndo(tester), isTrue);
+
+      // 문제 쪽을 손가락이 아니라 펜으로 한 번 찍으면 그쪽이 지금 페이지가 된다.
+      final problem = tester.getRect(viewers.at(0));
+      await _drawLine(tester, problem.topLeft + const Offset(40, 60), steps: 1);
+      await tester.tap(find.widgetWithIcon(IconButton, Icons.undo));
+      await tester.pump();
+      // 문제 쪽 획을 되돌렸다. 연습장 획은 남아 있어서 연습장을 다시 쓰면 되돌릴
+      // 수 있다.
+      expect(_canUndo(tester), isFalse);
+      expect(tester.takeException(), isNull);
+    });
+  });
 }

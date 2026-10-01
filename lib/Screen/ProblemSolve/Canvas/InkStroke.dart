@@ -100,6 +100,25 @@ class InkStroke {
     _maxY = math.max(first.dy, last.dy);
   }
 
+  /// 직선 보정 뒤 손을 움직이면 끝점만 옮긴다.
+  void moveEnd(Offset normalized) {
+    if (_points.length < 2) return;
+    _points[_points.length - 1] = normalized;
+    final first = _points.first;
+    _minX = math.min(first.dx, normalized.dx);
+    _minY = math.min(first.dy, normalized.dy);
+    _maxX = math.max(first.dx, normalized.dx);
+    _maxY = math.max(first.dy, normalized.dy);
+  }
+
+  /// 화면 기준 경계 상자 대각선 길이. 직선 보정을 할 만큼 그었는지 본다.
+  double screenExtent(Rect imageRect) {
+    if (_points.isEmpty) return 0;
+    final w = (_maxX - _minX) * imageRect.width;
+    final h = (_maxY - _minY) * imageRect.height;
+    return math.sqrt(w * w + h * h);
+  }
+
   double _widthAt(int index) {
     if (!hasPressure) return width;
     final scale = minPressureScale +

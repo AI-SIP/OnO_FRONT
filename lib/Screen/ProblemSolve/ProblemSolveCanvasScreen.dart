@@ -19,6 +19,7 @@ import 'Canvas/InkController.dart';
 import 'Canvas/InkInputRouter.dart';
 import 'Canvas/InkPainters.dart';
 import 'Canvas/InkStroke.dart';
+import 'Canvas/ScratchPaper.dart';
 import 'ProblemSolveRegisterScreen.dart';
 import '../../Module/Motion/AppHaptic.dart';
 import '../../Module/Motion/PressableScale.dart';
@@ -45,19 +46,24 @@ class ProblemSolveCanvasScreen extends StatefulWidget {
 
 enum _CanvasTool {
   pen,
+  highlighter,
   pixelEraser,
   strokeEraser,
   move,
 }
 
 class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
-  final GlobalKey _captureKey = GlobalKey();
-  final TransformationController _transformationController =
-      TransformationController();
+  // 문제 캔버스와 연습장 캔버스. 폰에서는 하나만 보이고, 태블릿 가로에서는
+  // 둘을 나란히 둔다.
+  final _InkSurface _problemSurface = _InkSurface(isScratch: false);
+  final _InkSurface _scratchSurface = _InkSurface(isScratch: true);
+  bool _showScratch = false;
+  int _scratchIndex = 0;
+  int _scratchPageCount = 1;
+  static const int _maxScratchPages = 5;
   // 획과 되돌리기 기록. 펜이 움직일 때 setState 없이 그리기 층만 다시 그린다.
   late final InkController _ink;
   final InkInputRouter _router = InkInputRouter();
-  final InkTransformTracker _tracker = InkTransformTracker();
   late final List<bool> _imageReadyStates;
   late final List<bool> _imageErrorStates;
   late final List<Size?> _imageNaturalSizes;
@@ -66,7 +72,6 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
 
   // 타이머와 지우개 커서는 그 칸만 다시 그린다.
   final ValueNotifier<int> _elapsed = ValueNotifier(0);
-  final ValueNotifier<Offset?> _cursor = ValueNotifier(null);
 
   // 펜이 감지돼 손가락 필기를 처음 막았을 때 한 번만 띄우는 안내.
   final ValueNotifier<bool> _palmNotice = ValueNotifier(false);
@@ -79,11 +84,24 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
   // 포인터마다 마지막 위치. 손가락으로 쓰다가 두 손가락 확대로 바뀔 때 첫
   // 손가락의 위치가 필요하다.
   final Map<int, Offset> _pointerPositions = {};
+
+  // 직선 보정. 긋다가 손을 떼지 않고 잠깐 멈추면 곧은 선으로 바꾼다.
+  Timer? _holdTimer;
+  Offset? _holdAnchor;
+  bool _straightened = false;
+
+  // 두 손가락 탭은 되돌리기, 세 손가락 탭은 다시 실행. 손가락을 댄 동안 얼마나
+  // 움직였는지, 몇 개까지 닿았는지 본다.
+  DateTime? _tapStart;
+  int _tapFingers = 0;
+  double _tapTravel = 0;
+  Matrix4? _tapStartMatrix;
   bool _isSubmitting = false;
   Size _canvasSize = Size.zero;
   Color _penColor = Colors.black87;
   double _penWidth = 4.0;
   double _eraserWidth = 18.0;
+  double _highlighterWidth = 14.0;
   _CanvasTool _selectedTool = _CanvasTool.pen;
   _CanvasTool _previousTool = _CanvasTool.pen;
 
@@ -120,7 +138,8 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
   void initState() {
     super.initState();
     AppAnalytics.logScreenView('ProblemSolveCanvasScreen');
-    _ink = InkController(pageCount: widget.problemImageUrls.length);
+    _ink = InkController(
+        pageCount: widget.problemImageUrls.length + _maxScratchPages);
     _imageReadyStates =
         List.generate(widget.problemImageUrls.length, (_) => false);
     _imageErrorStates =
@@ -183,10 +202,11 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
     if (Platform.isIOS) _pencilChannel.setMethodCallHandler(null);
     _timer?.cancel();
     _palmNoticeTimer?.cancel();
-    _transformationController.dispose();
+    _holdTimer?.cancel();
+    _problemSurface.dispose();
+    _scratchSurface.dispose();
     _ink.dispose();
     _elapsed.dispose();
-    _cursor.dispose();
     _palmNotice.dispose();
     super.dispose();
   }
@@ -282,158 +302,41 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
       ),
       body: Column(
         children: [
+          if (!_isSplit(context)) _buildPageBar(themeProvider),
           Expanded(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-              child: LayoutBuilder(
-                builder: (context, constraints) {
-                  final newSize =
-                      Size(constraints.maxWidth, constraints.maxHeight);
-                  if (newSize != _canvasSize) {
-                    WidgetsBinding.instance.addPostFrameCallback((_) {
-                      if (mounted) {
-                        setState(() => _onCanvasSizeChanged(newSize));
-                      }
-                    });
-                  }
-                  final imageRect = _computeImageRect(newSize);
-                  final imageIndex = _currentImageIndex;
-                  final imageUrl = _currentImageUrl;
-                  final page = _ink.pages[imageIndex];
-                  // 포인터는 확대 뷰 바깥에서 받는다. 그래야 화면 좌표로 두
-                  // 손가락 확대를 계산할 수 있고, 필기 좌표는 toScene 으로 바꾼다.
-                  return Listener(
-                    onPointerDown: (event) =>
-                        _onPointerDown(event, imageRect, newSize),
-                    onPointerMove: (event) =>
-                        _onPointerMove(event, imageRect, newSize),
-                    onPointerUp: (event) => _onPointerEnd(event),
-                    onPointerCancel: (event) => _onPointerEnd(event),
-                    onPointerHover: (event) {
-                      final forceErase =
-                          event.kind == PointerDeviceKind.stylus &&
-                              event.buttons & kPrimaryStylusButton != 0;
-                      if (_isEraserTool || forceErase) {
-                        _cursor.value = _transformationController
-                            .toScene(event.localPosition);
-                      }
-                    },
-                    child: Stack(
-                      children: [
-                        InteractiveViewer(
-                          transformationController: _transformationController,
-                          minScale: 1,
-                          maxScale: 4,
-                          // 펜 도구일 때는 확대와 이동을 직접 계산한다. 이동
-                          // 도구일 때만 InteractiveViewer 에 맡긴다.
-                          panEnabled: _selectedTool == _CanvasTool.move,
-                          scaleEnabled: _selectedTool == _CanvasTool.move,
-                          boundaryMargin: const EdgeInsets.all(80),
-                          child: Stack(
+            child: Stack(
+              children: [
+                Positioned.fill(
+                  child: _isSplit(context)
+                      ? Padding(
+                          padding: const EdgeInsets.fromLTRB(24, 4, 24, 12),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
-                              RepaintBoundary(
-                                key: _captureKey,
-                                child: Container(
-                                  width: constraints.maxWidth,
-                                  height: constraints.maxHeight,
-                                  color: Colors.white,
-                                  child: Stack(
-                                    fit: StackFit.expand,
-                                    children: [
-                                      Image.network(
-                                        imageUrl,
-                                        fit: BoxFit.contain,
-                                        frameBuilder: (
-                                          context,
-                                          child,
-                                          frame,
-                                          wasSynchronouslyLoaded,
-                                        ) {
-                                          if (wasSynchronouslyLoaded ||
-                                              frame != null) {
-                                            _markImageReady(imageIndex);
-                                          }
-                                          return child;
-                                        },
-                                        loadingBuilder:
-                                            (context, child, loadingProgress) {
-                                          if (loadingProgress == null) {
-                                            return child;
-                                          }
-                                          return Center(
-                                            child: CircularProgressIndicator(
-                                              color: themeProvider.primaryColor,
-                                            ),
-                                          );
-                                        },
-                                        errorBuilder:
-                                            (context, error, stackTrace) {
-                                          _markImageError(imageIndex);
-                                          return Center(
-                                            child: StandardText(
-                                              text: '문제 이미지를 불러오지 못했습니다.',
-                                              fontSize: 14,
-                                              color: themeProvider.primaryColor,
-                                            ),
-                                          );
-                                        },
-                                      ),
-                                      // 확정된 획과 지금 긋는 획을 따로 그린다.
-                                      // 펜이 움직일 때는 아래 층만 다시 그린다.
-                                      RepaintBoundary(
-                                        child: CustomPaint(
-                                          size: newSize,
-                                          painter: CommittedInkPainter(
-                                            controller: _ink,
-                                            page: page,
-                                            imageRect: imageRect,
-                                          ),
-                                        ),
-                                      ),
-                                      RepaintBoundary(
-                                        child: CustomPaint(
-                                          size: newSize,
-                                          painter: LiveInkPainter(
-                                            controller: _ink,
-                                            page: page,
-                                            imageRect: imageRect,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
+                              Expanded(
+                                child:
+                                    _buildPanel(_problemSurface, themeProvider),
                               ),
-                              // 지우개 커서. 캡처 영역 밖이라 사진에는 안 찍힌다.
-                              Positioned.fill(
-                                child: IgnorePointer(
-                                  child: ValueListenableBuilder<Offset?>(
-                                    valueListenable: _cursor,
-                                    builder: (context, position, _) =>
-                                        position == null
-                                            ? const SizedBox.shrink()
-                                            : CustomPaint(
-                                                painter: _EraserCursorPainter(
-                                                  position: position,
-                                                  radius: math.max(
-                                                      7.0, _eraserWidth / 2),
-                                                ),
-                                              ),
-                                  ),
-                                ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child:
+                                    _buildPanel(_scratchSurface, themeProvider),
                               ),
                             ],
                           ),
+                        )
+                      : Padding(
+                          padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
+                          child: _buildSurface(
+                            _showScratch ? _scratchSurface : _problemSurface,
+                            themeProvider,
+                          ),
                         ),
-                        _buildPalmNotice(),
-                      ],
-                    ),
-                  );
-                },
-              ),
+                ),
+                _buildPalmNotice(),
+              ],
             ),
           ),
-          _buildImageNavigation(themeProvider),
           _buildToolbar(themeProvider),
           _buildSubmitButton(themeProvider),
         ],
@@ -478,6 +381,16 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
                         isSelected: _selectedTool == _CanvasTool.pen,
                         themeProvider: themeProvider,
                         onTap: () => setState(() => _setTool(_CanvasTool.pen)),
+                      ),
+                      const SizedBox(width: 8),
+                      _buildToolModeButton(
+                        icon: Icons.border_color,
+                        label: '형광펜',
+                        isSelected: _selectedTool == _CanvasTool.highlighter,
+                        themeProvider: themeProvider,
+                        onTap: () => setState(
+                          () => _setTool(_CanvasTool.highlighter),
+                        ),
                       ),
                       const SizedBox(width: 8),
                       _buildToolModeButton(
@@ -538,9 +451,9 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
                   ),
                   child: Slider(
                     value: _currentStrokeWidth,
-                    min: _isEraserTool ? 2.0 : 0.5,
-                    max: _isEraserTool ? 48.0 : 18.0,
-                    divisions: _isEraserTool ? 46 : 35,
+                    min: _widthRange.$1,
+                    max: _widthRange.$2,
+                    divisions: _widthRange.$3,
                     activeColor: themeProvider.primaryColor,
                     inactiveColor: Colors.grey[200],
                     label: _widthLabel(_currentStrokeWidth),
@@ -550,6 +463,9 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
                               _changedWidth = true;
                               if (_isEraserTool) {
                                 _eraserWidth = value;
+                              } else if (_selectedTool ==
+                                  _CanvasTool.highlighter) {
+                                _highlighterWidth = value;
                               } else {
                                 _penWidth = value;
                               }
@@ -574,91 +490,336 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
     );
   }
 
-  Widget _buildImageNavigation(ThemeHandler themeProvider) {
-    if (widget.problemImageUrls.length <= 1) {
-      return const SizedBox.shrink();
-    }
+  int get _imageCount => widget.problemImageUrls.length;
 
-    return Container(
-      padding: const EdgeInsets.fromLTRB(18, 6, 18, 10),
-      color: Colors.white,
+  /// 태블릿 가로에서는 문제와 연습장을 나란히 펼친다.
+  bool _isSplit(BuildContext context) {
+    final size = MediaQuery.sizeOf(context);
+    return size.width >= 900 && size.width > size.height;
+  }
+
+  /// [surface] 가 지금 보여 주는 페이지 번호. 문제 이미지 다음에 연습장이 온다.
+  int _pageOf(_InkSurface surface) =>
+      surface.isScratch ? _imageCount + _scratchIndex : _currentImageIndex;
+
+  /// 연습장 페이지에 필기가 있는지.
+  int get _scratchPagesWithInk => [
+        for (var i = 0; i < _maxScratchPages; i++)
+          if (_ink.pages[_imageCount + i].hasInk) i,
+      ].length;
+
+  /// 폰에서 캔버스 위에 두는 줄. 왼쪽 `문제 | 연습장` 전환, 오른쪽 페이지 넘기기.
+  Widget _buildPageBar(ThemeHandler themeProvider) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 4, 12, 4),
       child: Row(
         children: [
-          _buildImageMoveButton(
-            icon: Icons.chevron_left,
-            label: '이전',
-            enabled: _currentImageIndex > 0 && !_isSubmitting,
-            themeProvider: themeProvider,
-            onTap: () => _moveToImage(_currentImageIndex - 1),
-          ),
-          Expanded(
-            child: Center(
-              child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                decoration: BoxDecoration(
-                  color: themeProvider.primaryColor.withOpacity(0.08),
-                  borderRadius: BorderRadius.circular(AppRadius.full),
-                  border: Border.all(
-                    color: themeProvider.primaryColor.withOpacity(0.18),
-                    width: 1,
-                  ),
-                ),
-                child: StandardText(
-                  text:
-                      '${_currentImageIndex + 1} / ${widget.problemImageUrls.length}',
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: themeProvider.primaryColor,
-                ),
-              ),
+          Container(
+            padding: const EdgeInsets.all(3),
+            decoration: BoxDecoration(
+              color: AppColors.surfaceMuted,
+              borderRadius: BorderRadius.circular(AppRadius.medium),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _buildSegment(
+                    '문제', !_showScratch, () => _setShowScratch(false)),
+                _buildSegment('연습장', _showScratch, () => _setShowScratch(true)),
+              ],
             ),
           ),
-          _buildImageMoveButton(
-            icon: Icons.chevron_right,
-            label: '다음',
-            enabled: _currentImageIndex < widget.problemImageUrls.length - 1 &&
-                !_isSubmitting,
-            themeProvider: themeProvider,
-            onTap: () => _moveToImage(_currentImageIndex + 1),
-            isTrailingIcon: true,
+          const SizedBox(width: 8),
+          // 큰 글씨나 좁은 폰에서도 넘치지 않게 남는 폭에 맞춰 줄인다.
+          Expanded(
+            child: Align(
+              alignment: Alignment.centerRight,
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: _buildPageNav(themeProvider, scratch: _showScratch),
+              ),
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildImageMoveButton({
-    required IconData icon,
-    required String label,
-    required bool enabled,
-    required ThemeHandler themeProvider,
-    required VoidCallback onTap,
-    bool isTrailingIcon = false,
-  }) {
-    final color = enabled ? themeProvider.primaryColor : Colors.grey[400]!;
-    final children = [
-      Icon(icon, color: color, size: 20),
-      const SizedBox(width: 3),
-      StandardText(
-        text: label,
-        fontSize: 13,
-        fontWeight: FontWeight.w600,
-        color: color,
+  Widget _buildSegment(String label, bool selected, VoidCallback onTap) {
+    return Semantics(
+      button: true,
+      selected: selected,
+      child: PressableScale(
+        haptic: HapticLevel.selection,
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 160),
+          height: 34,
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: selected ? Colors.white : Colors.transparent,
+            borderRadius: BorderRadius.circular(9),
+            boxShadow: selected
+                ? [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.1),
+                      blurRadius: 3,
+                      offset: const Offset(0, 1),
+                    ),
+                  ]
+                : null,
+          ),
+          child: StandardText(
+            text: label,
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: selected ? AppColors.textPrimary : AppColors.textSecondary,
+            height: 1.2,
+          ),
+        ),
       ),
-    ];
+    );
+  }
 
-    return TextButton(
-      onPressed: enabled ? onTap : null,
-      style: TextButton.styleFrom(
-        minimumSize: const Size(72, 38),
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: isTrailingIcon ? children.reversed.toList() : children,
-      ),
+  /// `‹ 1 / 2 ›`. 연습장이면 오른쪽에 `+` 가 붙는다. 문제인지 연습장인지는
+  /// 옆의 전환 버튼이나 패널 이름이 이미 말해 줘서 숫자만 둔다.
+  Widget _buildPageNav(ThemeHandler themeProvider, {required bool scratch}) {
+    final index = scratch ? _scratchIndex : _currentImageIndex;
+    final count = scratch ? _scratchPageCount : _imageCount;
+    final enabled = !_isSubmitting;
+
+    void go(int next) => scratch ? _moveToScratch(next) : _moveToImage(next);
+
+    Widget arrow(IconData icon, String tooltip, bool canGo, int next) {
+      return IconButton(
+        tooltip: tooltip,
+        onPressed: enabled && canGo ? () => go(next) : null,
+        visualDensity: VisualDensity.compact,
+        icon: Icon(icon,
+            color: enabled && canGo
+                ? themeProvider.primaryColor
+                : Colors.grey[400]),
+      );
+    }
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        arrow(Icons.chevron_left, scratch ? '이전 연습장' : '이전 문제 이미지', index > 0,
+            index - 1),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          decoration: BoxDecoration(
+            color: themeProvider.primaryColor.withValues(alpha: 0.08),
+            borderRadius: BorderRadius.circular(AppRadius.full),
+            border: Border.all(
+              color: themeProvider.primaryColor.withValues(alpha: 0.18),
+            ),
+          ),
+          child: StandardText(
+            text: '${index + 1} / $count',
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: themeProvider.primaryColor,
+            height: 1.2,
+          ),
+        ),
+        arrow(Icons.chevron_right, scratch ? '다음 연습장' : '다음 문제 이미지',
+            index < count - 1, index + 1),
+        if (scratch)
+          IconButton(
+            tooltip: '연습장 추가',
+            onPressed: enabled && _scratchPageCount < _maxScratchPages
+                ? _addScratchPage
+                : null,
+            visualDensity: VisualDensity.compact,
+            icon: Icon(
+              Icons.add_box_outlined,
+              color: enabled && _scratchPageCount < _maxScratchPages
+                  ? themeProvider.primaryColor
+                  : Colors.grey[400],
+            ),
+          ),
+      ],
+    );
+  }
+
+  /// 태블릿 가로에서 나란히 놓는 한쪽. 위에 이름과 페이지 넘기기, 아래 캔버스.
+  /// 마지막으로 쓴 쪽 테두리를 테마 색으로 둔다.
+  Widget _buildPanel(_InkSurface surface, ThemeHandler themeProvider) {
+    final active = _ink.pageIndex == _pageOf(surface);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        SizedBox(
+          height: 44,
+          child: Row(
+            children: [
+              StandardText(
+                text: surface.isScratch ? '연습장' : '문제',
+                fontSize: MobileFontSize.reduced(context, 14),
+                fontWeight: FontWeight.w600,
+                color: active
+                    ? themeProvider.primaryColor
+                    : AppColors.textSecondary,
+              ),
+              const Spacer(),
+              _buildPageNav(themeProvider, scratch: surface.isScratch),
+            ],
+          ),
+        ),
+        Expanded(
+          child: DecoratedBox(
+            position: DecorationPosition.foreground,
+            decoration: BoxDecoration(
+              border: Border.all(
+                color: active ? themeProvider.primaryColor : Colors.transparent,
+                width: 2,
+              ),
+            ),
+            child: _buildSurface(surface, themeProvider),
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// 캔버스 하나. 문제 이미지 또는 연습장 종이 위에 확정된 획 층과 지금 획 층을
+  /// 겹친다. 포인터는 확대 뷰 바깥에서 받아 화면 좌표로 두 손가락 확대를
+  /// 계산하고, 필기 좌표는 toScene 으로 바꾼다.
+  Widget _buildSurface(_InkSurface surface, ThemeHandler themeProvider) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final size = Size(constraints.maxWidth, constraints.maxHeight);
+        if (!surface.isScratch && size != _canvasSize) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) setState(() => _onCanvasSizeChanged(size));
+          });
+        }
+        final imageIndex = _currentImageIndex;
+        final imageRect =
+            surface.isScratch ? Offset.zero & size : _computeImageRect(size);
+        final page = _ink.pages[_pageOf(surface)];
+
+        return Listener(
+          onPointerDown: (event) =>
+              _onPointerDown(surface, event, imageRect, size),
+          onPointerMove: (event) =>
+              _onPointerMove(surface, event, imageRect, size),
+          onPointerUp: (event) => _onPointerEnd(surface, event),
+          onPointerCancel: (event) => _onPointerEnd(surface, event),
+          onPointerHover: (event) {
+            final forceErase = event.kind == PointerDeviceKind.stylus &&
+                event.buttons & kPrimaryStylusButton != 0;
+            if (_isEraserTool || forceErase) {
+              surface.cursor.value =
+                  surface.transform.toScene(event.localPosition);
+            }
+          },
+          child: InteractiveViewer(
+            transformationController: surface.transform,
+            minScale: 1,
+            maxScale: 4,
+            // 펜 도구일 때는 확대와 이동을 직접 계산한다. 이동 도구일 때만
+            // InteractiveViewer 에 맡긴다.
+            panEnabled: _selectedTool == _CanvasTool.move,
+            scaleEnabled: _selectedTool == _CanvasTool.move,
+            boundaryMargin: const EdgeInsets.all(80),
+            child: Stack(
+              children: [
+                RepaintBoundary(
+                  key: surface.captureKey,
+                  child: Container(
+                    width: size.width,
+                    height: size.height,
+                    color: Colors.white,
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        if (surface.isScratch)
+                          const ScratchPaper()
+                        else
+                          Image.network(
+                            _currentImageUrl,
+                            fit: BoxFit.contain,
+                            frameBuilder: (
+                              context,
+                              child,
+                              frame,
+                              wasSynchronouslyLoaded,
+                            ) {
+                              if (wasSynchronouslyLoaded || frame != null) {
+                                _markImageReady(imageIndex);
+                              }
+                              return child;
+                            },
+                            loadingBuilder: (context, child, loadingProgress) {
+                              if (loadingProgress == null) return child;
+                              return Center(
+                                child: CircularProgressIndicator(
+                                  color: themeProvider.primaryColor,
+                                ),
+                              );
+                            },
+                            errorBuilder: (context, error, stackTrace) {
+                              _markImageError(imageIndex);
+                              return Center(
+                                child: StandardText(
+                                  text: '문제 이미지를 불러오지 못했습니다.',
+                                  fontSize: 14,
+                                  color: themeProvider.primaryColor,
+                                ),
+                              );
+                            },
+                          ),
+                        // 확정된 획과 지금 긋는 획을 따로 그린다. 펜이 움직일
+                        // 때는 아래 층만 다시 그린다.
+                        RepaintBoundary(
+                          child: CustomPaint(
+                            size: size,
+                            painter: CommittedInkPainter(
+                              controller: _ink,
+                              page: page,
+                              imageRect: imageRect,
+                            ),
+                          ),
+                        ),
+                        RepaintBoundary(
+                          child: CustomPaint(
+                            size: size,
+                            painter: LiveInkPainter(
+                              controller: _ink,
+                              page: page,
+                              imageRect: imageRect,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                // 지우개 커서. 캡처 영역 밖이라 사진에는 안 찍힌다.
+                Positioned.fill(
+                  child: IgnorePointer(
+                    child: ValueListenableBuilder<Offset?>(
+                      valueListenable: surface.cursor,
+                      builder: (context, position, _) => position == null
+                          ? const SizedBox.shrink()
+                          : CustomPaint(
+                              painter: _EraserCursorPainter(
+                                position: position,
+                                radius: math.max(7.0, _eraserWidth / 2),
+                              ),
+                            ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -705,14 +866,19 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
   }
 
   Widget _buildColorButton(Color color) {
-    final isSelected = _selectedTool == _CanvasTool.pen && _penColor == color;
+    final isSelected = (_selectedTool == _CanvasTool.pen ||
+            _selectedTool == _CanvasTool.highlighter) &&
+        _penColor == color;
 
     return PressableScale(
       haptic: HapticLevel.selection,
       onTap: () => setState(() {
         if (color != _penColor) _changedColor = true;
         _penColor = color;
-        _setTool(_CanvasTool.pen);
+        // 형광펜을 들고 있으면 형광펜 색만 바꾼다.
+        if (_selectedTool != _CanvasTool.highlighter) {
+          _setTool(_CanvasTool.pen);
+        }
       }),
       child: Container(
         width: 38,
@@ -777,7 +943,18 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
       _selectedTool == _CanvasTool.pixelEraser ||
       _selectedTool == _CanvasTool.strokeEraser;
 
-  double get _currentStrokeWidth => _isEraserTool ? _eraserWidth : _penWidth;
+  double get _currentStrokeWidth => _isEraserTool
+      ? _eraserWidth
+      : _selectedTool == _CanvasTool.highlighter
+          ? _highlighterWidth
+          : _penWidth;
+
+  /// 굵기 막대의 (최소, 최대, 눈금 수).
+  (double, double, int) get _widthRange => _isEraserTool
+      ? (2.0, 48.0, 46)
+      : _selectedTool == _CanvasTool.highlighter
+          ? (4.0, 40.0, 36)
+          : (0.5, 18.0, 35);
 
   String _widthLabel(double width) {
     return width < 1 ? width.toStringAsFixed(1) : width.round().toString();
@@ -789,7 +966,8 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
       _previousTool = _selectedTool;
       _selectedTool = tool;
     }
-    _cursor.value = null;
+    _problemSurface.cursor.value = null;
+    _scratchSurface.cursor.value = null;
   }
 
   void _toggleToLastTool() {
@@ -809,7 +987,17 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
     return ((event.pressure - event.pressureMin) / range).clamp(0.0, 1.0);
   }
 
-  void _onPointerDown(PointerDownEvent event, Rect imageRect, Size viewport) {
+  /// 펜을 댄 캔버스의 페이지를 지금 페이지로 둔다. 태블릿 가로에서 마지막으로
+  /// 쓴 쪽이 되돌리기 대상이 된다.
+  void _activate(_InkSurface surface) {
+    final index = _pageOf(surface);
+    if (_ink.pageIndex == index) return;
+    _ink.pageIndex = index;
+    setState(() {});
+  }
+
+  void _onPointerDown(_InkSurface surface, PointerDownEvent event,
+      Rect imageRect, Size viewport) {
     // 이동 도구일 때는 InteractiveViewer 가 다 처리한다.
     if (_selectedTool == _CanvasTool.move) return;
 
@@ -825,7 +1013,7 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
 
     _pointerPositions[event.pointer] = event.localPosition;
     final decision = _router.onDown(event.pointer, event.kind);
-    if (decision.cancelLiveStroke) _ink.cancelStroke();
+    if (decision.cancelLiveStroke) _cancelLiveStroke();
 
     switch (decision.role) {
       case InkPointerRole.ignore:
@@ -833,23 +1021,32 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
         return;
       case InkPointerRole.transform:
         _maybeShowPalmNotice();
+        if (!surface.tracker.isActive) {
+          _tapStart = DateTime.now();
+          _tapFingers = 0;
+          _tapTravel = 0;
+          _tapStartMatrix = surface.transform.value.clone();
+        }
         // 쓰던 손가락이 확대로 넘어왔으면 그 손가락도 같이 기준에 넣는다.
         for (final pointer in _router.transformPointers) {
           final position = _pointerPositions[pointer];
-          if (position != null && !_tracker.tracks(pointer)) {
-            _tracker.add(pointer, position, _transformationController.value);
+          if (position != null && !surface.tracker.tracks(pointer)) {
+            surface.tracker.add(pointer, position, surface.transform.value);
           }
         }
+        _tapFingers = math.max(_tapFingers, _router.transformPointers.length);
         return;
       case InkPointerRole.draw:
         break;
     }
 
+    _activate(surface);
+
     // S펜 버튼을 누른 채 쓰면 획 지우개처럼 동작한다.
     final forceErase = isStylus && event.buttons & kPrimaryStylusButton != 0;
     if (forceErase) _usedStylusButton = true;
-    final point = _transformationController.toScene(event.localPosition);
-    if (_isEraserTool || forceErase) _cursor.value = point;
+    final point = surface.transform.toScene(event.localPosition);
+    if (_isEraserTool || forceErase) surface.cursor.value = point;
 
     if (forceErase || _selectedTool == _CanvasTool.strokeEraser) {
       _erasing = true;
@@ -857,56 +1054,131 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
       return;
     }
 
+    final kind = switch (_selectedTool) {
+      _CanvasTool.pixelEraser => InkKind.pixelEraser,
+      _CanvasTool.highlighter => InkKind.highlighter,
+      _ => InkKind.pen,
+    };
     _ink.beginStroke(
       InkStroke(
-        kind: _selectedTool == _CanvasTool.pixelEraser
-            ? InkKind.pixelEraser
-            : InkKind.pen,
+        kind: kind,
         color: _penColor,
         width: _currentStrokeWidth,
-        hasPressure: isStylus && _selectedTool == _CanvasTool.pen,
+        hasPressure: isStylus && kind == InkKind.pen,
       ),
       _toNormalized(point, imageRect),
       _pressureOf(event),
       imageRect,
     );
+    _straightened = false;
+    _restartHold(point, imageRect);
   }
 
-  void _onPointerMove(PointerMoveEvent event, Rect imageRect, Size viewport) {
+  void _onPointerMove(_InkSurface surface, PointerMoveEvent event,
+      Rect imageRect, Size viewport) {
     if (_pointerPositions.containsKey(event.pointer)) {
       _pointerPositions[event.pointer] = event.localPosition;
     }
     if (_router.isTransforming(event.pointer)) {
-      final next = _tracker.move(event.pointer, event.localPosition, viewport);
-      if (next != null) _transformationController.value = next;
+      _tapTravel += event.delta.distance;
+      final next =
+          surface.tracker.move(event.pointer, event.localPosition, viewport);
+      if (next != null) surface.transform.value = next;
       return;
     }
     if (!_router.isDrawing(event.pointer)) return;
 
-    final point = _transformationController.toScene(event.localPosition);
+    final point = surface.transform.toScene(event.localPosition);
     final forceErase =
         _isStylus(event) && event.buttons & kPrimaryStylusButton != 0;
-    if (_isEraserTool || forceErase) _cursor.value = point;
+    if (_isEraserTool || forceErase) surface.cursor.value = point;
 
     if (_erasing) {
       _ink.eraseAt(point, math.max(7.0, _eraserWidth / 2), imageRect);
       return;
     }
-    _ink.extendStroke(
-        _toNormalized(point, imageRect), _pressureOf(event), imageRect);
+    final normalized = _toNormalized(point, imageRect);
+    if (_straightened) {
+      _ink.moveLiveStrokeEnd(normalized);
+      return;
+    }
+    _ink.extendStroke(normalized, _pressureOf(event), imageRect);
+    if (_holdAnchor == null || (point - _holdAnchor!).distance > 4) {
+      _restartHold(point, imageRect);
+    }
   }
 
-  void _onPointerEnd(PointerEvent event) {
+  void _onPointerEnd(_InkSurface surface, PointerEvent event) {
     _pointerPositions.remove(event.pointer);
-    _tracker.remove(event.pointer, _transformationController.value);
-    if (!_router.onUp(event.pointer)) return;
+    final wasTransforming = _router.isTransforming(event.pointer);
+    surface.tracker.remove(event.pointer, surface.transform.value);
+    final wasDrawing = _router.onUp(event.pointer);
 
-    _cursor.value = null;
+    if (wasTransforming && _router.transformPointers.isEmpty) {
+      _finishTapGesture(surface);
+    }
+    if (!wasDrawing) return;
+
+    _holdTimer?.cancel();
+    _holdAnchor = null;
+    surface.cursor.value = null;
     if (_erasing) {
       _erasing = false;
       _ink.endErase();
     } else {
       _ink.endStroke();
+    }
+  }
+
+  void _cancelLiveStroke() {
+    _holdTimer?.cancel();
+    _holdAnchor = null;
+    _ink.cancelStroke();
+  }
+
+  /// 긋다가 [_holdDuration] 동안 4px 넘게 움직이지 않으면 곧은 선으로 바꾼다.
+  static const Duration _holdDuration = Duration(milliseconds: 500);
+
+  void _restartHold(Offset point, Rect imageRect) {
+    _holdAnchor = point;
+    _holdTimer?.cancel();
+    if (_selectedTool != _CanvasTool.pen &&
+        _selectedTool != _CanvasTool.highlighter) {
+      return;
+    }
+    _holdTimer = Timer(_holdDuration, () {
+      final stroke = _ink.liveStroke;
+      if (!mounted || stroke == null || stroke.isEraser) return;
+      // 점만 찍고 멈춘 것은 직선으로 바꾸지 않는다.
+      if (stroke.length < 3 || stroke.screenExtent(imageRect) < 24) return;
+      _ink.straightenLiveStroke();
+      _straightened = true;
+      _usedTools.add('straight_line');
+      HapticFeedback.selectionClick();
+    });
+  }
+
+  /// 손가락을 모두 뗐을 때 짧게 거의 안 움직였으면 탭으로 본다. 두 손가락은
+  /// 되돌리기, 세 손가락은 다시 실행. 탭하는 동안 살짝 움직인 화면은 되돌린다.
+  void _finishTapGesture(_InkSurface surface) {
+    final start = _tapStart;
+    final fingers = _tapFingers;
+    final startMatrix = _tapStartMatrix;
+    _tapStart = null;
+    _tapFingers = 0;
+    _tapStartMatrix = null;
+    if (start == null || fingers < 2) return;
+    final quick =
+        DateTime.now().difference(start) < const Duration(milliseconds: 300);
+    if (!quick || _tapTravel > 20) return;
+
+    if (startMatrix != null) surface.transform.value = startMatrix;
+    if (fingers == 2 && _ink.page.canUndo) {
+      _usedTools.add('two_finger_undo');
+      _undo();
+    } else if (fingers >= 3 && _ink.page.canRedo) {
+      _usedTools.add('three_finger_redo');
+      _redo();
     }
   }
 
@@ -986,22 +1258,45 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
   }
 
   void _resetZoom() {
-    _transformationController.value = Matrix4.identity();
+    _problemSurface.transform.value = Matrix4.identity();
+    _scratchSurface.transform.value = Matrix4.identity();
   }
 
   void _moveToImage(int imageIndex) {
-    if (imageIndex < 0 ||
-        imageIndex >= widget.problemImageUrls.length ||
-        imageIndex == _currentImageIndex) {
+    if (imageIndex < 0 || imageIndex >= _imageCount) return;
+    if (imageIndex == _currentImageIndex && _ink.pageIndex == imageIndex) {
       return;
     }
 
     _ink.pageIndex = imageIndex;
-    _tracker.clear();
+    _problemSurface.tracker.clear();
     _loadImageNaturalSize(imageIndex);
     setState(() => _currentImageIndex = imageIndex);
-    _cursor.value = null;
-    _resetZoom();
+    _problemSurface.cursor.value = null;
+    _problemSurface.transform.value = Matrix4.identity();
+  }
+
+  void _moveToScratch(int scratchIndex) {
+    if (scratchIndex < 0 || scratchIndex >= _scratchPageCount) return;
+    _ink.pageIndex = _imageCount + scratchIndex;
+    _scratchSurface.tracker.clear();
+    setState(() => _scratchIndex = scratchIndex);
+    _scratchSurface.cursor.value = null;
+    _scratchSurface.transform.value = Matrix4.identity();
+  }
+
+  /// 폰에서 `문제 | 연습장` 을 바꾼다.
+  void _setShowScratch(bool show) {
+    if (show == _showScratch || _isSubmitting) return;
+    if (show) _usedTools.add('scratch');
+    setState(() => _showScratch = show);
+    _ink.pageIndex = _pageOf(show ? _scratchSurface : _problemSurface);
+  }
+
+  void _addScratchPage() {
+    if (_scratchPageCount >= _maxScratchPages) return;
+    setState(() => _scratchPageCount++);
+    _moveToScratch(_scratchPageCount - 1);
   }
 
   // Points are stored in image-normalized coordinates, so no re-scaling needed
@@ -1042,6 +1337,7 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
   void _logCanvasSession(String name) {
     final strokes =
         _ink.pages.expand((p) => p.strokes).where((s) => !s.isEraser);
+
     AppAnalytics.logEvent(name, {
       'duration_sec': _elapsed.value,
       'image_count': widget.problemImageUrls.length,
@@ -1054,6 +1350,7 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
       'undo_count': _undoCount,
       'redo_count': _redoCount,
       'palm_rejected': _router.palmRejected,
+      'scratch_page_count': _scratchPagesWithInk,
       'cleared': _cleared,
     });
   }
@@ -1104,27 +1401,46 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
     }
   }
 
+  /// 문제 이미지를 모두 캡처하고, 필기가 있는 연습장만 그 뒤에 이어 캡처한다.
+  /// 빈 연습장은 넣지 않는다. 모두 같은 풀이 이미지 목록으로 올라간다.
   Future<List<File>> _captureAllSolutionImages() async {
-    final originalIndex = _currentImageIndex;
+    final split = _isSplit(context);
+    final originalImage = _currentImageIndex;
+    final originalScratch = _scratchIndex;
+    final originalShowScratch = _showScratch;
+    final originalPage = _ink.pageIndex;
     final directory = await getTemporaryDirectory();
     final files = <File>[];
 
-    for (var index = 0; index < widget.problemImageUrls.length; index++) {
+    final pages = _ink.pagesToCapture(
+        imageCount: _imageCount, scratchCount: _scratchPageCount);
+    for (final pageIndex in pages) {
       if (!mounted) throw StateError('canvas screen is not mounted');
-
-      if (_currentImageIndex != index) {
-        _moveToImage(index);
+      final isScratch = pageIndex >= _imageCount;
+      if (!split && _showScratch != isScratch) {
+        setState(() => _showScratch = isScratch);
       }
-
-      await _waitForImageReady(index);
-      await WidgetsBinding.instance.endOfFrame;
-
-      final file = await _captureCurrentCanvas(directory, index);
-      files.add(file);
+      if (isScratch) {
+        _moveToScratch(pageIndex - _imageCount);
+        await WidgetsBinding.instance.endOfFrame;
+        files.add(await _captureCanvas(_scratchSurface.captureKey, directory,
+            's${pageIndex - _imageCount}'));
+      } else {
+        _moveToImage(pageIndex);
+        await _waitForImageReady(pageIndex);
+        await WidgetsBinding.instance.endOfFrame;
+        files.add(await _captureCanvas(
+            _problemSurface.captureKey, directory, 'p$pageIndex'));
+      }
     }
 
-    if (mounted && _currentImageIndex != originalIndex) {
-      _moveToImage(originalIndex);
+    if (mounted) {
+      setState(() {
+        _showScratch = originalShowScratch;
+        _currentImageIndex = originalImage;
+        _scratchIndex = originalScratch;
+      });
+      _ink.pageIndex = originalPage;
     }
 
     return files;
@@ -1145,10 +1461,10 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
     throw StateError('problem image load timed out');
   }
 
-  Future<File> _captureCurrentCanvas(
-      Directory directory, int imageIndex) async {
-    final boundary = _captureKey.currentContext?.findRenderObject()
-        as RenderRepaintBoundary?;
+  Future<File> _captureCanvas(
+      GlobalKey captureKey, Directory directory, String tag) async {
+    final boundary =
+        captureKey.currentContext?.findRenderObject() as RenderRepaintBoundary?;
     if (boundary == null) {
       throw StateError('capture boundary is not ready');
     }
@@ -1165,7 +1481,7 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
     }
 
     final file = File(
-      '${directory.path}/problem_solve_${widget.problemId}_${imageIndex}_${DateTime.now().millisecondsSinceEpoch}.png',
+      '${directory.path}/problem_solve_${widget.problemId}_${tag}_${DateTime.now().millisecondsSinceEpoch}.png',
     );
     await file.writeAsBytes(byteData.buffer.asUint8List(), flush: true);
 
@@ -1213,5 +1529,21 @@ class _EraserCursorPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant _EraserCursorPainter oldDelegate) {
     return position != oldDelegate.position || radius != oldDelegate.radius;
+  }
+}
+
+/// 캔버스 하나에 딸린 것들. 확대 상태, 두 손가락 계산, 지우개 커서, 캡처 키.
+class _InkSurface {
+  final bool isScratch;
+  final TransformationController transform = TransformationController();
+  final InkTransformTracker tracker = InkTransformTracker();
+  final ValueNotifier<Offset?> cursor = ValueNotifier(null);
+  final GlobalKey captureKey = GlobalKey();
+
+  _InkSurface({required this.isScratch});
+
+  void dispose() {
+    transform.dispose();
+    cursor.dispose();
   }
 }

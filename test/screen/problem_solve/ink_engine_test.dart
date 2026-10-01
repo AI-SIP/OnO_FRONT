@@ -179,6 +179,19 @@ void main() {
     });
   });
 
+  test('제출할 때 문제 이미지는 모두, 연습장은 필기가 있는 것만 캡처한다', () {
+    // 문제 이미지 2장, 연습장 3장 중 두 번째만 썼다.
+    final controller = InkController(pageCount: 2 + 5);
+    controller.pages[3].add(_stroke([const Offset(0.5, 0.5)]));
+    // 지우개 획만 있는 연습장은 쓴 게 아니다.
+    controller.pages[4]
+        .add(_stroke([const Offset(0.5, 0.5)], kind: InkKind.pixelEraser));
+
+    expect(
+        controller.pagesToCapture(imageCount: 2, scratchCount: 3), [0, 1, 3]);
+    controller.dispose();
+  });
+
   group('InkInputRouter', () {
     const touch = PointerDeviceKind.touch;
     const stylus = PointerDeviceKind.stylus;
