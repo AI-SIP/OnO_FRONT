@@ -18,14 +18,18 @@ import '../../Module/Design/AppRadius.dart';
 import '../../Module/Design/AppColors.dart';
 
 class ReviewDueScreen extends StatefulWidget {
-  const ReviewDueScreen({super.key});
+  const ReviewDueScreen({super.key, this.problemService});
+
+  /// 테스트에서 가짜 서비스를 넣을 때만 쓴다. 없으면 진짜 서비스를 만든다.
+  final ProblemService? problemService;
 
   @override
   State<ReviewDueScreen> createState() => _ReviewDueScreenState();
 }
 
 class _ReviewDueScreenState extends State<ReviewDueScreen> {
-  final ProblemService _problemService = ProblemService();
+  late final ProblemService _problemService =
+      widget.problemService ?? ProblemService();
   Map<int, ProblemModel> _problemDetails = {};
 
   @override
@@ -110,7 +114,12 @@ class _ReviewDueScreenState extends State<ReviewDueScreen> {
                       _buildHeader(data, themeProvider),
                       const SizedBox(height: 16),
                       ...data.problems.map(
-                        (p) => _buildProblemTile(context, p, themeProvider),
+                        (p) => _buildProblemTile(
+                          context,
+                          p,
+                          data.requiredCorrectCount,
+                          themeProvider,
+                        ),
                       ),
                     ],
                   ),
@@ -146,6 +155,14 @@ class _ReviewDueScreenState extends State<ReviewDueScreen> {
                     ),
                   ],
                 ),
+                if (data.requiredCorrectCount != null) ...[
+                  const SizedBox(height: 3),
+                  StandardText(
+                    text: '${data.requiredCorrectCount}번 맞히면 추천에서 빠져요',
+                    fontSize: 12,
+                    color: AppColors.textSecondary,
+                  ),
+                ],
                 if (data.overdueCount > 0) ...[
                   const SizedBox(height: 3),
                   Row(
@@ -175,8 +192,10 @@ class _ReviewDueScreenState extends State<ReviewDueScreen> {
   Widget _buildProblemTile(
     BuildContext context,
     ReviewDueProblemModel problem,
+    int? requiredCorrectCount,
     ThemeHandler themeProvider,
   ) {
+    final correctCount = problem.correctCount;
     final detail = _problemDetails[problem.problemId];
     final imageUrl = detail?.problemImageDataList?.isNotEmpty == true
         ? detail!.problemImageDataList!.first.imageUrl
@@ -213,9 +232,16 @@ class _ReviewDueScreenState extends State<ReviewDueScreen> {
           title: title,
           imageUrl: imageUrl,
           tags: detail?.tags ?? const [],
-          solveCount: detail?.solveCount ?? problem.consecutiveCorrectCount,
+          // 추천에서 빠지기까지 몇 번 남았는지 보이도록 막대를 맞힌 횟수로 채운다.
+          // 예전 서버라 맞힌 횟수가 없으면 전처럼 푼 횟수로 채운다.
+          solveCount: correctCount ??
+              detail?.solveCount ??
+              problem.consecutiveCorrectCount,
           lastSolvedAt: detail?.lastSolvedAt,
           themeProvider: themeProvider,
+          progressLabel: correctCount != null && requiredCorrectCount != null
+              ? '정답 $correctCount/$requiredCorrectCount'
+              : null,
         ),
       ),
     );

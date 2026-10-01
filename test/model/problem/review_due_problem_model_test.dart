@@ -43,6 +43,17 @@ void main() {
       expect(model.consecutiveCorrectCount, 0);
     });
 
+    test('맞힌 횟수(correctCount)를 파싱하고, 없으면 null 이다', () {
+      final withCount = ReviewDueProblemModel.fromJson({
+        'problemId': 7,
+        'correctCount': 2,
+      });
+      final withoutCount = ReviewDueProblemModel.fromJson({'problemId': 7});
+
+      expect(withCount.correctCount, 2);
+      expect(withoutCount.correctCount, isNull);
+    });
+
     test('nextReviewAt 문자열이 파싱 불가능한 값이면 예외 없이 null 로 떨어진다', () {
       // DateTime.tryParse 를 쓰기 때문에 형식이 이상해도 죽지 않는다.
       final model = ReviewDueProblemModel.fromJson({
@@ -112,6 +123,17 @@ void main() {
       expect(response.dueCount, 0);
       expect(response.overdueCount, 0);
       expect(response.problems, isEmpty);
+    });
+
+    test('추천에서 빠지는 정답 횟수(requiredCorrectCount)를 파싱하고, 없으면 null 이다', () {
+      final withRequired = ReviewDueResponse.fromJson({
+        'data': {'requiredCorrectCount': 3},
+      });
+      final withoutRequired =
+          ReviewDueResponse.fromJson({'data': <String, dynamic>{}});
+
+      expect(withRequired.requiredCorrectCount, 3);
+      expect(withoutRequired.requiredCorrectCount, isNull);
     });
   });
 }
