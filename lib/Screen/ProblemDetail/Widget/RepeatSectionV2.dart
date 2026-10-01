@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:ono/Module/Text/StandardLightText.dart';
@@ -26,6 +28,10 @@ import '../../../Module/Motion/TossPageRoute.dart';
 import '../../../Module/Motion/TossDialog.dart';
 import '../../../Module/Design/AppColors.dart';
 import '../../../Module/Design/AppRadius.dart';
+import '../../../Model/Problem/ProblemSolveTrend.dart';
+import '../../../Util/AppAnalytics.dart';
+import 'ReviewStatusStyle.dart';
+import 'ReviewTrendPanel.dart';
 
 class RepeatSectionV2 extends StatefulWidget {
   final ProblemModel problem;
@@ -33,12 +39,16 @@ class RepeatSectionV2 extends StatefulWidget {
   final bool isWide;
   final int refreshSignal;
 
+  /// 테스트에서 가짜 응답을 넣을 때만 넘긴다. 없으면 실제 서비스를 쓴다.
+  final ProblemSolveService? service;
+
   const RepeatSectionV2({
     super.key,
     required this.problem,
     required this.iconColor,
     required this.isWide,
     this.refreshSignal = 0,
+    this.service,
   });
 
   @override
@@ -47,10 +57,19 @@ class RepeatSectionV2 extends StatefulWidget {
 
 class _RepeatSectionV2State extends State<RepeatSectionV2>
     with AutomaticKeepAliveClientMixin {
-  final problemSolveService = ProblemSolveService();
+  late final problemSolveService = widget.service ?? ProblemSolveService();
   late Future<List<ProblemSolveModel>> _problemSolvesFuture;
   final Map<int, bool> _expandedStates = {}; // 각 카드의 펼침 상태 관리
   int? _selectedSolveId; // 태블릿 상세 패널에 표시할 항목
+
+  // 폰에서 추이 판의 동그라미를 눌렀을 때 그 카드까지 스크롤하려고 둔다.
+  final ScrollController _scrollController = ScrollController();
+  final Map<int, GlobalKey> _cardKeys = {};
+  int? _tappedRound;
+
+  // build 마다 다시 정렬하지 않도록 같은 목록이면 계산해 둔 것을 쓴다.
+  List<ProblemSolveModel>? _trendSource;
+  ProblemSolveTrend? _trend;
 
   @override
   void initState() {
@@ -67,6 +86,64 @@ class _RepeatSectionV2State extends State<RepeatSectionV2>
     super.didUpdateWidget(oldWidget);
     if (oldWidget.refreshSignal != widget.refreshSignal) {
       refresh();
+    }
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  ProblemSolveTrend _trendOf(List<ProblemSolveModel> problemSolves) {
+    if (_trend == null || !identical(_trendSource, problemSolves)) {
+      _trendSource = problemSolves;
+      _trend = ProblemSolveTrend.from(problemSolves);
+    }
+    return _trend!;
+  }
+
+  Future<void> _goToRound(
+      List<ProblemSolveModel> oldestFirst, int round) async {
+    final solve = oldestFirst[round - 1];
+    setState(() {
+      _tappedRound = round;
+      _selectedSolveId = solve.problemSolveId;
+      if (!widget.isWide) _expandedStates[solve.problemSolveId] = true;
+    });
+    AppAnalytics.logEvent('review_trend_round_tap', {
+      'round': round,
+      'count': oldestFirst.length,
+    });
+    if (widget.isWide) return;
+
+    // ListView.builder 는 화면 밖 카드를 아직 만들지 않았을 수 있다. 카드가
+    // 만들어질 때까지 조금씩 내려간 뒤 그 카드가 보이게 맞춘다. 동그라미는
+    // 목록 맨 위 추이 카드에 있어서 찾는 회차 카드는 항상 아래쪽에 있다.
+    // 카드가 다 펼쳐진 뒤에 맞춰야 한다. 펼쳐지는 중에는 목록 길이가 짧아서
+    // 마지막 카드 쪽은 끝까지 내려가지 못한다.
+    await Future<void>.delayed(AppMotion.normal);
+    if (!mounted) return;
+    for (var i = 0; i < 30 && mounted; i++) {
+      final cardContext = _cardKeys[solve.problemSolveId]?.currentContext;
+      if (cardContext != null) {
+        if (!cardContext.mounted) return;
+        await Scrollable.ensureVisible(
+          cardContext,
+          duration: AppMotion.page,
+          curve: AppMotion.emphasized,
+          alignment: 0.05,
+        );
+        return;
+      }
+      if (!_scrollController.hasClients) return;
+      final position = _scrollController.position;
+      if (position.pixels >= position.maxScrollExtent) return;
+      _scrollController.jumpTo(min(
+        position.pixels + position.viewportDimension * 0.8,
+        position.maxScrollExtent,
+      ));
+      await WidgetsBinding.instance.endOfFrame;
     }
   }
 
@@ -168,31 +245,52 @@ class _RepeatSectionV2State extends State<RepeatSectionV2>
           );
         }
 
-        final latestFirst =
-            List<ProblemSolveModel>.from(problemSolves.reversed);
+        // 회차 번호는 가장 오래된 기록이 1회차다. 추이 카드와 번호가 어긋나지
+        // 않도록 서버 순서 대신 추이가 정렬한 순서에서 번호를 매기고, 카드
+        // 목록은 최근 복습이 위로 오게 뒤집어 보여 준다.
+        final trend = _trendOf(problemSolves);
+        final oldestFirst = trend.solves;
         if (_selectedSolveId == null ||
-            !latestFirst.any((s) => s.problemSolveId == _selectedSolveId)) {
-          _selectedSolveId = latestFirst.first.problemSolveId;
+            !oldestFirst.any((s) => s.problemSolveId == _selectedSolveId)) {
+          _selectedSolveId = oldestFirst.last.problemSolveId;
         }
 
         if (widget.isWide) {
-          return _buildTabletMasterDetail(context, latestFirst);
+          return _buildTabletMasterDetail(context, oldestFirst, trend);
         }
 
         return ListView.builder(
+          controller: _scrollController,
           padding: const EdgeInsets.symmetric(
             horizontal: 30.0,
             vertical: 20.0,
           ),
-          itemCount: latestFirst.length,
-          itemBuilder: (context, index) {
-            final solve = latestFirst[index];
-            final displayIndex = index + 1; // 최신 기록이 1회차
+          itemCount: oldestFirst.length + 1,
+          itemBuilder: (context, itemIndex) {
+            if (itemIndex == 0) {
+              return AppearTransition(
+                child: Padding(
+                  padding: const EdgeInsets.only(bottom: 16.0),
+                  child: ReviewTrendPanel(
+                    trend: trend,
+                    accentColor: widget.iconColor,
+                    isWide: false,
+                    selectedRound: _tappedRound,
+                    onRoundTap: (round) => _goToRound(oldestFirst, round),
+                  ),
+                ),
+              );
+            }
+            // 최근 복습이 맨 위다.
+            final index = oldestFirst.length - itemIndex;
+            final solve = oldestFirst[index];
+            final displayIndex = index + 1;
             // 기록이 한꺼번에 툭 나타나는 대신 위에서부터 차례로 들어온다.
             // 아래쪽까지 지연을 매기면 마지막 카드가 한참 뒤에 뜨므로
             // 여섯 번째부터는 같은 시점에 들어오게 묶는다.
             return AppearTransition(
-              delay: AppMotion.stagger * (index < 6 ? index : 6),
+              key: _cardKeys.putIfAbsent(solve.problemSolveId, GlobalKey.new),
+              delay: AppMotion.stagger * (itemIndex < 6 ? itemIndex : 6),
               child: _ProblemSolveCard(
                 solve: solve,
                 index: displayIndex,
@@ -209,72 +307,107 @@ class _RepeatSectionV2State extends State<RepeatSectionV2>
     );
   }
 
-  Widget _buildTabletMasterDetail(
-      BuildContext context, List<ProblemSolveModel> latestFirst) {
-    final selectedIndex = latestFirst
+  Widget _buildTabletMasterDetail(BuildContext context,
+      List<ProblemSolveModel> oldestFirst, ProblemSolveTrend trend) {
+    final selectedIndex = oldestFirst
         .indexWhere((solve) => solve.problemSolveId == _selectedSolveId);
     final safeSelectedIndex = selectedIndex >= 0 ? selectedIndex : 0;
-    final selectedSolve = latestFirst[safeSelectedIndex];
+    final selectedSolve = oldestFirst[safeSelectedIndex];
+    // 높이가 낮은 가로 태블릿에서는 카드를 다 두면 아래 목록이 너무 좁아진다.
+    final isShort = MediaQuery.sizeOf(context).height < 700;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 60.0, vertical: 20.0),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            flex: 1,
-            child: Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(AppRadius.large),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
+      child: LayoutBuilder(
+        builder: (context, constraints) => Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            ConstrainedBox(
+              constraints:
+                  BoxConstraints(maxHeight: constraints.maxHeight * 0.55),
+              child: SingleChildScrollView(
+                child: AppearTransition(
+                  child: ReviewTrendPanel(
+                    trend: trend,
+                    accentColor: widget.iconColor,
+                    isWide: true,
+                    compact: isShort,
+                    selectedRound: safeSelectedIndex + 1,
+                    onRoundTap: (round) => _goToRound(oldestFirst, round),
                   ),
-                ],
-              ),
-              child: ListView.separated(
-                padding: const EdgeInsets.all(12.0),
-                itemCount: latestFirst.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 10),
-                itemBuilder: (context, index) {
-                  final solve = latestFirst[index];
-                  return AppearTransition(
-                    delay: AppMotion.stagger * (index < 6 ? index : 6),
-                    child: _TabletSolveListItem(
-                      solve: solve,
-                      index: index + 1,
-                      isSelected: solve.problemSolveId == _selectedSolveId,
-                      onTap: () {
-                        setState(() {
-                          _selectedSolveId = solve.problemSolveId;
-                        });
-                      },
-                    ),
-                  );
-                },
+                ),
               ),
             ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            flex: 2,
-            child: SingleChildScrollView(
-              child: _ProblemSolveCard(
-                solve: selectedSolve,
-                index: safeSelectedIndex + 1,
-                iconColor: widget.iconColor,
-                isExpanded: true,
-                onToggle: (_) {},
-                onRefreshAsync: refreshAsync,
-                showExpandIcon: false,
-              ),
-            ),
-          ),
-        ],
+            const SizedBox(height: 16),
+            Expanded(
+                child: _buildTabletSplit(
+                    oldestFirst, selectedSolve, safeSelectedIndex)),
+          ],
+        ),
       ),
+    );
+  }
+
+  Widget _buildTabletSplit(List<ProblemSolveModel> oldestFirst,
+      ProblemSolveModel selectedSolve, int safeSelectedIndex) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          flex: 1,
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(AppRadius.large),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: ListView.separated(
+              padding: const EdgeInsets.all(12.0),
+              itemCount: oldestFirst.length,
+              separatorBuilder: (_, __) => const SizedBox(height: 10),
+              itemBuilder: (context, index) {
+                // 최근 복습이 맨 위다.
+                final round = oldestFirst.length - index;
+                final solve = oldestFirst[round - 1];
+                return AppearTransition(
+                  delay: AppMotion.stagger * (index < 6 ? index : 6),
+                  child: _TabletSolveListItem(
+                    solve: solve,
+                    index: round,
+                    isSelected: solve.problemSolveId == _selectedSolveId,
+                    onTap: () {
+                      setState(() {
+                        _selectedSolveId = solve.problemSolveId;
+                      });
+                    },
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          flex: 2,
+          child: SingleChildScrollView(
+            child: _ProblemSolveCard(
+              solve: selectedSolve,
+              index: safeSelectedIndex + 1,
+              iconColor: widget.iconColor,
+              isExpanded: true,
+              onToggle: (_) {},
+              onRefreshAsync: refreshAsync,
+              showExpandIcon: false,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
@@ -346,7 +479,7 @@ class _ProblemSolveCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeHandler>(context);
-    final statusColor = _getStatusColor(solve.answerStatus);
+    final statusColor = ReviewStatusStyle.color(solve.answerStatus);
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 16.0),
@@ -389,7 +522,7 @@ class _ProblemSolveCard extends StatelessWidget {
                         color: statusColor.withOpacity(0.15),
                         borderRadius: BorderRadius.circular(AppRadius.small),
                       ),
-                      child: Icon(_getStatusIcon(solve.answerStatus),
+                      child: Icon(ReviewStatusStyle.icon(solve.answerStatus),
                           color: statusColor, size: 22),
                     ),
                     const SizedBox(width: 12),
@@ -978,7 +1111,7 @@ class _TabletSolveListItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final statusColor = _getStatusColor(solve.answerStatus);
+    final statusColor = ReviewStatusStyle.color(solve.answerStatus);
     final borderColor =
         isSelected ? statusColor.withOpacity(0.7) : Colors.grey[300]!;
 
@@ -1000,7 +1133,7 @@ class _TabletSolveListItem extends StatelessWidget {
                 color: statusColor.withOpacity(0.15),
                 borderRadius: BorderRadius.circular(AppRadius.small),
               ),
-              child: Icon(_getStatusIcon(solve.answerStatus),
+              child: Icon(ReviewStatusStyle.icon(solve.answerStatus),
                   color: statusColor, size: 18),
             ),
             const SizedBox(width: 10),
@@ -1051,32 +1184,6 @@ class _TabletSolveListItem extends StatelessWidget {
         ),
       ),
     );
-  }
-}
-
-Color _getStatusColor(AnswerStatus status) {
-  switch (status) {
-    case AnswerStatus.CORRECT:
-      return Colors.green;
-    case AnswerStatus.PARTIAL:
-      return Colors.orange;
-    case AnswerStatus.WRONG:
-      return Colors.red;
-    case AnswerStatus.UNKNOWN:
-      return Colors.grey;
-  }
-}
-
-IconData _getStatusIcon(AnswerStatus status) {
-  switch (status) {
-    case AnswerStatus.CORRECT:
-      return Icons.check_circle;
-    case AnswerStatus.PARTIAL:
-      return Icons.radio_button_checked;
-    case AnswerStatus.WRONG:
-      return Icons.cancel;
-    case AnswerStatus.UNKNOWN:
-      return Icons.help;
   }
 }
 
