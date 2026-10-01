@@ -15,6 +15,10 @@ import '../../Module/Text/mobile_font_size.dart';
 import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import '../../Util/AppAnalytics.dart';
+import 'Canvas/InkController.dart';
+import 'Canvas/InkInputRouter.dart';
+import 'Canvas/InkPainters.dart';
+import 'Canvas/InkStroke.dart';
 import 'ProblemSolveRegisterScreen.dart';
 import '../../Module/Motion/AppHaptic.dart';
 import '../../Module/Motion/PressableScale.dart';
@@ -50,15 +54,31 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
   final GlobalKey _captureKey = GlobalKey();
   final TransformationController _transformationController =
       TransformationController();
-  late final List<List<_DrawStroke>> _strokesByImage;
+  // 획과 되돌리기 기록. 펜이 움직일 때 setState 없이 그리기 층만 다시 그린다.
+  late final InkController _ink;
+  final InkInputRouter _router = InkInputRouter();
+  final InkTransformTracker _tracker = InkTransformTracker();
   late final List<bool> _imageReadyStates;
   late final List<bool> _imageErrorStates;
   late final List<Size?> _imageNaturalSizes;
-  _DrawStroke? _currentStroke;
   Timer? _timer;
-  int _activePointers = 0;
   int _currentImageIndex = 0;
-  int _elapsedSeconds = 0;
+
+  // 타이머와 지우개 커서는 그 칸만 다시 그린다.
+  final ValueNotifier<int> _elapsed = ValueNotifier(0);
+  final ValueNotifier<Offset?> _cursor = ValueNotifier(null);
+
+  // 펜이 감지돼 손가락 필기를 처음 막았을 때 한 번만 띄우는 안내.
+  final ValueNotifier<bool> _palmNotice = ValueNotifier(false);
+  bool _palmNoticeShown = false;
+  Timer? _palmNoticeTimer;
+
+  // 획 지우개로 문지르는 중인지. 손을 떼면 한 번의 되돌리기 단위로 묶는다.
+  bool _erasing = false;
+
+  // 포인터마다 마지막 위치. 손가락으로 쓰다가 두 손가락 확대로 바뀔 때 첫
+  // 손가락의 위치가 필요하다.
+  final Map<int, Offset> _pointerPositions = {};
   bool _isSubmitting = false;
   Size _canvasSize = Size.zero;
   Color _penColor = Colors.black87;
@@ -66,7 +86,6 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
   double _eraserWidth = 18.0;
   _CanvasTool _selectedTool = _CanvasTool.pen;
   _CanvasTool _previousTool = _CanvasTool.pen;
-  Offset? _cursorPosition; // canvas-space position for eraser cursor overlay
 
   // Analytics 용. 도구를 바꿀 때마다 남기면 이벤트가 너무 많아서, 한 번 푸는
   // 동안 무엇을 썼는지 모아 두었다가 제출하거나 나갈 때 한 번에 남긴다.
@@ -76,6 +95,7 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
   bool _changedColor = false;
   bool _changedWidth = false;
   int _undoCount = 0;
+  int _redoCount = 0;
   bool _cleared = false;
   bool _submitted = false;
 
@@ -100,8 +120,7 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
   void initState() {
     super.initState();
     AppAnalytics.logScreenView('ProblemSolveCanvasScreen');
-    _strokesByImage =
-        List.generate(widget.problemImageUrls.length, (_) => <_DrawStroke>[]);
+    _ink = InkController(pageCount: widget.problemImageUrls.length);
     _imageReadyStates =
         List.generate(widget.problemImageUrls.length, (_) => false);
     _imageErrorStates =
@@ -122,8 +141,6 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
       }
     });
   }
-
-  List<_DrawStroke> get _currentStrokes => _strokesByImage[_currentImageIndex];
 
   bool get _isCurrentImageReady => _imageReadyStates[_currentImageIndex];
 
@@ -155,9 +172,7 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
   void _startTimer() {
     _timer?.cancel();
     _timer = Timer.periodic(const Duration(seconds: 1), (_) {
-      if (mounted) {
-        setState(() => _elapsedSeconds++);
-      }
+      if (mounted) _elapsed.value++;
     });
   }
 
@@ -167,7 +182,12 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
     if (!_submitted) _logCanvasSession('canvas_abandon');
     if (Platform.isIOS) _pencilChannel.setMethodCallHandler(null);
     _timer?.cancel();
+    _palmNoticeTimer?.cancel();
     _transformationController.dispose();
+    _ink.dispose();
+    _elapsed.dispose();
+    _cursor.dispose();
+    _palmNotice.dispose();
     super.dispose();
   }
 
@@ -216,11 +236,16 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
         backgroundColor: Colors.white,
         centerTitle: true,
         elevation: 0,
-        title: StandardText(
-          text: _formatElapsedTime(_elapsedSeconds),
-          fontSize: 18,
-          fontWeight: FontWeight.bold,
-          color: themeProvider.primaryColor,
+        // 타이머는 매초 바뀌어서 이 칸만 다시 그린다. 고치기 전에는 1초마다
+        // 화면 전체를 다시 만들었다.
+        title: ValueListenableBuilder<int>(
+          valueListenable: _elapsed,
+          builder: (context, seconds, _) => StandardText(
+            text: _formatElapsedTime(seconds),
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: themeProvider.primaryColor,
+          ),
         ),
         actions: [
           IconButton(
@@ -229,15 +254,29 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
             icon: Icon(Icons.center_focus_strong,
                 color: themeProvider.primaryColor),
           ),
-          IconButton(
-            tooltip: '되돌리기',
-            onPressed: _currentStrokes.isEmpty ? null : _undoLastStroke,
-            icon: Icon(Icons.undo, color: themeProvider.primaryColor),
-          ),
-          IconButton(
-            tooltip: '전체 지우기',
-            onPressed: _currentStrokes.isEmpty ? null : _clearStrokes,
-            icon: Icon(Icons.delete_outline, color: themeProvider.primaryColor),
+          ListenableBuilder(
+            listenable: _ink.committed,
+            builder: (context, _) => Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconButton(
+                  tooltip: '되돌리기',
+                  onPressed: _ink.page.canUndo ? _undo : null,
+                  icon: Icon(Icons.undo, color: themeProvider.primaryColor),
+                ),
+                IconButton(
+                  tooltip: '다시 실행',
+                  onPressed: _ink.page.canRedo ? _redo : null,
+                  icon: Icon(Icons.redo, color: themeProvider.primaryColor),
+                ),
+                IconButton(
+                  tooltip: '전체 지우기',
+                  onPressed: _ink.page.isEmpty ? null : _clearStrokes,
+                  icon: Icon(Icons.delete_outline,
+                      color: themeProvider.primaryColor),
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -260,125 +299,134 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
                   final imageRect = _computeImageRect(newSize);
                   final imageIndex = _currentImageIndex;
                   final imageUrl = _currentImageUrl;
-                  return InteractiveViewer(
-                    transformationController: _transformationController,
-                    minScale: 1,
-                    maxScale: 4,
-                    panEnabled: _selectedTool == _CanvasTool.move,
-                    scaleEnabled: true,
-                    boundaryMargin: const EdgeInsets.all(80),
-                    child: Listener(
-                      onPointerDown: (event) {
-                        if (event.kind == PointerDeviceKind.stylus) {
-                          _usedStylus = true;
-                        }
-                        // Apple Pencil 2 flat-side tap / S Pen secondary button
-                        if (event.kind == PointerDeviceKind.stylus &&
-                            event.buttons & kSecondaryStylusButton != 0) {
-                          _usedStylusButton = true;
-                          setState(() => _toggleToLastTool());
-                          return;
-                        }
-                        // S Pen primary barrel button held → force stroke erase
-                        final forceErase =
-                            event.kind == PointerDeviceKind.stylus &&
-                                event.buttons & kPrimaryStylusButton != 0;
-                        if (forceErase) _usedStylusButton = true;
-                        _handlePointerDown(event.localPosition, imageRect,
-                            forceErase: forceErase);
-                      },
-                      onPointerMove: (event) {
-                        final forceErase =
-                            event.kind == PointerDeviceKind.stylus &&
-                                event.buttons & kPrimaryStylusButton != 0;
-                        _handlePointerMove(event.localPosition, imageRect,
-                            forceErase: forceErase);
-                      },
-                      onPointerHover: (event) {
-                        final forceErase =
-                            event.kind == PointerDeviceKind.stylus &&
-                                event.buttons & kPrimaryStylusButton != 0;
-                        if (_isEraserTool || forceErase) {
-                          setState(() => _cursorPosition = event.localPosition);
-                        }
-                      },
-                      onPointerUp: (_) => _handlePointerEnd(),
-                      onPointerCancel: (_) => _handlePointerEnd(),
-                      child: Stack(
-                        children: [
-                          RepaintBoundary(
-                            key: _captureKey,
-                            child: Container(
-                              width: constraints.maxWidth,
-                              height: constraints.maxHeight,
-                              color: Colors.white,
-                              child: Stack(
-                                fit: StackFit.expand,
-                                children: [
-                                  Image.network(
-                                    imageUrl,
-                                    fit: BoxFit.contain,
-                                    frameBuilder: (
-                                      context,
-                                      child,
-                                      frame,
-                                      wasSynchronouslyLoaded,
-                                    ) {
-                                      if (wasSynchronouslyLoaded ||
-                                          frame != null) {
-                                        _markImageReady(imageIndex);
-                                      }
-                                      return child;
-                                    },
-                                    loadingBuilder:
-                                        (context, child, loadingProgress) {
-                                      if (loadingProgress == null) return child;
-                                      return Center(
-                                        child: CircularProgressIndicator(
-                                          color: themeProvider.primaryColor,
+                  final page = _ink.pages[imageIndex];
+                  // 포인터는 확대 뷰 바깥에서 받는다. 그래야 화면 좌표로 두
+                  // 손가락 확대를 계산할 수 있고, 필기 좌표는 toScene 으로 바꾼다.
+                  return Listener(
+                    onPointerDown: (event) =>
+                        _onPointerDown(event, imageRect, newSize),
+                    onPointerMove: (event) =>
+                        _onPointerMove(event, imageRect, newSize),
+                    onPointerUp: (event) => _onPointerEnd(event),
+                    onPointerCancel: (event) => _onPointerEnd(event),
+                    onPointerHover: (event) {
+                      final forceErase =
+                          event.kind == PointerDeviceKind.stylus &&
+                              event.buttons & kPrimaryStylusButton != 0;
+                      if (_isEraserTool || forceErase) {
+                        _cursor.value = _transformationController
+                            .toScene(event.localPosition);
+                      }
+                    },
+                    child: Stack(
+                      children: [
+                        InteractiveViewer(
+                          transformationController: _transformationController,
+                          minScale: 1,
+                          maxScale: 4,
+                          // 펜 도구일 때는 확대와 이동을 직접 계산한다. 이동
+                          // 도구일 때만 InteractiveViewer 에 맡긴다.
+                          panEnabled: _selectedTool == _CanvasTool.move,
+                          scaleEnabled: _selectedTool == _CanvasTool.move,
+                          boundaryMargin: const EdgeInsets.all(80),
+                          child: Stack(
+                            children: [
+                              RepaintBoundary(
+                                key: _captureKey,
+                                child: Container(
+                                  width: constraints.maxWidth,
+                                  height: constraints.maxHeight,
+                                  color: Colors.white,
+                                  child: Stack(
+                                    fit: StackFit.expand,
+                                    children: [
+                                      Image.network(
+                                        imageUrl,
+                                        fit: BoxFit.contain,
+                                        frameBuilder: (
+                                          context,
+                                          child,
+                                          frame,
+                                          wasSynchronouslyLoaded,
+                                        ) {
+                                          if (wasSynchronouslyLoaded ||
+                                              frame != null) {
+                                            _markImageReady(imageIndex);
+                                          }
+                                          return child;
+                                        },
+                                        loadingBuilder:
+                                            (context, child, loadingProgress) {
+                                          if (loadingProgress == null) {
+                                            return child;
+                                          }
+                                          return Center(
+                                            child: CircularProgressIndicator(
+                                              color: themeProvider.primaryColor,
+                                            ),
+                                          );
+                                        },
+                                        errorBuilder:
+                                            (context, error, stackTrace) {
+                                          _markImageError(imageIndex);
+                                          return Center(
+                                            child: StandardText(
+                                              text: '문제 이미지를 불러오지 못했습니다.',
+                                              fontSize: 14,
+                                              color: themeProvider.primaryColor,
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                      // 확정된 획과 지금 긋는 획을 따로 그린다.
+                                      // 펜이 움직일 때는 아래 층만 다시 그린다.
+                                      RepaintBoundary(
+                                        child: CustomPaint(
+                                          size: newSize,
+                                          painter: CommittedInkPainter(
+                                            controller: _ink,
+                                            page: page,
+                                            imageRect: imageRect,
+                                          ),
                                         ),
-                                      );
-                                    },
-                                    errorBuilder: (context, error, stackTrace) {
-                                      _markImageError(imageIndex);
-                                      return Center(
-                                        child: StandardText(
-                                          text: '문제 이미지를 불러오지 못했습니다.',
-                                          fontSize: 14,
-                                          color: themeProvider.primaryColor,
+                                      ),
+                                      RepaintBoundary(
+                                        child: CustomPaint(
+                                          size: newSize,
+                                          painter: LiveInkPainter(
+                                            controller: _ink,
+                                            page: page,
+                                            imageRect: imageRect,
+                                          ),
                                         ),
-                                      );
-                                    },
-                                  ),
-                                  CustomPaint(
-                                    size: Size(
-                                      constraints.maxWidth,
-                                      constraints.maxHeight,
-                                    ),
-                                    painter: _DrawingPainter(
-                                      strokes: _currentStrokes,
-                                      imageRect: imageRect,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                          // Eraser cursor overlay — outside RepaintBoundary so
-                          // it does not appear in the captured screenshot.
-                          if (_isEraserTool && _cursorPosition != null)
-                            Positioned.fill(
-                              child: IgnorePointer(
-                                child: CustomPaint(
-                                  painter: _EraserCursorPainter(
-                                    position: _cursorPosition!,
-                                    radius: math.max(7.0, _eraserWidth / 2),
+                                      ),
+                                    ],
                                   ),
                                 ),
                               ),
-                            ),
-                        ],
-                      ),
+                              // 지우개 커서. 캡처 영역 밖이라 사진에는 안 찍힌다.
+                              Positioned.fill(
+                                child: IgnorePointer(
+                                  child: ValueListenableBuilder<Offset?>(
+                                    valueListenable: _cursor,
+                                    builder: (context, position, _) =>
+                                        position == null
+                                            ? const SizedBox.shrink()
+                                            : CustomPaint(
+                                                painter: _EraserCursorPainter(
+                                                  position: position,
+                                                  radius: math.max(
+                                                      7.0, _eraserWidth / 2),
+                                                ),
+                                              ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        _buildPalmNotice(),
+                      ],
                     ),
                   );
                 },
@@ -741,7 +789,7 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
       _previousTool = _selectedTool;
       _selectedTool = tool;
     }
-    _cursorPosition = null;
+    _cursor.value = null;
   }
 
   void _toggleToLastTool() {
@@ -750,158 +798,191 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
     _selectedTool = temp;
   }
 
-  void _handlePointerDown(Offset point, Rect imageRect,
-      {bool forceErase = false}) {
-    _activePointers++;
+  bool _isStylus(PointerEvent event) =>
+      event.kind == PointerDeviceKind.stylus ||
+      event.kind == PointerDeviceKind.invertedStylus;
 
+  /// 필압을 0~1 로 맞춘다. 펜이 아니면 쓰지 않는다.
+  double _pressureOf(PointerEvent event) {
+    final range = event.pressureMax - event.pressureMin;
+    if (range <= 0) return 0.5;
+    return ((event.pressure - event.pressureMin) / range).clamp(0.0, 1.0);
+  }
+
+  void _onPointerDown(PointerDownEvent event, Rect imageRect, Size viewport) {
+    // 이동 도구일 때는 InteractiveViewer 가 다 처리한다.
     if (_selectedTool == _CanvasTool.move) return;
-    if (_activePointers > 1) {
-      _finishStroke();
+
+    final isStylus = _isStylus(event);
+    if (isStylus) _usedStylus = true;
+
+    // 애플펜슬 2 옆면 탭, S펜 보조 버튼은 마지막 도구로 바꾼다.
+    if (isStylus && event.buttons & kSecondaryStylusButton != 0) {
+      _usedStylusButton = true;
+      setState(_toggleToLastTool);
       return;
     }
 
-    if (_isEraserTool || forceErase) _cursorPosition = point;
+    _pointerPositions[event.pointer] = event.localPosition;
+    final decision = _router.onDown(event.pointer, event.kind);
+    if (decision.cancelLiveStroke) _ink.cancelStroke();
 
-    final normalized = _toNormalized(point, imageRect);
+    switch (decision.role) {
+      case InkPointerRole.ignore:
+        _maybeShowPalmNotice();
+        return;
+      case InkPointerRole.transform:
+        _maybeShowPalmNotice();
+        // 쓰던 손가락이 확대로 넘어왔으면 그 손가락도 같이 기준에 넣는다.
+        for (final pointer in _router.transformPointers) {
+          final position = _pointerPositions[pointer];
+          if (position != null && !_tracker.tracks(pointer)) {
+            _tracker.add(pointer, position, _transformationController.value);
+          }
+        }
+        return;
+      case InkPointerRole.draw:
+        break;
+    }
+
+    // S펜 버튼을 누른 채 쓰면 획 지우개처럼 동작한다.
+    final forceErase = isStylus && event.buttons & kPrimaryStylusButton != 0;
+    if (forceErase) _usedStylusButton = true;
+    final point = _transformationController.toScene(event.localPosition);
+    if (_isEraserTool || forceErase) _cursor.value = point;
 
     if (forceErase || _selectedTool == _CanvasTool.strokeEraser) {
-      _eraseStrokeAt(normalized, imageRect);
+      _erasing = true;
+      _ink.eraseAt(point, math.max(7.0, _eraserWidth / 2), imageRect);
       return;
     }
 
-    _startStroke(normalized);
-  }
-
-  void _handlePointerMove(Offset point, Rect imageRect,
-      {bool forceErase = false}) {
-    if (_selectedTool == _CanvasTool.move || _activePointers > 1) return;
-
-    if (_isEraserTool || forceErase) _cursorPosition = point;
-
-    final normalized = _toNormalized(point, imageRect);
-
-    if (forceErase || _selectedTool == _CanvasTool.strokeEraser) {
-      _eraseStrokeAt(normalized, imageRect);
-      return;
-    }
-
-    _appendStroke(normalized);
-  }
-
-  void _handlePointerEnd() {
-    _activePointers = math.max(0, _activePointers - 1);
-    setState(() => _cursorPosition = null);
-    _finishStroke();
-  }
-
-  void _startStroke(Offset normalizedPoint) {
-    setState(() {
-      _currentStroke = _DrawStroke(
-        points: [normalizedPoint],
+    _ink.beginStroke(
+      InkStroke(
+        kind: _selectedTool == _CanvasTool.pixelEraser
+            ? InkKind.pixelEraser
+            : InkKind.pen,
         color: _penColor,
         width: _currentStrokeWidth,
-        isEraser: _selectedTool == _CanvasTool.pixelEraser,
-      );
-      _currentStrokes.add(_currentStroke!);
-    });
-  }
-
-  void _appendStroke(Offset normalizedPoint) {
-    if (_currentStroke == null) return;
-
-    setState(() {
-      _currentStroke!.points.add(normalizedPoint);
-    });
-  }
-
-  void _finishStroke() {
-    _currentStroke = null;
-  }
-
-  // Erase any stroke whose canvas-space path comes within eraseRadius of the
-  // given normalizedPoint. All comparisons happen in canvas-pixel space so the
-  // cursor circle (same radius) matches exactly what gets erased.
-  void _eraseStrokeAt(Offset normalizedPoint, Rect imageRect) {
-    final eraseRadius = math.max(7.0, _eraserWidth / 2);
-    final canvasPoint = Offset(
-      imageRect.left + normalizedPoint.dx * imageRect.width,
-      imageRect.top + normalizedPoint.dy * imageRect.height,
+        hasPressure: isStylus && _selectedTool == _CanvasTool.pen,
+      ),
+      _toNormalized(point, imageRect),
+      _pressureOf(event),
+      imageRect,
     );
+  }
 
-    setState(() {
-      _currentStrokes.removeWhere((stroke) {
-        if (stroke.isEraser) return false;
-        return _isPointNearStrokeCanvas(
-            canvasPoint, stroke, eraseRadius, imageRect);
-      });
+  void _onPointerMove(PointerMoveEvent event, Rect imageRect, Size viewport) {
+    if (_pointerPositions.containsKey(event.pointer)) {
+      _pointerPositions[event.pointer] = event.localPosition;
+    }
+    if (_router.isTransforming(event.pointer)) {
+      final next = _tracker.move(event.pointer, event.localPosition, viewport);
+      if (next != null) _transformationController.value = next;
+      return;
+    }
+    if (!_router.isDrawing(event.pointer)) return;
+
+    final point = _transformationController.toScene(event.localPosition);
+    final forceErase =
+        _isStylus(event) && event.buttons & kPrimaryStylusButton != 0;
+    if (_isEraserTool || forceErase) _cursor.value = point;
+
+    if (_erasing) {
+      _ink.eraseAt(point, math.max(7.0, _eraserWidth / 2), imageRect);
+      return;
+    }
+    _ink.extendStroke(
+        _toNormalized(point, imageRect), _pressureOf(event), imageRect);
+  }
+
+  void _onPointerEnd(PointerEvent event) {
+    _pointerPositions.remove(event.pointer);
+    _tracker.remove(event.pointer, _transformationController.value);
+    if (!_router.onUp(event.pointer)) return;
+
+    _cursor.value = null;
+    if (_erasing) {
+      _erasing = false;
+      _ink.endErase();
+    } else {
+      _ink.endStroke();
+    }
+  }
+
+  /// 펜이 감지돼 손가락 필기를 처음 막았을 때 한 번만 안내한다.
+  void _maybeShowPalmNotice() {
+    if (_palmNoticeShown || !_router.palmRejected) return;
+    _palmNoticeShown = true;
+    _palmNotice.value = true;
+    _palmNoticeTimer = Timer(const Duration(seconds: 4), () {
+      if (mounted) _palmNotice.value = false;
     });
   }
 
-  bool _isPointNearStrokeCanvas(
-    Offset canvasPoint,
-    _DrawStroke stroke,
-    double eraseRadius,
-    Rect imageRect,
-  ) {
-    if (stroke.points.isEmpty) return false;
-
-    Offset denorm(Offset p) => Offset(
-          imageRect.left + p.dx * imageRect.width,
-          imageRect.top + p.dy * imageRect.height,
-        );
-
-    // Include stroke's own half-width so erasing feels natural at edges.
-    final totalRadius = eraseRadius + stroke.width / 2;
-
-    if (stroke.points.length == 1) {
-      return (canvasPoint - denorm(stroke.points.first)).distance <=
-          totalRadius;
-    }
-
-    for (var i = 0; i < stroke.points.length - 1; i++) {
-      final distance = _distanceToSegment(
-        canvasPoint,
-        denorm(stroke.points[i]),
-        denorm(stroke.points[i + 1]),
-      );
-      if (distance <= totalRadius) return true;
-    }
-
-    return false;
-  }
-
-  double _distanceToSegment(Offset point, Offset start, Offset end) {
-    final segment = end - start;
-    final lengthSquared = segment.dx * segment.dx + segment.dy * segment.dy;
-
-    if (lengthSquared == 0) {
-      return (point - start).distance;
-    }
-
-    final t = (((point.dx - start.dx) * segment.dx +
-                (point.dy - start.dy) * segment.dy) /
-            lengthSquared)
-        .clamp(0.0, 1.0);
-    final projection = Offset(
-      start.dx + segment.dx * t,
-      start.dy + segment.dy * t,
+  Widget _buildPalmNotice() {
+    return Positioned(
+      left: 12,
+      right: 12,
+      bottom: 12,
+      child: ValueListenableBuilder<bool>(
+        valueListenable: _palmNotice,
+        builder: (context, visible, _) => IgnorePointer(
+          ignoring: !visible,
+          child: AnimatedOpacity(
+            opacity: visible ? 1 : 0,
+            duration: const Duration(milliseconds: 200),
+            child: Semantics(
+              liveRegion: true,
+              child: Container(
+                padding: const EdgeInsets.fromLTRB(14, 10, 8, 10),
+                decoration: BoxDecoration(
+                  color: AppColors.textPrimary,
+                  borderRadius: BorderRadius.circular(AppRadius.large),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.edit, color: Colors.white, size: 20),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: StandardText(
+                        text: '펜이 감지돼서 손가락은 확대와 이동에만 써요',
+                        fontSize: MobileFontSize.reduced(context, 13),
+                        color: Colors.white,
+                        height: 1.4,
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: () => _palmNotice.value = false,
+                      child: const StandardText(
+                        text: '알겠어요',
+                        fontSize: 12,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
     );
-
-    return (point - projection).distance;
   }
 
-  void _undoLastStroke() {
+  void _undo() {
     _undoCount++;
-    setState(() {
-      if (_currentStrokes.isNotEmpty) {
-        _currentStrokes.removeLast();
-      }
-    });
+    _ink.undo();
+  }
+
+  void _redo() {
+    _redoCount++;
+    _ink.redo();
   }
 
   void _clearStrokes() {
     _cleared = true;
-    setState(_currentStrokes.clear);
+    _ink.clear();
   }
 
   void _resetZoom() {
@@ -915,13 +996,11 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
       return;
     }
 
-    _finishStroke();
+    _ink.pageIndex = imageIndex;
+    _tracker.clear();
     _loadImageNaturalSize(imageIndex);
-    setState(() {
-      _currentImageIndex = imageIndex;
-      _activePointers = 0;
-      _cursorPosition = null;
-    });
+    setState(() => _currentImageIndex = imageIndex);
+    _cursor.value = null;
     _resetZoom();
   }
 
@@ -961,9 +1040,10 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
   /// 한 번 푼 동안 캔버스를 어떻게 썼는지 남긴다. 지우개 두 가지, 색, 굵기,
   /// 스타일러스 버튼 같은 기능이 실제로 쓰이는지를 여기서 본다.
   void _logCanvasSession(String name) {
-    final strokes = _strokesByImage.expand((s) => s).where((s) => !s.isEraser);
+    final strokes =
+        _ink.pages.expand((p) => p.strokes).where((s) => !s.isEraser);
     AppAnalytics.logEvent(name, {
-      'duration_sec': _elapsedSeconds,
+      'duration_sec': _elapsed.value,
       'image_count': widget.problemImageUrls.length,
       'stroke_count': strokes.length,
       'tools': (_usedTools.toList()..sort()).join(','),
@@ -972,6 +1052,8 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
       'color_changed': _changedColor,
       'width_changed': _changedWidth,
       'undo_count': _undoCount,
+      'redo_count': _redoCount,
+      'palm_rejected': _router.palmRejected,
       'cleared': _cleared,
     });
   }
@@ -982,6 +1064,7 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
     setState(() => _isSubmitting = true);
 
     try {
+      _ink.endStroke();
       final files = await _captureAllSolutionImages();
       _timer?.cancel();
 
@@ -994,7 +1077,7 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
             problemId: widget.problemId,
             onRefresh: widget.onRefresh,
             initialSolutionImages: files,
-            initialTimeSpentSeconds: _elapsedSeconds,
+            initialTimeSpentSeconds: _elapsed.value,
           ),
         ),
       );
@@ -1093,83 +1176,6 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
     final minutes = totalSeconds ~/ 60;
     final seconds = totalSeconds % 60;
     return '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
-  }
-}
-
-class _DrawStroke {
-  final List<Offset> points; // image-normalized [0,1] coordinates
-  final Color color;
-  final double width; // canvas pixels at time of drawing
-  final bool isEraser;
-
-  _DrawStroke({
-    required this.points,
-    required this.color,
-    required this.width,
-    required this.isEraser,
-  });
-}
-
-class _DrawingPainter extends CustomPainter {
-  final List<_DrawStroke> strokes;
-  final Rect imageRect;
-
-  _DrawingPainter({required this.strokes, required this.imageRect});
-
-  Offset _denormalize(Offset normalized) {
-    return Offset(
-      imageRect.left + normalized.dx * imageRect.width,
-      imageRect.top + normalized.dy * imageRect.height,
-    );
-  }
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    // Drawable area boundary indicator
-    canvas.drawRect(
-      Offset.zero & size,
-      Paint()
-        ..color = const Color(0xFFCBD5E1)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 1.5,
-    );
-
-    canvas.saveLayer(Offset.zero & size, Paint());
-
-    for (final stroke in strokes) {
-      if (stroke.points.isEmpty) continue;
-
-      final pts = stroke.points.map(_denormalize).toList();
-
-      final paint = Paint()
-        ..color = stroke.color
-        ..strokeWidth = stroke.width
-        ..strokeCap = StrokeCap.round
-        ..strokeJoin = StrokeJoin.round
-        ..style = PaintingStyle.stroke
-        ..blendMode = stroke.isEraser ? BlendMode.clear : BlendMode.srcOver;
-
-      if (pts.length == 1) {
-        final dotPaint = Paint()
-          ..color = stroke.color
-          ..style = PaintingStyle.fill
-          ..blendMode = stroke.isEraser ? BlendMode.clear : BlendMode.srcOver;
-        canvas.drawCircle(pts.first, stroke.width / 2, dotPaint);
-      } else {
-        final path = Path()..moveTo(pts.first.dx, pts.first.dy);
-        for (final point in pts.skip(1)) {
-          path.lineTo(point.dx, point.dy);
-        }
-        canvas.drawPath(path, paint);
-      }
-    }
-
-    canvas.restore();
-  }
-
-  @override
-  bool shouldRepaint(covariant _DrawingPainter oldDelegate) {
-    return true;
   }
 }
 
