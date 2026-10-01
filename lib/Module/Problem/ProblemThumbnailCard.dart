@@ -16,6 +16,9 @@ class ProblemThumbnailCard extends StatelessWidget {
   final ThemeHandler themeProvider;
   final bool isSelected;
   final Widget? trailing;
+
+  /// 진행 막대 아래에 적는 글. 주면 막대가 무엇을 세는지 함께 보인다. 예) '정답 1/3'
+  final String? progressLabel;
   final EdgeInsetsGeometry padding;
   final double imageWidth;
   final double imageHeight;
@@ -38,6 +41,7 @@ class ProblemThumbnailCard extends StatelessWidget {
     required this.themeProvider,
     this.isSelected = false,
     this.trailing,
+    this.progressLabel,
     this.padding = const EdgeInsets.all(12),
     this.imageWidth = 50,
     this.imageHeight = 70,
@@ -180,10 +184,12 @@ class ProblemThumbnailCard extends StatelessWidget {
     final lastSolvedDateText =
         lastSolvedAt != null ? DateFormat('M/d').format(lastSolvedAt) : null;
 
+    final progressText = progressLabel ?? '풀이 진행 $cappedSolveCount/3';
+
     return Semantics(
       label: lastSolvedDateText == null
-          ? '복습 기록 없음, 풀이 진행 $cappedSolveCount/3'
-          : '최근 복습 $lastSolvedDateText, 풀이 진행 $cappedSolveCount/3',
+          ? '복습 기록 없음, $progressText'
+          : '최근 복습 $lastSolvedDateText, $progressText',
       child: SizedBox(
         width: 64,
         child: Column(
@@ -198,22 +204,36 @@ class ProblemThumbnailCard extends StatelessWidget {
                 borderRadius: BorderRadius.circular(AppRadius.small),
                 border: Border.all(color: Colors.grey.shade200),
               ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: List.generate(3, (index) {
-                  final filled = index < cappedSolveCount;
-                  return Container(
-                    width: 12,
-                    height: 4,
-                    margin: EdgeInsets.only(right: index == 2 ? 0 : 3),
-                    decoration: BoxDecoration(
-                      color: filled
-                          ? themeProvider.primaryColor
-                          : Colors.grey.shade300,
-                      borderRadius: BorderRadius.circular(2),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: List.generate(3, (index) {
+                      final filled = index < cappedSolveCount;
+                      return Container(
+                        width: 12,
+                        height: 4,
+                        margin: EdgeInsets.only(right: index == 2 ? 0 : 3),
+                        decoration: BoxDecoration(
+                          color: filled
+                              ? themeProvider.primaryColor
+                              : Colors.grey.shade300,
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      );
+                    }),
+                  ),
+                  if (progressLabel != null) ...[
+                    const SizedBox(height: 4),
+                    StandardText(
+                      text: progressLabel!,
+                      fontSize: 10,
+                      color: themeProvider.primaryColor,
+                      textAlign: TextAlign.center,
                     ),
-                  );
-                }),
+                  ],
+                ],
               ),
             ),
             const SizedBox(height: 6),
