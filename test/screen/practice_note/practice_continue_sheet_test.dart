@@ -91,6 +91,7 @@ void main() {
 
     expect(find.text('마지막 문제까지 풀었어요'), findsOneWidget);
     expect(find.text('복습 세트를 마칠까요?'), findsOneWidget);
+    expect(find.text('이번 회차를 마쳐요.'), findsOneWidget);
     expect(find.text('다음 문제 바로 풀기'), findsNothing);
 
     await tester.tap(find.text('복습 마치기'));

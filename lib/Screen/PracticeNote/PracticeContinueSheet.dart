@@ -163,7 +163,7 @@ class _PracticeContinueSheet extends StatelessWidget {
             _ChoiceTile(
               icon: Icons.flag_outlined,
               title: '복습 마치기',
-              description: '이번 회차를 마치고 기분을 남겨요.',
+              description: '이번 회차를 마쳐요.',
               accentColor: accentColor,
               highlighted: true,
               onTap: () =>
