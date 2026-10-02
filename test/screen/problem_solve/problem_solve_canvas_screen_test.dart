@@ -290,9 +290,9 @@ void main() {
       final area = _canvasArea(tester);
       final pen = await tester.startGesture(area.topLeft + const Offset(40, 80),
           kind: PointerDeviceKind.stylus);
-      // 구불구불하게 긋는다.
+      // 살짝 떨리며 거의 곧게 긋는다. 구불구불한 획은 멈춰도 그대로 둔다.
       for (var i = 1; i <= 12; i++) {
-        await pen.moveBy(Offset(10, i.isEven ? 12 : -12));
+        await pen.moveBy(Offset(10, i.isEven ? 1.5 : -1.5));
         await tester.pump();
       }
       await tester.pump(const Duration(milliseconds: 600));

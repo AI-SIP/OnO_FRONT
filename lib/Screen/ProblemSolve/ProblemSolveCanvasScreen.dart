@@ -1151,6 +1151,8 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
       if (!mounted || stroke == null || stroke.isEraser) return;
       // 점만 찍고 멈춘 것은 직선으로 바꾸지 않는다.
       if (stroke.length < 3 || stroke.screenExtent(imageRect) < 24) return;
+      // 구불구불한 획은 멈춰도 그대로 둔다.
+      if (!stroke.isRoughlyStraight(imageRect)) return;
       _ink.straightenLiveStroke();
       _straightened = true;
       _usedTools.add('straight_line');

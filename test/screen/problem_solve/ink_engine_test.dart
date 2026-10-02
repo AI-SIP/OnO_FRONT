@@ -55,6 +55,29 @@ void main() {
       expect(stroke.points, [const Offset(0.1, 0.1), const Offset(0.3, 0.1)]);
     });
 
+    test('거의 곧게 그은 획만 직선 보정 대상이다', () {
+      // 살짝 떨리며 곧게 그은 선
+      final line = _stroke([
+        const Offset(0.1, 0.5),
+        const Offset(0.3, 0.505),
+        const Offset(0.5, 0.497),
+        const Offset(0.7, 0.5),
+      ]);
+      // 숫자 2 처럼 꺾인 획
+      final two = _stroke([
+        const Offset(0.10, 0.40),
+        const Offset(0.14, 0.37),
+        const Offset(0.18, 0.38),
+        const Offset(0.19, 0.42),
+        const Offset(0.16, 0.48),
+        const Offset(0.10, 0.54),
+        const Offset(0.21, 0.54),
+      ]);
+
+      expect(line.isRoughlyStraight(_rect), isTrue);
+      expect(two.isRoughlyStraight(_rect), isFalse);
+    });
+
     test('곡선 경로는 첫 점에서 시작해 마지막 점에서 끝난다', () {
       final stroke = _stroke([
         const Offset(0.1, 0.1),

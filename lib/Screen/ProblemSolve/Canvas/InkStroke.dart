@@ -111,6 +111,26 @@ class InkStroke {
     _maxY = math.max(first.dy, normalized.dy);
   }
 
+  /// 시작점과 끝점을 잇는 선에서 크게 벗어나지 않았는지. 직선 보정은 이미
+  /// 거의 곧게 그은 획에만 한다. 글씨를 쓰다가 잠깐 멈췄다고 '2' 같은 획이
+  /// 곧은 선으로 바뀌면 안 되기 때문이다.
+  bool isRoughlyStraight(Rect imageRect) {
+    if (_points.length < 2) return false;
+    Offset at(int i) => Offset(
+          imageRect.left + _points[i].dx * imageRect.width,
+          imageRect.top + _points[i].dy * imageRect.height,
+        );
+    final start = at(0);
+    final end = at(_points.length - 1);
+    final length = (end - start).distance;
+    if (length == 0) return false;
+    final tolerance = math.max(8.0, length * 0.12);
+    for (var i = 1; i < _points.length - 1; i++) {
+      if (_distanceToSegment(at(i), start, end) > tolerance) return false;
+    }
+    return true;
+  }
+
   /// 화면 기준 경계 상자 대각선 길이. 직선 보정을 할 만큼 그었는지 본다.
   double screenExtent(Rect imageRect) {
     if (_points.isEmpty) return 0;
