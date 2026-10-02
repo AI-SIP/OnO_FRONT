@@ -62,8 +62,8 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
   int _scratchPageCount = 1;
   static const int _maxScratchPages = 5;
 
-  /// 앱바 양쪽 칸 폭. 같게 둬야 타이머가 가운데 온다. 오른쪽 버튼 둘이 들어간다.
-  static const double _appBarSideWidth = 104;
+  /// 앱바 양쪽 칸 폭. 같게 둬야 타이머가 가운데 온다. 오른쪽 버튼 셋이 들어간다.
+  static const double _appBarSideWidth = 128;
   // 획과 되돌리기 기록. 펜이 움직일 때 setState 없이 그리기 층만 다시 그린다.
   late final InkController _ink;
   final InkInputRouter _router = InkInputRouter();
@@ -255,9 +255,9 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
 
     return Scaffold(
       backgroundColor: Colors.white,
-      // 왼쪽 뒤로가기와 오른쪽 되돌리기, 다시 실행의 폭을 같게 맞춰 타이머가
-      // 정확히 가운데 온다. 전체 지우기는 도구 줄로, 확대 초기화는 확대했을
-      // 때만 캔버스 위에 뜨는 버튼으로 옮겼다.
+      // 왼쪽 뒤로가기 칸과 오른쪽 되돌리기, 다시 실행, 전체 지우기 칸의 폭을
+      // 같게 맞춰 타이머가 정확히 가운데 온다. 확대 초기화는 확대했을 때만
+      // 캔버스 위에 뜨는 버튼으로 옮겼다.
       appBar: AppBar(
         backgroundColor: Colors.white,
         surfaceTintColor: Colors.white,
@@ -272,20 +272,24 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
         // 화면 전체를 다시 만들었다.
         title: ValueListenableBuilder<int>(
           valueListenable: _elapsed,
-          builder: (context, seconds, _) => Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.timer_outlined,
-                  size: 20, color: themeProvider.primaryColor),
-              const SizedBox(width: 6),
-              StandardText(
-                text: _formatElapsedTime(seconds),
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: themeProvider.primaryColor,
-                height: 1.2,
-              ),
-            ],
+          // 큰 글씨에서도 가운데 칸을 넘치지 않게 줄인다.
+          builder: (context, seconds, _) => FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.timer_outlined,
+                    size: 20, color: themeProvider.primaryColor),
+                const SizedBox(width: 6),
+                StandardText(
+                  text: _formatElapsedTime(seconds),
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: themeProvider.primaryColor,
+                  height: 1.2,
+                ),
+              ],
+            ),
           ),
         ),
         actions: [
@@ -298,6 +302,7 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
                 children: [
                   IconButton(
                     tooltip: '되돌리기',
+                    visualDensity: VisualDensity.compact,
                     onPressed: _ink.page.canUndo ? _undo : null,
                     color: themeProvider.primaryColor,
                     disabledColor: AppColors.textDisabled,
@@ -305,10 +310,20 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
                   ),
                   IconButton(
                     tooltip: '다시 실행',
+                    visualDensity: VisualDensity.compact,
                     onPressed: _ink.page.canRedo ? _redo : null,
                     color: themeProvider.primaryColor,
                     disabledColor: AppColors.textDisabled,
                     icon: const Icon(Icons.redo),
+                  ),
+                  // 이제 되돌릴 수 있어서 되돌리기 옆에 둔다.
+                  IconButton(
+                    tooltip: '전체 지우기',
+                    visualDensity: VisualDensity.compact,
+                    onPressed: _ink.page.isEmpty ? null : _clearStrokes,
+                    color: themeProvider.primaryColor,
+                    disabledColor: AppColors.textDisabled,
+                    icon: const Icon(Icons.delete_outline),
                   ),
                   const SizedBox(width: 4),
                 ],
@@ -431,24 +446,6 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
                       ),
                     ],
                   ),
-                ),
-              ),
-              // 도구 줄은 가로로 넘겨지지만 전체 지우기는 늘 보이게 끝에 고정한다.
-              // 이제 되돌릴 수 있어서 도구 옆에 둬도 된다.
-              Container(
-                width: 1,
-                height: 28,
-                margin: const EdgeInsets.only(left: 8),
-                color: AppColors.border,
-              ),
-              ListenableBuilder(
-                listenable: _ink.committed,
-                builder: (context, _) => IconButton(
-                  tooltip: '전체 지우기',
-                  onPressed: _ink.page.isEmpty ? null : _clearStrokes,
-                  color: AppColors.textSecondary,
-                  disabledColor: AppColors.textDisabled,
-                  icon: const Icon(Icons.delete_outline),
                 ),
               ),
             ],
