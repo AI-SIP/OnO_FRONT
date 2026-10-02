@@ -19,8 +19,15 @@ class ProblemSolveEntry {
     required List<String> problemImageUrls,
     required VoidCallback onRefresh,
     required ThemeHandler themeProvider,
+
+    /// 정해서 넘기면 방식 고르기 시트를 건너뛴다. 복습 세트에서 다음 문제를
+    /// 바로 풀 때, 앞 문제에서 고른 방식을 그대로 쓴다.
+    ProblemSolveMode? mode,
+
+    /// 어떤 방식으로 풀었는지 알려 준다. 다음 문제를 같은 방식으로 열 때 쓴다.
+    ValueChanged<ProblemSolveMode>? onModeSelected,
   }) async {
-    final mode = await showModalBottomSheet<_ProblemSolveMode>(
+    mode ??= await showModalBottomSheet<ProblemSolveMode>(
       sheetAnimationStyle: AppMotion.sheetStyle,
       context: context,
       backgroundColor: Colors.transparent,
@@ -33,16 +40,17 @@ class ProblemSolveEntry {
     if (mode == null || !context.mounted) {
       return null;
     }
+    onModeSelected?.call(mode);
 
     // 종이에 풀고 기록만 남기는지, 앱 안 캔버스에 푸는지. 문제 이미지가
     // 없으면 캔버스를 골라도 기록 화면으로 간다.
     AppAnalytics.logEvent('solve_mode_select', {
-      'mode': mode == _ProblemSolveMode.offline || problemImageUrls.isEmpty
+      'mode': mode == ProblemSolveMode.offline || problemImageUrls.isEmpty
           ? 'offline'
           : 'canvas',
     });
 
-    if (mode == _ProblemSolveMode.offline) {
+    if (mode == ProblemSolveMode.offline) {
       return Navigator.push<bool>(
         context,
         TossPageRoute(
@@ -79,7 +87,8 @@ class ProblemSolveEntry {
   }
 }
 
-enum _ProblemSolveMode {
+/// 다시 풀기 방식. 종이에 풀고 사진으로 남기는지, 앱 안 필기 화면에서 푸는지.
+enum ProblemSolveMode {
   offline,
   inApp,
 }
@@ -153,7 +162,7 @@ class _ProblemSolveModeSheet extends StatelessWidget {
             title: '현장에서 풀었어요',
             description: '종이나 다른 앱에서 푼 풀이 이미지를 직접 등록합니다.',
             themeProvider: themeProvider,
-            onTap: () => Navigator.pop(context, _ProblemSolveMode.offline),
+            onTap: () => Navigator.pop(context, ProblemSolveMode.offline),
           ),
           const SizedBox(height: 10),
           _ModeTile(
@@ -164,7 +173,7 @@ class _ProblemSolveModeSheet extends StatelessWidget {
                 : '문제 이미지 $problemImageCount장 위에 필기하고 풀이 시간도 자동 기록합니다.',
             themeProvider: themeProvider,
             isEnabled: problemImageCount > 0,
-            onTap: () => Navigator.pop(context, _ProblemSolveMode.inApp),
+            onTap: () => Navigator.pop(context, ProblemSolveMode.inApp),
           ),
         ],
       ),
