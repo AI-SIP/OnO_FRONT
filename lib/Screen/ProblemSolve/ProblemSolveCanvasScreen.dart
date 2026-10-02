@@ -61,6 +61,9 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
   int _scratchIndex = 0;
   int _scratchPageCount = 1;
   static const int _maxScratchPages = 5;
+
+  /// 앱바 양쪽 칸 폭. 같게 둬야 타이머가 가운데 온다. 오른쪽 버튼 둘이 들어간다.
+  static const double _appBarSideWidth = 104;
   // 획과 되돌리기 기록. 펜이 움직일 때 setState 없이 그리기 층만 다시 그린다.
   late final InkController _ink;
   final InkInputRouter _router = InkInputRouter();
@@ -252,50 +255,64 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
 
     return Scaffold(
       backgroundColor: Colors.white,
+      // 왼쪽 뒤로가기와 오른쪽 되돌리기, 다시 실행의 폭을 같게 맞춰 타이머가
+      // 정확히 가운데 온다. 전체 지우기는 도구 줄로, 확대 초기화는 확대했을
+      // 때만 캔버스 위에 뜨는 버튼으로 옮겼다.
       appBar: AppBar(
         backgroundColor: Colors.white,
+        surfaceTintColor: Colors.white,
         centerTitle: true,
         elevation: 0,
+        leadingWidth: _appBarSideWidth,
+        leading: Align(
+          alignment: Alignment.centerLeft,
+          child: BackButton(color: AppColors.textPrimary),
+        ),
         // 타이머는 매초 바뀌어서 이 칸만 다시 그린다. 고치기 전에는 1초마다
         // 화면 전체를 다시 만들었다.
         title: ValueListenableBuilder<int>(
           valueListenable: _elapsed,
-          builder: (context, seconds, _) => StandardText(
-            text: _formatElapsedTime(seconds),
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: themeProvider.primaryColor,
+          builder: (context, seconds, _) => Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.timer_outlined,
+                  size: 20, color: themeProvider.primaryColor),
+              const SizedBox(width: 6),
+              StandardText(
+                text: _formatElapsedTime(seconds),
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: themeProvider.primaryColor,
+                height: 1.2,
+              ),
+            ],
           ),
         ),
         actions: [
-          IconButton(
-            tooltip: '확대 초기화',
-            onPressed: _resetZoom,
-            icon: Icon(Icons.center_focus_strong,
-                color: themeProvider.primaryColor),
-          ),
-          ListenableBuilder(
-            listenable: _ink.committed,
-            builder: (context, _) => Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                IconButton(
-                  tooltip: '되돌리기',
-                  onPressed: _ink.page.canUndo ? _undo : null,
-                  icon: Icon(Icons.undo, color: themeProvider.primaryColor),
-                ),
-                IconButton(
-                  tooltip: '다시 실행',
-                  onPressed: _ink.page.canRedo ? _redo : null,
-                  icon: Icon(Icons.redo, color: themeProvider.primaryColor),
-                ),
-                IconButton(
-                  tooltip: '전체 지우기',
-                  onPressed: _ink.page.isEmpty ? null : _clearStrokes,
-                  icon: Icon(Icons.delete_outline,
-                      color: themeProvider.primaryColor),
-                ),
-              ],
+          SizedBox(
+            width: _appBarSideWidth,
+            child: ListenableBuilder(
+              listenable: _ink.committed,
+              builder: (context, _) => Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  IconButton(
+                    tooltip: '되돌리기',
+                    onPressed: _ink.page.canUndo ? _undo : null,
+                    color: themeProvider.primaryColor,
+                    disabledColor: AppColors.textDisabled,
+                    icon: const Icon(Icons.undo),
+                  ),
+                  IconButton(
+                    tooltip: '다시 실행',
+                    onPressed: _ink.page.canRedo ? _redo : null,
+                    color: themeProvider.primaryColor,
+                    disabledColor: AppColors.textDisabled,
+                    icon: const Icon(Icons.redo),
+                  ),
+                  const SizedBox(width: 4),
+                ],
+              ),
             ),
           ),
         ],
@@ -414,6 +431,24 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
                       ),
                     ],
                   ),
+                ),
+              ),
+              // 도구 줄은 가로로 넘겨지지만 전체 지우기는 늘 보이게 끝에 고정한다.
+              // 이제 되돌릴 수 있어서 도구 옆에 둬도 된다.
+              Container(
+                width: 1,
+                height: 28,
+                margin: const EdgeInsets.only(left: 8),
+                color: AppColors.border,
+              ),
+              ListenableBuilder(
+                listenable: _ink.committed,
+                builder: (context, _) => IconButton(
+                  tooltip: '전체 지우기',
+                  onPressed: _ink.page.isEmpty ? null : _clearStrokes,
+                  color: AppColors.textSecondary,
+                  disabledColor: AppColors.textDisabled,
+                  icon: const Icon(Icons.delete_outline),
                 ),
               ),
             ],
@@ -702,122 +737,178 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
             surface.isScratch ? Offset.zero & size : _computeImageRect(size);
         final page = _ink.pages[_pageOf(surface)];
 
-        return Listener(
-          onPointerDown: (event) =>
-              _onPointerDown(surface, event, imageRect, size),
-          onPointerMove: (event) =>
-              _onPointerMove(surface, event, imageRect, size),
-          onPointerUp: (event) => _onPointerEnd(surface, event),
-          onPointerCancel: (event) => _onPointerEnd(surface, event),
-          onPointerHover: (event) {
-            final forceErase = event.kind == PointerDeviceKind.stylus &&
-                event.buttons & kPrimaryStylusButton != 0;
-            if (_isEraserTool || forceErase) {
-              surface.cursor.value =
-                  surface.transform.toScene(event.localPosition);
-            }
-          },
-          child: InteractiveViewer(
-            transformationController: surface.transform,
-            minScale: 1,
-            maxScale: 4,
-            // 펜 도구일 때는 확대와 이동을 직접 계산한다. 이동 도구일 때만
-            // InteractiveViewer 에 맡긴다.
-            panEnabled: _selectedTool == _CanvasTool.move,
-            scaleEnabled: _selectedTool == _CanvasTool.move,
-            boundaryMargin: const EdgeInsets.all(80),
-            child: Stack(
-              children: [
-                RepaintBoundary(
-                  key: surface.captureKey,
-                  child: Container(
-                    width: size.width,
-                    height: size.height,
-                    color: Colors.white,
-                    child: Stack(
-                      fit: StackFit.expand,
-                      children: [
-                        if (surface.isScratch)
-                          const ScratchPaper()
-                        else
-                          Image.network(
-                            _currentImageUrl,
-                            fit: BoxFit.contain,
-                            frameBuilder: (
-                              context,
-                              child,
-                              frame,
-                              wasSynchronouslyLoaded,
-                            ) {
-                              if (wasSynchronouslyLoaded || frame != null) {
-                                _markImageReady(imageIndex);
-                              }
-                              return child;
-                            },
-                            loadingBuilder: (context, child, loadingProgress) {
-                              if (loadingProgress == null) return child;
-                              return Center(
-                                child: CircularProgressIndicator(
-                                  color: themeProvider.primaryColor,
+        return Stack(
+          children: [
+            Positioned.fill(
+              child: Listener(
+                onPointerDown: (event) =>
+                    _onPointerDown(surface, event, imageRect, size),
+                onPointerMove: (event) =>
+                    _onPointerMove(surface, event, imageRect, size),
+                onPointerUp: (event) => _onPointerEnd(surface, event),
+                onPointerCancel: (event) => _onPointerEnd(surface, event),
+                onPointerHover: (event) {
+                  final forceErase = event.kind == PointerDeviceKind.stylus &&
+                      event.buttons & kPrimaryStylusButton != 0;
+                  if (_isEraserTool || forceErase) {
+                    surface.cursor.value =
+                        surface.transform.toScene(event.localPosition);
+                  }
+                },
+                child: InteractiveViewer(
+                  transformationController: surface.transform,
+                  minScale: 1,
+                  maxScale: 4,
+                  // 펜 도구일 때는 확대와 이동을 직접 계산한다. 이동 도구일 때만
+                  // InteractiveViewer 에 맡긴다.
+                  panEnabled: _selectedTool == _CanvasTool.move,
+                  scaleEnabled: _selectedTool == _CanvasTool.move,
+                  boundaryMargin: const EdgeInsets.all(80),
+                  child: Stack(
+                    children: [
+                      RepaintBoundary(
+                        key: surface.captureKey,
+                        child: Container(
+                          width: size.width,
+                          height: size.height,
+                          color: Colors.white,
+                          child: Stack(
+                            fit: StackFit.expand,
+                            children: [
+                              if (surface.isScratch)
+                                const ScratchPaper()
+                              else
+                                Image.network(
+                                  _currentImageUrl,
+                                  fit: BoxFit.contain,
+                                  frameBuilder: (
+                                    context,
+                                    child,
+                                    frame,
+                                    wasSynchronouslyLoaded,
+                                  ) {
+                                    if (wasSynchronouslyLoaded ||
+                                        frame != null) {
+                                      _markImageReady(imageIndex);
+                                    }
+                                    return child;
+                                  },
+                                  loadingBuilder:
+                                      (context, child, loadingProgress) {
+                                    if (loadingProgress == null) return child;
+                                    return Center(
+                                      child: CircularProgressIndicator(
+                                        color: themeProvider.primaryColor,
+                                      ),
+                                    );
+                                  },
+                                  errorBuilder: (context, error, stackTrace) {
+                                    _markImageError(imageIndex);
+                                    return Center(
+                                      child: StandardText(
+                                        text: '문제 이미지를 불러오지 못했습니다.',
+                                        fontSize: 14,
+                                        color: themeProvider.primaryColor,
+                                      ),
+                                    );
+                                  },
                                 ),
-                              );
-                            },
-                            errorBuilder: (context, error, stackTrace) {
-                              _markImageError(imageIndex);
-                              return Center(
-                                child: StandardText(
-                                  text: '문제 이미지를 불러오지 못했습니다.',
-                                  fontSize: 14,
-                                  color: themeProvider.primaryColor,
+                              // 확정된 획과 지금 긋는 획을 따로 그린다. 펜이 움직일
+                              // 때는 아래 층만 다시 그린다.
+                              RepaintBoundary(
+                                child: CustomPaint(
+                                  size: size,
+                                  painter: CommittedInkPainter(
+                                    controller: _ink,
+                                    page: page,
+                                    imageRect: imageRect,
+                                  ),
                                 ),
-                              );
-                            },
-                          ),
-                        // 확정된 획과 지금 긋는 획을 따로 그린다. 펜이 움직일
-                        // 때는 아래 층만 다시 그린다.
-                        RepaintBoundary(
-                          child: CustomPaint(
-                            size: size,
-                            painter: CommittedInkPainter(
-                              controller: _ink,
-                              page: page,
-                              imageRect: imageRect,
-                            ),
-                          ),
-                        ),
-                        RepaintBoundary(
-                          child: CustomPaint(
-                            size: size,
-                            painter: LiveInkPainter(
-                              controller: _ink,
-                              page: page,
-                              imageRect: imageRect,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                // 지우개 커서. 캡처 영역 밖이라 사진에는 안 찍힌다.
-                Positioned.fill(
-                  child: IgnorePointer(
-                    child: ValueListenableBuilder<Offset?>(
-                      valueListenable: surface.cursor,
-                      builder: (context, position, _) => position == null
-                          ? const SizedBox.shrink()
-                          : CustomPaint(
-                              painter: _EraserCursorPainter(
-                                position: position,
-                                radius: math.max(7.0, _eraserWidth / 2),
                               ),
-                            ),
-                    ),
+                              RepaintBoundary(
+                                child: CustomPaint(
+                                  size: size,
+                                  painter: LiveInkPainter(
+                                    controller: _ink,
+                                    page: page,
+                                    imageRect: imageRect,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      // 지우개 커서. 캡처 영역 밖이라 사진에는 안 찍힌다.
+                      Positioned.fill(
+                        child: IgnorePointer(
+                          child: ValueListenableBuilder<Offset?>(
+                            valueListenable: surface.cursor,
+                            builder: (context, position, _) => position == null
+                                ? const SizedBox.shrink()
+                                : CustomPaint(
+                                    painter: _EraserCursorPainter(
+                                      position: position,
+                                      radius: math.max(7.0, _eraserWidth / 2),
+                                    ),
+                                  ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-              ],
+              ),
             ),
-          ),
+            // 확대했을 때만 뜬다. 원래 크기로 돌린다.
+            Positioned(
+              top: 8,
+              right: 8,
+              child: ValueListenableBuilder<Matrix4>(
+                valueListenable: surface.transform,
+                builder: (context, matrix, _) {
+                  final zoomed = matrix != Matrix4.identity();
+                  return IgnorePointer(
+                    ignoring: !zoomed,
+                    child: AnimatedOpacity(
+                      opacity: zoomed ? 1 : 0,
+                      duration: const Duration(milliseconds: 160),
+                      child: Material(
+                        color: Colors.white,
+                        elevation: 2,
+                        borderRadius: BorderRadius.circular(AppRadius.full),
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(AppRadius.full),
+                          onTap: () =>
+                              surface.transform.value = Matrix4.identity(),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 8),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.zoom_out_map,
+                                    size: 16,
+                                    color: themeProvider.primaryColor),
+                                const SizedBox(width: 6),
+                                StandardText(
+                                  text: '원래 크기',
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.textPrimary,
+                                  height: 1.2,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
         );
       },
     );
@@ -1497,6 +1588,7 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
   }
 }
 
+/// 지우개가 지나가는 범위. 지워질 넓이만큼 반투명한 원으로 보인다.
 class _EraserCursorPainter extends CustomPainter {
   final Offset position;
   final double radius;
@@ -1505,26 +1597,18 @@ class _EraserCursorPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final circlePaint = Paint()
-      ..color = const Color(0xFF64748B)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.5;
-    canvas.drawCircle(position, radius, circlePaint);
-
-    // Crosshair at center for precise positioning
-    final crossPaint = Paint()
-      ..color = const Color(0xFF64748B)
-      ..strokeWidth = 1.0;
-    const crossSize = 4.0;
-    canvas.drawLine(
-      Offset(position.dx - crossSize, position.dy),
-      Offset(position.dx + crossSize, position.dy),
-      crossPaint,
+    canvas.drawCircle(
+      position,
+      radius,
+      Paint()..color = Colors.white.withValues(alpha: 0.55),
     );
-    canvas.drawLine(
-      Offset(position.dx, position.dy - crossSize),
-      Offset(position.dx, position.dy + crossSize),
-      crossPaint,
+    canvas.drawCircle(
+      position,
+      radius,
+      Paint()
+        ..color = const Color(0xFF64748B)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.5,
     );
   }
 

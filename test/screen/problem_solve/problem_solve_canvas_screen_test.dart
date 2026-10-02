@@ -205,7 +205,7 @@ void main() {
       await tester.pump();
       expect(_canUndo(tester), isTrue);
 
-      await tester.tap(find.widgetWithIcon(IconButton, Icons.delete_outline));
+      await tester.tap(find.byTooltip('전체 지우기'));
       await tester.pump();
       await tester.tap(find.widgetWithIcon(IconButton, Icons.undo));
       await tester.pump();
@@ -384,6 +384,57 @@ void main() {
       // 수 있다.
       expect(_canUndo(tester), isFalse);
       expect(tester.takeException(), isNull);
+    });
+  });
+
+  testWidgets('타이머는 앱바 가운데에 있다', (tester) async {
+    await withMockedNetworkImages(() async {
+      await _pumpCanvas(tester);
+
+      final screen = tester.getSize(find.byType(Scaffold)).width;
+
+      // 아이콘과 숫자를 합친 묶음의 가운데가 화면 가운데에서 4px 안에 있다.
+      final group = Rect.fromPoints(
+        tester.getTopLeft(find.byIcon(Icons.timer_outlined)),
+        tester.getBottomRight(find.text('00:00')),
+      );
+      expect((group.center.dx - screen / 2).abs(), lessThan(4));
+    });
+  });
+
+  testWidgets('원래 크기 버튼은 확대했을 때만 보인다', (tester) async {
+    await withMockedNetworkImages(() async {
+      await _pumpCanvas(tester);
+      double opacity() => tester
+          .widget<AnimatedOpacity>(find
+              .ancestor(
+                  of: find.text('원래 크기'),
+                  matching: find.byType(AnimatedOpacity))
+              .first)
+          .opacity;
+      expect(opacity(), 0);
+
+      final center = _canvasArea(tester).center;
+      final a = await tester.startGesture(center - const Offset(40, 0),
+          kind: PointerDeviceKind.touch);
+      final b = await tester.startGesture(center + const Offset(40, 0),
+          kind: PointerDeviceKind.touch);
+      for (var i = 0; i < 10; i++) {
+        await a.moveBy(const Offset(-6, 0));
+        await b.moveBy(const Offset(6, 0));
+        await tester.pump();
+      }
+      await a.up();
+      await b.up();
+      await tester.pumpAndSettle();
+      expect(opacity(), 1);
+
+      await tester.tap(find.text('원래 크기'));
+      await tester.pumpAndSettle();
+      expect(opacity(), 0);
+      final viewer =
+          tester.widget<InteractiveViewer>(find.byType(InteractiveViewer));
+      expect(viewer.transformationController!.value, Matrix4.identity());
     });
   });
 }
