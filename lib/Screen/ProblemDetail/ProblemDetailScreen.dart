@@ -17,7 +17,9 @@ import '../../Module/Text/mobile_font_size.dart';
 import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/ProblemsProvider.dart';
+import '../PracticeNote/PracticeContinueSheet.dart';
 import '../PracticeNote/PracticeNavigationButtons.dart';
+import '../ProblemSolve/ProblemSolveEntry.dart';
 import 'ProblemDetailTemplate.dart';
 import '../../Module/Motion/AppHaptic.dart';
 import '../../Module/Motion/PressableScale.dart';
@@ -34,8 +36,16 @@ class ProblemDetailScreen extends StatefulWidget {
   final int problemId;
   final bool isPractice;
 
-  const ProblemDetailScreen(
-      {required this.problemId, this.isPractice = false, super.key});
+  /// 복습 세트에서 `다음 문제 바로 풀기` 로 넘어왔을 때, 앞 문제와 같은 방식으로
+  /// 바로 다시 풀기를 시작한다.
+  final ProblemSolveMode? autoStartMode;
+
+  const ProblemDetailScreen({
+    required this.problemId,
+    this.isPractice = false,
+    this.autoStartMode,
+    super.key,
+  });
 
   @override
   _ProblemDetailScreenState createState() => _ProblemDetailScreenState();
@@ -1048,7 +1058,48 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
       problemModel: problemModel,
       isExpanded: _isExpansionTileExpanded,
       onExpansionChanged: _onExpansionChanged,
+      onSolved: widget.isPractice ? _onPracticeProblemSolved : null,
+      autoStartMode: widget.autoStartMode,
     );
+  }
+
+  /// 복습 세트에서 한 문제를 저장하고 돌아오면 다음 문제를 바로 풀지 묻는다.
+  Future<void> _onPracticeProblemSolved(ProblemSolveMode mode) async {
+    final practiceProvider =
+        Provider.of<ProblemPracticeProvider>(context, listen: false);
+    final problems = practiceProvider.currentProblems;
+    final index =
+        problems.indexWhere((problem) => problem.problemId == widget.problemId);
+    if (index < 0) return;
+    final next = index + 1 < problems.length ? problems[index + 1] : null;
+    final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
+
+    final choice = await showPracticeContinueSheet(
+      context,
+      solvedPosition: index + 1,
+      total: problems.length,
+      next: next,
+      mode: mode,
+      accentColor: themeProvider.primaryColor,
+    );
+    AppAnalytics.logEvent('practice_continue_choice', {
+      'choice': choice.analyticsName,
+      'mode': mode == ProblemSolveMode.inApp ? 'canvas' : 'offline',
+      'count': problems.length,
+    });
+    if (!mounted) return;
+
+    switch (choice) {
+      case PracticeContinueChoice.solveNext:
+        openPracticeProblem(context, next!.problemId,
+            isNext: true, autoStartMode: mode);
+      case PracticeContinueChoice.viewNext:
+        openPracticeProblem(context, next!.problemId, isNext: true);
+      case PracticeContinueChoice.finish:
+        openPracticeCompletion(context, practiceProvider);
+      case PracticeContinueChoice.stop:
+        break;
+    }
   }
 
   // 네비게이션 버튼 구성 함수
