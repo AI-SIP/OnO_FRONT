@@ -157,36 +157,7 @@ class _PracticeNavigationButtonsState extends State<PracticeNavigationButtons> {
   }
 
   void navigateToProblem(int problemId, {required bool isNext}) {
-    Navigator.pushReplacement(
-      context,
-      PageRouteBuilder(
-        pageBuilder: (context, animation, secondaryAnimation) =>
-            ProblemDetailScreen(
-          problemId: problemId,
-          isPractice: true,
-        ),
-        transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          final Offset begin =
-              isNext ? const Offset(1.0, 0.0) : const Offset(-1.0, 0.0);
-          const end = Offset.zero;
-          const curve = Curves.easeInOut;
-
-          var tween =
-              Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
-          var offsetAnimation = animation.drive(tween);
-
-          return SlideTransition(
-            position: offsetAnimation,
-            child: RotationTransition(
-              alignment: Alignment.bottomRight,
-              turns: Tween(begin: isNext ? 0.1 : -0.1, end: 0.0)
-                  .animate(animation),
-              child: child,
-            ),
-          );
-        },
-      ),
-    );
+    openPracticeProblem(context, problemId, isNext: isNext);
   }
 
   /// 완료 화면으로 넘어가는 중인지. 두 번 눌리면 완료 화면이 이 화면이
@@ -197,23 +168,7 @@ class _PracticeNavigationButtonsState extends State<PracticeNavigationButtons> {
     if (_openingCompletion) return;
     _openingCompletion = true;
 
-    final practiceId = widget.practiceProvider.currentPracticeNote!.practiceId;
-    final totalProblems = widget.practiceProvider.currentProblems.length;
-    final matchingPractices = widget.practiceProvider.practices
-        .where((practice) => practice.practiceId == practiceId);
-    final practiceRound = matchingPractices.isNotEmpty
-        ? matchingPractices.first.practiceCount
-        : 0;
-
-    Navigator.of(context).pushReplacement(
-      TossPageRoute(
-        builder: (context) => PracticeCompletionScreen(
-          practiceId: practiceId,
-          totalProblems: totalProblems,
-          practiceRound: practiceRound + 1,
-        ),
-      ),
-    );
+    openPracticeCompletion(context, widget.practiceProvider);
   }
 
   void problemSolveDialog(BuildContext context) async {
@@ -257,4 +212,66 @@ class _PracticeNavigationButtonsState extends State<PracticeNavigationButtons> {
           borderRadius: BorderRadius.circular(AppRadius.large)),
     );
   }
+}
+
+/// 복습 세트의 다른 문제로 넘어간다. 아래 이전/다음 버튼과 `다음 문제 풀까요`
+/// 시트가 같이 쓴다. [autoStartMode] 를 넘기면 넘어가자마자 그 방식으로 푼다.
+void openPracticeProblem(
+  BuildContext context,
+  int problemId, {
+  required bool isNext,
+  ProblemSolveMode? autoStartMode,
+}) {
+  Navigator.pushReplacement(
+    context,
+    PageRouteBuilder(
+      pageBuilder: (context, animation, secondaryAnimation) =>
+          ProblemDetailScreen(
+        problemId: problemId,
+        isPractice: true,
+        autoStartMode: autoStartMode,
+      ),
+      transitionsBuilder: (context, animation, secondaryAnimation, child) {
+        final Offset begin =
+            isNext ? const Offset(1.0, 0.0) : const Offset(-1.0, 0.0);
+        const end = Offset.zero;
+        const curve = Curves.easeInOut;
+
+        var tween =
+            Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+        var offsetAnimation = animation.drive(tween);
+
+        return SlideTransition(
+          position: offsetAnimation,
+          child: RotationTransition(
+            alignment: Alignment.bottomRight,
+            turns:
+                Tween(begin: isNext ? 0.1 : -0.1, end: 0.0).animate(animation),
+            child: child,
+          ),
+        );
+      },
+    ),
+  );
+}
+
+/// 복습 세트를 마치고 완료 화면으로 간다.
+void openPracticeCompletion(
+    BuildContext context, ProblemPracticeProvider practiceProvider) {
+  final practiceId = practiceProvider.currentPracticeNote!.practiceId;
+  final totalProblems = practiceProvider.currentProblems.length;
+  final matchingPractices = practiceProvider.practices
+      .where((practice) => practice.practiceId == practiceId);
+  final practiceRound =
+      matchingPractices.isNotEmpty ? matchingPractices.first.practiceCount : 0;
+
+  Navigator.of(context).pushReplacement(
+    TossPageRoute(
+      builder: (context) => PracticeCompletionScreen(
+        practiceId: practiceId,
+        totalProblems: totalProblems,
+        practiceRound: practiceRound + 1,
+      ),
+    ),
+  );
 }

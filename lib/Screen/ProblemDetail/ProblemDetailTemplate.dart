@@ -24,10 +24,20 @@ class ProblemDetailTemplate extends StatefulWidget {
   final bool isExpanded;
   final Function(bool) onExpansionChanged;
 
+  /// 다시 풀기를 저장까지 마쳤을 때 어떤 방식으로 풀었는지 알려 준다.
+  /// 복습 세트에서 다음 문제를 바로 풀지 물을 때 쓴다.
+  final ValueChanged<ProblemSolveMode>? onSolved;
+
+  /// 있으면 화면이 열리자마자 이 방식으로 다시 풀기를 시작한다. 복습 세트에서
+  /// `다음 문제 바로 풀기` 를 골랐을 때 앞 문제와 같은 방식으로 이어 푼다.
+  final ProblemSolveMode? autoStartMode;
+
   const ProblemDetailTemplate({
     required this.problemModel,
     required this.isExpanded,
     required this.onExpansionChanged,
+    this.onSolved,
+    this.autoStartMode,
     super.key,
   });
 
@@ -57,6 +67,42 @@ class _ProblemDetailTemplateState extends State<ProblemDetailTemplate>
         _currentTabIndex = _tabController.index;
       });
     });
+    final autoStartMode = widget.autoStartMode;
+    if (autoStartMode != null) {
+      // 화면이 다 그려진 뒤에 연다. 넘김 효과가 끝나기 전에 위로 덮이지 않게
+      // 한 박자 기다린다.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        Future<void>.delayed(AppMotion.page, () {
+          if (mounted) _startSolve(mode: autoStartMode);
+        });
+      });
+    }
+  }
+
+  /// 다시 풀기. [mode] 를 넘기면 방식 고르기를 건너뛴다.
+  Future<void> _startSolve({ProblemSolveMode? mode}) async {
+    final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
+    final problemImageUrls = (widget.problemModel.problemImageDataList ?? [])
+        .map((image) => image.imageUrl)
+        .toList();
+    ProblemSolveMode? usedMode = mode;
+
+    final result = await ProblemSolveEntry.open(
+      context: context,
+      problemId: widget.problemModel.problemId,
+      problemImageUrls: problemImageUrls,
+      onRefresh: () {},
+      themeProvider: themeProvider,
+      mode: mode,
+      onModeSelected: (selected) => usedMode = selected,
+    );
+
+    if (result == true && mounted) {
+      setState(() {
+        _reviewRefreshSignal++;
+      });
+      if (usedMode != null) widget.onSolved?.call(usedMode!);
+    }
   }
 
   @override
@@ -360,10 +406,6 @@ class _ProblemDetailTemplateState extends State<ProblemDetailTemplate>
   }
 
   Widget _buildBottomReviewCta(ThemeHandler themeProvider, bool isWide) {
-    final problemImages = widget.problemModel.problemImageDataList ?? [];
-    final problemImageUrls =
-        problemImages.map((image) => image.imageUrl).toList();
-
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
@@ -371,21 +413,7 @@ class _ProblemDetailTemplateState extends State<ProblemDetailTemplate>
       child: SizedBox(
         height: 50,
         child: FloatingActionButton.extended(
-          onPressed: () async {
-            final result = await ProblemSolveEntry.open(
-              context: context,
-              problemId: widget.problemModel.problemId,
-              problemImageUrls: problemImageUrls,
-              onRefresh: () {},
-              themeProvider: themeProvider,
-            );
-
-            if (result == true && mounted) {
-              setState(() {
-                _reviewRefreshSignal++;
-              });
-            }
-          },
+          onPressed: _startSolve,
           backgroundColor: themeProvider.primaryColor,
           icon: const Icon(Icons.replay, color: Colors.white, size: 20),
           label: const StandardText(
