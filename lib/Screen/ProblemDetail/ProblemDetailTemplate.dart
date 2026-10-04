@@ -3,6 +3,9 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../../Model/Problem/ProblemModel.dart';
+import '../../Model/Problem/ProblemRegisterModel.dart';
+import '../../Module/Design/AppToast.dart';
+import '../../Provider/ProblemsProvider.dart';
 import '../../Module/Text/mobile_font_size.dart';
 import '../../Module/Text/StandardText.dart';
 import '../../Module/Text/UnderlinedText.dart';
@@ -11,6 +14,7 @@ import '../../Module/Theme/ThemeHandler.dart';
 import '../ProblemSolve/ProblemSolveEntry.dart';
 import 'Widget/AnalysisSection.dart';
 import 'Widget/ImageSection.dart';
+import 'Widget/MemoEditSheet.dart';
 import 'Widget/RepeatSectionV2.dart';
 import '../../Module/Motion/AppHaptic.dart';
 import '../../Module/Motion/AppMotion.dart';
@@ -454,6 +458,62 @@ class _ProblemDetailTemplateState extends State<ProblemDetailTemplate>
     );
   }
 
+  Widget _buildAddMemoButton(ThemeHandler themeProvider) {
+    return InkWell(
+      onTap: () => _editMemo(themeProvider),
+      borderRadius: BorderRadius.circular(AppRadius.medium),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 14),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(AppRadius.medium),
+          border: Border.all(
+            color: themeProvider.primaryColor.withValues(alpha: 0.3),
+          ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.add, size: 18, color: themeProvider.primaryColor),
+            const SizedBox(width: 6),
+            StandardText(
+              text: '메모 추가',
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: themeProvider.primaryColor,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// 메모만 바로 쓰고 저장한다. 서버는 빈 메모를 무시해서 지우기는 막아 둔다.
+  Future<void> _editMemo(ThemeHandler themeProvider) async {
+    final before = widget.problemModel.memo ?? '';
+    final memo = await showMemoEditSheet(
+      context,
+      initialMemo: before,
+      color: themeProvider.primaryColor,
+    );
+    if (memo == null || !mounted) return;
+    try {
+      await Provider.of<ProblemsProvider>(context, listen: false).updateProblem(
+        ProblemRegisterModel(
+          problemId: widget.problemModel.problemId,
+          memo: ProblemRegisterModel.clampMemo(memo),
+        ),
+      );
+      AppAnalytics.logEvent('problem_memo_save', {
+        'source': 'detail',
+        'had_memo': before.isNotEmpty,
+      });
+      AppToast.success('메모를 저장했어요');
+    } catch (_) {
+      AppToast.error('메모를 저장하지 못했어요. 잠시 후 다시 시도해 주세요.');
+    }
+  }
+
   Widget _buildSectionCard(
     ThemeHandler themeProvider, {
     required String title,
@@ -563,7 +623,7 @@ class _ProblemDetailTemplateState extends State<ProblemDetailTemplate>
             themeProvider,
           ),
         ),
-        if (hasTags || hasMemo) const SizedBox(height: 24),
+        const SizedBox(height: 24),
         if (hasTags) ...[
           _buildSectionCard(
             themeProvider,
@@ -594,22 +654,33 @@ class _ProblemDetailTemplateState extends State<ProblemDetailTemplate>
               }).toList(),
             ),
           ),
-          if (hasMemo) const SizedBox(height: 24),
+          const SizedBox(height: 24),
         ],
-        if (hasMemo) ...[
-          _buildSectionCard(
-            themeProvider,
-            title: '메모',
-            icon: Icons.edit,
-            child: Padding(
-              padding: const EdgeInsets.only(left: 4.0),
-              child: UnderlinedText(
-                text: widget.problemModel.memo!,
-                fontSize: 18,
-              ),
-            ),
-          ),
-        ],
+        // 메모는 비어 있어도 칸을 둔다. 전에는 메모가 없으면 칸이 아예 없어서,
+        // 복습하다 떠오른 것을 적으려면 수정 화면 전체로 가야 했다.
+        _buildSectionCard(
+          themeProvider,
+          title: '메모',
+          icon: Icons.edit,
+          trailing: hasMemo
+              ? IconButton(
+                  tooltip: '메모 고치기',
+                  visualDensity: VisualDensity.compact,
+                  icon: Icon(Icons.edit_outlined,
+                      size: 18, color: themeProvider.primaryColor),
+                  onPressed: () => _editMemo(themeProvider),
+                )
+              : null,
+          child: hasMemo
+              ? Padding(
+                  padding: const EdgeInsets.only(left: 4.0),
+                  child: UnderlinedText(
+                    text: widget.problemModel.memo!,
+                    fontSize: 18,
+                  ),
+                )
+              : _buildAddMemoButton(themeProvider),
+        ),
       ],
     );
 
