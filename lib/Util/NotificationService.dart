@@ -206,18 +206,48 @@ class NotificationService {
       }
     }
 
-    await _requestPermission();
-    _configureMessageHandlers();
-  }
-
-  Future<void> _requestPermission() async {
+    // 알림 권한은 앱을 켜자마자 묻지 않는다. 무엇을 알려 주는지 모르는
+    // 상태에서 물으면 거절하기 쉽다. 첫 오답노트를 쓰거나 첫 복습을 저장한 뒤
+    // [requestPermissionIfNeeded] 로 묻는다. 토큰을 받고 서버에 보내는 것은
+    // 권한과 상관없이 지금처럼 로그인할 때 한다.
     await _messaging.setForegroundNotificationPresentationOptions(
       alert: true,
       badge: true,
       sound: true,
     );
+    _configureMessageHandlers();
+  }
 
-    await _messaging.requestPermission(
+  /// 아직 알림 권한을 묻지 않았으면 묻는다. 이미 허용하거나 거절했으면
+  /// 시스템이 다시 묻지 않으니 아무 일도 없다.
+  ///
+  /// [source] 는 어디서 물었는지다. 실패해도 저장 흐름을 막지 않는다.
+  Future<void> requestPermissionIfNeeded({required String source}) async {
+    try {
+      if (Platform.isIOS) {
+        final iosInfo = await _deviceInfo.iosInfo;
+        if (!iosInfo.isPhysicalDevice) return;
+      }
+      final settings = await _messaging.getNotificationSettings();
+      if (settings.authorizationStatus != AuthorizationStatus.notDetermined) {
+        return;
+      }
+      final result = await _requestPermission();
+      AppAnalytics.logEvent('notification_permission_prompt', {
+        'source': source,
+        'result': result.authorizationStatus ==
+                    AuthorizationStatus.authorized ||
+                result.authorizationStatus == AuthorizationStatus.provisional
+            ? 'success'
+            : 'rejected',
+      });
+    } catch (error) {
+      debugPrint('알림 권한 요청 실패: $error');
+    }
+  }
+
+  Future<NotificationSettings> _requestPermission() async {
+    return _messaging.requestPermission(
       alert: true,
       announcement: false,
       badge: true,
