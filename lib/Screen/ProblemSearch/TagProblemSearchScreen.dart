@@ -21,6 +21,7 @@ import '../../Module/Motion/TossPageRoute.dart';
 import '../../Module/Design/AppColors.dart';
 import '../../Module/Design/AppRadius.dart';
 import '../../Util/AppAnalytics.dart';
+import '../../Util/AppErrorReporter.dart';
 
 enum _SearchMode { tag, title }
 
@@ -53,6 +54,9 @@ class _TagProblemSearchScreenState extends State<TagProblemSearchScreen> {
   int? _cursor;
   bool _hasNext = false;
   bool _isLoadingProblems = false;
+
+  /// 마지막 조회가 실패했는지. 실패를 결과 없음과 구분해 다시 시도를 보인다.
+  bool _loadFailed = false;
 
   String _currentQuery = '';
   Timer? _debounce;
@@ -113,6 +117,8 @@ class _TagProblemSearchScreenState extends State<TagProblemSearchScreen> {
       if (_selectedTagId != null && _mode == _SearchMode.tag) {
         await _loadTagProblems(_selectedTagId!, isInitial: true);
       }
+    } catch (e, stackTrace) {
+      _onLoadFailed(e, stackTrace);
     } finally {
       if (mounted) {
         setState(() => _isLoadingTags = false);
@@ -128,6 +134,7 @@ class _TagProblemSearchScreenState extends State<TagProblemSearchScreen> {
       _cursor = null;
       _hasNext = false;
       _isLoadingProblems = false;
+      _loadFailed = false;
     });
 
     if (_mode == _SearchMode.tag && _selectedTagId != null) {
@@ -152,10 +159,14 @@ class _TagProblemSearchScreenState extends State<TagProblemSearchScreen> {
         _cursor = null;
         _hasNext = false;
         _isLoadingProblems = true;
+        _loadFailed = false;
       });
     } else {
       if (!_hasNext) return;
-      setState(() => _isLoadingProblems = true);
+      setState(() {
+        _isLoadingProblems = true;
+        _loadFailed = false;
+      });
     }
 
     try {
@@ -183,6 +194,10 @@ class _TagProblemSearchScreenState extends State<TagProblemSearchScreen> {
         _cursor = response.nextCursor;
         _hasNext = response.hasNext;
       });
+    } catch (e, stackTrace) {
+      // 예전에는 catch 가 없어서 실패해도 결과가 없는 것처럼 보였고, 입력
+      // 디바운스 타이머 안에서 난 예외는 아무도 받지 않았다.
+      _onLoadFailed(e, stackTrace);
     } finally {
       if (mounted) {
         setState(() => _isLoadingProblems = false);
@@ -212,10 +227,14 @@ class _TagProblemSearchScreenState extends State<TagProblemSearchScreen> {
         _cursor = null;
         _hasNext = false;
         _isLoadingProblems = true;
+        _loadFailed = false;
       });
     } else {
       if (!_hasNext) return;
-      setState(() => _isLoadingProblems = true);
+      setState(() {
+        _isLoadingProblems = true;
+        _loadFailed = false;
+      });
     }
 
     try {
@@ -243,6 +262,10 @@ class _TagProblemSearchScreenState extends State<TagProblemSearchScreen> {
         _cursor = response.nextCursor;
         _hasNext = response.hasNext;
       });
+    } catch (e, stackTrace) {
+      // 예전에는 catch 가 없어서 실패해도 결과가 없는 것처럼 보였고, 입력
+      // 디바운스 타이머 안에서 난 예외는 아무도 받지 않았다.
+      _onLoadFailed(e, stackTrace);
     } finally {
       if (mounted) {
         setState(() => _isLoadingProblems = false);
@@ -250,8 +273,35 @@ class _TagProblemSearchScreenState extends State<TagProblemSearchScreen> {
     }
   }
 
+  void _onLoadFailed(Object error, StackTrace stackTrace) {
+    debugPrint('검색 결과를 불러오지 못했습니다: $error');
+    unawaited(AppErrorReporter.report(
+      error,
+      stackTrace,
+      source: 'problem_search_load',
+      severity: AppErrorSeverity.warning,
+    ));
+    if (mounted) setState(() => _loadFailed = true);
+  }
+
+  /// 실패한 조회를 다시 한다. 받아 둔 결과가 있으면 다음 쪽부터 다시 받는다.
+  Future<void> _retryLoad() async {
+    final isInitial = _problems.isEmpty;
+    if (_mode == _SearchMode.tag && _tags.isEmpty) {
+      setState(() => _loadFailed = false);
+      await _loadTagsAndFirstTagProblems();
+      return;
+    }
+    if (_mode == _SearchMode.tag && _selectedTagId != null) {
+      await _loadTagProblems(_selectedTagId!, isInitial: isInitial);
+      return;
+    }
+    await _searchByTitle(_currentQuery, isInitial: isInitial);
+  }
+
   Future<void> _loadMoreProblems() async {
-    if (_isLoadingProblems || !_hasNext) return;
+    // 다음 쪽을 받다 실패했으면 스크롤할 때마다 다시 부르지 않고 버튼을 기다린다.
+    if (_isLoadingProblems || !_hasNext || _loadFailed) return;
 
     if (_mode == _SearchMode.tag && _selectedTagId != null) {
       await _loadTagProblems(_selectedTagId!, isInitial: false);
@@ -510,6 +560,14 @@ class _TagProblemSearchScreenState extends State<TagProblemSearchScreen> {
       );
     }
 
+    if (_problems.isEmpty && _loadFailed) {
+      return _buildEmptyState(
+        '오답노트를 불러오지 못했어요',
+        detail: '인터넷 연결을 확인하고 다시 시도해 주세요.',
+        action: _buildRetryButton(themeProvider),
+      );
+    }
+
     if (_problems.isEmpty) {
       if (_mode == _SearchMode.title && _currentQuery.isEmpty) {
         // 문구만 덩그러니 있으면 화면이 비어 보인다. 다른 빈 화면처럼
@@ -532,6 +590,12 @@ class _TagProblemSearchScreenState extends State<TagProblemSearchScreen> {
       itemCount: _problems.length + (_hasNext || _isLoadingProblems ? 1 : 0),
       itemBuilder: (context, index) {
         if (index == _problems.length) {
+          if (_loadFailed && !_isLoadingProblems) {
+            return Padding(
+              padding: const EdgeInsets.all(16),
+              child: Center(child: _buildRetryButton(themeProvider)),
+            );
+          }
           return const Padding(
             padding: EdgeInsets.all(16),
             child: Center(child: CircularProgressIndicator()),
@@ -551,7 +615,33 @@ class _TagProblemSearchScreenState extends State<TagProblemSearchScreen> {
 
   /// [iconAsset] 을 주면 기본 연필 대신 그 그림을 그린다. [detail] 은 그 아래
   /// 덧붙이는 한 줄이다.
-  Widget _buildEmptyState(String message, {String? iconAsset, String? detail}) {
+  Widget _buildRetryButton(ThemeHandler themeProvider) {
+    return OutlinedButton(
+      onPressed: _retryLoad,
+      style: OutlinedButton.styleFrom(
+        foregroundColor: themeProvider.primaryColor,
+        side: BorderSide(
+            color: themeProvider.primaryColor.withValues(alpha: 0.5)),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.small),
+        ),
+      ),
+      child: StandardText(
+        text: '다시 시도',
+        fontSize: 14,
+        fontWeight: FontWeight.w600,
+        color: themeProvider.primaryColor,
+      ),
+    );
+  }
+
+  Widget _buildEmptyState(
+    String message, {
+    String? iconAsset,
+    String? detail,
+    Widget? action,
+  }) {
     return LayoutBuilder(
       builder: (context, constraints) => SingleChildScrollView(
         child: ConstrainedBox(
@@ -583,6 +673,10 @@ class _TagProblemSearchScreenState extends State<TagProblemSearchScreen> {
                         color: AppColors.textTertiary,
                         fontSize: 13,
                       ),
+                    ],
+                    if (action != null) ...[
+                      const SizedBox(height: 18),
+                      action,
                     ],
                   ],
                 ),
