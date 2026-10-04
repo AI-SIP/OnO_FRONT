@@ -42,6 +42,7 @@ import '../../Module/Motion/TossDialog.dart';
 import '../../Module/Design/AppColors.dart';
 import '../../Module/Design/AppRadius.dart';
 import '../../Util/AppAnalytics.dart';
+import 'Widget/FirstNoteGuide.dart';
 
 class ProblemRegisterTemplate extends StatefulWidget {
   final ProblemModel? problemModel;
@@ -970,6 +971,21 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
   /// 아직 없어서, 버튼을 한 번 더 누르면 같은 오답노트가 두 번 만들어졌다.
   bool _isSubmitting = false;
 
+  /// 방금 등록한 오답노트. 첫 오답노트면 바로 풀어 보라고 권할 때 쓴다.
+  int? _registeredProblemId;
+
+  /// 서버에 오답노트 수를 물어 방금 쓴 것이 첫 오답노트인지 본다. 앱이 들고
+  /// 있는 개수는 로그인할 때 받지 않아서 믿을 수 없다. 묻지 못하면 아니라고 본다.
+  Future<bool> _isFirstNote() async {
+    try {
+      final count = await Provider.of<ProblemsProvider>(context, listen: false)
+          .getUserProblemCount(showErrorSnackBar: false);
+      return count == 1;
+    } catch (_) {
+      return false;
+    }
+  }
+
   Future<void> submit() async {
     if (_isSubmitting) return;
     _isSubmitting = true;
@@ -1027,6 +1043,7 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
     }
 
     bool shouldPop = false;
+    bool isFirstNote = false;
     bool loadingHidden = false;
     try {
       if (widget.isEditMode) {
@@ -1035,6 +1052,8 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
       } else {
         await _registerProblem();
         shouldPop = canPopBeforeSubmit;
+        // 로딩 창이 떠 있는 동안 물어서 화면이 닫히기 전에 멈칫하지 않게 한다.
+        isFirstNote = _registeredProblemId != null && await _isFirstNote();
       }
     } catch (e, stackTrace) {
       debugPrint('오답노트 ${widget.isEditMode ? "수정" : "등록"} 실패: $e');
@@ -1089,7 +1108,21 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
       );
     }
 
-    showSuccessDialog(context);
+    // 첫 오답노트면 저장 알림 대신 다음에 할 일을 알려 준다. 등록 화면이
+    // 닫히거나 탭이 바뀐 뒤에 뜨도록 다음 프레임에 띄운다.
+    final registeredProblemId = _registeredProblemId;
+    if (isFirstNote && registeredProblemId != null) {
+      final accent =
+          Provider.of<ThemeHandler>(context, listen: false).primaryColor;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        showFirstNoteGuide(
+          problemId: registeredProblemId,
+          accentColor: accent,
+        );
+      });
+    } else {
+      showSuccessDialog(context);
+    }
 
     if (shouldPop) {
       Navigator.of(context).pop(true);
@@ -1264,7 +1297,8 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
     final foldersProvider =
         Provider.of<FoldersProvider>(context, listen: false);
     final problemService = ProblemService();
-    final registeredProblemId = await problemService.registerProblemV2(
+    final registeredProblemId =
+        _registeredProblemId = await problemService.registerProblemV2(
       problemId: null,
       memo: ProblemRegisterModel.clampMemo(_memoCtrl.text),
       reference: ProblemRegisterModel.clampReference(_titleCtrl.text),
