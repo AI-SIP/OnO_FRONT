@@ -193,7 +193,7 @@ class _ProblemSolveRegisterScreenState
         'has_reflection': reviewData['reflection'] != null,
         'image_count': solutionImages.length,
         'via_canvas': widget.initialTimeSpentSeconds != null,
-        'in_practice_set': practiceProvider.currentPracticeNote != null,
+        'in_practice_set': practiceProvider.isPracticing,
       });
 
       // 5. 유저 정보 갱신 (경험치 업데이트)

@@ -69,7 +69,7 @@ class _PracticeNavigationButtonsState extends State<PracticeNavigationButtons> {
 
   StandardText buildProgressText(ThemeHandler themeProvider) {
     final int currentIndex = getCurrentProblemIndex();
-    final int totalProblems = widget.practiceProvider.currentProblems.length;
+    final int totalProblems = widget.practiceProvider.sessionProblems.length;
 
     return StandardText(
       text: '${currentIndex + 1} / $totalProblems',
@@ -137,20 +137,20 @@ class _PracticeNavigationButtonsState extends State<PracticeNavigationButtons> {
   }
 
   int getCurrentProblemIndex() {
-    return widget.practiceProvider.currentProblems.indexWhere(
+    return widget.practiceProvider.sessionProblems.indexWhere(
       (problem) => problem.problemId == widget.currentProblemId,
     );
   }
 
   int getPreviousProblemId(int currentIndex) {
-    final currentProblems = widget.practiceProvider.currentProblems;
+    final currentProblems = widget.practiceProvider.sessionProblems;
     return currentIndex > 0
         ? currentProblems[currentIndex - 1].problemId
         : currentProblems.first.problemId;
   }
 
   int getNextProblemId(int currentIndex) {
-    final currentProblems = widget.practiceProvider.currentProblems;
+    final currentProblems = widget.practiceProvider.sessionProblems;
     return currentIndex < currentProblems.length - 1
         ? currentProblems[currentIndex + 1].problemId
         : -1;
@@ -175,11 +175,11 @@ class _PracticeNavigationButtonsState extends State<PracticeNavigationButtons> {
     FirebaseAnalytics.instance.logEvent(name: 'problem_repeat_button_click');
 
     final currentProblemIndex =
-        widget.practiceProvider.currentProblems.indexWhere(
+        widget.practiceProvider.sessionProblems.indexWhere(
       (problem) => problem.problemId == widget.currentProblemId,
     );
     final currentProblem = currentProblemIndex >= 0
-        ? widget.practiceProvider.currentProblems[currentProblemIndex]
+        ? widget.practiceProvider.sessionProblems[currentProblemIndex]
         : null;
     final problemImages = currentProblem?.problemImageDataList ?? [];
     final problemImageUrls =
@@ -259,7 +259,7 @@ void openPracticeProblem(
 void openPracticeCompletion(
     BuildContext context, ProblemPracticeProvider practiceProvider) {
   final practiceId = practiceProvider.currentPracticeNote!.practiceId;
-  final totalProblems = practiceProvider.currentProblems.length;
+  final totalProblems = practiceProvider.sessionProblems.length;
   final matchingPractices = practiceProvider.practices
       .where((practice) => practice.practiceId == practiceId);
   final practiceRound =
