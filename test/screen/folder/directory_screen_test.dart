@@ -333,6 +333,24 @@ void main() {
       expect(find.text('수학 문제집 p.12'), findsOneWidget);
     });
 
+    testWidgets('상세에서 문제를 다시 받으면 책장 카드도 그 값으로 바뀐다', (tester) async {
+      stubDefaultFolderLoad(
+        problems: [buildProblem(problemId: 100, reference: '고치기 전 제목')],
+      );
+      await pumpDirectory(tester);
+      expect(find.text('고치기 전 제목'), findsOneWidget);
+
+      when(() => problemService.getProblem(100,
+              showErrorSnackBar: any(named: 'showErrorSnackBar')))
+          .thenAnswer(
+              (_) async => buildProblem(problemId: 100, reference: '고친 제목'));
+      await problemsProvider.fetchProblem(100);
+      await tester.pumpAndSettle();
+
+      expect(find.text('고친 제목'), findsOneWidget);
+      expect(find.text('고치기 전 제목'), findsNothing);
+    });
+
     testWidgets('폴더 조회가 실패하면 에러 스낵바가 뜬다', (tester) async {
       when(() => folderService.getRootFolder())
           .thenThrow(Exception('network down'));
