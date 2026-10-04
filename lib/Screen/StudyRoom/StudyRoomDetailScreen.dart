@@ -30,7 +30,14 @@ import '../../Util/AppAnalytics.dart';
 class StudyRoomDetailScreen extends StatefulWidget {
   final int roomId;
 
-  const StudyRoomDetailScreen({super.key, required this.roomId});
+  /// 방을 막 만들고 들어왔을 때 초대 코드를 바로 보여 준다.
+  final bool showInviteCodeOnOpen;
+
+  const StudyRoomDetailScreen({
+    super.key,
+    required this.roomId,
+    this.showInviteCodeOnOpen = false,
+  });
 
   @override
   State<StudyRoomDetailScreen> createState() => _StudyRoomDetailScreenState();
@@ -60,7 +67,16 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
     provider.updateCurrentUserId(userId);
     try {
       await provider.fetchRoomDetail(widget.roomId);
-      if (mounted) _showUnreadReport();
+      if (!mounted) return;
+      if (widget.showInviteCodeOnOpen) {
+        await _showInviteCode(
+          context,
+          provider,
+          Provider.of<ThemeHandler>(context, listen: false),
+        );
+        return;
+      }
+      _showUnreadReport();
     } catch (_) {
       if (mounted) setState(() {});
     }
@@ -398,10 +414,33 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
             )
           : room == null
               ? Center(
-                  child: StandardText(
-                    text: '방을 불러오지 못했어요',
-                    fontSize: 15,
-                    color: Colors.grey[500]!,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const StandardText(
+                        text: '방을 불러오지 못했어요',
+                        fontSize: 15,
+                        color: AppColors.textSecondary,
+                      ),
+                      const SizedBox(height: 14),
+                      // 전에는 문구만 있어서 화면을 나갔다 들어와야 했다.
+                      OutlinedButton(
+                        onPressed: _loadRoom,
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: themeProvider.primaryColor,
+                          minimumSize: const Size(0, 44),
+                          side: BorderSide(
+                              color: themeProvider.primaryColor
+                                  .withValues(alpha: 0.5)),
+                        ),
+                        child: StandardText(
+                          text: '다시 시도',
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: themeProvider.primaryColor,
+                        ),
+                      ),
+                    ],
                   ),
                 )
               : _buildTabBody(context, room, provider, themeProvider, isHost),

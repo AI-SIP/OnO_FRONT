@@ -19,6 +19,8 @@ import '../../Module/Motion/PressableScale.dart';
 import '../../Module/Motion/AppMotion.dart';
 import '../../Module/Design/AppColors.dart';
 import '../../Module/Design/AppRadius.dart';
+import '../../Module/Design/AppToast.dart';
+import '../../Module/Design/AppLayout.dart';
 
 class StudyRoomListScreen extends StatefulWidget {
   final TutorialTargets? tutorialTargets;
@@ -66,25 +68,38 @@ class _StudyRoomListScreenState extends State<StudyRoomListScreen> {
     }
   }
 
-  void _openCreate() {
-    Navigator.push(
+  /// 방을 만들면 그 방을 열고 초대 코드까지 보여 준다. 전에는 목록으로만
+  /// 돌아와서 초대 코드를 찾으려고 방에 다시 들어가야 했다.
+  Future<void> _openCreate() async {
+    final roomId = await Navigator.push<int>(
       context,
       TossPageRoute(builder: (_) => const StudyRoomCreateScreen()),
     );
+    if (roomId == null || !mounted) return;
+    AppToast.success('방을 만들었어요. 초대 코드로 친구를 불러 보세요');
+    _openDetail(roomId, showInviteCode: true);
   }
 
-  void _openJoin() {
-    Navigator.push(
+  /// 참여하면 그 방을 바로 연다. 전에는 아무 말 없이 목록으로 돌아와서
+  /// 참여가 됐는지 알 수 없었다.
+  Future<void> _openJoin() async {
+    final roomId = await Navigator.push<int>(
       context,
       TossPageRoute(builder: (_) => const StudyRoomJoinScreen()),
     );
+    if (roomId == null || !mounted) return;
+    AppToast.success('방에 참여했어요');
+    _openDetail(roomId);
   }
 
-  void _openDetail(int roomId) {
+  void _openDetail(int roomId, {bool showInviteCode = false}) {
     Navigator.push(
       context,
       TossPageRoute(
-        builder: (_) => StudyRoomDetailScreen(roomId: roomId),
+        builder: (_) => StudyRoomDetailScreen(
+          roomId: roomId,
+          showInviteCodeOnOpen: showInviteCode,
+        ),
       ),
     );
   }
@@ -230,50 +245,52 @@ class _StudyRoomListScreenState extends State<StudyRoomListScreen> {
           onPressed: () => _showAddMenu(themeProvider),
           backgroundColor: themeProvider.primaryColor,
           elevation: 2,
-          tooltip: '방 추가',
-          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          tooltip: '방 만들기 또는 참여하기',
           icon: const Icon(Icons.add, color: Colors.white),
+          // 누르면 만들기와 참여하기가 함께 나와서 '참여' 만 적으면 맞지 않았다.
           label: const StandardText(
-            text: '스터디룸 참여',
+            text: '방 추가',
             fontSize: 15,
             color: Colors.white,
             fontWeight: FontWeight.w600,
           ),
         ),
       ),
-      body: SizedBox.expand(
-        key: widget.tutorialTargets?.studyRoomListKey,
-        child: provider.isLoading && provider.rooms.isEmpty
-            ? Center(
-                child: CircularProgressIndicator(
+      body: AppContentWidth(
+        child: SizedBox.expand(
+          key: widget.tutorialTargets?.studyRoomListKey,
+          child: provider.isLoading && provider.rooms.isEmpty
+              ? Center(
+                  child: CircularProgressIndicator(
+                    color: themeProvider.primaryColor,
+                  ),
+                )
+              : RefreshIndicator(
+                  onRefresh: _refresh,
                   color: themeProvider.primaryColor,
-                ),
-              )
-            : RefreshIndicator(
-                onRefresh: _refresh,
-                color: themeProvider.primaryColor,
-                child: provider.rooms.isEmpty
-                    // 참여 중인 방이 없어도 당겨서 새로고침할 수 있어야 한다.
-                    // 빈 상태는 스크롤되지 않아서 그냥 두면 당길 것이 없다.
-                    // 화면 높이만큼 스크롤 영역을 만들어 준다.
-                    ? LayoutBuilder(
-                        builder: (context, constraints) =>
-                            SingleChildScrollView(
-                          physics: const AlwaysScrollableScrollPhysics(),
-                          child: ConstrainedBox(
-                            constraints: BoxConstraints(
-                              minHeight: constraints.maxHeight,
-                            ),
-                            child: StudyRoomEmptyState(
-                              themeProvider: themeProvider,
-                              onCreateTap: _openCreate,
-                              onJoinTap: _openJoin,
+                  child: provider.rooms.isEmpty
+                      // 참여 중인 방이 없어도 당겨서 새로고침할 수 있어야 한다.
+                      // 빈 상태는 스크롤되지 않아서 그냥 두면 당길 것이 없다.
+                      // 화면 높이만큼 스크롤 영역을 만들어 준다.
+                      ? LayoutBuilder(
+                          builder: (context, constraints) =>
+                              SingleChildScrollView(
+                            physics: const AlwaysScrollableScrollPhysics(),
+                            child: ConstrainedBox(
+                              constraints: BoxConstraints(
+                                minHeight: constraints.maxHeight,
+                              ),
+                              child: StudyRoomEmptyState(
+                                themeProvider: themeProvider,
+                                onCreateTap: _openCreate,
+                                onJoinTap: _openJoin,
+                              ),
                             ),
                           ),
-                        ),
-                      )
-                    : _buildRoomList(provider, themeProvider),
-              ),
+                        )
+                      : _buildRoomList(provider, themeProvider),
+                ),
+        ),
       ),
     );
   }

@@ -58,10 +58,11 @@ class _StudyRoomJoinScreenState extends State<StudyRoomJoinScreen> {
 
     setState(() => _isJoining = true);
     try {
-      await Provider.of<StudyRoomProvider>(context, listen: false)
+      final room = await Provider.of<StudyRoomProvider>(context, listen: false)
           .joinRoom(code);
       FirebaseAnalytics.instance.logEvent(name: 'study_room_joined');
-      if (mounted) Navigator.pop(context, true);
+      // 목록이 들어간 방을 바로 열 수 있게 방 번호를 돌려준다.
+      if (mounted) Navigator.pop(context, room.roomId);
     } catch (e) {
       AppSnackBar.showError(_joinErrorMessage(e));
     } finally {
