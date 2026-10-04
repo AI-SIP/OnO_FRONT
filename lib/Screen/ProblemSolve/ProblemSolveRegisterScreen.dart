@@ -134,6 +134,11 @@ class _ProblemSolveRegisterScreenState
         Provider.of<MissionProvider>(context, listen: false);
     final problemSolveService = ProblemSolveService();
 
+    // 결과를 고르지 않았으면 결과 칸으로 올려 보내고 저장하지 않는다.
+    if (_templateKey.currentState?.requireAnswerStatus() == false) {
+      return;
+    }
+
     // 템플릿에서 데이터 가져오기
     final reviewData = _templateKey.currentState?.getReviewData();
 

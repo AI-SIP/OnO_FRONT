@@ -44,8 +44,22 @@ class ProblemSolveRegisterTemplateState
     extends State<ProblemSolveRegisterTemplate> {
   final _memoCtrl = TextEditingController();
   final List<XFile> _solutionImages = [];
-  AnswerStatus _answerStatus = AnswerStatus.CORRECT; // 정답 상태 (기본값: 정답)
-  int _timeSpentSeconds = 10 * 60; // 소요 시간 (초)
+
+  /// 이번 복습 결과. 처음에는 아무것도 고르지 않은 채로 연다.
+  ///
+  /// 전에는 정답이 미리 골라져 있어서, 고르지 않고 저장하면 맞힌 것으로 남고
+  /// 추천 복습에서 빠지는 정답 수에 그대로 들어갔다.
+  AnswerStatus? _answerStatus;
+
+  /// 고르지 않고 저장하려 했을 때 결과 칸에 안내를 띄운다.
+  bool _answerMissing = false;
+  final GlobalKey _answerSectionKey = GlobalKey();
+
+  /// 소요 시간 (초). 0 이면 비어 있는 것으로 보고 시간 없이 저장한다.
+  ///
+  /// 전에는 10분이 미리 들어 있어서, 시간을 넘기지 않는 현장 풀이는 손대지
+  /// 않으면 10분으로 저장됐다.
+  int _timeSpentSeconds = 0;
   List<String> _answerImageUrls = [];
 
   /// 이 회차의 기분 이모지 키. 안 고르고 넘어가도 된다.
@@ -206,6 +220,7 @@ class ProblemSolveRegisterTemplateState
 
   Widget _buildAnswerStatusSection(ThemeHandler themeProvider) {
     return _buildSectionBox(
+      key: _answerSectionKey,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -252,8 +267,7 @@ class ProblemSolveRegisterTemplateState
                   icon: Icons.check_circle,
                   color: Colors.green,
                   isSelected: _answerStatus == AnswerStatus.CORRECT,
-                  onTap: () =>
-                      setState(() => _answerStatus = AnswerStatus.CORRECT),
+                  onTap: () => _selectAnswerStatus(AnswerStatus.CORRECT),
                 ),
               ),
               const SizedBox(width: 8),
@@ -263,8 +277,7 @@ class ProblemSolveRegisterTemplateState
                   icon: Icons.check_circle_outline,
                   color: Colors.orange,
                   isSelected: _answerStatus == AnswerStatus.PARTIAL,
-                  onTap: () =>
-                      setState(() => _answerStatus = AnswerStatus.PARTIAL),
+                  onTap: () => _selectAnswerStatus(AnswerStatus.PARTIAL),
                 ),
               ),
               const SizedBox(width: 8),
@@ -274,12 +287,19 @@ class ProblemSolveRegisterTemplateState
                   icon: Icons.cancel,
                   color: Colors.red,
                   isSelected: _answerStatus == AnswerStatus.WRONG,
-                  onTap: () =>
-                      setState(() => _answerStatus = AnswerStatus.WRONG),
+                  onTap: () => _selectAnswerStatus(AnswerStatus.WRONG),
                 ),
               ),
             ],
           ),
+          if (_answerMissing) ...[
+            const SizedBox(height: 10),
+            StandardText(
+              text: '이번 복습 결과를 골라 주세요',
+              fontSize: 13,
+              color: Colors.red.shade600,
+            ),
+          ],
         ],
       ),
     );
@@ -795,8 +815,9 @@ class ProblemSolveRegisterTemplateState
     );
   }
 
-  Widget _buildSectionBox({required Widget child}) {
+  Widget _buildSectionBox({Key? key, required Widget child}) {
     return Container(
+      key: key,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.grey[50],
@@ -847,6 +868,30 @@ class ProblemSolveRegisterTemplateState
     );
   }
 
+  void _selectAnswerStatus(AnswerStatus status) {
+    setState(() {
+      _answerStatus = status;
+      _answerMissing = false;
+    });
+  }
+
+  /// 저장하기 전에 부른다. 결과를 고르지 않았으면 결과 칸으로 올라가 안내를
+  /// 띄우고 false 를 돌려준다.
+  bool requireAnswerStatus() {
+    if (_answerStatus != null) return true;
+    setState(() => _answerMissing = true);
+    final sectionContext = _answerSectionKey.currentContext;
+    if (sectionContext != null) {
+      Scrollable.ensureVisible(
+        sectionContext,
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeOut,
+        alignment: 0.1,
+      );
+    }
+    return false;
+  }
+
   // API 연동 시 사용할 데이터 수집 메서드
   Map<String, dynamic> getReviewData() {
     return {
@@ -867,8 +912,9 @@ class ProblemSolveRegisterTemplateState
     setState(() {
       _memoCtrl.clear();
       _solutionImages.clear();
-      _answerStatus = AnswerStatus.CORRECT;
-      _timeSpentSeconds = 10 * 60;
+      _answerStatus = null;
+      _answerMissing = false;
+      _timeSpentSeconds = 0;
       _improvements.updateAll((key, value) => false);
       _selectedMoodKey = null;
     });
