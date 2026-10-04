@@ -26,13 +26,13 @@ import 'ProblemDetailTemplate.dart';
 import '../../Module/Motion/AppHaptic.dart';
 import '../../Module/Motion/PressableScale.dart';
 import '../../Module/Motion/TossPageRoute.dart';
-import '../../Module/Motion/TossDialog.dart';
 import '../../Module/Motion/AppMotion.dart';
 import '../../Module/Design/AppColors.dart';
 import '../../Module/Design/AppToast.dart';
 import '../../Module/Design/AppRadius.dart';
 import '../../Module/Motion/AppearTransition.dart';
 import '../../Module/Motion/Skeleton.dart';
+import '../../Module/Dialog/ConfirmDialog.dart';
 
 class ProblemDetailScreen extends StatefulWidget {
   final int problemId;
@@ -1022,138 +1022,43 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
 
   Future<void> _showDeleteProblemDialog(
       int problemId, ThemeHandler themeProvider) async {
-    return showTossDialog(
-      context: context,
-      builder: (dialogContext) {
-        return Dialog(
-          backgroundColor: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppRadius.large),
-          ),
-          child: Container(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // 헤더
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: Colors.red.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(AppRadius.small),
-                      ),
-                      child: const Icon(
-                        Icons.delete_forever,
-                        color: Colors.red,
-                        size: 20,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    StandardText(
-                      text: '오답노트 삭제',
-                      fontSize: MobileFontSize.reduced(context, 18),
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary,
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 20),
-                // 내용
-                StandardText(
-                  text: '정말로 이 오답노트를 삭제할까요?',
-                  fontSize: MobileFontSize.reduced(context, 15),
-                  color: AppColors.textPrimary,
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 24),
-                // 액션 버튼
-                Row(
-                  children: [
-                    Expanded(
-                      child: TextButton(
-                        onPressed: () {
-                          Navigator.pop(dialogContext);
-                        },
-                        style: TextButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          backgroundColor: Colors.grey[100],
-                          shape: RoundedRectangleBorder(
-                            borderRadius:
-                                BorderRadius.circular(AppRadius.small),
-                          ),
-                        ),
-                        child: StandardText(
-                          text: '취소',
-                          fontSize: MobileFontSize.reduced(context, 15),
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: TextButton(
-                        onPressed: () async {
-                          // context가 유효할 때 Provider와 Navigator 가져오기
-                          final problemsProvider =
-                              Provider.of<ProblemsProvider>(context,
-                                  listen: false);
-                          final navigator = Navigator.of(context);
-
-                          // 다이얼로그 닫기
-                          Navigator.pop(dialogContext);
-
-                          // 상세를 바로 닫고 잠깐 되돌리기를 보인 뒤에 지운다.
-                          // 전에는 바로 지워서 잘못 지운 오답노트를 되살릴 수
-                          // 없었다. 목록은 지우기를 기다리는 문제를 걸러 그린다.
-                          if (mounted) {
-                            setState(() => _isProblemDeleted = true);
-                            navigator.pop(true);
-                          }
-                          try {
-                            final deleted =
-                                await PendingDeletion.instance.schedule(
-                              problemIds: [problemId],
-                              message: '오답노트를 지웠어요',
-                              commit: () =>
-                                  problemsProvider.deleteProblems([problemId]),
-                            );
-                            if (deleted) {
-                              // 예전에는 삭제를 요청하기 전에 남겨서 실패도 셌다.
-                              AppAnalytics.logEvent('problem_delete', {
-                                'count': 1,
-                                'source': 'detail',
-                              });
-                            }
-                          } catch (e) {
-                            debugPrint('문제 삭제 실패: $e');
-                            AppToast.error('오답노트를 삭제하지 못했어요. 잠시 후 다시 시도해 주세요.');
-                          }
-                        },
-                        style: TextButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          backgroundColor: Colors.red,
-                          shape: RoundedRectangleBorder(
-                            borderRadius:
-                                BorderRadius.circular(AppRadius.small),
-                          ),
-                        ),
-                        child: const StandardText(
-                          text: '삭제',
-                          fontSize: 15,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        );
-      },
+    // context가 유효할 때 Provider와 Navigator 가져오기
+    final problemsProvider =
+        Provider.of<ProblemsProvider>(context, listen: false);
+    final navigator = Navigator.of(context);
+    final confirmed = await showConfirmDialog(
+      context,
+      title: '이 오답노트를 삭제할까요?',
+      message: '지운 뒤 몇 초 안에는 되돌릴 수 있어요.',
+      confirmLabel: '삭제하기',
+      destructive: true,
     );
+    if (!confirmed) return;
+
+    // 상세를 바로 닫고 잠깐 되돌리기를 보인 뒤에 지운다. 전에는 바로 지워서
+    // 잘못 지운 오답노트를 되살릴 수 없었다. 목록은 지우기를 기다리는 문제를
+    // 걸러 그린다.
+    if (mounted) {
+      setState(() => _isProblemDeleted = true);
+      navigator.pop(true);
+    }
+    try {
+      final deleted = await PendingDeletion.instance.schedule(
+        problemIds: [problemId],
+        message: '오답노트를 지웠어요',
+        commit: () => problemsProvider.deleteProblems([problemId]),
+      );
+      if (deleted) {
+        // 예전에는 삭제를 요청하기 전에 남겨서 실패도 셌다.
+        AppAnalytics.logEvent('problem_delete', {
+          'count': 1,
+          'source': 'detail',
+        });
+      }
+    } catch (e) {
+      debugPrint('문제 삭제 실패: $e');
+      AppToast.error('오답노트를 삭제하지 못했어요. 잠시 후 다시 시도해 주세요.');
+    }
   }
 
   Widget _buildContent(ProblemModel problemModel) {

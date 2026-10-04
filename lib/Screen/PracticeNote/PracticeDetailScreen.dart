@@ -22,13 +22,13 @@ import 'PracticeTitleWriteScreen.dart';
 import '../../Module/Motion/AppHaptic.dart';
 import '../../Module/Motion/PressableScale.dart';
 import '../../Module/Motion/TossPageRoute.dart';
-import '../../Module/Motion/TossDialog.dart';
 import '../../Module/Motion/AppMotion.dart';
 import '../../Module/Design/AppColors.dart';
 import '../../Module/Design/AppToast.dart';
 import '../../Module/Design/AppRadius.dart';
 import '../../Util/AppAnalytics.dart';
 import '../../Util/AppErrorReporter.dart';
+import '../../Module/Dialog/ConfirmDialog.dart';
 
 class PracticeDetailScreen extends StatefulWidget {
   final PracticeNoteDetailModel practice;
@@ -982,128 +982,30 @@ class _PracticeDetailScreenState extends State<PracticeDetailScreen> {
   }
 
   Future<void> _showDeletePracticeDialog(BuildContext context) async {
-    return showTossDialog(
-      context: context,
-      builder: (context) {
-        return Dialog(
-          backgroundColor: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppRadius.large),
-          ),
-          child: Container(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // 헤더
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: Colors.red.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(AppRadius.small),
-                      ),
-                      child: const Icon(
-                        Icons.delete_forever,
-                        color: Colors.red,
-                        size: 20,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    StandardText(
-                      text: '복습 세트 삭제',
-                      fontSize: MobileFontSize.reduced(context, 18),
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary,
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 20),
-                // 내용
-                StandardText(
-                  text: '정말로 이 복습 세트를 삭제할까요?',
-                  fontSize: MobileFontSize.reduced(context, 15),
-                  color: AppColors.textPrimary,
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 24),
-                // 액션 버튼
-                Row(
-                  children: [
-                    Expanded(
-                      child: TextButton(
-                        onPressed: () {
-                          Navigator.pop(context);
-                        },
-                        style: TextButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 10),
-                          backgroundColor: Colors.grey[100],
-                          shape: RoundedRectangleBorder(
-                            borderRadius:
-                                BorderRadius.circular(AppRadius.small),
-                          ),
-                        ),
-                        child: StandardText(
-                          text: '취소',
-                          fontSize: MobileFontSize.reduced(context, 15),
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: TextButton(
-                        onPressed: () async {
-                          // 화면을 닫고 나면 context 가 죽어서 Provider 를 못
-                          // 찾는다. 닫기 전에 미리 잡아 둔다.
-                          final provider = Provider.of<ProblemPracticeProvider>(
-                              context,
-                              listen: false);
-
-                          Navigator.pop(context);
-                          if (Navigator.canPop(context)) {
-                            Navigator.pop(context);
-                          }
-
-                          try {
-                            await provider
-                                .deletePractices([widget.practice.practiceId]);
-                            AppAnalytics.logEvent('practice_set_deleted', {
-                              'count': 1,
-                              'source': 'detail',
-                            });
-                            AppToast.success('복습 세트를 삭제했어요.');
-                          } catch (e) {
-                            debugPrint('복습 세트 삭제 실패: $e');
-                            AppToast.error(
-                                '복습 세트를 삭제하지 못했어요. 잠시 후 다시 시도해 주세요.');
-                          }
-                        },
-                        style: TextButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 10),
-                          backgroundColor: Colors.red,
-                          shape: RoundedRectangleBorder(
-                            borderRadius:
-                                BorderRadius.circular(AppRadius.small),
-                          ),
-                        ),
-                        child: const StandardText(
-                          text: '삭제',
-                          fontSize: 15,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        );
-      },
+    // 화면을 닫고 나면 context 가 죽어서 Provider 를 못 찾는다. 미리 잡아 둔다.
+    final provider =
+        Provider.of<ProblemPracticeProvider>(context, listen: false);
+    final navigator = Navigator.of(context);
+    final confirmed = await showConfirmDialog(
+      context,
+      title: '이 복습 세트를 삭제할까요?',
+      message: '세트만 지워지고 담긴 오답노트는 그대로 남아요.',
+      confirmLabel: '삭제하기',
+      destructive: true,
     );
+    if (!confirmed) return;
+    if (navigator.canPop()) navigator.pop();
+
+    try {
+      await provider.deletePractices([widget.practice.practiceId]);
+      AppAnalytics.logEvent('practice_set_deleted', {
+        'count': 1,
+        'source': 'detail',
+      });
+      AppToast.success('복습 세트를 삭제했어요.');
+    } catch (e) {
+      debugPrint('복습 세트 삭제 실패: $e');
+      AppToast.error('복습 세트를 삭제하지 못했어요. 잠시 후 다시 시도해 주세요.');
+    }
   }
 }

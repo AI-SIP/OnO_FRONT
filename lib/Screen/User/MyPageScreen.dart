@@ -33,6 +33,7 @@ import 'package:ono/Util/AppAnalytics.dart';
 import '../../Module/Dialog/LoadingDialog.dart';
 import '../../Util/NotificationService.dart';
 import 'package:permission_handler/permission_handler.dart';
+import '../../Module/Dialog/ConfirmDialog.dart';
 
 class SettingScreen extends StatefulWidget {
   final TutorialTargets? tutorialTargets;
@@ -597,10 +598,11 @@ class _MyPageSettingsScreenState extends State<_MyPageSettingsScreen> {
             child: AccountActionButtons(
               onLogoutTap: () => _showConfirmationDialog(
                 context,
-                '로그아웃',
+                '로그아웃할까요?',
+                confirmLabel: '로그아웃',
                 // 게스트는 로그아웃하면 데이터가 지워지는데 전에는 괄호 한 줄로만
                 // 알렸다.
-                '정말 로그아웃할까요?\n\n게스트로 이용 중이라면 로그아웃할 때 지금까지 쓴 오답노트와 복습 기록이 모두 지워져요.',
+                '게스트로 이용 중이라면 로그아웃할 때 지금까지 쓴 오답노트와 복습 기록이 모두 지워져요.',
                 () async {
                   // 게스트는 로그아웃이 곧 계정 삭제라 서버 요청이 나간다.
                   // 실패하면 로그아웃되지 않은 것이므로 알리고 화면을 두어야
@@ -628,8 +630,9 @@ class _MyPageSettingsScreenState extends State<_MyPageSettingsScreen> {
               ),
               onDeleteAccountTap: () => _showConfirmationDialog(
                 context,
-                '회원 탈퇴',
-                '정말 탈퇴할까요?\n그동안 작성했던 모든 오답노트 및 개인정보가 삭제돼요. 이 작업은 되돌릴 수 없어요.',
+                '탈퇴할까요?',
+                confirmLabel: '탈퇴하기',
+                '그동안 작성했던 모든 오답노트 및 개인정보가 삭제돼요. 이 작업은 되돌릴 수 없어요.',
                 () async {
                   LoadingDialog.show(context, '탈퇴하는 중...');
                   try {
@@ -726,102 +729,22 @@ Widget _buildTutorialReplaySection({
   );
 }
 
-void _showConfirmationDialog(BuildContext context, String title, String message,
-    VoidCallback onConfirm) {
-  showTossDialog(
-    context: context,
-    builder: (BuildContext context) {
-      return Dialog(
-        backgroundColor: Colors.white,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppRadius.large),
-        ),
-        child: Container(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: Colors.orange.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(AppRadius.small),
-                    ),
-                    child: const Icon(
-                      Icons.warning_amber_rounded,
-                      color: Colors.orange,
-                      size: 20,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  StandardText(
-                    text: title,
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary,
-                  ),
-                ],
-              ),
-              const SizedBox(height: 20),
-              StandardText(
-                text: message,
-                fontSize: 15,
-                color: AppColors.textPrimary,
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 24),
-              Row(
-                children: [
-                  Expanded(
-                    child: TextButton(
-                      onPressed: () {
-                        Navigator.of(context).pop();
-                      },
-                      style: TextButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 8),
-                        backgroundColor: Colors.grey[100],
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(AppRadius.small),
-                        ),
-                      ),
-                      child: const StandardText(
-                        text: '취소',
-                        fontSize: 14,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: TextButton(
-                      onPressed: () {
-                        Navigator.of(context).pop();
-                        onConfirm();
-                      },
-                      style: TextButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 8),
-                        backgroundColor: Colors.red,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(AppRadius.small),
-                        ),
-                      ),
-                      child: const StandardText(
-                        text: '확인',
-                        fontSize: 14,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      );
-    },
+/// 로그아웃과 탈퇴를 묻는다. 확정 버튼은 '확인' 대신 [confirmLabel] 로 무엇을
+/// 하는지 적는다.
+Future<void> _showConfirmationDialog(
+  BuildContext context,
+  String title,
+  String message,
+  VoidCallback onConfirm, {
+  required String confirmLabel,
+}) async {
+  final confirmed = await showConfirmDialog(
+    context,
+    title: title,
+    message: message,
+    confirmLabel: confirmLabel,
+    destructive: true,
+    icon: Icons.warning_amber_rounded,
   );
+  if (confirmed) onConfirm();
 }
