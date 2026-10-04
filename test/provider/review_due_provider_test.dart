@@ -61,6 +61,21 @@ void main() {
       expect(provider.data, isNull);
     });
 
+    test('실패하면 hasError 가 켜지고, 다시 성공하면 꺼진다', () async {
+      when(() => problemService.getReviewDueProblems())
+          .thenThrow(Exception('네트워크'));
+      await provider.fetchReviewDue();
+      expect(provider.hasError, isTrue);
+      expect(provider.data, isNull);
+
+      when(() => problemService.getReviewDueProblems()).thenAnswer(
+        (_) async =>
+            ReviewDueResponse(dueCount: 0, overdueCount: 0, problems: []),
+      );
+      await provider.fetchReviewDue();
+      expect(provider.hasError, isFalse);
+    });
+
     test('이미 로딩 중이면 재진입하지 않는다 (동시 호출 가드)', () async {
       var callCount = 0;
       when(() => problemService.getReviewDueProblems()).thenAnswer((_) async {
