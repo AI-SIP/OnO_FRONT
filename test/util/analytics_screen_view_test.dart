@@ -21,9 +21,6 @@ void main() {
     'PracticeDetailScreen': '여는 쪽이 남김',
     // 운영에서 열리지 않는 화면.
     'CosmeticCombinationPreviewScreen': '디버그 전용',
-    'TemplateSelectionScreen': '여는 곳 없음',
-    'ColorPickerScreen': '여는 곳 없음',
-    'CoordinatePickerScreen': '여는 곳 없음',
     'AnswerShareScreen': '여는 곳 없음',
     'ProblemShareScreen': '여는 곳 없음',
   };
