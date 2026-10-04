@@ -115,11 +115,14 @@ class _ReviewDueScreenState extends State<ReviewDueScreen> {
                         padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
                         children: [
                           _buildHeader(data, themeProvider),
+                          const SizedBox(height: 12),
+                          _buildStartButton(data, themeProvider),
                           const SizedBox(height: 16),
                           ...data.problems.map(
                             (p) => _buildProblemTile(
                               context,
                               p,
+                              data.problems.map((e) => e.problemId).toList(),
                               data.requiredCorrectCount,
                               themeProvider,
                             ),
@@ -192,9 +195,50 @@ class _ReviewDueScreenState extends State<ReviewDueScreen> {
     );
   }
 
+  /// 추천 목록 순서대로 첫 문제부터 연다. 한 문제를 저장하면 다음 문제를
+  /// 바로 풀지 묻는다.
+  Widget _buildStartButton(ReviewDueResponse data, ThemeHandler themeProvider) {
+    final queue = data.problems.map((p) => p.problemId).toList();
+    return SizedBox(
+      width: double.infinity,
+      height: 48,
+      child: ElevatedButton.icon(
+        onPressed: () async {
+          AppAnalytics.logEvent('review_due_start', {'count': queue.length});
+          await Navigator.push(
+            context,
+            TossPageRoute(
+              builder: (_) => ProblemDetailScreen(
+                problemId: queue.first,
+                reviewQueue: queue,
+              ),
+            ),
+          );
+          if (!mounted) return;
+          _refresh();
+        },
+        icon: const Icon(Icons.play_arrow_rounded, color: Colors.white),
+        label: const StandardText(
+          text: '추천 문제부터 풀기',
+          fontSize: 15,
+          fontWeight: FontWeight.w600,
+          color: Colors.white,
+        ),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: themeProvider.primaryColor,
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppRadius.medium),
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildProblemTile(
     BuildContext context,
     ReviewDueProblemModel problem,
+    List<int> queue,
     int? requiredCorrectCount,
     ThemeHandler themeProvider,
   ) {
@@ -226,7 +270,10 @@ class _ReviewDueScreenState extends State<ReviewDueScreen> {
           await Navigator.push(
             context,
             TossPageRoute(
-              builder: (_) => ProblemDetailScreen(problemId: problem.problemId),
+              builder: (_) => ProblemDetailScreen(
+                problemId: problem.problemId,
+                reviewQueue: queue,
+              ),
             ),
           );
           if (!mounted) return;
