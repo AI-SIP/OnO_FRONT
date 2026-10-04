@@ -3,6 +3,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:ono/Model/Common/PaginatedResponse.dart';
 import 'package:ono/Model/Problem/ProblemModel.dart';
+import 'package:ono/Model/Folder/FolderThumbnailModel.dart';
+import 'package:ono/Provider/FoldersProvider.dart';
 import 'package:ono/Provider/ProblemsProvider.dart';
 import 'package:ono/Screen/ProblemSearch/TagProblemSearchScreen.dart';
 
@@ -59,5 +61,45 @@ void main() {
 
     expect(find.text('오답노트를 불러오지 못했어요'), findsNothing);
     expect(find.text('이차함수 최댓값'), findsOneWidget);
+  });
+
+  testWidgets('제목 검색으로 열리고 바로 입력할 수 있으며 결과에 공책 이름을 붙인다', (tester) async {
+    when(() => problemService.getTitleProblemsV2(
+          query: any(named: 'query'),
+          cursor: any(named: 'cursor'),
+          size: any(named: 'size'),
+        )).thenAnswer((_) async => PaginatedResponse<ProblemModel>(
+          content: [
+            ProblemModel(problemId: 1, reference: '이차함수 최댓값', folderId: 7),
+          ],
+          nextCursor: null,
+          hasNext: false,
+          size: 20,
+        ));
+    final foldersProvider = FoldersProvider(problemsProvider: problemsProvider);
+
+    await pumpOnoWidget(
+      tester,
+      const TagProblemSearchScreen(),
+      problemsProvider: problemsProvider,
+      foldersProvider: foldersProvider,
+    );
+    // 태그 목록을 받다 인증 실패로 캐시가 비워질 수 있어서 화면이 뜬 뒤에 넣는다.
+    foldersProvider.saveSubfoldersToCache(
+      1,
+      [FolderThumbnailModel(folderId: 7, folderName: '수학 1', problemCount: 1)],
+      null,
+      false,
+    );
+
+    final field = tester.widget<TextField>(find.byType(TextField));
+    expect(field.autofocus, isTrue);
+
+    await tester.enterText(find.byType(TextField), '이차');
+    await tester.pump(const Duration(milliseconds: 350));
+    await tester.pumpAndSettle();
+
+    expect(find.text('이차함수 최댓값'), findsOneWidget);
+    expect(find.text('수학 1'), findsOneWidget);
   });
 }

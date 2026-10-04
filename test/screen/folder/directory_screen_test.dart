@@ -281,6 +281,47 @@ void main() {
       expect(find.textContaining('공책에 저장해 관리하세요'), findsNothing);
     });
 
+    testWidgets('당겨서 새로고침하는 동안 목록을 비우지 않는다', (tester) async {
+      stubDefaultFolderLoad(
+        problems: [buildProblem(problemId: 100, reference: '수학 문제집 p.12')],
+      );
+      await pumpDirectory(tester);
+
+      // 다시 받는 응답을 늦춰서 받는 중인 화면을 붙잡는다.
+      when(() => problemService.getFolderProblemsV2(
+            folderId: any(named: 'folderId'),
+            cursor: any(named: 'cursor'),
+            size: any(named: 'size'),
+            sort: any(named: 'sort'),
+          )).thenAnswer((_) async {
+        await Future<void>.delayed(const Duration(seconds: 2));
+        return PaginatedResponse(
+          content: [buildProblem(problemId: 100, reference: '수학 문제집 p.12')],
+          nextCursor: null,
+          hasNext: false,
+          size: 1,
+        );
+      });
+      await tester.fling(find.text('수학 문제집 p.12'), const Offset(0, 400), 1000);
+      // 새로고침이 시작되고 목록 응답은 아직 오지 않은 때.
+      for (var i = 0; i < 10; i++) {
+        await tester.pump(const Duration(milliseconds: 100));
+      }
+      verify(() => problemService.getFolderProblemsV2(
+            folderId: any(named: 'folderId'),
+            cursor: any(named: 'cursor'),
+            size: any(named: 'size'),
+            sort: any(named: 'sort'),
+          )).called(greaterThanOrEqualTo(1));
+
+      expect(find.byType(SkeletonList), findsNothing);
+      expect(find.text('수학 문제집 p.12'), findsOneWidget);
+
+      await tester.pump(const Duration(seconds: 2));
+      await tester.pumpAndSettle();
+      expect(find.text('수학 문제집 p.12'), findsOneWidget);
+    });
+
     testWidgets('폴더 조회가 실패하면 에러 스낵바가 뜬다', (tester) async {
       when(() => folderService.getRootFolder())
           .thenThrow(Exception('network down'));

@@ -24,6 +24,9 @@ class ProblemThumbnailCard extends StatelessWidget {
   /// 나왔는지 보여 줄 때 쓴다.
   final String? statusLabel;
   final Color? statusColor;
+
+  /// 제목 아래 작게 덧붙이는 한 줄. 검색 결과에서 어느 공책에 있는지 보인다.
+  final String? subtitle;
   final EdgeInsetsGeometry padding;
   final double imageWidth;
   final double imageHeight;
@@ -49,6 +52,7 @@ class ProblemThumbnailCard extends StatelessWidget {
     this.progressLabel,
     this.statusLabel,
     this.statusColor,
+    this.subtitle,
     this.padding = const EdgeInsets.all(12),
     this.imageWidth = 50,
     this.imageHeight = 70,
@@ -132,6 +136,24 @@ class ProblemThumbnailCard extends StatelessWidget {
           maxLines: titleMaxLines,
           overflow: TextOverflow.ellipsis,
         ),
+        if (subtitle != null) ...[
+          const SizedBox(height: 2),
+          Row(
+            children: [
+              Icon(Icons.folder_outlined, size: 13, color: Colors.grey[600]),
+              const SizedBox(width: 3),
+              Flexible(
+                child: StandardText(
+                  text: subtitle!,
+                  fontSize: 12,
+                  color: Colors.grey[700]!,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+        ],
         const SizedBox(height: 8),
         Wrap(
           spacing: tagSpacing,

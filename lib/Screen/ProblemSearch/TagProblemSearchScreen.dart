@@ -23,6 +23,7 @@ import '../../Module/Design/AppRadius.dart';
 import '../../Util/AppAnalytics.dart';
 import '../../Util/AppErrorReporter.dart';
 import '../../Util/PendingDeletion.dart';
+import '../../Provider/FoldersProvider.dart';
 
 enum _SearchMode { tag, title }
 
@@ -45,7 +46,8 @@ class _TagProblemSearchScreenState extends State<TagProblemSearchScreen> {
   final ScrollController _scrollController = ScrollController();
   final TextEditingController _queryController = TextEditingController();
 
-  _SearchMode _mode = _SearchMode.tag;
+  // 제목으로 찾는 사람이 더 많아서 제목 검색을 먼저 연다.
+  _SearchMode _mode = _SearchMode.title;
 
   List<TagModel> _tags = [];
   int? _selectedTagId;
@@ -422,15 +424,15 @@ class _TagProblemSearchScreenState extends State<TagProblemSearchScreen> {
       child: Row(
         children: [
           modeChip(
-            mode: _SearchMode.tag,
-            label: '태그로 검색',
-            icon: Icons.sell_outlined,
-          ),
-          const SizedBox(width: 8),
-          modeChip(
             mode: _SearchMode.title,
             label: '제목으로 검색',
             icon: Icons.search_rounded,
+          ),
+          const SizedBox(width: 8),
+          modeChip(
+            mode: _SearchMode.tag,
+            label: '태그로 검색',
+            icon: Icons.sell_outlined,
           ),
         ],
       ),
@@ -443,6 +445,9 @@ class _TagProblemSearchScreenState extends State<TagProblemSearchScreen> {
       padding: const EdgeInsets.fromLTRB(20, 4, 20, 10),
       child: TextField(
         controller: _queryController,
+        // 검색하러 들어왔으니 바로 쓸 수 있게 한다. 복습 세트에 넣을 문제를
+        // 고르는 화면에서는 키보드가 목록을 가려서 띄우지 않는다.
+        autofocus: !widget.selectable,
         textInputAction: TextInputAction.search,
         onSubmitted: (value) => _searchByTitle(value.trim(), isInitial: true),
         style: baseTextStyle.copyWith(
@@ -726,9 +731,23 @@ class _TagProblemSearchScreenState extends State<TagProblemSearchScreen> {
               builder: (_) => ProblemDetailScreen(problemId: problem.problemId),
             ),
           );
+          // 상세에서 복습하거나 고친 값으로 카드를 바꾼다. 전에는 돌아와도
+          // 들어가기 전 모습 그대로였다.
+          if (!mounted) return;
+          final latest = Provider.of<ProblemsProvider>(context, listen: false)
+              .cachedProblem(problem.problemId);
+          final index =
+              _problems.indexWhere((p) => p.problemId == problem.problemId);
+          if (latest != null && index >= 0) {
+            setState(() => _problems[index] = latest);
+          }
         },
         child: ProblemThumbnailCard(
           title: title,
+          subtitle: problem.folderId == null
+              ? null
+              : Provider.of<FoldersProvider>(context, listen: false)
+                  .folderNameOf(problem.folderId!),
           imageUrl: problemImageUrl,
           tags: problem.tags,
           solveCount: problem.solveCount,

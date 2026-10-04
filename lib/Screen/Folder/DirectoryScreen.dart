@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -161,9 +163,19 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     }
   }
 
-  Future<void> _loadFolderData() async {
+  /// 이 공책의 하위 공책과 오답노트를 다시 받는다.
+  ///
+  /// 이미 그려 둔 목록이 있으면 [keepVisible] 로 그대로 둔 채 받아서 바꿔
+  /// 끼우고 보던 스크롤 위치를 지킨다. 전에는 하위 공책에서 돌아오거나 무언가를
+  /// 옮기고 지울 때마다 스켈레톤이 뜨고 맨 위부터 다시 그렸다. 정렬을 바꿀
+  /// 때처럼 순서가 달라지면 false 로 불러 맨 위부터 그린다.
+  Future<void> _loadFolderData({bool? keepVisible}) async {
+    final keep = keepVisible ?? _currentFolder != null;
+    final savedOffset =
+        keep && _scrollController.hasClients ? _scrollController.offset : null;
+
     // 초기 로딩 상태 시작
-    if (mounted) {
+    if (mounted && !keep) {
       setState(() {
         _isInitialLoading = true;
       });
@@ -190,12 +202,17 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
       // 폴더 메타데이터만 가져오기 (Provider의 currentFolder는 업데이트하지 않음)
       final folder = await foldersProvider.getFolder(targetFolderId);
 
-      // 로컬 상태 초기화
+      // 로컬 상태 초기화. 목록을 그대로 두는 경우에는 첫 쪽이 오면 바꿔 낀다.
       if (mounted) {
         setState(() {
           _currentFolder = folder;
-          _localSubfolders = [];
-          _localProblems = [];
+          if (keep) {
+            _replaceSubfoldersOnNextPage = true;
+            _replaceProblemsOnNextPage = true;
+          } else {
+            _localSubfolders = [];
+            _localProblems = [];
+          }
           _subfolderNextCursor = null;
           _problemNextCursor = null;
           _subfolderHasNext = false;
@@ -208,6 +225,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
         _loadMoreSubfoldersLocal(targetFolderId),
         _loadMoreProblemsLocal(targetFolderId),
       ]);
+      if (savedOffset != null) _restoreScrollOffset(savedOffset);
     } on UnauthorizedException catch (e) {
       debugPrint('Directory auth failure: $e');
       if (mounted) {
@@ -232,13 +250,47 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
         );
       }
     } finally {
-      // 초기 로딩 완료
+      // 초기 로딩 완료. 바꿔 끼우기 표시는 여기서 지우지 않는다. 다시 받기가
+      // 겹치면 늦게 시작한 쪽이 먼저 끝나는데, 그때 지우면 먼저 시작한 쪽의
+      // 첫 쪽이 예전 목록 뒤에 붙어 같은 카드가 두 번 보였다. 실패해서 남아
+      // 있으면 다음에 받는 첫 쪽이 바꿔 낀다.
       if (mounted) {
         setState(() {
           _isInitialLoading = false;
         });
       }
     }
+  }
+
+  // 다시 받는 동안 예전 목록을 그대로 보이다가 첫 쪽이 오면 바꿔 낀다.
+  bool _replaceSubfoldersOnNextPage = false;
+  bool _replaceProblemsOnNextPage = false;
+
+  void _putSubfolders(List<FolderThumbnailModel> page) {
+    if (_replaceSubfoldersOnNextPage) {
+      _replaceSubfoldersOnNextPage = false;
+      _localSubfolders = List.of(page);
+    } else {
+      _localSubfolders.addAll(page);
+    }
+  }
+
+  void _putProblems(List<ProblemModel> page) {
+    if (_replaceProblemsOnNextPage) {
+      _replaceProblemsOnNextPage = false;
+      _localProblems = List.of(page);
+    } else {
+      _localProblems.addAll(page);
+    }
+  }
+
+  /// 다시 받은 목록이 짧아졌을 수 있어서 끝을 넘지 않게 맞춘다.
+  void _restoreScrollOffset(double offset) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !_scrollController.hasClients) return;
+      final max = _scrollController.position.maxScrollExtent;
+      _scrollController.jumpTo(offset.clamp(0.0, max));
+    });
   }
 
   // 로컬 하위 폴더 로드 (캐시 우선 사용)
@@ -270,7 +322,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
             '✅ Using cached subfolders for folder $folderId (${cachedSubfolders.length} items)');
         if (mounted) {
           setState(() {
-            _localSubfolders.addAll(cachedSubfolders);
+            _putSubfolders(cachedSubfolders);
             // Provider의 상태 복사
             _subfolderNextCursor = cachedSubfolders.isNotEmpty
                 ? cachedSubfolders.last.folderId
@@ -297,7 +349,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
       // 로컬 상태 업데이트 (모든 페이지)
       if (mounted) {
         setState(() {
-          _localSubfolders.addAll(response.content);
+          _putSubfolders(response.content);
           _subfolderNextCursor = response.nextCursor;
           _subfolderHasNext = response.hasNext;
         });
@@ -395,7 +447,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
             '✅ Using cached problems for folder $folderId (${cachedProblems.length} items)');
         if (mounted) {
           setState(() {
-            _localProblems.addAll(cachedProblems);
+            _putProblems(cachedProblems);
             // Provider의 상태 복사
             _problemNextCursor = cachedProblems.isNotEmpty
                 ? cachedProblems.last.problemId
@@ -422,7 +474,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
       // 로컬 상태 업데이트 (모든 페이지)
       if (mounted) {
         setState(() {
-          _localProblems.addAll(response.content);
+          _putProblems(response.content);
           _problemNextCursor = response.nextCursor;
           _problemHasNext = response.hasNext;
         });
@@ -512,7 +564,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
         !_isInitialLoading) {
       _loadedSort = foldersProvider.bookshelfSort;
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) _loadFolderData();
+        if (mounted) _loadFolderData(keepVisible: false);
       });
     }
 
@@ -673,7 +725,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
         if (sort == foldersProvider.bookshelfSort) return;
         AppAnalytics.logEvent('bookshelf_sort_change', {'sort': sort.name});
         foldersProvider.setBookshelfSort(sort);
-        _loadFolderData();
+        _loadFolderData(keepVisible: false);
       },
       itemBuilder: (context) => [
         for (final sort in ListSort.values)
@@ -2401,6 +2453,40 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     await _loadFolderData();
   }
 
+  /// 상세에서 돌아오면 그 카드만 새로 받은 값으로 바꾼다.
+  ///
+  /// 상세는 복습을 저장하거나 고칠 때 문제를 다시 받아 [ProblemsProvider] 에
+  /// 넣는다. 전에는 책장 카드가 그걸 몰라서 최근 복습일과 제목, 옮긴 공책이
+  /// 들어가기 전 모습 그대로 남았다. 다른 공책으로 옮겼으면 이 목록에서 뺀다.
+  void _syncProblemFromProvider(int problemId) {
+    if (!mounted || _currentFolder == null) return;
+    final latest = Provider.of<ProblemsProvider>(context, listen: false)
+        .cachedProblem(problemId);
+    if (latest == null) return;
+    final index = _localProblems.indexWhere((p) => p.problemId == problemId);
+    if (index < 0 || identical(_localProblems[index], latest)) return;
+
+    final movedOut =
+        latest.folderId != null && latest.folderId != _currentFolder!.folderId;
+    setState(() {
+      if (movedOut) {
+        _localProblems.removeAt(index);
+      } else {
+        _localProblems[index] = latest;
+      }
+    });
+    final foldersProvider =
+        Provider.of<FoldersProvider>(context, listen: false);
+    foldersProvider.saveProblemsToCache(
+      _currentFolder!.folderId,
+      _localProblems,
+      _problemNextCursor,
+      _problemHasNext,
+    );
+    // 옮겨 간 공책은 받아 둔 목록을 버려서, 열 때 새로 받게 한다.
+    if (movedOut) unawaited(foldersProvider.refreshFolder(latest.folderId!));
+  }
+
   void navigateToProblemDetail(BuildContext context, int problemId) {
     Navigator.push(
       context,
@@ -2416,7 +2502,9 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
         // 캐시 삭제 후 새로고침
         await foldersProvider.refreshFolder(_currentFolder!.folderId);
         await _loadFolderData();
+        return;
       }
+      _syncProblemFromProvider(problemId);
     });
   }
 
