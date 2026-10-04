@@ -787,7 +787,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
                       _buildQuickCreateAction(
-                        label: '공책 추가',
+                        label: '공책 만들기',
                         icon: Icons.create_new_folder_outlined,
                         themeProvider: themeProvider,
                         onTap: () async {
@@ -937,7 +937,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
   // 공책 생성 다이얼로그 출력
   Future<void> _showCreateFolderDialog() async {
     await _showFolderNameDialog(
-      dialogTitle: '공책 추가',
+      dialogTitle: '공책 만들기',
       defaultFolderName: '', // 폴더 생성 시에는 기본값이 없음
       onFolderNameSubmitted: (folderName) async {
         final foldersProvider =
@@ -1086,7 +1086,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                     _buildActionItem(
                       icon: Icons.add_circle_outline,
                       iconColor: themeProvider.primaryColor,
-                      title: '공책 추가하기',
+                      title: '공책 만들기',
                       onTap: () {
                         Navigator.pop(context);
                         FirebaseAnalytics.instance.logEvent(
@@ -1099,7 +1099,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                       _buildActionItem(
                         icon: Icons.drive_file_rename_outline,
                         iconColor: themeProvider.primaryColor,
-                        title: '공책 이름 수정하기',
+                        title: '공책 이름 바꾸기',
                         onTap: () {
                           Navigator.pop(context);
                           FirebaseAnalytics.instance
@@ -1196,7 +1196,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
 
   Future<void> _showRenameFolderDialog(FoldersProvider foldersProvider) async {
     await _showFolderNameDialog(
-      dialogTitle: '공책 이름 변경',
+      dialogTitle: '공책 이름 바꾸기',
       defaultFolderName: _currentFolder?.folderName ?? '',
       onFolderNameSubmitted: (newName) async {
         await _renameFolder(newName);

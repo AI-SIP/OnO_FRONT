@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../../Provider/CosmeticProvider.dart';
@@ -26,6 +25,7 @@ import '../../Module/Design/AppColors.dart';
 import '../../Module/Design/AppRadius.dart';
 import '../../Module/Design/AppToast.dart';
 import '../../Util/AppAnalytics.dart';
+import '../../Util/ShortDate.dart';
 
 class PracticeThumbnailScreen extends StatefulWidget {
   final TutorialTargets? tutorialTargets;
@@ -140,7 +140,7 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
       centerTitle: true,
       backgroundColor: Colors.white,
       title: StandardText(
-        text: _isSelectionMode ? '삭제할 항목 선택' : '오답 복습',
+        text: _isSelectionMode ? '삭제할 항목 선택' : '복습 세트',
         fontSize: 18,
         color: themeProvider.primaryColor,
       ),
@@ -862,7 +862,7 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
     if (dateTime == null) {
       return null;
     }
-    return DateFormat('yyyy/MM/dd').format(dateTime);
+    return shortDate(dateTime);
   }
 
   Future<void> _refreshPracticeThumbnails() async {

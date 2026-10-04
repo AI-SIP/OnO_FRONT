@@ -357,7 +357,7 @@ void main() {
     await tester.tap(find.text('취소하기'));
     await tester.pumpAndSettle();
 
-    expect(find.text('오답 복습'), findsOneWidget); // 앱바 제목이 원래대로
+    expect(find.text('복습 세트'), findsOneWidget); // 앱바 제목이 원래대로
     expect(find.byType(FloatingActionButton), findsOneWidget);
   });
 
