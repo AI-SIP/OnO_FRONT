@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:collection';
 
 import 'package:flutter/material.dart';
@@ -10,6 +11,8 @@ import 'package:ono/Util/AppErrorReporter.dart';
 
 import '../Model/Folder/FolderModel.dart';
 import '../Model/Problem/ProblemModel.dart';
+import '../Model/Common/ListSort.dart';
+import '../Util/BookshelfSortPreference.dart';
 
 // 폴더별 스크롤 상태를 저장하는 클래스
 class FolderScrollState {
@@ -43,6 +46,35 @@ class FoldersProvider with ChangeNotifier {
   int get rootFolderRefreshTimestamp => _rootFolderRefreshTimestamp;
 
   FolderModel? get currentFolder => _currentFolder;
+
+  ListSort _bookshelfSort = ListSort.newest;
+
+  /// 책장의 하위 공책과 오답노트를 어느 순서로 보일지. 처음에는 최근 등록순이다.
+  ListSort get bookshelfSort => _bookshelfSort;
+
+  bool _bookshelfSortLoaded = false;
+
+  /// 기기에 기억해 둔 정렬을 처음 한 번만 읽는다. 바뀌었으면 받아 둔 목록을
+  /// 버린다.
+  Future<void> loadBookshelfSort() async {
+    if (_bookshelfSortLoaded) return;
+    _bookshelfSortLoaded = true;
+    final saved = await BookshelfSortPreference.load();
+    if (saved == _bookshelfSort) return;
+    _bookshelfSort = saved;
+    _folderCache.clear();
+    notifyListeners();
+  }
+
+  /// 책장 정렬을 바꾼다. 받아 둔 목록은 예전 순서라 모두 버린다. 커서가 순서에
+  /// 묶여 있어서 이어 받을 수 없다.
+  void setBookshelfSort(ListSort sort) {
+    if (sort == _bookshelfSort) return;
+    _bookshelfSort = sort;
+    _folderCache.clear();
+    unawaited(BookshelfSortPreference.save(sort));
+    notifyListeners();
+  }
 
   // 호환성을 위한 getter (정렬된 리스트 반환)
   List<FolderModel> get folders => _foldersMap.values.toList();
@@ -260,6 +292,7 @@ class FoldersProvider with ChangeNotifier {
         folderId: folderId,
         cursor: state.subfolderNextCursor,
         size: 20,
+        sort: _bookshelfSort,
       );
 
       state.subfolders.addAll(response.content);
@@ -300,6 +333,7 @@ class FoldersProvider with ChangeNotifier {
         folderId: folderId,
         cursor: state.problemNextCursor,
         size: 20,
+        sort: _bookshelfSort,
       );
 
       state.problems.addAll(response.content);

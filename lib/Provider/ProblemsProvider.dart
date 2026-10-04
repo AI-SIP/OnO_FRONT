@@ -11,6 +11,7 @@ import '../Model/Problem/ProblemRegisterModel.dart';
 import '../Module/Util/ReviewHandler.dart';
 import '../Service/Api/FileUpload/FileUploadService.dart';
 import '../Util/AppErrorReporter.dart';
+import '../Model/Common/ListSort.dart';
 
 class ProblemsProvider with ChangeNotifier {
   // SplayTreeMap: O(log n) 삽입, O(log n) 조회, 자동 정렬
@@ -280,12 +281,14 @@ class ProblemsProvider with ChangeNotifier {
     required int folderId,
     int? cursor,
     int size = 20,
+    ListSort sort = ListSort.newest,
   }) async {
     try {
       final response = await problemService.getFolderProblemsV2(
         folderId: folderId,
         cursor: cursor,
         size: size,
+        sort: sort,
       );
 
       // O(log n) 삽입으로 로컬 캐시에 추가 (중복 방지 및 자동 정렬)

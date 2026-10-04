@@ -18,6 +18,8 @@ import 'package:ono/Provider/UserProvider.dart';
 import 'package:ono/Screen/Folder/DirectoryScreen.dart';
 
 import '../../helpers/helpers.dart';
+import 'package:ono/Model/Common/ListSort.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class _FakeUserProvider extends Mock implements UserProvider {}
 
@@ -35,6 +37,7 @@ void main() {
   setUpOnoWidgetTest();
 
   setUpAll(() {
+    registerFallbackValue(ListSort.newest);
     registerFallbackValue(_FolderRegisterModelFake());
   });
 
@@ -119,6 +122,7 @@ void main() {
           folderId: any(named: 'folderId'),
           cursor: any(named: 'cursor'),
           size: any(named: 'size'),
+          sort: any(named: 'sort'),
         )).thenAnswer((_) async => PaginatedResponse(
           content: subfolders,
           nextCursor: subfolderHasNext ? 999 : null,
@@ -129,6 +133,7 @@ void main() {
           folderId: any(named: 'folderId'),
           cursor: any(named: 'cursor'),
           size: any(named: 'size'),
+          sort: any(named: 'sort'),
         )).thenAnswer((_) async => PaginatedResponse(
           content: problems,
           nextCursor: problemHasNext ? 999 : null,
@@ -190,6 +195,44 @@ void main() {
 
       expect(find.textContaining('로그인을 통해'), findsOneWidget);
       expect(find.byType(FloatingActionButton), findsNothing);
+    });
+  });
+
+  group('정렬', () {
+    testWidgets('처음에는 최근 등록순으로 받는다', (tester) async {
+      await pumpDirectory(tester);
+
+      verify(() => problemService.getFolderProblemsV2(
+            folderId: any(named: 'folderId'),
+            cursor: any(named: 'cursor'),
+            size: any(named: 'size'),
+            sort: ListSort.newest,
+          )).called(greaterThanOrEqualTo(1));
+    });
+
+    testWidgets('오래된순을 고르면 기억하고 그 순서로 다시 받는다', (tester) async {
+      await pumpDirectory(tester);
+
+      await tester.tap(find.byTooltip('정렬: 최근 등록순'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('오래된순'));
+      await tester.pumpAndSettle();
+
+      expect(foldersProvider.bookshelfSort, ListSort.oldest);
+      verify(() => folderService.getSubfoldersV2(
+            folderId: any(named: 'folderId'),
+            cursor: any(named: 'cursor'),
+            size: any(named: 'size'),
+            sort: ListSort.oldest,
+          )).called(1);
+      verify(() => problemService.getFolderProblemsV2(
+            folderId: any(named: 'folderId'),
+            cursor: any(named: 'cursor'),
+            size: any(named: 'size'),
+            sort: ListSort.oldest,
+          )).called(1);
+      final prefs = await SharedPreferences.getInstance();
+      expect(prefs.getString('bookshelf_sort'), 'oldest');
     });
   });
 

@@ -372,7 +372,7 @@ void main() {
       expect(http.lastRequest.method, 'GET');
       expect(
         http.lastRequest.url.toString(),
-        '$testBaseUrl/api/practiceNotes/thumbnail/V2?size=20',
+        '$testBaseUrl/api/practiceNotes/thumbnail/V2?size=20&sort=NEWEST',
       );
       expect(page.content, hasLength(1));
       expect(page.nextCursor, 5);
@@ -390,7 +390,8 @@ void main() {
       );
       await buildService(http).getPracticeNoteThumbnailsV2(cursor: 7, size: 5);
 
-      expect(http.lastRequest.queryParameters, {'cursor': '7', 'size': '5'});
+      expect(http.lastRequest.queryParameters,
+          {'cursor': '7', 'size': '5', 'sort': 'NEWEST'});
     });
 
     // TODO(#174): 실제 버그. lib/Model/Common/PaginatedResponse.dart:23,27,28
