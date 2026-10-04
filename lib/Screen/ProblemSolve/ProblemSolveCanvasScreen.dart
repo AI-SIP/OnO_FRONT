@@ -5,6 +5,7 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import '../../Module/Dialog/UnsavedChangesScope.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
@@ -253,6 +254,18 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeHandler>(context);
 
+    // 필기는 화면을 다시 그리지 않고 쌓여서 나가려는 순간에 확인한다. 캔버스
+    // 왼쪽 끝에서 쓰다가 밀어서 뒤로가기가 걸리는 일도 함께 막힌다.
+    return UnsavedChangesScope.check(
+      checkChanges: () => _ink.pages.any((page) => page.hasInk),
+      source: 'problem_solve_canvas',
+      title: '풀이를 그만둘까요?',
+      description: '지금 나가면 쓴 풀이가 저장되지 않아요.',
+      child: _buildScaffold(themeProvider),
+    );
+  }
+
+  Widget _buildScaffold(ThemeHandler themeProvider) {
     return Scaffold(
       backgroundColor: Colors.white,
       // 왼쪽 뒤로가기 칸과 오른쪽 되돌리기, 다시 실행, 전체 지우기 칸의 폭을

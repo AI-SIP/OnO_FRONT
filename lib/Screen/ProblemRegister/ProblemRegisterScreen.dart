@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../Module/Dialog/UnsavedChangesScope.dart';
 import 'package:ono/Screen/ProblemRegister/ProblemRegisterTemplate.dart';
 import 'package:ono/Screen/ProblemRegister/Widget/ActionButtons.dart';
 import 'package:provider/provider.dart';
@@ -27,6 +28,13 @@ class ProblemRegisterScreen extends StatefulWidget {
 class _ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
   final GlobalKey<ProblemRegisterTemplateState> _templateKey =
       GlobalKey<ProblemRegisterTemplateState>();
+  final ValueNotifier<bool> _unsavedChanges = ValueNotifier(false);
+
+  @override
+  void dispose() {
+    _unsavedChanges.dispose();
+    super.dispose();
+  }
 
   @override
   void initState() {
@@ -39,48 +47,57 @@ class _ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Provider.of<ThemeHandler>(context);
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        centerTitle: true,
+    return UnsavedChangesScope(
+      hasChanges: _unsavedChanges,
+      source: widget.isEditMode ? 'problem_edit' : 'problem_register',
+      title: widget.isEditMode ? '수정을 그만둘까요?' : '작성을 그만둘까요?',
+      description: widget.isEditMode
+          ? '지금 나가면 고친 내용이 저장되지 않아요.'
+          : '지금 나가면 쓰던 오답노트가 저장되지 않아요.',
+      child: Scaffold(
         backgroundColor: Colors.white,
-        title: StandardText(
-          text: widget.isEditMode ? '오답노트 수정' : '오답노트 작성',
-          color: theme.primaryColor,
-          fontSize: 18,
+        appBar: AppBar(
+          centerTitle: true,
+          backgroundColor: Colors.white,
+          title: StandardText(
+            text: widget.isEditMode ? '오답노트 수정' : '오답노트 작성',
+            color: theme.primaryColor,
+            fontSize: 18,
+          ),
         ),
-      ),
-      body: SingleChildScrollView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-        child: ProblemRegisterTemplate(
-          key: _templateKey,
-          problemModel: widget.problemModel,
-          isEditMode: widget.isEditMode,
-          initialFolderId: widget.initialFolderId,
+        body: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+          child: ProblemRegisterTemplate(
+            key: _templateKey,
+            problemModel: widget.problemModel,
+            isEditMode: widget.isEditMode,
+            initialFolderId: widget.initialFolderId,
+            unsavedChanges: _unsavedChanges,
+          ),
         ),
-      ),
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.grey.withOpacity(0.2),
-              blurRadius: 10,
-              offset: const Offset(0, -2),
-            ),
-          ],
-        ),
-        padding: EdgeInsets.only(
-          left: 24,
-          right: 24,
-          top: 12,
-          bottom: MediaQuery.of(context).padding.bottom + 12,
-        ),
-        child: ActionButtons(
-          isEdit: widget.isEditMode,
-          onCancel: () => _templateKey.currentState?.resetAll(),
-          onSubmit: () => _templateKey.currentState?.submit(),
+        bottomNavigationBar: Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.grey.withOpacity(0.2),
+                blurRadius: 10,
+                offset: const Offset(0, -2),
+              ),
+            ],
+          ),
+          padding: EdgeInsets.only(
+            left: 24,
+            right: 24,
+            top: 12,
+            bottom: MediaQuery.of(context).padding.bottom + 12,
+          ),
+          child: ActionButtons(
+            isEdit: widget.isEditMode,
+            onCancel: () => _templateKey.currentState?.resetAll(),
+            onSubmit: () => _templateKey.currentState?.submit(),
+          ),
         ),
       ),
     );

@@ -28,11 +28,15 @@ class ProblemSolveRegisterTemplate extends StatefulWidget {
   final List<File> initialSolutionImages;
   final int? initialTimeSpentSeconds;
 
+  /// 저장하지 않은 입력이 있는지 여기에 적는다. 화면이 뒤로 가기 전에 물어볼지 정한다.
+  final ValueNotifier<bool>? unsavedChanges;
+
   const ProblemSolveRegisterTemplate({
     Key? key,
     required this.problemId,
     this.initialSolutionImages = const [],
     this.initialTimeSpentSeconds,
+    this.unsavedChanges,
   }) : super(key: key);
 
   @override
@@ -80,6 +84,9 @@ class ProblemSolveRegisterTemplateState
       widget.initialSolutionImages.map((file) => XFile(file.path)),
     );
     _timeSpentSeconds = widget.initialTimeSpentSeconds ?? _timeSpentSeconds;
+    _memoCtrl.addListener(_syncUnsavedChanges);
+    // 필기로 풀고 넘어온 풀이 이미지가 있으면 처음부터 쓴 것이 있는 상태다.
+    WidgetsBinding.instance.addPostFrameCallback((_) => _syncUnsavedChanges());
     WidgetsBinding.instance.addPostFrameCallback((_) => _loadAnswerImages());
   }
 
@@ -866,6 +873,24 @@ class ProblemSolveRegisterTemplateState
         ],
       ),
     );
+  }
+
+  /// 화면을 다시 그릴 때마다 저장하지 않은 입력이 있는지 다시 본다.
+  @override
+  void setState(VoidCallback fn) {
+    super.setState(fn);
+    _syncUnsavedChanges();
+  }
+
+  void _syncUnsavedChanges() {
+    final notifier = widget.unsavedChanges;
+    if (notifier == null || !mounted) return;
+    notifier.value = _solutionImages.isNotEmpty ||
+        _answerStatus != null ||
+        _memoCtrl.text.trim().isNotEmpty ||
+        _improvements.values.any((checked) => checked) ||
+        _selectedMoodKey != null ||
+        _timeSpentSeconds != (widget.initialTimeSpentSeconds ?? 0);
   }
 
   void _selectAnswerStatus(AnswerStatus status) {
