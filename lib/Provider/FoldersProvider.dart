@@ -131,6 +131,20 @@ class FoldersProvider with ChangeNotifier {
     return _folderCache[folderId]?.problemHasNext ?? false;
   }
 
+  /// 받아 둔 정보에서 공책 이름을 찾는다. 서버에 묻지 않아서 아직 열어 본 적
+  /// 없는 공책이면 null 이다. 책장(루트)은 '책장' 이다.
+  String? folderNameOf(int folderId) {
+    if (rootFolder?.folderId == folderId) return '책장';
+    final folder = _foldersMap[folderId];
+    if (folder != null) return folder.folderName;
+    for (final state in _folderCache.values) {
+      for (final sub in state.subfolders) {
+        if (sub.folderId == folderId) return sub.folderName;
+      }
+    }
+    return null;
+  }
+
   // 캐시 존재 여부 확인 (빈 리스트도 유효한 캐시)
   bool hasSubfolderCache(int folderId) {
     return _folderCache.containsKey(folderId);
