@@ -32,12 +32,22 @@ class ProblemDetailTemplate extends StatefulWidget {
   /// `다음 문제 바로 풀기` 를 골랐을 때 앞 문제와 같은 방식으로 이어 푼다.
   final ProblemSolveMode? autoStartMode;
 
+  /// AI 분석을 다시 요청한다. 분석하지 않은 문제, 한도 초과, 실패일 때 버튼으로 보인다.
+  final VoidCallback? onRequestAnalysis;
+
+  /// 분석을 기다리다 확인을 멈췄는지. 그때는 [onRefreshAnalysis] 로 다시 확인하게 한다.
+  final bool analysisTimedOut;
+  final VoidCallback? onRefreshAnalysis;
+
   const ProblemDetailTemplate({
     required this.problemModel,
     required this.isExpanded,
     required this.onExpansionChanged,
     this.onSolved,
     this.autoStartMode,
+    this.onRequestAnalysis,
+    this.analysisTimedOut = false,
+    this.onRefreshAnalysis,
     super.key,
   });
 
@@ -521,7 +531,13 @@ class _ProblemDetailTemplateState extends State<ProblemDetailTemplate>
       title: 'AI 분석 결과',
       icon: Icons.auto_awesome,
       child: buildAnalysisSection(
-          context, widget.problemModel.analysis, themeProvider.primaryColor),
+        context,
+        widget.problemModel.analysis,
+        themeProvider.primaryColor,
+        onRequestAnalysis: widget.onRequestAnalysis,
+        timedOut: widget.analysisTimedOut,
+        onRefreshAnalysis: widget.onRefreshAnalysis,
+      ),
     );
     final hasTags = widget.problemModel.tags.isNotEmpty;
     final hasMemo = widget.problemModel.memo != null &&

@@ -27,8 +27,10 @@ import '../../Service/Api/FileUpload/FileUploadService.dart';
 import '../../Service/Api/Problem/ProblemService.dart';
 import '../../Service/Api/Tag/TagService.dart';
 import '../../Service/HomeWidget/HomeWidgetSyncService.dart';
+import '../../Util/AiAnalysisPreference.dart';
 import '../../Util/AppErrorReporter.dart';
 import 'TagSelectionScreen.dart';
+import 'Widget/AiAnalysisToggle.dart';
 import 'Widget/DatePickerWidget.dart';
 import 'Widget/ImageGridWidget.dart';
 import 'Widget/LabeledTextField.dart';
@@ -87,9 +89,17 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
   bool _isApplyingDefaultTitle = false;
   String? _currentAutoTitle;
 
+  /// 등록한 뒤 AI 분석을 요청할지. 마지막으로 고른 값을 기기에서 읽어 온다.
+  bool _aiAnalysisEnabled = true;
+
   @override
   void initState() {
     super.initState();
+    if (!widget.isEditMode) {
+      AiAnalysisPreference.load().then((enabled) {
+        if (mounted) setState(() => _aiAnalysisEnabled = enabled);
+      });
+    }
     final problemModel = widget.problemModel;
     _selectedDate = problemModel?.solvedAt ?? DateTime.now();
     if (widget.isEditMode) {
@@ -261,8 +271,25 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
               maxLines: 3,
               maxLength: ProblemRegisterModel.memoMaxLength,
             ),
+            if (!widget.isEditMode) ...[
+              SizedBox(height: spacing),
+              AiAnalysisToggle(
+                value: _aiAnalysisEnabled,
+                color: Provider.of<ThemeHandler>(context).primaryColor,
+                onChanged: _changeAiAnalysis,
+              ),
+            ],
           ],
         ));
+  }
+
+  void _changeAiAnalysis(bool enabled) {
+    setState(() => _aiAnalysisEnabled = enabled);
+    unawaited(AiAnalysisPreference.save(enabled));
+    AppAnalytics.logEvent('ai_analysis_toggle', {
+      'enabled': enabled,
+      'mode': 'single',
+    });
   }
 
   Widget _buildImageSections({required bool isWide}) {
@@ -1025,6 +1052,7 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
       {
         if (!widget.isEditMode) 'mode': 'single',
         if (!widget.isEditMode) 'count': 1,
+        if (!widget.isEditMode) 'ai_analysis': _aiAnalysisEnabled,
         ...analyticsParams,
       },
     );
@@ -1225,13 +1253,16 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
     unawaited(HomeWidgetSyncService.instance.sync(force: true));
 
     // 등록 후 분석/캐시 갱신은 후처리이므로 실패해도 등록 성공을 막지 않습니다.
-    await _runPostSaveTask(
-      () => problemService.requestProblemAnalysis(
-        registeredProblemId,
-        showErrorSnackBar: false,
-      ),
-      source: 'problem_register_analysis_request',
-    );
+    // AI 분석을 끈 채로 등록하면 요청하지 않는다. 문제 상세에서 따로 할 수 있다.
+    if (_aiAnalysisEnabled) {
+      await _runPostSaveTask(
+        () => problemService.requestProblemAnalysis(
+          registeredProblemId,
+          showErrorSnackBar: false,
+        ),
+        source: 'problem_register_analysis_request',
+      );
+    }
 
     // Provider를 통해 문제 조회 및 상태 업데이트
     await _runPostSaveTask(
