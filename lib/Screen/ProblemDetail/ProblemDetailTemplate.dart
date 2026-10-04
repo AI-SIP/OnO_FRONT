@@ -323,6 +323,52 @@ class _ProblemDetailTemplateState extends State<ProblemDetailTemplate>
     final problemImageCount =
         widget.problemModel.problemImageDataList?.length ?? 0;
 
+    // 태블릿 가로에서는 이미지를 왼쪽에 크게 두고, 정보와 다시 풀기 버튼을
+    // 오른쪽에 둔다. 전에는 넓은 화면에서도 한 줄로 세워서 옆이 비었다.
+    final size = MediaQuery.sizeOf(context);
+    if (size.width >= 900 && size.width > size.height) {
+      final imageUrls = widget.problemModel.problemImageDataList
+              ?.map((m) => m.imageUrl)
+              .toList() ??
+          [];
+      return Padding(
+        padding: const EdgeInsets.fromLTRB(32, 24, 32, 20),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              flex: 3,
+              child: SingleChildScrollView(
+                child: _buildSectionCard(
+                  themeProvider,
+                  title: '문제 이미지',
+                  icon: Icons.image,
+                  trailing: _buildCountChip(problemImageCount, themeProvider),
+                  child: buildImageSection(
+                    context,
+                    imageUrls,
+                    '문제 이미지',
+                    themeProvider,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 24),
+            SizedBox(
+              width: 360,
+              child: Column(
+                children: [
+                  _buildProblemMetaCard(themeProvider),
+                  const Spacer(),
+                  _buildBottomReviewCta(themeProvider, isWide),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
     return Column(
       children: [
         Expanded(
@@ -424,7 +470,10 @@ class _ProblemDetailTemplateState extends State<ProblemDetailTemplate>
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
       color: Colors.white,
-      child: SizedBox(
+      alignment: Alignment.center,
+      // 넓은 화면에서 버튼이 화면 폭 전체로 늘어나지 않게 막는다.
+      child: Container(
+        constraints: const BoxConstraints(maxWidth: 560),
         height: 50,
         child: FloatingActionButton.extended(
           onPressed: _startSolve,

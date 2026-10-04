@@ -122,39 +122,45 @@ class ProblemSolveRegisterTemplateState
       onTap: () => FocusScope.of(context).unfocus(),
       child: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 24.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 30),
+        // 태블릿에서 입력칸과 선택지가 화면 폭 끝까지 늘어나지 않게 한다.
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 720),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 30),
 
-            // 복습 완료 헤더
-            _buildCompletionHeader(themeProvider),
-            SizedBox(height: spacing),
+                // 복습 완료 헤더
+                _buildCompletionHeader(themeProvider),
+                SizedBox(height: spacing),
 
-            // 정답 여부 선택
-            _buildAnswerStatusSection(themeProvider),
-            SizedBox(height: spacing),
+                // 정답 여부 선택
+                _buildAnswerStatusSection(themeProvider),
+                SizedBox(height: spacing),
 
-            // 소요 시간 입력
-            _buildTimeSpentSection(themeProvider),
-            SizedBox(height: spacing),
+                // 소요 시간 입력
+                _buildTimeSpentSection(themeProvider),
+                SizedBox(height: spacing),
 
-            // 풀이 이미지 업로드
-            _buildImageSection(themeProvider),
-            SizedBox(height: spacing),
+                // 풀이 이미지 업로드
+                _buildImageSection(themeProvider),
+                SizedBox(height: spacing),
 
-            // 개선된 점 체크리스트
-            _buildImprovementSection(themeProvider),
-            SizedBox(height: spacing),
+                // 개선된 점 체크리스트
+                _buildImprovementSection(themeProvider),
+                SizedBox(height: spacing),
 
-            // 이번 회차 기분
-            _buildMoodSection(themeProvider),
-            SizedBox(height: spacing),
+                // 이번 회차 기분
+                _buildMoodSection(themeProvider),
+                SizedBox(height: spacing),
 
-            // 복습 메모
-            _buildReflectionSection(themeProvider),
-            SizedBox(height: spacing),
-          ],
+                // 복습 메모
+                _buildReflectionSection(themeProvider),
+                SizedBox(height: spacing),
+              ],
+            ),
+          ),
         ),
       ),
     );
