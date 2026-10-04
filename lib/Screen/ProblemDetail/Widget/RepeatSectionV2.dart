@@ -37,6 +37,7 @@ import '../../../Util/AppAnalytics.dart';
 import 'ReviewStatusStyle.dart';
 import 'ReviewTrendPanel.dart';
 import '../../../Util/PendingDeletion.dart';
+import '../../../Module/Image/ImageCompareScreen.dart';
 
 class RepeatSectionV2 extends StatefulWidget {
   final ProblemModel problem;
@@ -378,6 +379,7 @@ class _RepeatSectionV2State extends State<RepeatSectionV2>
                     _toggleExpanded(solve.problemSolveId, value),
                 onRefreshAsync: refreshAsync,
                 service: problemSolveService,
+                problem: widget.problem,
               ),
             );
           },
@@ -483,6 +485,7 @@ class _RepeatSectionV2State extends State<RepeatSectionV2>
               onToggle: (_) {},
               onRefreshAsync: refreshAsync,
               service: problemSolveService,
+              problem: widget.problem,
               showExpandIcon: false,
             ),
           ),
@@ -544,6 +547,9 @@ Widget buildRepeatSectionV2(
 
 class _ProblemSolveCard extends StatelessWidget {
   final ProblemSolveModel solve;
+
+  /// 내 풀이를 문제, 정답과 나란히 볼 때 쓴다.
+  final ProblemModel problem;
   final int index;
   final Color iconColor;
   final bool isExpanded;
@@ -560,6 +566,7 @@ class _ProblemSolveCard extends StatelessWidget {
     required this.onToggle,
     required this.onRefreshAsync,
     required this.service,
+    required this.problem,
     this.showExpandIcon = true,
   });
 
@@ -880,8 +887,52 @@ class _ProblemSolveCard extends StatelessWidget {
               statusColor: statusColor,
               primaryColor: themeProvider.primaryColor,
             ),
+            if (_compareGroups.length > 1)
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton.icon(
+                  onPressed: () => _openCompare(context),
+                  icon: Icon(Icons.compare,
+                      size: 18, color: themeProvider.primaryColor),
+                  label: StandardText(
+                    text: '문제, 정답과 비교하기',
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: themeProvider.primaryColor,
+                  ),
+                  style: TextButton.styleFrom(minimumSize: const Size(44, 44)),
+                ),
+              ),
           ],
         ],
+      ),
+    );
+  }
+
+  List<ImageCompareGroup> get _compareGroups => [
+        ImageCompareGroup(label: '내 풀이', imagePaths: solve.imageUrls),
+        ImageCompareGroup(
+          label: '문제',
+          imagePaths: [
+            for (final image in problem.problemImageDataList ?? const [])
+              if (image.imageUrl.trim().isNotEmpty) image.imageUrl,
+          ],
+        ),
+        ImageCompareGroup(
+          label: '정답',
+          imagePaths: [
+            for (final image in problem.answerImageDataList ?? const [])
+              if (image.imageUrl.trim().isNotEmpty) image.imageUrl,
+          ],
+        ),
+      ].where((g) => g.imagePaths.isNotEmpty).toList();
+
+  void _openCompare(BuildContext context) {
+    AppAnalytics.logEvent('image_compare_open', {'source': 'history'});
+    Navigator.push(
+      context,
+      TossPageRoute(
+        builder: (_) => ImageCompareScreen(groups: _compareGroups),
       ),
     );
   }
