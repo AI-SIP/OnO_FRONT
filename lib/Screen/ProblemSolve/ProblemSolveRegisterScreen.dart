@@ -200,6 +200,12 @@ class _ProblemSolveRegisterScreenState
       // 추천 복습 목록과 홈의 추천 개수를 맞춘다. 전에는 복습해도 그대로였다.
       unawaited(reviewDueProvider.fetchReviewDue());
 
+      // 회차 안에서 푼 것이면 완료 화면이 실제로 푼 수를 셀 수 있게 남긴다.
+      practiceProvider.recordSessionResult(
+        widget.problemId,
+        reviewData['answerStatus'] as AnswerStatus,
+      );
+
       // 4. 복습 세트 갱신
       if (practiceProvider.currentPracticeNote != null) {
         await practiceProvider.moveToPractice(

@@ -4,6 +4,7 @@
 import 'package:mocktail/mocktail.dart';
 import 'package:ono/Model/PracticeNote/PracticeNoteDetailModel.dart';
 import 'package:ono/Provider/PracticeNoteProvider.dart';
+import 'package:ono/Model/Problem/AnswerStatus.dart';
 import 'package:ono/Screen/PracticeNote/PracticeCompletionScreen.dart';
 
 import '../../helpers/helpers.dart';
@@ -34,6 +35,13 @@ void main() {
           practiceId: 1,
           totalProblems: 5,
           practiceRound: 2,
+          sessionResults: [
+            AnswerStatus.CORRECT,
+            AnswerStatus.CORRECT,
+            AnswerStatus.CORRECT,
+            AnswerStatus.PARTIAL,
+            AnswerStatus.WRONG,
+          ],
         ),
         cosmeticProvider: await loadedCosmeticProvider(),
         practiceProvider: ProblemPracticeProvider(
