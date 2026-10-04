@@ -439,6 +439,24 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
       SettingScreen(tutorialTargets: _tutorialTargets),
     ];
 
+    // 안드로이드 뒤로 가기는 첫 탭이 아니면 첫 탭으로 돌아간다. 전에는 어느
+    // 탭에서든 바로 앱이 꺼졌다.
+    final isFirstTab = screenIndexProvider.screenIndex == 0;
+    return PopScope(
+      canPop: isFirstTab,
+      onPopInvokedWithResult: (didPop, _) {
+        if (didPop || isFirstTab) return;
+        screenIndexProvider.setSelectedIndex(0);
+      },
+      child: _buildTabs(context, screenIndexProvider, widgetOptions),
+    );
+  }
+
+  Widget _buildTabs(
+    BuildContext context,
+    ScreenIndexProvider screenIndexProvider,
+    List<Widget> widgetOptions,
+  ) {
     return Stack(
       children: [
         Scaffold(

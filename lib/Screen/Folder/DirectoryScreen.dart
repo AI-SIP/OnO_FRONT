@@ -550,8 +550,18 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
             ),
           );
 
+    // 선택 모드에서 뒤로 가기는 선택만 푼다. 전에는 첫 화면에서 앱이 꺼졌다.
     return PopScope(
-        canPop: true,
+        canPop: !_isSelectionMode,
+        onPopInvokedWithResult: (didPop, _) {
+          if (didPop || !_isSelectionMode) return;
+          setState(() {
+            _isSelectionMode = false;
+            _isQuickCreateOpen = false;
+            _selectedFolderIds.clear();
+            _selectedProblemIds.clear();
+          });
+        },
         child: Scaffold(
           backgroundColor: Colors.white,
           appBar: _buildAppBar(themeProvider, foldersProvider), // 상단 AppBar 추가

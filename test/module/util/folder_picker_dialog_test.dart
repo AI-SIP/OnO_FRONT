@@ -236,6 +236,24 @@ void main() {
     );
   });
 
+  group('공책 끌어 옮기기', () {
+    testWidgets('고르기만 하는 창에서는 공책을 끌 수 없다', (tester) async {
+      stubRoot(1, children: [_buildSubfolder(10, name: '수학')]);
+
+      await openDialog(tester);
+
+      expect(find.byType(LongPressDraggable<FolderTreeNode>), findsNothing);
+    });
+
+    testWidgets('공책 정리에서는 하위 공책을 끌 수 있다', (tester) async {
+      stubRoot(1, children: [_buildSubfolder(10, name: '수학')]);
+
+      await openDialog(tester, isManagementMode: true);
+
+      expect(find.byType(LongPressDraggable<FolderTreeNode>), findsOneWidget);
+    });
+  });
+
   group('폴더 트리 표시', () {
     testWidgets('하위 폴더가 있으면 책장과 함께 트리로 보인다', (tester) async {
       stubRoot(1, children: [

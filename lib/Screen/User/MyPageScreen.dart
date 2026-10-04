@@ -30,6 +30,7 @@ import '../../Module/Design/AppRadius.dart';
 import '../../Module/Design/AppColors.dart';
 import '../../Module/Design/AppToast.dart';
 import 'package:ono/Util/AppAnalytics.dart';
+import '../../Module/Dialog/LoadingDialog.dart';
 
 class SettingScreen extends StatefulWidget {
   final TutorialTargets? tutorialTargets;
@@ -548,19 +549,25 @@ class _MyPageSettingsScreenState extends State<_MyPageSettingsScreen> {
               onLogoutTap: () => _showConfirmationDialog(
                 context,
                 '로그아웃',
-                '정말 로그아웃 하시겠습니까?\n(게스트 유저의 경우 모든 정보가 삭제됩니다.)',
+                // 게스트는 로그아웃하면 데이터가 지워지는데 전에는 괄호 한 줄로만
+                // 알렸다.
+                '정말 로그아웃 하시겠습니까?\n\n게스트로 이용 중이라면 로그아웃할 때 지금까지 쓴 오답노트와 복습 기록이 모두 지워져요.',
                 () async {
                   // 게스트는 로그아웃이 곧 계정 삭제라 서버 요청이 나간다.
                   // 실패하면 로그아웃되지 않은 것이므로 알리고 화면을 두어야
                   // 한다. 예전에는 예외를 아무도 받지 않아 아무 반응 없이
                   // 멈춘 것처럼 보였다.
+                  // 서버 요청이 끝날 때까지 아무 표시가 없어 다시 누르게 됐다.
+                  LoadingDialog.show(context, '로그아웃하는 중...');
                   try {
                     await userProvider.signOut();
                   } catch (error) {
                     debugPrint('로그아웃 실패: $error');
+                    if (context.mounted) LoadingDialog.hide(context);
                     AppToast.error('로그아웃에 실패했어요. 잠시 후 다시 시도해주세요.');
                     return;
                   }
+                  if (context.mounted) LoadingDialog.hide(context);
                   screenIndexProvider.setSelectedIndex(0);
 
                   if (!context.mounted) return;
@@ -575,13 +582,16 @@ class _MyPageSettingsScreenState extends State<_MyPageSettingsScreen> {
                 '회원 탈퇴',
                 '정말 회원 탈퇴 하시겠습니까?\n그동안 작성했던 모든 오답노트 및 개인정보가 삭제됩니다. 이 작업은 되돌릴 수 없습니다.',
                 () async {
+                  LoadingDialog.show(context, '탈퇴하는 중...');
                   try {
                     await userProvider.deleteAccount();
                   } catch (error) {
                     debugPrint('회원 탈퇴 실패: $error');
+                    if (context.mounted) LoadingDialog.hide(context);
                     AppToast.error('회원 탈퇴에 실패했어요. 잠시 후 다시 시도해주세요.');
                     return;
                   }
+                  if (context.mounted) LoadingDialog.hide(context);
                   screenIndexProvider.setSelectedIndex(0);
 
                   if (!context.mounted) return;
