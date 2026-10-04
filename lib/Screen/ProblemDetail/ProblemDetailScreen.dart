@@ -8,6 +8,7 @@ import 'package:ono/Provider/PracticeNoteProvider.dart';
 import 'package:ono/Screen/ProblemRegister/ProblemRegisterScreen.dart';
 import 'package:ono/Util/AppAnalytics.dart';
 import 'package:ono/Util/AppErrorReporter.dart';
+import 'package:ono/Util/PendingDeletion.dart';
 import 'package:provider/provider.dart';
 
 import '../../Model/Problem/ProblemAnalysisStatus.dart';
@@ -1097,39 +1098,29 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                           // 다이얼로그 닫기
                           Navigator.pop(dialogContext);
 
-                          // 로딩 다이얼로그 표시
-                          LoadingDialog.show(context, '오답노트 지우는 중...');
-
+                          // 상세를 바로 닫고 잠깐 되돌리기를 보인 뒤에 지운다.
+                          // 전에는 바로 지워서 잘못 지운 오답노트를 되살릴 수
+                          // 없었다. 목록은 지우기를 기다리는 문제를 걸러 그린다.
+                          if (mounted) {
+                            setState(() => _isProblemDeleted = true);
+                            navigator.pop(true);
+                          }
                           try {
-                            // 삭제 작업 수행
-                            await problemsProvider.deleteProblems([problemId]);
-                            // 예전에는 삭제를 요청하기 전에 남겨서 실패도 셌다.
-                            AppAnalytics.logEvent('problem_delete', {
-                              'count': 1,
-                              'source': 'detail',
-                            });
-                            //await practiceProvider.fetchAllPracticeContents();
-
-                            if (mounted) {
-                              setState(() {
-                                _isProblemDeleted = true; // Set the flag
+                            final deleted =
+                                await PendingDeletion.instance.schedule(
+                              problemIds: [problemId],
+                              message: '오답노트를 지웠어요',
+                              commit: () =>
+                                  problemsProvider.deleteProblems([problemId]),
+                            );
+                            if (deleted) {
+                              // 예전에는 삭제를 요청하기 전에 남겨서 실패도 셌다.
+                              AppAnalytics.logEvent('problem_delete', {
+                                'count': 1,
+                                'source': 'detail',
                               });
-                              // 로딩 다이얼로그 닫기
-                              LoadingDialog.hide(context);
                             }
-
-                            // 상세 화면 닫고 DirectoryScreen에 삭제 완료 알림 (true 반환)
-                            if (mounted) {
-                              navigator.pop(true);
-                            }
-                            // 화면을 닫은 뒤에 알린다. 토스트는 앱 전체
-                            // Overlay 를 쓰므로 이 화면이 사라져도 뜬다.
-                            AppToast.success('오답노트를 삭제했어요.');
                           } catch (e) {
-                            // 에러 발생 시 로딩 다이얼로그 닫기
-                            if (mounted) {
-                              LoadingDialog.hide(context);
-                            }
                             debugPrint('문제 삭제 실패: $e');
                             AppToast.error('오답노트를 삭제하지 못했어요. 잠시 후 다시 시도해주세요.');
                           }

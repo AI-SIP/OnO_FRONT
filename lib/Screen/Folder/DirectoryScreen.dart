@@ -18,6 +18,7 @@ import '../../Model/Problem/ProblemThumbnailModel.dart';
 import '../../Exception/ApiException.dart';
 import '../../Module/Dialog/LoadingDialog.dart';
 import '../../Module/Design/AppToast.dart';
+import '../../Util/PendingDeletion.dart';
 import '../../Module/Util/FolderPickerWidget.dart';
 import '../../Module/Image/DisplayImage.dart';
 import '../../Module/Problem/ProblemThumbnailCard.dart';
@@ -106,6 +107,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     // ScrollController 초기화
     _scrollController = ScrollController();
     _scrollController.addListener(_onScroll);
+    PendingDeletion.instance.addListener(_onPendingDeletionChanged);
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       // 이 화면의 폴더 데이터 로드
@@ -121,8 +123,13 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
 
   @override
   void dispose() {
+    PendingDeletion.instance.removeListener(_onPendingDeletionChanged);
     _scrollController.dispose();
     super.dispose();
+  }
+
+  void _onPendingDeletionChanged() {
+    if (mounted) setState(() {});
   }
 
   @override
@@ -1273,8 +1280,16 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
               child: Builder(
                 builder: (context) {
                   // 로컬 상태 사용 (Provider와 독립적)
-                  var currentSubfolders = _localSubfolders;
-                  var currentProblems = _localProblems;
+                  // 지우고 되돌리기를 기다리는 것은 목록에서 뺀다.
+                  final pending = PendingDeletion.instance;
+                  var currentSubfolders = _localSubfolders
+                      .where(
+                          (folder) => !pending.isFolderHidden(folder.folderId))
+                      .toList();
+                  var currentProblems = _localProblems
+                      .where((problem) =>
+                          !pending.isProblemHidden(problem.problemId))
+                      .toList();
                   final isLoadingMore =
                       _isLoadingSubfolders || _isLoadingProblems;
 
@@ -1958,26 +1973,26 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
   Future<void> _deleteSelectedItems() async {
     final folderIds = List<int>.from(_selectedFolderIds);
     final problemIds = List<int>.from(_selectedProblemIds);
+    // 목록에서는 바로 빠지므로 선택 모드도 바로 푼다. 실제로 지우는 것은
+    // 되돌리기 시간이 지난 뒤다.
+    setState(() {
+      _isSelectionMode = false;
+      _selectedFolderIds.clear();
+      _selectedProblemIds.clear();
+    });
     final deleted = await _deleteItems(
       folderIds: folderIds,
       problemIds: problemIds,
-      loadingMessage: '폴더 정리 중...',
-      successMessage: '선택된 항목이 삭제되었습니다!',
+      successMessage: '${folderIds.length + problemIds.length}개를 지웠어요',
       errorMessage: '항목 삭제 중 오류가 발생했습니다.',
     );
 
-    if (!deleted || !mounted) return;
+    if (!deleted) return;
 
     AppAnalytics.logEvent('items_deleted', {
       'folder_count': folderIds.length,
       'problem_count': problemIds.length,
       'source': 'selection',
-    });
-
-    setState(() {
-      _isSelectionMode = false;
-      _selectedFolderIds.clear();
-      _selectedProblemIds.clear();
     });
   }
 
@@ -1989,13 +2004,13 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
 
     if (item is FolderThumbnailModel) {
       folderIds.add(item.folderId);
-      successMessage = '${item.folderName} 공책을 삭제했어요.';
+      successMessage = '${item.folderName} 공책을 지웠어요';
       final folderName = item.folderName.isNotEmpty ? item.folderName : '제목 없음';
       confirmMessage = '\'$folderName\' 공책을 정말 삭제하시겠습니까?\n'
           '$_folderDeleteScopeMessage';
     } else if (item is ProblemModel) {
       problemIds.add(item.problemId);
-      successMessage = '오답노트를 삭제했어요.';
+      successMessage = '오답노트를 지웠어요';
       confirmMessage = '정말로 이 오답노트를 삭제하시겠습니까?';
     } else {
       return;
@@ -2009,7 +2024,6 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     final deleted = await _deleteItems(
       folderIds: folderIds,
       problemIds: problemIds,
-      loadingMessage: '삭제 중...',
       successMessage: successMessage,
       errorMessage: '삭제 중 오류가 발생했습니다.',
     );
@@ -2021,10 +2035,14 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     });
   }
 
+  /// 고른 항목을 목록에서 바로 빼고, 잠깐 `되돌리기` 를 보인 뒤에 실제로 지운다.
+  ///
+  /// 전에는 확인 창 뒤에 바로 지워서 잘못 지운 오답노트를 되살릴 수 없었다.
+  /// 지웠으면 true, 되돌렸거나 실패했으면 false 다. 이 화면을 벗어나도
+  /// 시간이 지나면 지운다.
   Future<bool> _deleteItems({
     required List<int> folderIds,
     required List<int> problemIds,
-    required String loadingMessage,
     required String successMessage,
     required String errorMessage,
   }) async {
@@ -2036,56 +2054,40 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
         Provider.of<FoldersProvider>(context, listen: false);
     final problemsProvider =
         Provider.of<ProblemsProvider>(context, listen: false);
-
-    LoadingDialog.show(context, loadingMessage);
+    final currentFolderId = _currentFolder!.folderId;
 
     try {
-      if (folderIds.isNotEmpty) {
-        await foldersProvider.deleteFolders(folderIds);
-      }
-
-      if (problemIds.isNotEmpty) {
-        await problemsProvider.deleteProblems(problemIds);
-      }
-
-      await foldersProvider.refreshFolder(_currentFolder!.folderId);
+      final deleted = await PendingDeletion.instance.schedule(
+        folderIds: folderIds,
+        problemIds: problemIds,
+        message: successMessage,
+        commit: () async {
+          if (folderIds.isNotEmpty) {
+            await foldersProvider.deleteFolders(folderIds);
+          }
+          if (problemIds.isNotEmpty) {
+            await problemsProvider.deleteProblems(problemIds);
+          }
+          await foldersProvider.refreshFolder(currentFolderId);
+        },
+      );
+      if (!deleted) return false;
 
       if (mounted) {
-        LoadingDialog.hide(context);
+        setState(() {
+          _localSubfolders.removeWhere(
+            (folder) => folderIds.contains(folder.folderId),
+          );
+          _localProblems.removeWhere(
+            (problem) => problemIds.contains(problem.problemId),
+          );
+        });
+        await _loadFolderData();
       }
-
-      if (!mounted) return true;
-
-      setState(() {
-        _localSubfolders.removeWhere(
-          (folder) => folderIds.contains(folder.folderId),
-        );
-        _localProblems.removeWhere(
-          (problem) => problemIds.contains(problem.problemId),
-        );
-      });
-
-      SnackBarDialog.showSnackBar(
-        context: context,
-        message: successMessage,
-        backgroundColor: Theme.of(context).primaryColor,
-      );
-
-      await _loadFolderData();
       return true;
     } catch (e) {
-      if (mounted) {
-        LoadingDialog.hide(context);
-      }
-
       debugPrint('Error deleting items: $e');
-      if (mounted) {
-        SnackBarDialog.showSnackBar(
-          context: context,
-          message: errorMessage,
-          backgroundColor: Colors.red,
-        );
-      }
+      AppToast.error(errorMessage);
       return false;
     }
   }
