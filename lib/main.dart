@@ -552,7 +552,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
       (
         icon: Icons.menu_book_outlined,
         activeIcon: Icons.menu_book,
-        label: '오답노트 관리'
+        label: '책장'
       ),
       (icon: Icons.history_outlined, activeIcon: Icons.history, label: '복습 세트'),
       // 캐릭터 탭. 아이콘은 아래에서 개구리로 바꿔 끼운다.

@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 
 import '../../Model/Tag/TagModel.dart';
 import '../Image/DisplayImage.dart';
 import '../Text/StandardText.dart';
 import '../Theme/ThemeHandler.dart';
 import '../Design/AppRadius.dart';
+import '../../Util/ShortDate.dart';
 
 class ProblemThumbnailCard extends StatelessWidget {
   final String title;
@@ -231,9 +231,12 @@ class ProblemThumbnailCard extends StatelessWidget {
   ) {
     final cappedSolveCount = solveCount.clamp(0, 3);
     final lastSolvedDateText =
-        lastSolvedAt != null ? DateFormat('M/d').format(lastSolvedAt) : null;
+        lastSolvedAt != null ? shortDate(lastSolvedAt) : null;
 
     final progressText = progressLabel ?? '풀이 진행 $cappedSolveCount/3';
+    // 막대만 있으면 세 번 다 틀려도 꽉 차서 맞힌 것처럼 보였다. 추천 카드의
+    // '정답 n/3' 과 다른 뜻이라 푼 횟수를 글자로 붙인다.
+    final shownLabel = progressLabel ?? '$solveCount회 풂';
 
     return Semantics(
       label: lastSolvedDateText == null
@@ -273,10 +276,10 @@ class ProblemThumbnailCard extends StatelessWidget {
                       );
                     }),
                   ),
-                  if (progressLabel != null) ...[
+                  ...[
                     const SizedBox(height: 4),
                     StandardText(
-                      text: progressLabel!,
+                      text: shownLabel,
                       fontSize: 10,
                       color: themeProvider.primaryColor,
                       textAlign: TextAlign.center,

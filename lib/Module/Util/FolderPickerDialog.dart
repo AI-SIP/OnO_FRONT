@@ -275,7 +275,7 @@ class _FolderPickerDialogState extends State<FolderPickerDialog> {
                           ),
                         ),
                         IconButton(
-                          tooltip: '공책 추가',
+                          tooltip: '공책 만들기',
                           icon: const ClayIcon(
                             "assets/Icon/addNote.png",
                             width: 26,
@@ -286,7 +286,7 @@ class _FolderPickerDialogState extends State<FolderPickerDialog> {
                               ? null
                               : () async {
                                   await _showFolderNameDialog(
-                                    dialogTitle: '공책 생성',
+                                    dialogTitle: '공책 만들기',
                                     defaultFolderName: '',
                                     parentFolderName: createTargetName,
                                     onFolderNameSubmitted: (folderName) async {

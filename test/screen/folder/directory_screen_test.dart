@@ -420,7 +420,7 @@ void main() {
       await tester.tap(find.byIcon(Icons.more_vert));
       await tester.pumpAndSettle();
 
-      expect(find.text('공책 추가하기'), findsOneWidget);
+      expect(find.text('공책 만들기'), findsOneWidget);
       expect(find.text('공책 정리하기'), findsOneWidget);
       expect(deleteMenuItem(), findsOneWidget);
     });
@@ -471,14 +471,14 @@ void main() {
     });
   });
 
-  group('공책 생성', () {
+  group('공책 만들기', () {
     testWidgets('빠른 추가 FAB 을 열면 세 가지 옵션이 보인다', (tester) async {
       await pumpDirectory(tester);
 
       await tester.tap(find.byKey(const ValueKey('quick_fab_closed')));
       await tester.pumpAndSettle();
 
-      expect(find.text('공책 추가'), findsOneWidget);
+      expect(find.text('공책 만들기'), findsOneWidget);
       expect(find.text('오답노트 1장 작성'), findsOneWidget);
       expect(find.text('오답노트 여러장 작성'), findsOneWidget);
     });
@@ -491,7 +491,7 @@ void main() {
 
       await tester.tap(find.byKey(const ValueKey('quick_fab_closed')));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('공책 추가'));
+      await tester.tap(find.text('공책 만들기'));
       await tester.pumpAndSettle();
 
       await tester.enterText(find.byType(TextField), '영어');
@@ -506,7 +506,7 @@ void main() {
 
       await tester.tap(find.byKey(const ValueKey('quick_fab_closed')));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('공책 추가'));
+      await tester.tap(find.text('공책 만들기'));
       await tester.pumpAndSettle();
 
       await tester.enterText(find.byType(TextField), '');

@@ -198,7 +198,7 @@ void main() {
 
       final addButton = tester.widget<IconButton>(
         find.byWidgetPredicate(
-          (widget) => widget is IconButton && widget.tooltip == '공책 추가',
+          (widget) => widget is IconButton && widget.tooltip == '공책 만들기',
         ),
       );
       expect(addButton.onPressed, isNull);
@@ -442,15 +442,15 @@ void main() {
     });
   });
 
-  group('공책 생성', () {
+  group('공책 만들기', () {
     testWidgets('공책 추가 버튼을 누르면 이름 입력 다이얼로그가 뜬다', (tester) async {
       stubRoot(13);
 
       await openDialog(tester);
-      await tester.tap(find.byTooltip('공책 추가'));
+      await tester.tap(find.byTooltip('공책 만들기'));
       await tester.pumpAndSettle();
 
-      expect(find.text('공책 생성'), findsOneWidget);
+      expect(find.text('공책 만들기'), findsOneWidget);
       expect(find.textContaining('책장 아래에 만들어요'), findsOneWidget);
       expect(find.byType(TextField), findsOneWidget);
     });
@@ -464,7 +464,7 @@ void main() {
           .thenAnswer((_) async => _buildRootFolder(140, name: '영어'));
 
       await openDialog(tester);
-      await tester.tap(find.byTooltip('공책 추가'));
+      await tester.tap(find.byTooltip('공책 만들기'));
       await tester.pumpAndSettle();
       await tester.enterText(find.byType(TextField), '영어');
       await tester.tap(find.text('확인'));
@@ -472,21 +472,21 @@ void main() {
 
       verify(() => folderService.registerFolder(any())).called(1);
       // 생성 다이얼로그는 닫히고 폴더 선택 다이얼로그로 돌아온다.
-      expect(find.text('공책 생성'), findsNothing);
+      expect(find.text('공책 만들기'), findsNothing);
     });
 
     testWidgets('이름을 비운 채 확인을 눌러도 registerFolder 가 호출되지 않는다', (tester) async {
       stubRoot(15);
 
       await openDialog(tester);
-      await tester.tap(find.byTooltip('공책 추가'));
+      await tester.tap(find.byTooltip('공책 만들기'));
       await tester.pumpAndSettle();
       await tester.tap(find.text('확인'));
       await tester.pumpAndSettle();
 
       verifyNever(() => folderService.registerFolder(any()));
       // 빈 값이면 다이얼로그가 닫히지 않는다.
-      expect(find.text('공책 생성'), findsOneWidget);
+      expect(find.text('공책 만들기'), findsOneWidget);
     });
   });
 
