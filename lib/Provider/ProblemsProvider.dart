@@ -190,6 +190,16 @@ class ProblemsProvider with ChangeNotifier {
     }
   }
 
+  /// 이 문제만 AI 분석을 요청하고 바뀐 분석 상태를 받아 둔다.
+  ///
+  /// 등록할 때 분석을 껐거나, 하루 한도를 넘겼거나, 분석이 실패한 문제를
+  /// 문제 상세에서 다시 분석할 때 쓴다. 서버가 한도를 넘기면 예외 대신 분석
+  /// 상태를 RATE_LIMIT_EXCEEDED 로 바꿔 둔다.
+  Future<void> requestProblemAnalysis(int problemId) async {
+    await problemService.requestProblemAnalysis(problemId);
+    await fetchProblemAnalysis(problemId);
+  }
+
   Future<void> updateProblemAnalysisStatus({required int problemId}) async {
     await problemService.updateProblemAnalysisStatus(problemId: problemId);
   }

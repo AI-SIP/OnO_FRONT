@@ -31,8 +31,10 @@ import '../../Service/Api/Problem/ProblemService.dart';
 import '../../Service/Api/Tag/TagService.dart';
 import '../../Service/HomeWidget/HomeWidgetSyncService.dart';
 import '../../Util/AppAnalytics.dart';
+import '../../Util/AiAnalysisPreference.dart';
 import '../../Util/AppErrorReporter.dart';
 import 'TagSelectionScreen.dart';
+import 'Widget/AiAnalysisToggle.dart';
 import 'Widget/DatePickerWidget.dart';
 import 'Widget/ImageGridWidget.dart';
 import 'Widget/LabeledTextField.dart';
@@ -84,10 +86,16 @@ class _MultiProblemRegisterScreenState
   bool _isOpeningInitialGallery = true;
   bool _createPracticeSet = true;
 
+  /// 등록한 뒤 AI 분석을 요청할지. 한 번에 올리는 문제 모두에 같이 적용한다.
+  bool _aiAnalysisEnabled = true;
+
   @override
   void initState() {
     super.initState();
     AppAnalytics.logScreenView('MultiProblemRegisterScreen');
+    AiAnalysisPreference.load().then((enabled) {
+      if (mounted) setState(() => _aiAnalysisEnabled = enabled);
+    });
     _selectedFolderId = widget.initialFolderId;
     _loadTags();
     _loadRecommendedTags();
@@ -636,6 +644,12 @@ class _MultiProblemRegisterScreenState
               ),
               const SizedBox(height: 12),
               _buildPracticeSetOption(themeProvider),
+              const SizedBox(height: 8),
+              AiAnalysisToggle(
+                value: _aiAnalysisEnabled,
+                color: themeProvider.primaryColor,
+                onChanged: _isSubmitting ? null : _changeAiAnalysis,
+              ),
             ],
           );
         }
@@ -1103,6 +1117,15 @@ class _MultiProblemRegisterScreenState
         ),
       ),
     );
+  }
+
+  void _changeAiAnalysis(bool enabled) {
+    setState(() => _aiAnalysisEnabled = enabled);
+    unawaited(AiAnalysisPreference.save(enabled));
+    AppAnalytics.logEvent('ai_analysis_toggle', {
+      'enabled': enabled,
+      'mode': 'multi',
+    });
   }
 
   Widget _buildPracticeSetOption(ThemeHandler themeProvider) {
@@ -1874,7 +1897,11 @@ class _MultiProblemRegisterScreenState
     // 몇 장을 한 번에 올렸는지는 count 로 따로 본다.
     FirebaseAnalytics.instance.logEvent(
       name: 'problem_created',
-      parameters: {'mode': 'multi', 'count': registeredProblemIds.length},
+      parameters: {
+        'mode': 'multi',
+        'count': registeredProblemIds.length,
+        'ai_analysis': _aiAnalysisEnabled.toString(),
+      },
     );
 
     if (!mounted) {
@@ -1987,17 +2014,20 @@ class _MultiProblemRegisterScreenState
     // 홈 화면 위젯의 오늘 칸을 새로 맞춘다. 기다리지 않는다.
     unawaited(HomeWidgetSyncService.instance.sync(force: true));
 
-    await Future.wait(
-      registeredProblemIds.map(
-        (problemId) => _runPostSaveTask(
-          () => _problemService.requestProblemAnalysis(
-            problemId,
-            showErrorSnackBar: false,
+    // AI 분석을 끈 채로 등록하면 요청하지 않는다. 문제 상세에서 따로 할 수 있다.
+    if (_aiAnalysisEnabled) {
+      await Future.wait(
+        registeredProblemIds.map(
+          (problemId) => _runPostSaveTask(
+            () => _problemService.requestProblemAnalysis(
+              problemId,
+              showErrorSnackBar: false,
+            ),
+            source: 'batch_problem_register_analysis_request',
           ),
-          source: 'batch_problem_register_analysis_request',
         ),
-      ),
-    );
+      );
+    }
     await Future.wait(
       registeredProblemIds.map(
         (problemId) => _runPostSaveTask(
