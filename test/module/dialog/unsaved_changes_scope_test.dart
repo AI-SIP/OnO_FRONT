@@ -100,4 +100,44 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('작성 화면'), findsNothing);
   });
+
+  testWidgets('알림처럼 한꺼번에 닫는 길은 쓴 것이 없으면 묻지 않는다', (tester) async {
+    final changed = ValueNotifier(false);
+    await pumpHost(
+      tester,
+      () => UnsavedChangesScope(
+          hasChanges: changed, source: 'test', child: body()),
+    );
+
+    final result =
+        UnsavedChangesScope.confirmBeforeLeavingAll(source: 'notification');
+    await tester.pumpAndSettle();
+
+    expect(find.text('쓰던 내용을 두고 이동할까요?'), findsNothing);
+    expect(await result, isTrue);
+  });
+
+  testWidgets('알림처럼 한꺼번에 닫는 길도 쓴 것이 있으면 묻는다', (tester) async {
+    final changed = ValueNotifier(true);
+    await pumpHost(
+      tester,
+      () => UnsavedChangesScope(
+          hasChanges: changed, source: 'test', child: body()),
+    );
+
+    final stay =
+        UnsavedChangesScope.confirmBeforeLeavingAll(source: 'notification');
+    await tester.pumpAndSettle();
+    expect(find.text('쓰던 내용을 두고 이동할까요?'), findsOneWidget);
+    await tester.tap(find.text('계속 쓰기'));
+    await tester.pumpAndSettle();
+    expect(await stay, isFalse);
+
+    final leave =
+        UnsavedChangesScope.confirmBeforeLeavingAll(source: 'notification');
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('이동하기'));
+    await tester.pumpAndSettle();
+    expect(await leave, isTrue);
+  });
 }

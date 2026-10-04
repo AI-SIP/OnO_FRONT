@@ -17,7 +17,7 @@ import '../Text/StandardText.dart';
 /// 넘긴다. 그러면 쓴 것이 없을 때는 iOS 밀어서 뒤로가기가 그대로 살아 있다.
 /// 필기처럼 화면을 다시 그리지 않고 바뀌는 것은 [checkChanges] 를 넘긴다.
 /// 이때는 늘 막아 두고, 나가려는 순간에 확인한다.
-class UnsavedChangesScope extends StatelessWidget {
+class UnsavedChangesScope extends StatefulWidget {
   final ValueListenable<bool>? hasChanges;
   final bool Function()? checkChanges;
   final Widget child;
@@ -45,9 +45,51 @@ class UnsavedChangesScope extends StatelessWidget {
     this.description = '지금 나가면 쓰던 내용이 저장되지 않아요.',
   }) : hasChanges = null;
 
+  /// 지금 화면에 떠 있는 것들. 알림이나 홈 위젯처럼 화면을 한꺼번에 닫고
+  /// 이동하는 길은 PopScope 를 거치지 않아서, 여기서 직접 물어본다.
+  static final Set<_UnsavedChangesScopeState> _mounted = {};
+
+  /// 쓰던 내용이 있는 화면이 하나라도 있으면 그걸 두고 이동할지 묻는다.
+  /// 이동해도 되면 true 다.
+  ///
+  /// `popUntil` 로 쌓인 화면을 한꺼번에 닫기 전에 부른다.
+  static Future<bool> confirmBeforeLeavingAll({required String source}) async {
+    final changed =
+        _mounted.where((state) => state.mounted && state._hasChanges);
+    if (changed.isEmpty) return true;
+    // 쓰던 화면 위에서 묻는다. 그 화면이 가장 위에 있으니 확인 창도 그 위에 뜬다.
+    return confirmLeave(
+      changed.last.context,
+      source: source,
+      title: '쓰던 내용을 두고 이동할까요?',
+      description: '지금 이동하면 쓰던 내용이 저장되지 않아요.',
+      leaveLabel: '이동하기',
+    );
+  }
+
+  @override
+  State<UnsavedChangesScope> createState() => _UnsavedChangesScopeState();
+}
+
+class _UnsavedChangesScopeState extends State<UnsavedChangesScope> {
+  bool get _hasChanges =>
+      widget.hasChanges?.value ?? widget.checkChanges?.call() ?? false;
+
+  @override
+  void initState() {
+    super.initState();
+    UnsavedChangesScope._mounted.add(this);
+  }
+
+  @override
+  void dispose() {
+    UnsavedChangesScope._mounted.remove(this);
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
-    final hasChanges = this.hasChanges;
+    final hasChanges = widget.hasChanges;
     if (hasChanges == null) {
       return _buildScope(context, canPop: false);
     }
@@ -62,22 +104,21 @@ class UnsavedChangesScope extends StatelessWidget {
       canPop: canPop,
       onPopInvokedWithResult: (didPop, _) async {
         if (didPop) return;
-        final changed = hasChanges?.value ?? checkChanges?.call() ?? false;
-        if (!changed) {
+        if (!_hasChanges) {
           Navigator.of(context).pop();
           return;
         }
         final leave = await confirmLeave(
           context,
-          source: source,
-          title: title,
-          description: description,
+          source: widget.source,
+          title: widget.title,
+          description: widget.description,
         );
         if (leave && context.mounted) {
           Navigator.of(context).pop();
         }
       },
-      child: child,
+      child: widget.child,
     );
   }
 }
