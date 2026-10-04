@@ -167,7 +167,7 @@ class _SharedProblemCardState extends State<SharedProblemCard> {
     try {
       await provider.deleteSharedProblem(problem.sharedProblemId);
     } catch (_) {
-      if (context.mounted) AppSnackBar.showError('공유 취소에 실패했습니다');
+      if (context.mounted) AppSnackBar.showError('공유 취소에 실패했어요');
     }
   }
 

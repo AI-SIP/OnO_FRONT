@@ -16,7 +16,7 @@ Widget buildImageSection(
           borderRadius: BorderRadius.circular(AppRadius.medium)),
       child: Center(
           child: StandardText(
-              text: '$label가 없습니다.',
+              text: '$label가 없어요.',
               fontSize: 14,
               color: theme.primaryColor.withOpacity(0.5))),
     );

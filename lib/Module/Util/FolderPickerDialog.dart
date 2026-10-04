@@ -861,7 +861,7 @@ class _FolderPickerDialogState extends State<FolderPickerDialog> {
       if (mounted) {
         SnackBarDialog.showSnackBar(
           context: context,
-          message: '공책을 옮기지 못했어요. 잠시 후 다시 시도해주세요.',
+          message: '공책을 옮기지 못했어요. 잠시 후 다시 시도해 주세요.',
           backgroundColor: Colors.redAccent,
         );
       }

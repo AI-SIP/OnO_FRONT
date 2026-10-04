@@ -660,7 +660,7 @@ class _PracticeDetailScreenState extends State<PracticeDetailScreen> {
       );
       if (!mounted) return;
       setState(() => _removing = false);
-      AppToast.error('문제를 빼지 못했어요. 잠시 후 다시 시도해주세요.');
+      AppToast.error('문제를 빼지 못했어요. 잠시 후 다시 시도해 주세요.');
     }
   }
 
@@ -679,7 +679,7 @@ class _PracticeDetailScreenState extends State<PracticeDetailScreen> {
             ),
             const SizedBox(height: 16),
             const StandardText(
-              text: '복습 세트가 비어있습니다.\n오답노트를 추가해 편리한 복습을 해보세요!',
+              text: '복습 세트가 비어있어요.\n오답노트를 추가해 편리한 복습을 해보세요!',
               fontSize: 16,
               color: AppColors.textPrimary,
               textAlign: TextAlign.center,
@@ -746,7 +746,7 @@ class _PracticeDetailScreenState extends State<PracticeDetailScreen> {
     if (practiceProvider.currentProblems.isEmpty) {
       SnackBarDialog.showSnackBar(
         context: context,
-        message: '복습 세트가 비어있습니다!',
+        message: '복습 세트가 비어있어요!',
         backgroundColor: Colors.red,
       );
       return;
@@ -784,7 +784,7 @@ class _PracticeDetailScreenState extends State<PracticeDetailScreen> {
     if (practiceProvider.currentProblems.isEmpty) {
       SnackBarDialog.showSnackBar(
         context: context,
-        message: '복습 세트가 비어있습니다!',
+        message: '복습 세트가 비어있어요!',
         backgroundColor: Colors.red,
       );
       return;
@@ -1021,7 +1021,7 @@ class _PracticeDetailScreenState extends State<PracticeDetailScreen> {
                 const SizedBox(height: 20),
                 // 내용
                 StandardText(
-                  text: '정말로 이 복습 세트를 삭제하시겠습니까?',
+                  text: '정말로 이 복습 세트를 삭제할까요?',
                   fontSize: MobileFontSize.reduced(context, 15),
                   color: AppColors.textPrimary,
                   textAlign: TextAlign.center,
@@ -1076,7 +1076,8 @@ class _PracticeDetailScreenState extends State<PracticeDetailScreen> {
                             AppToast.success('복습 세트를 삭제했어요.');
                           } catch (e) {
                             debugPrint('복습 세트 삭제 실패: $e');
-                            AppToast.error('복습 세트를 삭제하지 못했어요. 잠시 후 다시 시도해주세요.');
+                            AppToast.error(
+                                '복습 세트를 삭제하지 못했어요. 잠시 후 다시 시도해 주세요.');
                           }
                         },
                         style: TextButton.styleFrom(

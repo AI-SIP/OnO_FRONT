@@ -475,7 +475,7 @@ class _MultiProblemRegisterScreenState
                   ),
                   SizedBox(height: isTight ? 4 : 8),
                   StandardText(
-                    text: '이미지 1장당 오답노트 1개 초안이 생성됩니다.',
+                    text: '이미지 1장당 오답노트 1개 초안이 생성돼요.',
                     fontSize: isTight ? 12 : 14,
                     color: Colors.grey[600]!,
                     textAlign: TextAlign.center,
@@ -797,7 +797,7 @@ class _MultiProblemRegisterScreenState
               refresh();
             },
             onChanged: refresh,
-            emptyText: '선택된 태그가 없습니다.',
+            emptyText: '선택된 태그가 없어요.',
           ),
           const SizedBox(height: 14),
           LabeledTextField(
@@ -1044,7 +1044,7 @@ class _MultiProblemRegisterScreenState
           if (draft.problemImages.length == 1) {
             SnackBarDialog.showSnackBar(
               context: context,
-              message: '문제 이미지는 최소 1장이 필요합니다.',
+              message: '문제 이미지는 최소 1장이 필요해요.',
               backgroundColor: Colors.orange,
             );
             return;
@@ -1119,7 +1119,7 @@ class _MultiProblemRegisterScreenState
                       _selectedTagIds.remove(tagId);
                     }),
                     onChanged: () => setState(() {}),
-                    emptyText: '선택된 태그가 없습니다.',
+                    emptyText: '선택된 태그가 없어요.',
                   ),
                   const SizedBox(height: 16),
                   DatePickerWidget(
@@ -1452,7 +1452,7 @@ class _MultiProblemRegisterScreenState
           const SizedBox(height: 8),
           if (_recommendedTags.isEmpty && !_isLoadingRecommendations)
             StandardText(
-              text: '최근 사용 태그가 없습니다.',
+              text: '최근 사용 태그가 없어요.',
               fontSize: 13,
               color: Colors.grey[400]!,
             )
@@ -1528,7 +1528,7 @@ class _MultiProblemRegisterScreenState
     if (selectedTagIds.length >= 5) {
       SnackBarDialog.showSnackBar(
         context: context,
-        message: '태그는 최대 5개까지 선택할 수 있습니다.',
+        message: '태그는 최대 5개까지 선택할 수 있어요.',
         backgroundColor: Colors.orange,
       );
       return;
@@ -1558,7 +1558,7 @@ class _MultiProblemRegisterScreenState
       clearInitialOpeningState();
       SnackBarDialog.showSnackBar(
         context: context,
-        message: '여러 장 작성은 한 번에 최대 20장까지 등록할 수 있습니다.',
+        message: '여러 장 작성은 한 번에 최대 20장까지 등록할 수 있어요.',
         backgroundColor: Colors.orange,
       );
       return;
@@ -1588,7 +1588,7 @@ class _MultiProblemRegisterScreenState
       clearInitialOpeningState();
       SnackBarDialog.showSnackBar(
         context: context,
-        message: '여러 장 작성은 한 번에 최대 20장까지 등록할 수 있습니다.',
+        message: '여러 장 작성은 한 번에 최대 20장까지 등록할 수 있어요.',
         backgroundColor: Colors.orange,
       );
       return;
@@ -1605,7 +1605,7 @@ class _MultiProblemRegisterScreenState
     if (pickedImages.length > remainingCount) {
       SnackBarDialog.showSnackBar(
         context: context,
-        message: '최대 20장까지만 추가했습니다.',
+        message: '최대 20장까지만 추가했어요.',
         backgroundColor: Colors.orange,
       );
     }
@@ -1913,7 +1913,7 @@ class _MultiProblemRegisterScreenState
     if (_drafts.isEmpty) {
       SnackBarDialog.showSnackBar(
         context: context,
-        message: '등록할 오답노트가 없습니다.',
+        message: '등록할 오답노트가 없어요.',
         backgroundColor: Colors.orange,
       );
       return;
@@ -1949,7 +1949,7 @@ class _MultiProblemRegisterScreenState
         Navigator.of(context, rootNavigator: true).pop();
         SnackBarDialog.showSnackBar(
           context: context,
-          message: '오답노트 묶음 등록에 실패했습니다. 잠시 후 다시 시도해주세요.',
+          message: '오답노트 묶음 등록에 실패했어요. 잠시 후 다시 시도해 주세요.',
           backgroundColor: Colors.red,
         );
       }
@@ -2007,8 +2007,8 @@ class _MultiProblemRegisterScreenState
     SnackBarDialog.showSnackBar(
       context: context,
       message: _createPracticeSet && !practiceSetCreated
-          ? '${draftsToRegister.length}개의 문제는 등록됐지만 복습 세트 생성에 실패했습니다.'
-          : '${draftsToRegister.length}개의 문제가 등록되었습니다.',
+          ? '${draftsToRegister.length}개의 문제는 등록됐지만 복습 세트 생성에 실패했어요.'
+          : '${draftsToRegister.length}개의 문제가 등록됐어요.',
       backgroundColor: _createPracticeSet && !practiceSetCreated
           ? Colors.orange
           : Provider.of<ThemeHandler>(context, listen: false).primaryColor,

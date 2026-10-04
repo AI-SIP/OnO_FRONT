@@ -291,7 +291,7 @@ void main() {
     await tester.tap(find.widgetWithText(ElevatedButton, '삭제하기'));
     await tester.pumpAndSettle();
 
-    expect(find.text('정말로 이 복습 세트를 삭제하시겠습니까?'), findsNothing);
+    expect(find.text('정말로 이 복습 세트를 삭제할까요?'), findsNothing);
   });
 
   testWidgets('선택 후 삭제를 확정하면 deletePracticeNotes 가 불리고 목록에서 빠지며 선택 모드가 풀린다',
@@ -326,7 +326,7 @@ void main() {
 
     await tester.tap(find.widgetWithText(ElevatedButton, '삭제하기'));
     await tester.pumpAndSettle();
-    expect(find.text('정말로 이 복습 세트를 삭제하시겠습니까?'), findsOneWidget);
+    expect(find.text('정말로 이 복습 세트를 삭제할까요?'), findsOneWidget);
 
     await tester.tap(find.text('삭제'));
     await tester.pumpAndSettle();

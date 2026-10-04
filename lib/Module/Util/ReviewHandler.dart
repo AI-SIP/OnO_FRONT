@@ -38,7 +38,7 @@ class ReviewHandler {
             color: themeProvider.primaryColor,
           ),
           content: HandWriteText(
-            text: '작성하신 리뷰는 저희에게 큰 도움이 됩니다. 리뷰를 작성하시겠습니까?',
+            text: '작성하신 리뷰는 저희에게 큰 도움이 돼요. 리뷰를 작성할까요?',
             fontSize: 20,
             color: themeProvider.primaryColor,
           ),

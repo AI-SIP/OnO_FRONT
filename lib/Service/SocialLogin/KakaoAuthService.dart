@@ -94,7 +94,7 @@ class KakaoAuthService {
       await UserApi.instance.unlink();
     } catch (error, stackTrace) {
       debugPrint('카카오 연동 해제 실패: $error');
-      AppSnackBar.showError('카카오 계정 연동 해제에 실패했습니다.');
+      AppSnackBar.showError('카카오 계정 연동 해제에 실패했어요.');
       await Sentry.captureException(error, stackTrace: stackTrace);
     }
   }

@@ -69,7 +69,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
   static const double _dialogMaxWidth = 420;
   // 공책을 지우면 서버가 안에 든 공책과 오답노트까지 함께 지운다. 하위 공책의
   // 오답노트 수는 클라이언트가 정확히 모르므로 개수 없이 범위만 알린다.
-  static const String _folderDeleteScopeMessage = '안에 있는 공책과 오답노트도 함께 삭제됩니다.';
+  static const String _folderDeleteScopeMessage = '안에 있는 공책과 오답노트도 함께 삭제돼요.';
   bool _isSelectionMode = false; // 선택 모드 활성화 여부
   late final ProblemsProvider _problemsProvider;
 
@@ -250,7 +250,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
       if (mounted) {
         SnackBarDialog.showSnackBar(
           context: context,
-          message: '서버 응답이 올바르지 않아 데이터를 불러오지 못했습니다.',
+          message: '서버 응답이 올바르지 않아 데이터를 불러오지 못했어요.',
           backgroundColor: Colors.redAccent,
         );
       }
@@ -383,7 +383,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
       if (mounted) {
         SnackBarDialog.showSnackBar(
           context: context,
-          message: '폴더 목록을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.',
+          message: '폴더 목록을 불러오지 못했어요. 잠시 후 다시 시도해 주세요.',
           backgroundColor: Colors.redAccent,
         );
       }
@@ -508,7 +508,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
       if (mounted) {
         SnackBarDialog.showSnackBar(
           context: context,
-          message: '문제 목록을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.',
+          message: '문제 목록을 불러오지 못했어요. 잠시 후 다시 시도해 주세요.',
           backgroundColor: Colors.redAccent,
         );
       }
@@ -2151,7 +2151,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
       folderIds: folderIds,
       problemIds: problemIds,
       successMessage: '${folderIds.length + problemIds.length}개를 지웠어요',
-      errorMessage: '항목 삭제 중 오류가 발생했습니다.',
+      errorMessage: '항목 삭제 중 오류가 발생했어요.',
     );
 
     if (!deleted) return;
@@ -2173,12 +2173,12 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
       folderIds.add(item.folderId);
       successMessage = '${item.folderName} 공책을 지웠어요';
       final folderName = item.folderName.isNotEmpty ? item.folderName : '제목 없음';
-      confirmMessage = '\'$folderName\' 공책을 정말 삭제하시겠습니까?\n'
+      confirmMessage = '\'$folderName\' 공책을 정말 삭제할까요?\n'
           '$_folderDeleteScopeMessage';
     } else if (item is ProblemModel) {
       problemIds.add(item.problemId);
       successMessage = '오답노트를 지웠어요';
-      confirmMessage = '정말로 이 오답노트를 삭제하시겠습니까?';
+      confirmMessage = '정말로 이 오답노트를 삭제할까요?';
     } else {
       return;
     }
@@ -2192,7 +2192,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
       folderIds: folderIds,
       problemIds: problemIds,
       successMessage: successMessage,
-      errorMessage: '삭제 중 오류가 발생했습니다.',
+      errorMessage: '삭제 중 오류가 발생했어요.',
     );
     if (!deleted) return;
     AppAnalytics.logEvent('items_deleted', {
@@ -2261,8 +2261,8 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
 
   Future<void> _confirmDelete() async {
     final message = _selectedFolderIds.isNotEmpty
-        ? '선택한 항목을 정말 삭제하시겠습니까?\n$_folderDeleteScopeMessage'
-        : '선택한 항목을 정말 삭제하시겠습니까?';
+        ? '선택한 항목을 정말 삭제할까요?\n$_folderDeleteScopeMessage'
+        : '선택한 항목을 정말 삭제할까요?';
     final confirmed = await _showDeleteConfirmDialog(message: message);
     if (!confirmed || !mounted) return;
     _deleteSelectedItems();
@@ -2417,7 +2417,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     if (mounted) {
       SnackBarDialog.showSnackBar(
         context: context,
-        message: '공책이 성공적으로 이동되었습니다!',
+        message: '공책이 성공적으로 이동됐어요!',
         backgroundColor: Theme.of(context).primaryColor,
       );
     }
@@ -2456,7 +2456,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     if (mounted) {
       SnackBarDialog.showSnackBar(
         context: context,
-        message: '오답노트가 이동되었습니다!',
+        message: '오답노트가 이동됐어요!',
         backgroundColor: Theme.of(context).primaryColor,
       );
     }

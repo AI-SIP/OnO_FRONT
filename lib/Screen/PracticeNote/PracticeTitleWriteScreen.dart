@@ -156,7 +156,7 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
           });
 
           if (!context.mounted) return;
-          _showSnackBar(context, themeProvider, '복습 세트가 수정되었습니다.',
+          _showSnackBar(context, themeProvider, '복습 세트가 수정됐어요.',
               themeProvider.primaryColor);
 
           if (widget.closeOnlySelf) {
@@ -193,7 +193,7 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
           });
 
           if (!context.mounted) return;
-          _showSnackBar(context, themeProvider, '복습 세트가 생성되었습니다.',
+          _showSnackBar(context, themeProvider, '복습 세트가 생성됐어요.',
               themeProvider.primaryColor);
 
           if (widget.closeOnlySelf) {
@@ -217,8 +217,8 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
             context,
             themeProvider,
             isUpdate
-                ? '복습 세트 수정에 실패했습니다. 잠시 후 다시 시도해주세요.'
-                : '복습 세트 생성에 실패했습니다. 잠시 후 다시 시도해주세요.',
+                ? '복습 세트 수정에 실패했어요. 잠시 후 다시 시도해 주세요.'
+                : '복습 세트 생성에 실패했어요. 잠시 후 다시 시도해 주세요.',
             Colors.red,
           );
         }

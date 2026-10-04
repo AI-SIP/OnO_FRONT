@@ -157,7 +157,7 @@ void main() {
     verify(() =>
             practiceNoteService.addPracticeNoteCount(1, moodEmojiKey: null))
         .called(1);
-    expect(find.text('복습을 완료했습니다!'), findsOneWidget);
+    expect(find.text('복습을 완료했어요!'), findsOneWidget);
   });
 
   // 완료 요청은 보낼 때마다 복습 횟수를 하나씩 올린다. 버튼이 잠기는 것은 화면을

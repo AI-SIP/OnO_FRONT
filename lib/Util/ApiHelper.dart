@@ -248,7 +248,7 @@ class ApiHelper {
       return _ErrorPresentation(error.getUserMessage(), Colors.red);
     }
 
-    return const _ErrorPresentation('알 수 없는 오류가 발생했습니다.', Colors.red);
+    return const _ErrorPresentation('알 수 없는 오류가 발생했어요.', Colors.red);
   }
 }
 

@@ -506,7 +506,7 @@ class _TagProblemSearchScreenState extends State<TagProblemSearchScreen> {
             border: Border.all(color: AppColors.border),
           ),
           child: StandardText(
-            text: '생성된 태그가 없습니다.',
+            text: '생성된 태그가 없어요.',
             fontSize: 13,
             color: Colors.grey[600]!,
           ),
@@ -592,13 +592,13 @@ class _TagProblemSearchScreenState extends State<TagProblemSearchScreen> {
         // 그림을 두되, 검색 안내라 연필 대신 돋보기를 쓴다. 둘 다 같은 손으로
         // 빚은 점토 그림이라 나란히 놓아도 결이 맞는다.
         return _buildEmptyState(
-          '검색어를 입력해주세요.',
+          '검색어를 입력해 주세요.',
           iconAsset: 'assets/Icon/Search.png',
           detail: '오답노트 제목의 일부만 넣어도 찾을 수 있어요.',
         );
       }
       final emptyText =
-          _mode == _SearchMode.tag ? '해당 태그의 오답노트가 없습니다.' : '검색 결과가 없습니다.';
+          _mode == _SearchMode.tag ? '해당 태그의 오답노트가 없어요.' : '검색 결과가 없어요.';
       return _buildEmptyState(emptyText);
     }
 

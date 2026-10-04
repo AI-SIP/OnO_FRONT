@@ -108,7 +108,7 @@ class _AchievementCardScreenState extends State<AchievementCardScreen> {
         severity: AppErrorSeverity.error,
       );
       if (mounted) {
-        AppSnackBar.showError('이미지를 공유하지 못했습니다. 잠시 후 다시 시도해주세요.');
+        AppSnackBar.showError('이미지를 공유하지 못했어요. 잠시 후 다시 시도해 주세요.');
       }
     } finally {
       if (mounted) setState(() => _isSharing = false);
@@ -117,7 +117,7 @@ class _AchievementCardScreenState extends State<AchievementCardScreen> {
 
   void _showShareCompletedSnackBar() {
     // 다른 화면과 같은 상단 토스트를 쓴다. 여기만 하단 SnackBar 로 남아 있었다.
-    AppToast.success('학습 성취 카드 공유가 완료되었습니다.');
+    AppToast.success('학습 성취 카드 공유가 완료됐어요.');
   }
 
   @override

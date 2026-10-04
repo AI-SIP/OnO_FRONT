@@ -160,7 +160,7 @@ class _ProblemSolveModeSheet extends StatelessWidget {
           _ModeTile(
             icon: Icons.photo_camera_outlined,
             title: '현장에서 풀었어요',
-            description: '종이나 다른 앱에서 푼 풀이 이미지를 직접 등록합니다.',
+            description: '종이나 다른 앱에서 푼 풀이 이미지를 직접 등록해요.',
             themeProvider: themeProvider,
             onTap: () => Navigator.pop(context, ProblemSolveMode.offline),
           ),
@@ -169,8 +169,8 @@ class _ProblemSolveModeSheet extends StatelessWidget {
             icon: Icons.draw,
             title: '앱에서 바로 풀기',
             description: problemImageCount == 0
-                ? '문제 이미지가 있어야 사용할 수 있습니다.'
-                : '문제 이미지 $problemImageCount장 위에 필기하고 풀이 시간도 자동 기록합니다.',
+                ? '문제 이미지가 있어야 사용할 수 있어요.'
+                : '문제 이미지 $problemImageCount장 위에 필기하고 풀이 시간도 자동 기록해요.',
             themeProvider: themeProvider,
             isEnabled: problemImageCount > 0,
             onTap: () => Navigator.pop(context, ProblemSolveMode.inApp),

@@ -67,7 +67,7 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
       if (!mounted) return;
       setState(() {
         _isLoading = false;
-        _errorMessage = '학습 리포트를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.';
+        _errorMessage = '학습 리포트를 불러오지 못했어요. 잠시 후 다시 시도해 주세요.';
       });
     }
   }
@@ -173,7 +173,7 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
     if (_report == null) {
       return const Center(
         child: StandardText(
-          text: '표시할 리포트가 없습니다.',
+          text: '표시할 리포트가 없어요.',
           fontSize: 14,
           color: AppColors.textPrimary,
         ),
@@ -236,7 +236,7 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
               ),
               SizedBox(width: 6),
               StandardText(
-                text: '학습 리포트는 매일 자정 갱신됩니다.',
+                text: '학습 리포트는 매일 자정 갱신돼요.',
                 fontSize: 12,
                 color: Colors.grey,
               ),
@@ -859,7 +859,7 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
 
   Widget _buildWeakTopicCard(ThemeHandler themeProvider, _ReportViewData data) {
     final items = data.weakAreas.isEmpty
-        ? ['현재 취약 영역 데이터가 없습니다.']
+        ? ['현재 취약 영역 데이터가 없어요.']
         : data.weakAreas
             .map((e) => '${e.topic} (오답 ${e.wrongCount}회)')
             .toList();

@@ -94,7 +94,7 @@ class _ProblemPickerScreenState extends State<ProblemPickerScreen> {
         await _loadInitialProblems(_selectedFolderId!);
       }
     } catch (_) {
-      if (mounted) AppSnackBar.showError('폴더 목록을 불러오지 못했습니다');
+      if (mounted) AppSnackBar.showError('폴더 목록을 불러오지 못했어요');
     } finally {
       if (mounted) setState(() => _isLoadingFolders = false);
     }
@@ -121,7 +121,7 @@ class _ProblemPickerScreenState extends State<ProblemPickerScreen> {
         _problemHasNext = response.hasNext;
       });
     } catch (_) {
-      if (mounted) AppSnackBar.showError('문제 목록을 불러오지 못했습니다');
+      if (mounted) AppSnackBar.showError('문제 목록을 불러오지 못했어요');
     } finally {
       if (mounted) setState(() => _isLoadingProblems = false);
     }
@@ -496,7 +496,7 @@ class _ProblemPickerScreenState extends State<ProblemPickerScreen> {
       if (error is ApiException) {
         AppSnackBar.showError(error.getUserMessage());
       } else {
-        AppSnackBar.showError('문제 공유에 실패했습니다');
+        AppSnackBar.showError('문제 공유에 실패했어요');
       }
     } finally {
       if (mounted) setState(() => _isSharing = false);

@@ -196,7 +196,7 @@ class _PracticeProblemSelectionScreenState
         e,
         stackTrace,
         source: 'practice_selection_load_folders',
-        message: '폴더 목록을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.',
+        message: '폴더 목록을 불러오지 못했어요. 잠시 후 다시 시도해 주세요.',
       );
     } finally {
       if (mounted) {
@@ -232,7 +232,7 @@ class _PracticeProblemSelectionScreenState
         e,
         stackTrace,
         source: 'practice_selection_load_more_folders',
-        message: '폴더 목록을 더 불러오지 못했습니다. 잠시 후 다시 시도해주세요.',
+        message: '폴더 목록을 더 불러오지 못했어요. 잠시 후 다시 시도해 주세요.',
       );
     } finally {
       if (mounted) {
@@ -260,7 +260,7 @@ class _PracticeProblemSelectionScreenState
         e,
         stackTrace,
         source: 'practice_selection_load_tags',
-        message: '태그 목록을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.',
+        message: '태그 목록을 불러오지 못했어요. 잠시 후 다시 시도해 주세요.',
       );
     } finally {
       if (mounted) {
@@ -327,7 +327,7 @@ class _PracticeProblemSelectionScreenState
         e,
         stackTrace,
         source: 'practice_selection_load_folder_problems',
-        message: '문제 목록을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.',
+        message: '문제 목록을 불러오지 못했어요. 잠시 후 다시 시도해 주세요.',
       );
     } finally {
       if (mounted) {
@@ -379,7 +379,7 @@ class _PracticeProblemSelectionScreenState
         e,
         stackTrace,
         source: 'practice_selection_load_tag_problems',
-        message: '태그 문제를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.',
+        message: '태그 문제를 불러오지 못했어요. 잠시 후 다시 시도해 주세요.',
       );
     } finally {
       if (mounted) {
@@ -444,7 +444,7 @@ class _PracticeProblemSelectionScreenState
         e,
         stackTrace,
         source: 'practice_selection_search_title_problems',
-        message: '검색 결과를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.',
+        message: '검색 결과를 불러오지 못했어요. 잠시 후 다시 시도해 주세요.',
       );
     } finally {
       if (mounted) {
@@ -482,7 +482,7 @@ class _PracticeProblemSelectionScreenState
           e,
           stackTrace,
           source: 'practice_selection_load_more_folder_problems',
-          message: '문제 목록을 더 불러오지 못했습니다. 잠시 후 다시 시도해주세요.',
+          message: '문제 목록을 더 불러오지 못했어요. 잠시 후 다시 시도해 주세요.',
         );
       } finally {
         if (mounted) {
@@ -718,7 +718,7 @@ class _PracticeProblemSelectionScreenState
             border: Border.all(color: AppColors.border),
           ),
           child: StandardText(
-            text: '생성된 태그가 없습니다.',
+            text: '생성된 태그가 없어요.',
             fontSize: 13,
             color: Colors.grey[600]!,
           ),
@@ -1085,8 +1085,8 @@ class _PracticeProblemSelectionScreenState
 
   Widget _buildEmptyProblemMessage() {
     final message = _searchMode == _PracticeSearchMode.title
-        ? (_titleQuery.isEmpty ? '검색어를 입력해주세요.' : '검색 결과가 없습니다.')
-        : '작성한 오답노트가 없습니다!';
+        ? (_titleQuery.isEmpty ? '검색어를 입력해 주세요.' : '검색 결과가 없어요.')
+        : '작성한 오답노트가 없어요!';
 
     if (_searchMode == _PracticeSearchMode.title && _titleQuery.isEmpty) {
       // 문구만 있으면 화면이 비어 보인다. 검색 안내라 연필 대신 돋보기를 쓴다.
@@ -1244,7 +1244,7 @@ class _PracticeProblemSelectionScreenState
       );
       if (!mounted) return;
       setState(() => _submitting = false);
-      AppToast.error('문제를 추가하지 못했어요. 잠시 후 다시 시도해주세요.');
+      AppToast.error('문제를 추가하지 못했어요. 잠시 후 다시 시도해 주세요.');
     }
   }
 
@@ -1438,7 +1438,7 @@ class _PracticeProblemSelectionScreenState
                 ),
                 const SizedBox(height: 20),
                 StandardText(
-                  text: '하나 이상의 문제를 선택해주세요!',
+                  text: '하나 이상의 문제를 선택해 주세요!',
                   fontSize: MobileFontSize.reduced(context, 15),
                   color: AppColors.textPrimary,
                   textAlign: TextAlign.center,

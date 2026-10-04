@@ -94,7 +94,7 @@ void main() {
     await tester.pump();
 
     expect(find.byType(PageView), findsNothing);
-    expect(find.text('이미지를 불러오지 못했습니다'), findsOneWidget);
+    expect(find.text('이미지를 불러오지 못했어요'), findsOneWidget);
   });
 
   testWidgets('화면을 누르면 위아래 버튼이 사라진다', (tester) async {

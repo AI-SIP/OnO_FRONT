@@ -92,7 +92,7 @@ class _StudyRoomEditScreenState extends State<StudyRoomEditScreen> {
     if (nameSuccess && thumbnailSuccess) {
       Navigator.pop(context, true);
     } else if (!nameSuccess && !thumbnailSuccess) {
-      AppSnackBar.showError('수정에 실패했습니다. 다시 시도해 주세요');
+      AppSnackBar.showError('수정에 실패했어요. 다시 시도해 주세요');
     } else if (!nameSuccess) {
       AppSnackBar.showError('사진은 변경됐지만 이름 수정에 실패했어요');
       Navigator.pop(context, true);

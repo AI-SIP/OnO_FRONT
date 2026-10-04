@@ -196,7 +196,7 @@ class _ChallengeCreateSheetState extends State<ChallengeCreateSheet> {
       } else if (error is BadRequestException) {
         AppSnackBar.showError(error.getUserMessage());
       } else {
-        AppSnackBar.showError('챌린지 생성에 실패했습니다');
+        AppSnackBar.showError('챌린지 생성에 실패했어요');
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);

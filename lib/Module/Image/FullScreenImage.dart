@@ -224,7 +224,7 @@ class _FullScreenImageState extends State<FullScreenImage> {
     final imagePath = _hasImages ? widget.imagePaths[_current] : null;
     if (imagePath == null) {
       SnackBarDialog.showSnackBar(
-          context: context, message: '이미지가 없습니다!', backgroundColor: Colors.red);
+          context: context, message: '이미지가 없어요!', backgroundColor: Colors.red);
       return;
     }
 
@@ -236,7 +236,7 @@ class _FullScreenImageState extends State<FullScreenImage> {
         if (!mounted) return;
         SnackBarDialog.showSnackBar(
             context: context,
-            message: '저장 권한이 필요합니다.',
+            message: '저장 권한이 필요해요.',
             backgroundColor: Colors.red);
         return;
       }
@@ -246,7 +246,7 @@ class _FullScreenImageState extends State<FullScreenImage> {
         if (!mounted) return;
         SnackBarDialog.showSnackBar(
             context: context,
-            message: '다운로드에 실패했습니다.',
+            message: '다운로드에 실패했어요.',
             backgroundColor: Colors.red);
         return;
       }
@@ -265,19 +265,19 @@ class _FullScreenImageState extends State<FullScreenImage> {
         AppHaptic.primary();
         SnackBarDialog.showSnackBar(
             context: context,
-            message: '이미지가 다운로드 되었습니다.',
+            message: '이미지가 다운로드 됐어요.',
             backgroundColor: Colors.green);
       } else {
         SnackBarDialog.showSnackBar(
             context: context,
-            message: '다운로드에 실패했습니다.',
+            message: '다운로드에 실패했어요.',
             backgroundColor: Colors.red);
       }
     } catch (e) {
       if (!mounted) return;
       SnackBarDialog.showSnackBar(
           context: context,
-          message: '다운로드에 실패했습니다.',
+          message: '다운로드에 실패했어요.',
           backgroundColor: Colors.red);
     } finally {
       if (mounted) setState(() => _downloading = false);
@@ -416,7 +416,7 @@ class _FullScreenImageState extends State<FullScreenImage> {
           SvgPicture.asset(_defaultImagePath, width: 140, height: 140),
           const SizedBox(height: 16),
           StandardText(
-            text: '이미지를 불러오지 못했습니다',
+            text: '이미지를 불러오지 못했어요',
             fontSize: 14,
             color: Colors.white.withValues(alpha: 0.6),
             height: 1.2,

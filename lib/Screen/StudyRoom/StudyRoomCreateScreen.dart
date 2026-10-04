@@ -348,7 +348,7 @@ class _StudyRoomCreateScreenState extends State<StudyRoomCreateScreen> {
                             ),
                             SizedBox(height: screenHeight * 0.01),
                             StandardText(
-                              text: '방을 만들면 자동으로 초대 코드가 생성됩니다.',
+                              text: '방을 만들면 자동으로 초대 코드가 생성돼요.',
                               fontSize: 13,
                               color: Colors.grey[500]!,
                               fontWeight: FontWeight.normal,

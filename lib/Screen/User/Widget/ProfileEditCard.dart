@@ -143,7 +143,7 @@ class _ProfileEditCardState extends State<ProfileEditCard> {
       HomeWidgetSyncService.instance.refreshProfile();
     } catch (_) {
       if (!mounted) return;
-      _showProfileSnackBar('프로필 이미지 변경에 실패했습니다. 다시 시도해주세요.');
+      _showProfileSnackBar('프로필 이미지 변경에 실패했어요. 다시 시도해 주세요.');
     } finally {
       if (mounted) setState(() => _isUploadingProfileImage = false);
     }
@@ -159,7 +159,7 @@ class _ProfileEditCardState extends State<ProfileEditCard> {
       HomeWidgetSyncService.instance.refreshProfile();
     } catch (_) {
       if (!mounted) return;
-      _showProfileSnackBar('기본 이미지 변경에 실패했습니다. 다시 시도해주세요.');
+      _showProfileSnackBar('기본 이미지 변경에 실패했어요. 다시 시도해 주세요.');
     } finally {
       if (mounted) setState(() => _isUploadingProfileImage = false);
     }
@@ -366,11 +366,11 @@ class _NameChangeDialogState extends State<_NameChangeDialog> {
 
     final newName = _controller.text.trim();
     if (newName.isEmpty) {
-      widget.onError('이름을 입력해주세요.');
+      widget.onError('이름을 입력해 주세요.');
       return;
     }
     if (newName.length > 20) {
-      widget.onError('이름은 20자 이하로 입력해주세요.');
+      widget.onError('이름은 20자 이하로 입력해 주세요.');
       return;
     }
     if (newName == widget.currentName) {
@@ -384,7 +384,7 @@ class _NameChangeDialogState extends State<_NameChangeDialog> {
       if (!mounted) return;
       Navigator.of(context).pop();
     } catch (_) {
-      widget.onError('이름 변경에 실패했습니다. 다시 시도해주세요.');
+      widget.onError('이름 변경에 실패했어요. 다시 시도해 주세요.');
       if (mounted) {
         setState(() => _isSaving = false);
       }

@@ -938,7 +938,7 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen>
                                     _markImageError(imageIndex);
                                     return Center(
                                       child: StandardText(
-                                        text: '문제 이미지를 불러오지 못했습니다.',
+                                        text: '문제 이미지를 불러오지 못했어요.',
                                         fontSize: 14,
                                         color: themeProvider.primaryColor,
                                       ),
@@ -1147,7 +1147,7 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen>
             text: _isSubmitting
                 ? '풀이 이미지 저장 중...'
                 : _hasImageLoadError
-                    ? '문제 이미지를 불러오지 못했습니다'
+                    ? '문제 이미지를 불러오지 못했어요'
                     : _isCurrentImageReady
                         ? widget.problemImageUrls.length > 1
                             ? '전체 풀이 제출하기'
@@ -1630,7 +1630,7 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen>
 
       SnackBarDialog.showSnackBar(
         context: context,
-        message: '풀이 이미지를 저장하지 못했습니다. 잠시 후 다시 시도해주세요.',
+        message: '풀이 이미지를 저장하지 못했어요. 잠시 후 다시 시도해 주세요.',
         backgroundColor: Colors.red,
       );
       setState(() => _isSubmitting = false);

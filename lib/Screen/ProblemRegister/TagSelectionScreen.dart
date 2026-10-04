@@ -321,7 +321,7 @@ class _TagSelectionScreenState extends State<TagSelectionScreen> {
                         height: MediaQuery.of(context).size.height * 0.5,
                         child: _tags.isEmpty
                             ? const Center(
-                                child: StandardText(text: '삭제할 태그가 없습니다.'),
+                                child: StandardText(text: '삭제할 태그가 없어요.'),
                               )
                             : ListView.builder(
                                 itemCount: _tags.length,
@@ -860,7 +860,7 @@ class _TagSelectionScreenState extends State<TagSelectionScreen> {
                   ? const SkeletonList(itemCount: 5, itemHeight: 48, spacing: 8)
                   : _tags.isEmpty
                       ? const Center(
-                          child: StandardText(text: '생성된 태그가 없습니다.'),
+                          child: StandardText(text: '생성된 태그가 없어요.'),
                         )
                       : ListView.separated(
                           itemCount: _tags.length,

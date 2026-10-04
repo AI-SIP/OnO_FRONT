@@ -32,7 +32,7 @@ void main() {
       );
 
       expect(find.text('2024 수능특강 12p'), findsOneWidget);
-      expect(find.text('작성한 출처가 없습니다!'), findsNothing);
+      expect(find.text('작성한 출처가 없어요!'), findsNothing);
     });
 
     testWidgets('출처가 null 이면 안내 문구를 보여준다', (tester) async {
@@ -41,7 +41,7 @@ void main() {
         _wrap(buildReferenceRow(null, Colors.pink)),
       );
 
-      expect(find.text('작성한 출처가 없습니다!'), findsOneWidget);
+      expect(find.text('작성한 출처가 없어요!'), findsOneWidget);
     });
 
     testWidgets('출처가 빈 문자열이면 안내 문구를 보여준다', (tester) async {
@@ -50,7 +50,7 @@ void main() {
         _wrap(buildReferenceRow('', Colors.pink)),
       );
 
-      expect(find.text('작성한 출처가 없습니다!'), findsOneWidget);
+      expect(find.text('작성한 출처가 없어요!'), findsOneWidget);
     });
   });
 
@@ -70,7 +70,7 @@ void main() {
         _wrap(buildMemoSection(null, Colors.pink)),
       );
 
-      expect(find.text('작성한 메모가 없습니다!'), findsOneWidget);
+      expect(find.text('작성한 메모가 없어요!'), findsOneWidget);
     });
 
     testWidgets('태블릿 폭에서도 예외 없이 그려진다', (tester) async {

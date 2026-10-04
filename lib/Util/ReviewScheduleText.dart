@@ -18,7 +18,7 @@ class ReviewScheduleText {
     required DateTime? nextReviewAt,
     DateTime? now,
   }) {
-    if (!hasReviewSchedule) return '복습이 완료되었습니다!';
+    if (!hasReviewSchedule) return '복습이 완료됐어요!';
     if (nextReviewAt == null) return '복습을 기록했어요. 3번 맞혀서 추천 복습에서 빠졌어요';
     final days = _daysBetween(now ?? DateTime.now(), nextReviewAt);
     final date = '${nextReviewAt.month}월 ${nextReviewAt.day}일';

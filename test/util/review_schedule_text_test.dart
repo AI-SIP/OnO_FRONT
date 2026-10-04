@@ -57,7 +57,7 @@ void main() {
           nextReviewAt: null,
           now: now,
         ),
-        '복습이 완료되었습니다!',
+        '복습이 완료됐어요!',
       );
     });
   });

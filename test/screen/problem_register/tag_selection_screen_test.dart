@@ -32,7 +32,7 @@ void main() {
       await tester.pump(const Duration(milliseconds: 50));
     }, json: []);
 
-    expect(find.text('생성된 태그가 없습니다.'), findsOneWidget);
+    expect(find.text('생성된 태그가 없어요.'), findsOneWidget);
   });
 
   testWidgets('서버에서 받아온 태그 목록이 보인다', (tester) async {

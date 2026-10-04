@@ -274,7 +274,7 @@ class _RepeatSectionV2State extends State<RepeatSectionV2>
                           ),
                           const SizedBox(height: 16),
                           StandardText(
-                            text: '아직 복습 기록이 없습니다.',
+                            text: '아직 복습 기록이 없어요.',
                             fontSize: MobileFontSize.reduced(context, 16),
                             color: Colors.black,
                           ),
@@ -1132,7 +1132,7 @@ class _ProblemSolveCard extends StatelessWidget {
               const SizedBox(height: 20),
               // 내용
               StandardText(
-                text: '이 복습 기록을 정말 삭제하시겠습니까?',
+                text: '이 복습 기록을 정말 삭제할까요?',
                 fontSize: MobileFontSize.reduced(parentContext, 15),
                 color: AppColors.textPrimary,
                 textAlign: TextAlign.center,

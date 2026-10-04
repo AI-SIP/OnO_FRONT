@@ -238,7 +238,7 @@ void main() {
 
       await openAccountActionDialog(tester, '로그아웃');
 
-      expect(find.textContaining('정말 로그아웃 하시겠습니까'), findsOneWidget);
+      expect(find.textContaining('정말 로그아웃할까요'), findsOneWidget);
       expect(find.text('취소'), findsOneWidget);
       expect(find.text('확인'), findsOneWidget);
     });
@@ -322,7 +322,7 @@ void main() {
 
       await openAccountActionDialog(tester, '회원 탈퇴');
 
-      expect(find.textContaining('이 작업은 되돌릴 수 없습니다'), findsOneWidget);
+      expect(find.textContaining('이 작업은 되돌릴 수 없어요'), findsOneWidget);
     });
 
     testWidgets('취소를 누르면 deleteAccount 가 호출되지 않는다', (tester) async {
