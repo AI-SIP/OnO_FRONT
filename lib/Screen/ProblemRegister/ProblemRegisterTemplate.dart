@@ -43,6 +43,9 @@ import '../../Module/Design/AppColors.dart';
 import '../../Module/Design/AppRadius.dart';
 import '../../Util/AppAnalytics.dart';
 import 'Widget/FirstNoteGuide.dart';
+import '../../Module/Design/AppToast.dart';
+import '../../Util/AppNavigator.dart';
+import 'ProblemRegisterScreen.dart';
 
 class ProblemRegisterTemplate extends StatefulWidget {
   final ProblemModel? problemModel;
@@ -300,6 +303,9 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
         label: '문제 이미지',
         files: _problemImages,
         existingImageUrls: _existingProblemImageUrls,
+        uploadingPaths: _uploadTasks.keys.toSet(),
+        failedPaths: _failedUploadPaths,
+        onRetry: (i) => _retryUpload(_problemImages[i], isProblemImage: true),
         onAdd: _pickProblemImage,
         onRemove: widget.isEditMode
             ? (i) => setState(() => _problemImages.removeAt(i))
@@ -322,6 +328,9 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
         label: '해설 이미지',
         files: _answerImages,
         existingImageUrls: _existingAnswerImageUrls,
+        uploadingPaths: _uploadTasks.keys.toSet(),
+        failedPaths: _failedUploadPaths,
+        onRetry: (i) => _retryUpload(_answerImages[i], isProblemImage: false),
         onAdd: _pickAnswerImage,
         onRemove: widget.isEditMode
             ? (i) => setState(() => _answerImages.removeAt(i))
@@ -486,6 +495,7 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
     if (index < 0 || index >= _problemImages.length) return;
     final removed = _problemImages.removeAt(index);
     _canceledUploadLocalPaths.add(removed.path);
+    _failedUploadPaths.remove(removed.path);
     setState(() {});
   }
 
@@ -493,6 +503,7 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
     if (index < 0 || index >= _answerImages.length) return;
     final removed = _answerImages.removeAt(index);
     _canceledUploadLocalPaths.add(removed.path);
+    _failedUploadPaths.remove(removed.path);
     setState(() {});
   }
 
@@ -524,7 +535,18 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
     }
   }
 
+  /// 사진을 고른 순서. 업로드는 끝나는 순서가 제각각이라, 올라간 주소를 이
+  /// 순서대로 끼워 넣는다. 전에는 끝난 순서대로 붙어서 여러 쪽짜리 문제의
+  /// 쪽 순서가 바뀔 수 있었다.
+  int _pickSequence = 0;
+  final Map<String, int> _pickOrderByPath = {};
+  final Map<String, int> _pickOrderByUrl = {};
+
+  /// 올리지 못한 사진. 목록에서 빼지 않고 남겨 두어 눌러서 다시 올리게 한다.
+  final Set<String> _failedUploadPaths = {};
+
   void _uploadImageImmediately(XFile file, {required bool isProblemImage}) {
+    _pickOrderByPath[file.path] = _pickSequence++;
     setState(() {
       if (isProblemImage) {
         _problemImages.add(file);
@@ -533,9 +555,22 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
       }
     });
 
+    _startUpload(file, isProblemImage: isProblemImage);
+  }
+
+  void _startUpload(XFile file, {required bool isProblemImage}) {
     final task = _uploadSingleImage(file, isProblemImage: isProblemImage);
     _uploadTasks[file.path] = task;
   }
+
+  void _retryUpload(XFile file, {required bool isProblemImage}) {
+    if (!_failedUploadPaths.remove(file.path)) return;
+    setState(() {});
+    _startUpload(file, isProblemImage: isProblemImage);
+  }
+
+  void _insertInPickOrder(List<String> urls, String url, int order) =>
+      insertInPickOrder(urls, _pickOrderByUrl, url, order);
 
   Future<void> _uploadSingleImage(
     XFile file, {
@@ -550,13 +585,14 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
       }
 
       if (!mounted) return;
+      final order = _pickOrderByPath[file.path] ?? _pickSequence++;
       setState(() {
         if (isProblemImage) {
           _problemImages.removeWhere((f) => f.path == file.path);
-          _existingProblemImageUrls.add(imageUrl);
+          _insertInPickOrder(_existingProblemImageUrls, imageUrl, order);
         } else {
           _answerImages.removeWhere((f) => f.path == file.path);
-          _existingAnswerImageUrls.add(imageUrl);
+          _insertInPickOrder(_existingAnswerImageUrls, imageUrl, order);
         }
       });
       if (isProblemImage) {
@@ -564,18 +600,10 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
       }
     } catch (e) {
       if (!mounted) return;
-      setState(() {
-        if (isProblemImage) {
-          _problemImages.removeWhere((f) => f.path == file.path);
-        } else {
-          _answerImages.removeWhere((f) => f.path == file.path);
-        }
-      });
-      SnackBarDialog.showSnackBar(
-        context: context,
-        message: '이미지 업로드에 실패했습니다.',
-        backgroundColor: Colors.red,
-      );
+      // 지운 사진이면 남길 것이 없다.
+      if (_canceledUploadLocalPaths.contains(file.path)) return;
+      setState(() => _failedUploadPaths.add(file.path));
+      AppToast.error('사진을 올리지 못했어요. 사진을 눌러 다시 올려 주세요.');
     } finally {
       _canceledUploadLocalPaths.remove(file.path);
       _uploadTasks.remove(file.path);
@@ -842,7 +870,9 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
             duration: const Duration(milliseconds: 220),
             switchInCurve: Curves.easeOutCubic,
             switchOutCurve: Curves.easeInCubic,
-            child: _existingProblemImageUrls.isEmpty
+            // 서버는 사진과 상관없이 최근에 쓴 태그를 준다. 전에는 문제 사진이
+            // 올라가야 보여서, 태그를 먼저 고르려는 사람은 찾지 못했다.
+            child: _recommendedTags.isEmpty && !_isLoadingRecommendations
                 ? const SizedBox.shrink()
                 : Padding(
                     key: const ValueKey('recommended_tags'),
@@ -959,6 +989,7 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
       _memoCtrl.clear();
       _problemImages.clear();
       _answerImages.clear();
+      _failedUploadPaths.clear();
       _existingProblemImageUrls.clear();
       _existingAnswerImageUrls.clear();
       _deletedImageUrls.clear();
@@ -1035,6 +1066,12 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
     if (!widget.isEditMode) {
       await _waitForPendingUploads();
       if (!mounted) return;
+      // 올리지 못한 사진을 빼고 저장하면 쪽이 빠진 오답노트가 된다.
+      if (_failedUploadPaths.isNotEmpty) {
+        LoadingDialog.hide(context);
+        AppToast.error('올리지 못한 사진이 있어요. 다시 올리거나 지운 뒤 저장해 주세요.');
+        return;
+      }
       if (_existingProblemImageUrls.isEmpty) {
         LoadingDialog.hide(context);
         _showProblemImageRequiredDialog(context);
@@ -1483,10 +1520,54 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
   }
 
   void showSuccessDialog(BuildContext context) {
-    final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
-    SnackBarDialog.showSnackBar(
-        context: context,
-        message: "오답노트가 성공적으로 저장되었습니다.",
-        backgroundColor: themeProvider.primaryColor);
+    if (widget.isEditMode) {
+      final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
+      SnackBarDialog.showSnackBar(
+          context: context,
+          message: "오답노트가 성공적으로 저장되었습니다.",
+          backgroundColor: themeProvider.primaryColor);
+      return;
+    }
+
+    // 문제집 몇 쪽을 이어서 올릴 때 매번 + 버튼부터 다시 눌러야 했다. 같은
+    // 공책으로 작성 화면을 바로 다시 연다.
+    final folderId = _selectedFolderId;
+    AppToast.show(
+      message: '오답노트를 저장했어요',
+      type: ToastType.success,
+      duration: const Duration(seconds: 4),
+      actionLabel: '하나 더 쓰기',
+      onAction: () {
+        AppAnalytics.logEvent('problem_register_another', {});
+        AppNavigator.navigatorKey.currentState?.push(
+          TossPageRoute(
+            builder: (_) => ProblemRegisterScreen(
+              problemModel: null,
+              isEditMode: false,
+              initialFolderId: folderId,
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+/// 고른 순서를 지키며 올라간 주소를 끼워 넣는다.
+///
+/// [orderByUrl] 에 없는 주소(수정 화면에서 이미 있던 사진)는 맨 앞 순서로 본다.
+@visibleForTesting
+void insertInPickOrder(
+  List<String> urls,
+  Map<String, int> orderByUrl,
+  String url,
+  int order,
+) {
+  orderByUrl[url] = order;
+  final index = urls.indexWhere((u) => (orderByUrl[u] ?? -1) > order);
+  if (index < 0) {
+    urls.add(url);
+  } else {
+    urls.insert(index, url);
   }
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:ono/Module/Design/AppToast.dart';
 import 'package:ono/Screen/ProblemRegister/TagSelectionScreen.dart';
 
 import '../../helpers/helpers.dart';
@@ -116,7 +117,7 @@ void main() {
     expect(find.text('0/5'), findsOneWidget);
   });
 
-  testWidgets('태그를 6개 선택하고 확인을 누르면 5개 제한 경고 다이얼로그가 뜬다', (tester) async {
+  testWidgets('여섯 번째 태그는 고르는 순간 막고 다섯 개만 남긴다', (tester) async {
     final tags = List.generate(6, (i) => {'tagId': i + 1, 'name': '태그$i'});
 
     await withFakeJsonApi(() async {
@@ -132,12 +133,11 @@ void main() {
         await tester.tap(find.text('태그$i'));
         await tester.pump();
       }
-
-      await tester.tap(find.text('확인'));
-      await tester.pump();
     }, json: tags);
 
-    expect(find.text('태그는 최대 5개까지만 선택할 수 있어요.'), findsOneWidget);
+    expect(find.text('태그는 최대 5개까지 고를 수 있어요.'), findsOneWidget);
+    expect(find.text('5/5'), findsOneWidget);
+    AppToast.dismiss();
   });
 
   testWidgets('5개 이하로 선택하고 확인을 누르면 선택 결과를 반환하며 화면이 닫힌다', (tester) async {
