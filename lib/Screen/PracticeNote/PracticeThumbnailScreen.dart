@@ -423,7 +423,7 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
                 const SizedBox(height: 20),
                 // 내용
                 StandardText(
-                  text: '정말로 이 복습 세트를 삭제하시겠습니까?',
+                  text: '정말로 이 복습 세트를 삭제할까요?',
                   fontSize: MobileFontSize.reduced(context, 15),
                   color: AppColors.textPrimary,
                   textAlign: TextAlign.center,
@@ -475,7 +475,7 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
 
                           // 다이얼로그를 닫은 뒤라 이 자리의 context 는 이미
                           // 죽어 있다. 넘기지 않고 앱 전체 Overlay 에 맡긴다.
-                          AppToast.success('복습 세트가 삭제되었습니다!');
+                          AppToast.success('복습 세트가 삭제됐어요!');
                         },
                         style: TextButton.styleFrom(
                           padding: const EdgeInsets.symmetric(

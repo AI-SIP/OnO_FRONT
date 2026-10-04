@@ -99,7 +99,7 @@ Widget buildRepeatSection(
                                 const SizedBox(height: 20),
                                 // 내용
                                 StandardText(
-                                  text: '이 복습 이미지를 정말 삭제하시겠습니까?',
+                                  text: '이 복습 이미지를 정말 삭제할까요?',
                                   fontSize: MobileFontSize.reduced(ctx, 15),
                                   color: AppColors.textPrimary,
                                   textAlign: TextAlign.center,

@@ -213,7 +213,7 @@ void main() {
       practiceProvider: practiceProvider,
     );
 
-    expect(find.textContaining('복습 세트가 비어있습니다'), findsOneWidget);
+    expect(find.textContaining('복습 세트가 비어있어요'), findsOneWidget);
     expect(find.text('오답노트 추가하기'), findsOneWidget);
     expect(find.text('복습하기'), findsNothing);
   });
@@ -228,7 +228,7 @@ void main() {
     );
 
     expect(find.text('복습하기'), findsOneWidget);
-    expect(find.textContaining('복습 세트가 비어있습니다'), findsNothing);
+    expect(find.textContaining('복습 세트가 비어있어요'), findsNothing);
   });
 
   testWidgets('빈 상태에서 오답노트 추가하기를 탭하면 문제 선택 화면으로 전환된다', (tester) async {
@@ -474,7 +474,7 @@ void main() {
     await tester.tap(find.text('복습 세트 삭제하기'));
     await tester.pumpAndSettle();
 
-    expect(find.text('정말로 이 복습 세트를 삭제하시겠습니까?'), findsOneWidget);
+    expect(find.text('정말로 이 복습 세트를 삭제할까요?'), findsOneWidget);
 
     await tester.tap(find.text('삭제'));
     await tester.pumpAndSettle();
@@ -499,7 +499,7 @@ void main() {
     await tester.pumpAndSettle();
 
     verifyNever(() => practiceNoteService.deletePracticeNotes(any()));
-    expect(find.text('정말로 이 복습 세트를 삭제하시겠습니까?'), findsNothing);
+    expect(find.text('정말로 이 복습 세트를 삭제할까요?'), findsNothing);
   });
 
   testWidgets('네트워크 이미지가 있는 문제 카드도 예외 없이 그려진다', (tester) async {

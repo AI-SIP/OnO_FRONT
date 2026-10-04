@@ -371,7 +371,7 @@ class ProblemSolveRegisterTemplateState
           ),
           const SizedBox(height: 4),
           const StandardText(
-            text: '해당되는 항목을 선택해주세요 (선택사항)',
+            text: '해당되는 항목을 선택해 주세요 (선택사항)',
             fontSize: 13,
             color: AppColors.textSecondary,
           ),
@@ -602,7 +602,7 @@ class ProblemSolveRegisterTemplateState
               ),
               fillColor: Colors.white,
               filled: true,
-              hintText: '이번 복습에서 느낀 점을 자유롭게 작성해주세요!',
+              hintText: '이번 복습에서 느낀 점을 자유롭게 작성해 주세요!',
               hintStyle: standardTextStyle.copyWith(
                 color: Colors.grey[400],
                 fontSize: 14,

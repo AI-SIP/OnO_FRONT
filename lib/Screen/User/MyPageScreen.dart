@@ -599,7 +599,7 @@ class _MyPageSettingsScreenState extends State<_MyPageSettingsScreen> {
                 '로그아웃',
                 // 게스트는 로그아웃하면 데이터가 지워지는데 전에는 괄호 한 줄로만
                 // 알렸다.
-                '정말 로그아웃 하시겠습니까?\n\n게스트로 이용 중이라면 로그아웃할 때 지금까지 쓴 오답노트와 복습 기록이 모두 지워져요.',
+                '정말 로그아웃할까요?\n\n게스트로 이용 중이라면 로그아웃할 때 지금까지 쓴 오답노트와 복습 기록이 모두 지워져요.',
                 () async {
                   // 게스트는 로그아웃이 곧 계정 삭제라 서버 요청이 나간다.
                   // 실패하면 로그아웃되지 않은 것이므로 알리고 화면을 두어야
@@ -612,7 +612,7 @@ class _MyPageSettingsScreenState extends State<_MyPageSettingsScreen> {
                   } catch (error) {
                     debugPrint('로그아웃 실패: $error');
                     if (context.mounted) LoadingDialog.hide(context);
-                    AppToast.error('로그아웃에 실패했어요. 잠시 후 다시 시도해주세요.');
+                    AppToast.error('로그아웃에 실패했어요. 잠시 후 다시 시도해 주세요.');
                     return;
                   }
                   if (context.mounted) LoadingDialog.hide(context);
@@ -628,7 +628,7 @@ class _MyPageSettingsScreenState extends State<_MyPageSettingsScreen> {
               onDeleteAccountTap: () => _showConfirmationDialog(
                 context,
                 '회원 탈퇴',
-                '정말 회원 탈퇴 하시겠습니까?\n그동안 작성했던 모든 오답노트 및 개인정보가 삭제됩니다. 이 작업은 되돌릴 수 없습니다.',
+                '정말 탈퇴할까요?\n그동안 작성했던 모든 오답노트 및 개인정보가 삭제돼요. 이 작업은 되돌릴 수 없어요.',
                 () async {
                   LoadingDialog.show(context, '탈퇴하는 중...');
                   try {
@@ -636,7 +636,7 @@ class _MyPageSettingsScreenState extends State<_MyPageSettingsScreen> {
                   } catch (error) {
                     debugPrint('회원 탈퇴 실패: $error');
                     if (context.mounted) LoadingDialog.hide(context);
-                    AppToast.error('회원 탈퇴에 실패했어요. 잠시 후 다시 시도해주세요.');
+                    AppToast.error('회원 탈퇴에 실패했어요. 잠시 후 다시 시도해 주세요.');
                     return;
                   }
                   if (context.mounted) LoadingDialog.hide(context);

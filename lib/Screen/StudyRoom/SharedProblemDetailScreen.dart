@@ -170,7 +170,7 @@ class _SharedProblemDetailScreenState extends State<SharedProblemDetailScreen> {
       await provider.deleteSharedProblem(problem.sharedProblemId);
       if (context.mounted) Navigator.pop(context);
     } catch (_) {
-      if (context.mounted) AppSnackBar.showError('공유 취소에 실패했습니다');
+      if (context.mounted) AppSnackBar.showError('공유 취소에 실패했어요');
     }
   }
 

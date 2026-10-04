@@ -192,7 +192,7 @@ void main() {
         (captured.single as PracticeNoteRegisterModel).practiceTitle,
         '9월 모의고사 오답',
       );
-      expect(find.text('복습 세트가 생성되었습니다.'), findsOneWidget);
+      expect(find.text('복습 세트가 생성됐어요.'), findsOneWidget);
     });
 
     testWidgets('등록이 실패하면 실패 스낵바가 뜨고 화면에 남는다', (tester) async {
@@ -214,7 +214,7 @@ void main() {
       await tester.tap(find.widgetWithText(ElevatedButton, '복습 세트 만들기'));
       await tester.pumpAndSettle();
 
-      expect(find.text('복습 세트 생성에 실패했습니다. 잠시 후 다시 시도해주세요.'), findsOneWidget);
+      expect(find.text('복습 세트 생성에 실패했어요. 잠시 후 다시 시도해 주세요.'), findsOneWidget);
       expect(find.byType(PracticeTitleWriteScreen), findsOneWidget);
     });
   });
@@ -300,7 +300,7 @@ void main() {
         (captured.single as PracticeNoteUpdateModel).practiceTitle,
         '고친 제목',
       );
-      expect(find.text('복습 세트가 수정되었습니다.'), findsOneWidget);
+      expect(find.text('복습 세트가 수정됐어요.'), findsOneWidget);
     });
   });
 

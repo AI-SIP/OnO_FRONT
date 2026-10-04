@@ -340,7 +340,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                       } else if (snapshot.hasError) {
                         return Center(
                           child: StandardText(
-                            text: '오답노트를 찾을 수 없습니다.',
+                            text: '오답노트를 찾을 수 없어요.',
                             color: themeProvider.primaryColor,
                           ),
                         );
@@ -354,7 +354,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                       } else {
                         return Center(
                           child: StandardText(
-                            text: '오답노트를 찾을 수 없습니다.',
+                            text: '오답노트를 찾을 수 없어요.',
                             color: themeProvider.primaryColor,
                           ),
                         );
@@ -639,7 +639,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
       LoadingDialog.hide(context);
       SnackBarDialog.showSnackBar(
         context: context,
-        message: '복습 세트 목록을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.',
+        message: '복습 세트 목록을 불러오지 못했어요. 잠시 후 다시 시도해 주세요.',
         backgroundColor: Colors.red,
       );
       return;
@@ -1012,7 +1012,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
       LoadingDialog.hide(context);
       SnackBarDialog.showSnackBar(
         context: context,
-        message: '복습 세트에 반영하지 못했습니다. 잠시 후 다시 시도해주세요.',
+        message: '복습 세트에 반영하지 못했어요. 잠시 후 다시 시도해 주세요.',
         backgroundColor: Colors.red,
       );
       debugPrint('복습 세트 반영 실패: $e');
@@ -1061,7 +1061,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                 const SizedBox(height: 20),
                 // 내용
                 StandardText(
-                  text: '정말로 이 오답노트를 삭제하시겠습니까?',
+                  text: '정말로 이 오답노트를 삭제할까요?',
                   fontSize: MobileFontSize.reduced(context, 15),
                   color: AppColors.textPrimary,
                   textAlign: TextAlign.center,
@@ -1127,7 +1127,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                             }
                           } catch (e) {
                             debugPrint('문제 삭제 실패: $e');
-                            AppToast.error('오답노트를 삭제하지 못했어요. 잠시 후 다시 시도해주세요.');
+                            AppToast.error('오답노트를 삭제하지 못했어요. 잠시 후 다시 시도해 주세요.');
                           }
                         },
                         style: TextButton.styleFrom(

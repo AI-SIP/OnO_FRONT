@@ -1422,7 +1422,7 @@ class _CameraScreenState extends State<CameraScreen>
                   StandardText(
                     text: denied
                         ? '설정에서 카메라 권한을 켜면 바로 촬영할 수 있어요.'
-                        : '다른 앱이 카메라를 쓰고 있는지 확인한 뒤 다시 시도해주세요.',
+                        : '다른 앱이 카메라를 쓰고 있는지 확인한 뒤 다시 시도해 주세요.',
                     fontSize: 14,
                     height: 1.5,
                     fontFamily: 'PretendardLight',

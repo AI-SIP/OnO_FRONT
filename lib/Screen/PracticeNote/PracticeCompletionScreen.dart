@@ -320,7 +320,7 @@ class _PracticeCompletionScreenState extends State<PracticeCompletionScreen> {
                   if (navigator.canPop()) {
                     navigator.pop(true); // PracticeDetailScreen 닫으면서 true 반환
                   }
-                  AppToast.success('복습을 완료했습니다!');
+                  AppToast.success('복습을 완료했어요!');
                 },
           style: ElevatedButton.styleFrom(
             backgroundColor: themeProvider.primaryColor,

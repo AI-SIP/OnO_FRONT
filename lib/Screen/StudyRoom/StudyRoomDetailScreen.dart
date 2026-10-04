@@ -154,7 +154,7 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
         themeProvider: themeProvider,
       );
     } catch (_) {
-      AppSnackBar.showError('초대 코드를 불러올 수 없습니다');
+      AppSnackBar.showError('초대 코드를 불러올 수 없어요');
     }
   }
 
@@ -187,9 +187,9 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
     final hasOtherMembers = room != null && room.members.length > 1;
     final content = isHost
         ? hasOtherMembers
-            ? '탈퇴하면 다른 멤버에게 방장이 자동으로 넘어갑니다.\n정말 탈퇴하시겠어요?'
-            : '마지막 멤버이므로 탈퇴 시 방이 삭제됩니다.\n정말 탈퇴하시겠어요?'
-        : '정말 탈퇴하시겠어요?';
+            ? '나가면 다른 멤버에게 방장이 자동으로 넘어가요.\n정말 나갈까요?'
+            : '마지막 멤버라 나가면 방이 삭제돼요.\n정말 나갈까요?'
+        : '정말 나갈까요?';
     final confirmed = await _showConfirmDialog(
       context: context,
       themeProvider: themeProvider,
@@ -221,7 +221,7 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
       icon: Icons.delete_forever,
       iconColor: Colors.red,
       title: '방 삭제',
-      content: '방을 삭제하면 모든 멤버가 퇴장됩니다.\n정말 삭제하시겠어요?',
+      content: '방을 삭제하면 모든 멤버가 퇴장돼요.\n정말 삭제할까요?',
       confirmLabel: '삭제',
       confirmColor: Colors.red,
     );

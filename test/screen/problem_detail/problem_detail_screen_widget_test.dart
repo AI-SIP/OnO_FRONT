@@ -45,7 +45,7 @@ void main() {
     });
 
     expect(find.text('2026년 5월 1일'), findsOneWidget);
-    expect(find.text('문제 이미지가 없습니다.'), findsOneWidget);
+    expect(find.text('문제 이미지가 없어요.'), findsOneWidget);
   });
 
   testWidgets('buildExpansionTile 은 펼치면 정답 관련 섹션을 보여준다', (tester) async {

@@ -117,7 +117,7 @@ class ProblemsProvider with ChangeNotifier {
             _problemsMap[problemId]!.updateAnalysis(analysisResult);
         notifyListeners();
         debugPrint(
-            'ProblemModel 업데이트 완료 (status: ${analysisResult.status}) - UI가 자동으로 갱신됩니다');
+            'ProblemModel 업데이트 완료 (status: ${analysisResult.status}) - UI가 자동으로 갱신돼요');
       }
 
       debugPrint('문제 분석 결과 조회 완료');

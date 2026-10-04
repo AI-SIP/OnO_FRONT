@@ -92,7 +92,7 @@ class AppleAuthService {
       );
     } on Exception catch (e, stackTrace) {
       debugPrint('사용자 계정 삭제 중 오류 발생: $e');
-      AppSnackBar.showError('애플 계정 연동 해제에 실패했습니다.');
+      AppSnackBar.showError('애플 계정 연동 해제에 실패했어요.');
       await Sentry.captureException(
         e,
         stackTrace: stackTrace,

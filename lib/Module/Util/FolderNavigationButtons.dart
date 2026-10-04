@@ -374,7 +374,7 @@ class _FolderNavigationButtonsState extends State<FolderNavigationButtons> {
 
                                         SnackBarDialog.showSnackBar(
                                           context: context,
-                                          message: '복습이 완료되었습니다!',
+                                          message: '복습이 완료됐어요!',
                                           backgroundColor:
                                               themeProvider.primaryColor,
                                         );
@@ -465,7 +465,7 @@ class _FolderNavigationButtonsState extends State<FolderNavigationButtons> {
 
                                         SnackBarDialog.showSnackBar(
                                           context: context,
-                                          message: '알 수 없는 오류가 발생했습니다.',
+                                          message: '알 수 없는 오류가 발생했어요.',
                                           backgroundColor: Colors.red,
                                         );
                                       } finally {

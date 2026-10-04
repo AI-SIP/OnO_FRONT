@@ -254,7 +254,7 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
             SizedBox(height: spacing),
             LabeledTextField(
               label: '제목',
-              hintText: '오답노트의 제목을 작성해주세요!',
+              hintText: '오답노트의 제목을 작성해 주세요!',
               icon: Icons.info,
               controller: _titleCtrl,
               maxLength: ProblemRegisterModel.referenceMaxLength,
@@ -272,7 +272,7 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
               label: '메모',
               controller: _memoCtrl,
               icon: Icons.edit,
-              hintText: '기록하고 싶은 내용을 간단하게 작성해주세요!',
+              hintText: '기록하고 싶은 내용을 간단하게 작성해 주세요!',
               maxLines: 3,
               maxLength: ProblemRegisterModel.memoMaxLength,
             ),
@@ -529,7 +529,7 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
       if (!mounted) return;
       SnackBarDialog.showSnackBar(
         context: context,
-        message: '이미지 삭제에 실패했습니다.',
+        message: '이미지 삭제에 실패했어요.',
         backgroundColor: Colors.red,
       );
     }
@@ -810,7 +810,7 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
             ),
             child: _selectedTagIds.isEmpty
                 ? StandardText(
-                    text: '선택된 태그가 없습니다.',
+                    text: '선택된 태그가 없어요.',
                     fontSize: 13,
                     color: Colors.grey[400]!,
                   )
@@ -906,7 +906,7 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
                           Padding(
                             padding: const EdgeInsets.only(left: 4),
                             child: StandardText(
-                              text: '최근 사용 태그가 없습니다.',
+                              text: '최근 사용 태그가 없어요.',
                               fontSize: 13,
                               color: Colors.grey[400]!,
                             ),
@@ -1101,8 +1101,8 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
         SnackBarDialog.showSnackBar(
           context: context,
           message: widget.isEditMode
-              ? '오답노트 수정에 실패했습니다. 잠시 후 다시 시도해주세요.'
-              : '오답노트 등록에 실패했습니다. 잠시 후 다시 시도해주세요.',
+              ? '오답노트 수정에 실패했어요. 잠시 후 다시 시도해 주세요.'
+              : '오답노트 등록에 실패했어요. 잠시 후 다시 시도해 주세요.',
           backgroundColor: Colors.red,
         );
       }
@@ -1524,7 +1524,7 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
       final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
       SnackBarDialog.showSnackBar(
           context: context,
-          message: "오답노트가 성공적으로 저장되었습니다.",
+          message: "오답노트가 성공적으로 저장됐어요.",
           backgroundColor: themeProvider.primaryColor);
       return;
     }
