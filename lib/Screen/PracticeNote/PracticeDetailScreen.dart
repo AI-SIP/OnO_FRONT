@@ -858,7 +858,10 @@ class _PracticeDetailScreenState extends State<PracticeDetailScreen> {
                             ),
                             const SizedBox(width: 12),
                             StandardText(
-                              text: '복습 방식 선택',
+                              // 문제를 열면 '다시 풀기 방식 선택' 이 한 번 더 떠서,
+                              // 이름이 같으면 같은 걸 두 번 묻는 것처럼 보였다.
+                              // 여기서는 순서만 고른다.
+                              text: '푸는 순서 고르기',
                               fontSize: MobileFontSize.reduced(context, 18),
                               fontWeight: FontWeight.w600,
                               color: AppColors.textPrimary,
@@ -879,7 +882,7 @@ class _PracticeDetailScreenState extends State<PracticeDetailScreen> {
                           context: context,
                           icon: Icons.format_list_numbered,
                           iconColor: themeProvider.primaryColor,
-                          title: '등록한 순서로 복습하기',
+                          title: '담은 순서대로 풀기',
                           subtitle: '세트에 담은 순서대로 $count문제를 풀어요.',
                           onTap: () {
                             Navigator.pop(sheetContext);
@@ -897,7 +900,7 @@ class _PracticeDetailScreenState extends State<PracticeDetailScreen> {
                           context: context,
                           icon: Icons.shuffle,
                           iconColor: themeProvider.primaryColor,
-                          title: '셔플 모드로 복습하기',
+                          title: '섞어서 풀기',
                           subtitle: '순서를 섞어서 $count문제를 풀어요.',
                           onTap: () {
                             Navigator.pop(sheetContext);

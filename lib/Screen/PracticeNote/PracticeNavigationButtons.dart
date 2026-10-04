@@ -11,6 +11,7 @@ import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/PracticeNoteProvider.dart';
 import '../../Module/Motion/TossPageRoute.dart';
 import '../../Module/Design/AppRadius.dart';
+import '../../Module/Design/AppColors.dart';
 
 class PracticeNavigationButtons extends StatefulWidget {
   final BuildContext context;
@@ -60,22 +61,43 @@ class _PracticeNavigationButtonsState extends State<PracticeNavigationButtons> {
           : null,
       style:
           _buildButtonStyle(themeProvider, screenHeight, isCompletion: false),
-      child: StandardText(
-        text: '< 이전 문제',
-        fontSize: 13,
-        color: themeProvider.primaryColor,
+      // 꺾쇠를 글자로 쓰던 것을 아이콘으로 바꾼다.
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.chevron_left, size: 18, color: themeProvider.primaryColor),
+          StandardText(
+            text: '이전',
+            fontSize: 14,
+            color: themeProvider.primaryColor,
+          ),
+        ],
       ),
     );
   }
 
-  StandardText buildProgressText(ThemeHandler themeProvider) {
+  /// 몇 번째 문제인지와 이번 회차에서 몇 문제를 저장했는지 보인다. 전에는
+  /// `3 / 5` 만 있어서 어느 문제를 저장했는지 알 수 없었다.
+  Widget buildProgressText(ThemeHandler themeProvider) {
     final int currentIndex = getCurrentProblemIndex();
     final int totalProblems = widget.practiceProvider.sessionProblems.length;
+    final int savedCount = widget.practiceProvider.sessionResults.length;
 
-    return StandardText(
-      text: '${currentIndex + 1} / $totalProblems',
-      fontSize: 16,
-      color: themeProvider.primaryColor,
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        StandardText(
+          text: '${currentIndex + 1} / $totalProblems',
+          fontSize: 16,
+          color: themeProvider.primaryColor,
+        ),
+        if (savedCount > 0)
+          StandardText(
+            text: '$savedCount개 저장',
+            fontSize: 11,
+            color: AppColors.textSecondary,
+          ),
+      ],
     );
   }
 
@@ -129,11 +151,24 @@ class _PracticeNavigationButtonsState extends State<PracticeNavigationButtons> {
           : () => _showCompletionScreen(),
       style: _buildButtonStyle(themeProvider, screenHeight,
           isCompletion: nextProblemId == -1),
-      child: StandardText(
-        text: nextProblemId != -1 ? '다음 문제 >' : '복습 마치기',
-        fontSize: 13,
-        color: nextProblemId != -1 ? themeProvider.primaryColor : Colors.white,
-      ),
+      child: nextProblemId != -1
+          ? Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                StandardText(
+                  text: '다음',
+                  fontSize: 14,
+                  color: themeProvider.primaryColor,
+                ),
+                Icon(Icons.chevron_right,
+                    size: 18, color: themeProvider.primaryColor),
+              ],
+            )
+          : const StandardText(
+              text: '복습 마치기',
+              fontSize: 14,
+              color: Colors.white,
+            ),
     );
   }
 
@@ -256,15 +291,8 @@ void openPracticeProblem(
             Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
         var offsetAnimation = animation.drive(tween);
 
-        return SlideTransition(
-          position: offsetAnimation,
-          child: RotationTransition(
-            alignment: Alignment.bottomRight,
-            turns:
-                Tween(begin: isNext ? 0.1 : -0.1, end: 0.0).animate(animation),
-            child: child,
-          ),
-        );
+        // 회전 효과는 이 화면에만 있어서 뺐다. 옆으로 미는 것만 남긴다.
+        return SlideTransition(position: offsetAnimation, child: child);
       },
     ),
   );

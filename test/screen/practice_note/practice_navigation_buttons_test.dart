@@ -91,15 +91,15 @@ void main() {
       await pumpButtons(tester, currentProblemId: 20);
 
       expect(find.text('2 / 3'), findsOneWidget);
-      expect(find.text('< 이전 문제'), findsOneWidget);
-      expect(find.text('다음 문제 >'), findsOneWidget);
+      expect(find.text('이전'), findsOneWidget);
+      expect(find.text('다음'), findsOneWidget);
     });
 
     testWidgets('첫 번째 문제에서는 이전 버튼이 비활성화된다', (tester) async {
       await pumpButtons(tester, currentProblemId: 10);
 
       final previousButton =
-          tester.widget<TextButton>(find.widgetWithText(TextButton, '< 이전 문제'));
+          tester.widget<TextButton>(find.widgetWithText(TextButton, '이전'));
       expect(previousButton.onPressed, isNull);
     });
 
@@ -107,7 +107,7 @@ void main() {
       await pumpButtons(tester, currentProblemId: 10);
 
       final nextButton =
-          tester.widget<TextButton>(find.widgetWithText(TextButton, '다음 문제 >'));
+          tester.widget<TextButton>(find.widgetWithText(TextButton, '다음'));
       expect(nextButton.onPressed, isNotNull);
     });
 
@@ -115,7 +115,7 @@ void main() {
       await pumpButtons(tester, currentProblemId: 30);
 
       expect(find.text('복습 마치기'), findsOneWidget);
-      expect(find.text('다음 문제 >'), findsNothing);
+      expect(find.text('다음'), findsNothing);
       expect(find.text('3 / 3'), findsOneWidget);
     });
   });
@@ -126,7 +126,7 @@ void main() {
     await pumpButtons(tester, currentProblemId: 10);
 
     final previousButton =
-        tester.widget<TextButton>(find.widgetWithText(TextButton, '< 이전 문제'));
+        tester.widget<TextButton>(find.widgetWithText(TextButton, '이전'));
     expect(previousButton.onPressed, isNull);
     expect(find.text('복습 마치기'), findsOneWidget);
     expect(find.text('1 / 1'), findsOneWidget);
