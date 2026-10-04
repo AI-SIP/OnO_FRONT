@@ -38,6 +38,9 @@ extension PracticeContinueChoiceName on PracticeContinueChoice {
 ///
 /// [solvedPosition] 은 방금 푼 문제가 세트에서 몇 번째인지(1부터)다. [next] 가
 /// null 이면 마지막 문제였다는 뜻이라 복습을 마칠지 묻는다.
+///
+/// 추천 복습에서도 같은 시트를 쓴다. 그때는 마지막 문제에서 묻는 말과 버튼을
+/// [finishQuestion], [finishLabel], [finishDescription] 으로 바꾼다.
 Future<PracticeContinueChoice> showPracticeContinueSheet(
   BuildContext context, {
   required int solvedPosition,
@@ -45,6 +48,9 @@ Future<PracticeContinueChoice> showPracticeContinueSheet(
   required ProblemModel? next,
   required ProblemSolveMode mode,
   required Color accentColor,
+  String finishQuestion = '복습 세트를 마칠까요?',
+  String finishLabel = '복습 마치기',
+  String finishDescription = '이번 회차를 마쳐요.',
 }) async {
   final choice = await showModalBottomSheet<PracticeContinueChoice>(
     context: context,
@@ -57,6 +63,9 @@ Future<PracticeContinueChoice> showPracticeContinueSheet(
       next: next,
       mode: mode,
       accentColor: accentColor,
+      finishQuestion: finishQuestion,
+      finishLabel: finishLabel,
+      finishDescription: finishDescription,
     ),
   );
   return choice ?? PracticeContinueChoice.stop;
@@ -70,6 +79,9 @@ class _PracticeContinueSheet extends StatelessWidget {
   final ProblemModel? next;
   final ProblemSolveMode mode;
   final Color accentColor;
+  final String finishQuestion;
+  final String finishLabel;
+  final String finishDescription;
 
   const _PracticeContinueSheet({
     required this.solvedPosition,
@@ -77,6 +89,9 @@ class _PracticeContinueSheet extends StatelessWidget {
     required this.next,
     required this.mode,
     required this.accentColor,
+    required this.finishQuestion,
+    required this.finishLabel,
+    required this.finishDescription,
   });
 
   String get _nextTitle {
@@ -148,7 +163,7 @@ class _PracticeContinueSheet extends StatelessWidget {
                     // 이 시트는 세트의 몇 문제를 실제로 풀었는지 모른다. 마지막
                     // 문제라는 것만 알아서 '모두 복습했다' 고 말하지 않는다.
                     StandardText(
-                      text: finished ? '복습 세트를 마칠까요?' : '다음 문제도 이어서 풀까요?',
+                      text: finished ? finishQuestion : '다음 문제도 이어서 풀까요?',
                       fontSize: 13,
                       color: Colors.black54,
                       height: 1.4,
@@ -162,8 +177,8 @@ class _PracticeContinueSheet extends StatelessWidget {
           if (finished)
             _ChoiceTile(
               icon: Icons.flag_outlined,
-              title: '복습 마치기',
-              description: '이번 회차를 마쳐요.',
+              title: finishLabel,
+              description: finishDescription,
               accentColor: accentColor,
               highlighted: true,
               onTap: () =>

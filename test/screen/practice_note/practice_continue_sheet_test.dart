@@ -111,4 +111,40 @@ void main() {
       expect(result, PracticeContinueChoice.stop);
     });
   });
+
+  testWidgets('추천 복습에서는 마지막 문제에서 목록으로 돌아갈지 묻는다', (tester) async {
+    PracticeContinueChoice? result;
+    await pumpOnoWidget(
+      tester,
+      Scaffold(
+        body: Builder(
+          builder: (context) => Center(
+            child: TextButton(
+              onPressed: () async => result = await showPracticeContinueSheet(
+                context,
+                solvedPosition: 3,
+                total: 3,
+                next: null,
+                mode: ProblemSolveMode.inApp,
+                accentColor: Colors.green,
+                finishQuestion: '추천 복습 목록으로 돌아갈까요?',
+                finishLabel: '목록으로 돌아가기',
+                finishDescription: '남은 추천 문제를 확인해요.',
+              ),
+              child: const Text('열기'),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.text('열기'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('추천 복습 목록으로 돌아갈까요?'), findsOneWidget);
+    expect(find.text('복습 세트를 마칠까요?'), findsNothing);
+
+    await tester.tap(find.text('목록으로 돌아가기'));
+    await tester.pumpAndSettle();
+    expect(result, PracticeContinueChoice.finish);
+  });
 }

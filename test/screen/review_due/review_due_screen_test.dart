@@ -58,6 +58,7 @@ void main() {
 
     expect(find.text('3번 맞히면 추천에서 빠져요'), findsOneWidget);
     expect(find.text('정답 1/3'), findsOneWidget);
+    expect(find.text('추천 문제부터 풀기'), findsOneWidget);
   });
 
   testWidgets('예전 서버라 맞힌 횟수가 없으면 안내를 띄우지 않는다', (tester) async {

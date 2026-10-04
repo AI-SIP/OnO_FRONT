@@ -37,6 +37,10 @@ class ProblemDetailScreen extends StatefulWidget {
   final int problemId;
   final bool isPractice;
 
+  /// 추천 복습에서 열었을 때 추천 목록의 문제 순서. 있으면 한 문제를 저장하고
+  /// 돌아왔을 때 다음 추천 문제를 바로 풀지 묻는다.
+  final List<int>? reviewQueue;
+
   /// 복습 세트에서 `다음 문제 바로 풀기` 로 넘어왔을 때, 앞 문제와 같은 방식으로
   /// 바로 다시 풀기를 시작한다.
   final ProblemSolveMode? autoStartMode;
@@ -44,6 +48,7 @@ class ProblemDetailScreen extends StatefulWidget {
   const ProblemDetailScreen({
     required this.problemId,
     this.isPractice = false,
+    this.reviewQueue,
     this.autoStartMode,
     super.key,
   });
@@ -1158,7 +1163,11 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
       problemModel: problemModel,
       isExpanded: _isExpansionTileExpanded,
       onExpansionChanged: _onExpansionChanged,
-      onSolved: widget.isPractice ? _onPracticeProblemSolved : null,
+      onSolved: widget.isPractice
+          ? _onPracticeProblemSolved
+          : widget.reviewQueue != null
+              ? _onReviewQueueProblemSolved
+              : null,
       autoStartMode: widget.autoStartMode,
       onRequestAnalysis: _isRequestingAnalysis
           ? null
@@ -1169,6 +1178,72 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
             .fetchProblemAnalysis(problemModel.problemId);
         _startAnalysisPolling(problemModel.problemId);
       },
+    );
+  }
+
+  /// 추천 복습에서 연 문제를 저장하고 돌아오면 다음 추천 문제를 바로 풀지 묻는다.
+  ///
+  /// 복습 세트와 같은 시트를 쓴다. 다음 문제는 연 순간의 추천 목록 순서를 따른다.
+  Future<void> _onReviewQueueProblemSolved(ProblemSolveMode mode) async {
+    final queue = widget.reviewQueue!;
+    final index = queue.indexOf(widget.problemId);
+    if (index < 0) return;
+    final nextId = index + 1 < queue.length ? queue[index + 1] : null;
+    final problemsProvider =
+        Provider.of<ProblemsProvider>(context, listen: false);
+    final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
+
+    ProblemModel? next;
+    if (nextId != null) {
+      try {
+        next = await problemsProvider.getProblem(nextId);
+      } catch (_) {
+        // 다음 문제를 못 받으면 제목 없이 묻는다.
+        next = ProblemModel(problemId: nextId);
+      }
+      if (!mounted) return;
+    }
+
+    final choice = await showPracticeContinueSheet(
+      context,
+      solvedPosition: index + 1,
+      total: queue.length,
+      next: next,
+      mode: mode,
+      accentColor: themeProvider.primaryColor,
+      finishQuestion: '추천 복습 목록으로 돌아갈까요?',
+      finishLabel: '목록으로 돌아가기',
+      finishDescription: '남은 추천 문제를 확인해요.',
+    );
+    AppAnalytics.logEvent('review_due_continue_choice', {
+      'choice': choice.analyticsName,
+      'mode': mode == ProblemSolveMode.inApp ? 'canvas' : 'offline',
+      'count': queue.length,
+    });
+    if (!mounted) return;
+
+    switch (choice) {
+      case PracticeContinueChoice.solveNext:
+        _openReviewQueueProblem(nextId!, autoStartMode: mode);
+      case PracticeContinueChoice.viewNext:
+        _openReviewQueueProblem(nextId!);
+      case PracticeContinueChoice.finish:
+        Navigator.of(context).pop();
+      case PracticeContinueChoice.stop:
+        break;
+    }
+  }
+
+  void _openReviewQueueProblem(int problemId,
+      {ProblemSolveMode? autoStartMode}) {
+    Navigator.of(context).pushReplacement(
+      TossPageRoute(
+        builder: (_) => ProblemDetailScreen(
+          problemId: problemId,
+          reviewQueue: widget.reviewQueue,
+          autoStartMode: autoStartMode,
+        ),
+      ),
     );
   }
 
