@@ -602,6 +602,52 @@ class _TagProblemSearchScreenState extends State<TagProblemSearchScreen> {
       return _buildEmptyState(emptyText);
     }
 
+    // 넓은 화면에서는 두 열로 놓는다.
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final columns = constraints.maxWidth >= 700 ? 2 : 1;
+        if (columns == 1)
+          return _buildSingleColumnList(problems, themeProvider);
+        final rowCount = (problems.length / columns).ceil();
+        return ListView.builder(
+          controller: _scrollController,
+          padding: const EdgeInsets.fromLTRB(20, 4, 20, 20),
+          itemCount: rowCount + (_hasNext || _isLoadingProblems ? 1 : 0),
+          itemBuilder: (context, index) {
+            if (index == rowCount) {
+              if (_loadFailed && !_isLoadingProblems) {
+                return Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Center(child: _buildRetryButton(themeProvider)),
+                );
+              }
+              return const Padding(
+                padding: EdgeInsets.all(16),
+                child: Center(child: CircularProgressIndicator()),
+              );
+            }
+            final first = index * columns;
+            return Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                for (var i = first; i < first + columns; i++) ...[
+                  if (i > first) const SizedBox(width: 12),
+                  Expanded(
+                    child: i < problems.length
+                        ? _buildProblemTile(problems[i], themeProvider)
+                        : const SizedBox.shrink(),
+                  ),
+                ],
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildSingleColumnList(
+      List<ProblemModel> problems, ThemeHandler themeProvider) {
     return ListView.builder(
       controller: _scrollController,
       padding: const EdgeInsets.fromLTRB(20, 4, 20, 20),

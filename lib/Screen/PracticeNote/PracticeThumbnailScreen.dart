@@ -576,30 +576,49 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
       return _buildLoadingIndicator();
     }
 
-    return ListView.builder(
-      controller: _scrollController,
-      physics: const AlwaysScrollableScrollPhysics(),
-      padding: const EdgeInsets.symmetric(vertical: 20),
-      itemCount: thumbnails.length + (isLoadingMore || hasMore ? 1 : 0),
-      itemBuilder: (context, index) {
-        // 더 불러오는 중임을 알리는 자리. 목록 아래에 잠깐 보이는 것이라
-        // 스켈레톤보다 작은 표시가 낫다.
-        if (index == thumbnails.length) {
-          return const Padding(
-            padding: EdgeInsets.all(16.0),
-            child: Center(child: CircularProgressIndicator()),
-          );
-        }
+    // 넓은 화면에서는 두 열로 놓는다. 태블릿에서도 한 줄이라 카드가 길게
+    // 늘어났다.
+    return LayoutBuilder(builder: (context, constraints) {
+      final columns = constraints.maxWidth >= 700 ? 2 : 1;
+      final rowCount = (thumbnails.length / columns).ceil();
+      return ListView.builder(
+        controller: _scrollController,
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.symmetric(vertical: 20),
+        itemCount: rowCount + (isLoadingMore || hasMore ? 1 : 0),
+        itemBuilder: (context, index) {
+          // 더 불러오는 중임을 알리는 자리. 목록 아래에 잠깐 보이는 것이라
+          // 스켈레톤보다 작은 표시가 낫다.
+          if (index == rowCount) {
+            return const Padding(
+              padding: EdgeInsets.all(16.0),
+              child: Center(child: CircularProgressIndicator()),
+            );
+          }
 
-        final practice = thumbnails[index];
-        // 첫 화면에 보이는 것만 하나씩 들어온다.
-        return AppearTransition(
-          enabled: index < _staggeredItemLimit,
-          delay: AppMotion.stagger * index,
-          child: _buildPracticeItem(practice, themeProvider),
-        );
-      },
-    );
+          final first = index * columns;
+          final row = columns == 1
+              ? _buildPracticeItem(thumbnails[first], themeProvider)
+              : Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    for (var i = first; i < first + columns; i++)
+                      Expanded(
+                        child: i < thumbnails.length
+                            ? _buildPracticeItem(thumbnails[i], themeProvider)
+                            : const SizedBox.shrink(),
+                      ),
+                  ],
+                );
+          // 첫 화면에 보이는 것만 하나씩 들어온다.
+          return AppearTransition(
+            enabled: index < _staggeredItemLimit,
+            delay: AppMotion.stagger * index,
+            child: row,
+          );
+        },
+      );
+    });
   }
 
   Widget _buildPracticeItem(

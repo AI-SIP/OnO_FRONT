@@ -1422,8 +1422,8 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
         child: Column(
           children: [
             Expanded(
-              child: Builder(
-                builder: (context) {
+              child: LayoutBuilder(
+                builder: (context, constraints) {
                   // 로컬 상태 사용 (Provider와 독립적)
                   // 지우고 되돌리기를 기다리는 것은 목록에서 뺀다.
                   final pending = PendingDeletion.instance;
@@ -1518,15 +1518,39 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                       currentSubfolders.length + currentProblems.length;
                   final hasMore = _subfolderHasNext || _problemHasNext;
 
+                  Widget tileAt(int index) => index < currentSubfolders.length
+                      ? _buildFolderTile(
+                          currentSubfolders[index], themeProvider, index)
+                      : _buildProblemTile(
+                          currentProblems[index - currentSubfolders.length],
+                          themeProvider);
+
+                  // 넓은 화면에서는 두 열로 놓는다. 전에는 태블릿에서도 한 줄이라
+                  // 카드가 길게 늘어나고 한 화면에 몇 개 보이지 않았다. 공책과
+                  // 오답노트는 서로 섞이지 않게 각자 짝을 짓는다.
+                  final twoColumns = constraints.maxWidth >= 700;
+                  final rows = <List<int>>[];
+                  if (twoColumns) {
+                    void pairUp(int from, int to) {
+                      for (var i = from; i < to; i += 2) {
+                        rows.add([i, if (i + 1 < to) i + 1]);
+                      }
+                    }
+
+                    pairUp(0, currentSubfolders.length);
+                    pairUp(currentSubfolders.length, totalItems);
+                  }
+                  final rowCount = twoColumns ? rows.length : totalItems;
+
                   return ListView.builder(
                     controller: _scrollController,
                     physics: const AlwaysScrollableScrollPhysics(),
                     padding:
                         const EdgeInsets.symmetric(horizontal: _pagePadding),
-                    itemCount: totalItems + (isLoadingMore || hasMore ? 1 : 0),
+                    itemCount: rowCount + (isLoadingMore || hasMore ? 1 : 0),
                     itemBuilder: (context, index) {
                       // 로딩 인디케이터 표시
-                      if (index == totalItems) {
+                      if (index == rowCount) {
                         return const Padding(
                           padding: EdgeInsets.all(16.0),
                           child: Center(
@@ -1535,12 +1559,20 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                         );
                       }
 
-                      final tile = index < currentSubfolders.length
-                          ? _buildFolderTile(
-                              currentSubfolders[index], themeProvider, index)
-                          : _buildProblemTile(
-                              currentProblems[index - currentSubfolders.length],
-                              themeProvider);
+                      final tile = twoColumns
+                          ? Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Expanded(child: tileAt(rows[index][0])),
+                                const SizedBox(width: 16),
+                                Expanded(
+                                  child: rows[index].length > 1
+                                      ? tileAt(rows[index][1])
+                                      : const SizedBox.shrink(),
+                                ),
+                              ],
+                            )
+                          : tileAt(index);
 
                       // 첫 화면에 보이는 것만 하나씩 들어온다. 아래쪽까지
                       // 지연을 매기면 스크롤해 내려갔을 때 항목이 뒤늦게
