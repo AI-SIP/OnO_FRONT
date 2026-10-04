@@ -163,7 +163,7 @@ void main() {
     expect(find.text('기록 없음'), findsOneWidget);
   });
 
-  testWidgets('마지막 복습 일시가 있으면 yyyy/MM/dd 형식으로 보인다', (tester) async {
+  testWidgets('마지막 복습 일시가 있으면 짧은 날짜로 보인다 (다른 해면 연도를 붙인다)', (tester) async {
     practiceProvider.currentProblems = [_problem(10)];
     solvesByProblem = {
       10: [_solve(1, 10, AnswerStatus.CORRECT)]
@@ -180,7 +180,7 @@ void main() {
       practiceProvider: practiceProvider,
     );
 
-    expect(find.text('2024/03/05'), findsOneWidget);
+    expect(find.text('24/3/5'), findsOneWidget);
     expect(find.text('기록 없음'), findsNothing);
   });
 

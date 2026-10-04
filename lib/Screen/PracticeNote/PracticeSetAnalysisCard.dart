@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 
 import '../../Model/Problem/AnswerStatus.dart';
 import '../../Module/Design/AppColors.dart';
@@ -9,6 +8,7 @@ import '../../Module/Text/StandardText.dart';
 import '../../Module/Text/mobile_font_size.dart';
 import '../ProblemDetail/Widget/ReviewStatusStyle.dart';
 import 'PracticeSetAnalysis.dart';
+import '../../Util/ShortDate.dart';
 
 /// 결과마다 색과 이름. 아직 안 푼 문제는 회색이다.
 abstract final class PracticeResultStyle {
@@ -100,10 +100,7 @@ class PracticeSetAnalysisCard extends StatelessWidget {
     final average = analysis?.averageSeconds;
     final items = [
       ('복습 횟수', '$practiceCount회'),
-      (
-        '마지막 복습',
-        last == null ? '기록 없음' : DateFormat('yyyy/MM/dd').format(last)
-      ),
+      ('마지막 복습', last == null ? '기록 없음' : shortDate(last)),
       // 기록을 받는 중이거나 시간이 남은 기록이 없으면 비워 둔다.
       ('평균 풀이 시간', average == null ? '-' : formatDuration(average)),
     ];
