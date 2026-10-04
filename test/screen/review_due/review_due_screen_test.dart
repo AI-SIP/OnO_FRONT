@@ -102,4 +102,52 @@ void main() {
 
     expect(find.text('추천 복습 문제가 없어요'), findsOneWidget);
   });
+
+  testWidgets('카드에 오늘인지 며칠 밀렸는지 붙인다', (tester) async {
+    final today = DateTime.now();
+    await pumpScreen(
+      tester,
+      ReviewDueResponse(
+        dueCount: 2,
+        overdueCount: 1,
+        problems: [
+          ReviewDueProblemModel(
+            problemId: 1,
+            reference: '밀린 문제',
+            nextReviewAt: today.subtract(const Duration(days: 3)),
+            reviewInterval: 1,
+            consecutiveCorrectCount: 0,
+          ),
+          ReviewDueProblemModel(
+            problemId: 2,
+            reference: '오늘 문제',
+            nextReviewAt: today,
+            reviewInterval: 1,
+            consecutiveCorrectCount: 0,
+          ),
+        ],
+      ),
+    );
+
+    expect(find.text('3일 밀림'), findsOneWidget);
+    expect(find.text('오늘'), findsOneWidget);
+  });
+
+  testWidgets('받아 둔 목록이 있어도 화면에 들어오면 다시 받는다', (tester) async {
+    final provider = ReviewDueProvider(problemService: problemService);
+    when(() => problemService.getReviewDueProblems()).thenAnswer(
+      (_) async =>
+          ReviewDueResponse(dueCount: 0, overdueCount: 0, problems: []),
+    );
+    await provider.fetchReviewDue();
+    clearInteractions(problemService);
+
+    await pumpOnoWidget(
+      tester,
+      ReviewDueScreen(problemService: problemService),
+      reviewDueProvider: provider,
+    );
+
+    verify(() => problemService.getReviewDueProblems()).called(1);
+  });
 }

@@ -19,6 +19,11 @@ class ProblemThumbnailCard extends StatelessWidget {
 
   /// 진행 막대 아래에 적는 글. 주면 막대가 무엇을 세는지 함께 보인다. 예) '정답 1/3'
   final String? progressLabel;
+
+  /// 태그 앞에 붙이는 칩. 추천 복습에서 `오늘`, `3일 밀림` 처럼 왜 지금
+  /// 나왔는지 보여 줄 때 쓴다.
+  final String? statusLabel;
+  final Color? statusColor;
   final EdgeInsetsGeometry padding;
   final double imageWidth;
   final double imageHeight;
@@ -42,6 +47,8 @@ class ProblemThumbnailCard extends StatelessWidget {
     this.isSelected = false,
     this.trailing,
     this.progressLabel,
+    this.statusLabel,
+    this.statusColor,
     this.padding = const EdgeInsets.all(12),
     this.imageWidth = 50,
     this.imageHeight = 70,
@@ -129,11 +136,31 @@ class ProblemThumbnailCard extends StatelessWidget {
         Wrap(
           spacing: tagSpacing,
           runSpacing: tagRunSpacing,
-          children: tags.isNotEmpty
-              ? tags.map((tag) => _buildTag('#${tag.name}')).toList()
-              : [_buildEmptyTag()],
+          children: [
+            if (statusLabel != null) _buildStatusChip(statusLabel!),
+            ...tags.isNotEmpty
+                ? tags.map((tag) => _buildTag('#${tag.name}'))
+                : [_buildEmptyTag()],
+          ],
         ),
       ],
+    );
+  }
+
+  Widget _buildStatusChip(String text) {
+    final color = statusColor ?? themeProvider.primaryColor;
+    return Container(
+      padding: tagPadding,
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(AppRadius.small),
+      ),
+      child: StandardText(
+        text: text,
+        fontSize: tagFontSize,
+        fontWeight: FontWeight.w600,
+        color: color,
+      ),
     );
   }
 

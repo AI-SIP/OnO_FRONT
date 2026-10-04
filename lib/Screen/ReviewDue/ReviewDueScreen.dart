@@ -9,6 +9,7 @@ import 'package:ono/Provider/ReviewDueProvider.dart';
 import 'package:ono/Screen/ProblemDetail/ProblemDetailScreen.dart';
 import 'package:ono/Service/Api/Problem/ProblemService.dart';
 import 'package:ono/Util/AppAnalytics.dart';
+import 'package:ono/Util/ReviewScheduleText.dart';
 import 'package:provider/provider.dart';
 import '../../Module/Motion/AppHaptic.dart';
 import '../../Module/Motion/PressableScale.dart';
@@ -38,10 +39,10 @@ class _ReviewDueScreenState extends State<ReviewDueScreen> {
     FirebaseAnalytics.instance.logEvent(name: 'review_due_screen_view');
     AppAnalytics.logScreenView('ReviewDueScreen');
     WidgetsBinding.instance.addPostFrameCallback((_) async {
+      // 받아 둔 목록이 있으면 먼저 보이고 늘 다시 받는다. 전에는 목록이 없을
+      // 때만 받아서, 다른 곳에서 복습하고 와도 이미 푼 문제가 그대로 남았다.
       final provider = Provider.of<ReviewDueProvider>(context, listen: false);
-      if (provider.data == null) {
-        await provider.fetchReviewDue();
-      }
+      await provider.fetchReviewDue();
       if (provider.data != null) {
         await _loadProblemDetails(provider.data!.problems);
       }
@@ -198,6 +199,7 @@ class _ReviewDueScreenState extends State<ReviewDueScreen> {
     ThemeHandler themeProvider,
   ) {
     final correctCount = problem.correctCount;
+    final dueChip = ReviewScheduleText.dueChip(problem.nextReviewAt);
     final detail = _problemDetails[problem.problemId];
     final imageUrl = detail?.problemImageDataList?.isNotEmpty == true
         ? detail!.problemImageDataList!.first.imageUrl
@@ -244,6 +246,10 @@ class _ReviewDueScreenState extends State<ReviewDueScreen> {
           progressLabel: correctCount != null && requiredCorrectCount != null
               ? '정답 $correctCount/$requiredCorrectCount'
               : null,
+          statusLabel: dueChip,
+          statusColor: dueChip == null || dueChip == '오늘'
+              ? themeProvider.primaryColor
+              : Colors.orange.shade700,
         ),
       ),
     );
