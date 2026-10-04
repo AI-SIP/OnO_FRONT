@@ -43,6 +43,8 @@ import 'Widget/LabeledTextField.dart';
 import '../../Module/Motion/TossDialog.dart';
 import '../../Module/Design/AppColors.dart';
 import '../../Module/Design/AppRadius.dart';
+import '../../Util/BatchPracticeSetPreference.dart';
+import '../../Module/Design/AppToast.dart';
 
 enum _BatchRegisterStep {
   selectImages,
@@ -97,6 +99,9 @@ class _MultiProblemRegisterScreenState
     AppAnalytics.logScreenView('MultiProblemRegisterScreen');
     AiAnalysisPreference.load().then((enabled) {
       if (mounted) setState(() => _aiAnalysisEnabled = enabled);
+    });
+    BatchPracticeSetPreference.load().then((enabled) {
+      if (mounted) setState(() => _createPracticeSet = enabled);
     });
     _selectedFolderId = widget.initialFolderId;
     _loadTags();
@@ -410,7 +415,8 @@ class _MultiProblemRegisterScreenState
             ),
             const SizedBox(height: 18),
             StandardText(
-              text: '갤러리를 여는 중입니다.',
+              // 카메라와 앨범 중 고르는 창이 먼저 뜬다. 갤러리만 여는 게 아니다.
+              text: '사진을 가져오는 중이에요.',
               fontSize: MobileFontSize.reduced(context, 16),
               color: AppColors.textPrimary,
               fontWeight: FontWeight.w600,
@@ -418,7 +424,7 @@ class _MultiProblemRegisterScreenState
             ),
             const SizedBox(height: 7),
             StandardText(
-              text: '이미지 선택창이 열릴 때까지 잠시만 기다려 주세요.',
+              text: '카메라나 앨범을 고르는 창이 곧 열려요.',
               fontSize: 13,
               color: Colors.grey[600]!,
               textAlign: TextAlign.center,
@@ -490,7 +496,7 @@ class _MultiProblemRegisterScreenState
                       ),
                       icon: const Icon(Icons.photo_library_outlined, size: 18),
                       label: const StandardText(
-                        text: '갤러리에서 선택',
+                        text: '사진 가져오기',
                         fontSize: 14,
                         color: Colors.white,
                         fontWeight: FontWeight.w600,
@@ -1168,14 +1174,17 @@ class _MultiProblemRegisterScreenState
     });
   }
 
+  void _setCreatePracticeSet(bool enabled) {
+    setState(() => _createPracticeSet = enabled);
+    unawaited(BatchPracticeSetPreference.save(enabled));
+  }
+
   Widget _buildPracticeSetOption(ThemeHandler themeProvider) {
     return PressableScale(
       haptic: HapticLevel.selection,
       onTap: _isSubmitting
           ? null
-          : () => setState(() {
-                _createPracticeSet = !_createPracticeSet;
-              }),
+          : () => _setCreatePracticeSet(!_createPracticeSet),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
@@ -1216,9 +1225,7 @@ class _MultiProblemRegisterScreenState
               materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
               onChanged: _isSubmitting
                   ? null
-                  : (value) => setState(() {
-                        _createPracticeSet = value ?? false;
-                      }),
+                  : (value) => _setCreatePracticeSet(value ?? false),
             ),
           ],
         ),
@@ -1867,17 +1874,38 @@ class _MultiProblemRegisterScreenState
     }
   }
 
-  void _removeDraft(int index) {
+  /// 초안을 빼고 잠깐 되돌리기를 보인다. 전에는 확인도 되돌리기도 없어서
+  /// 적어 둔 메모가 한 번 누르면 사라졌다.
+  Future<void> _removeDraft(int index) async {
     final removedDraft = _drafts.removeAt(index);
-    removedDraft.dispose();
-    if (index < _problemImages.length) {
-      _problemImages.removeAt(index);
-    }
+    final removedImage =
+        index < _problemImages.length ? _problemImages.removeAt(index) : null;
+    final wasLast = _drafts.isEmpty;
+    final stepBefore = _step;
 
     setState(() {
-      if (_drafts.isEmpty) {
+      if (wasLast) {
         _step = _BatchRegisterStep.selectImages;
       }
+    });
+
+    final undone = await AppToast.undo('오답노트 하나를 뺐어요');
+    if (!mounted) {
+      removedDraft.dispose();
+      return;
+    }
+    if (!undone) {
+      removedDraft.dispose();
+      return;
+    }
+    setState(() {
+      final draftIndex = index.clamp(0, _drafts.length);
+      _drafts.insert(draftIndex, removedDraft);
+      if (removedImage != null) {
+        _problemImages.insert(
+            index.clamp(0, _problemImages.length), removedImage);
+      }
+      _step = stepBefore;
     });
   }
 
@@ -2113,7 +2141,10 @@ class _MultiProblemRegisterScreenState
 
     final practiceProvider =
         Provider.of<ProblemPracticeProvider>(context, listen: false);
-    final practiceTitle = _resolvePracticeSetTitle(registeredDrafts);
+    // 같은 공책으로 여러 번 올리면 이름이 같은 세트가 쌓여서 날짜를 붙인다.
+    final now = DateTime.now();
+    final practiceTitle =
+        '${_resolvePracticeSetTitle(registeredDrafts)} ${now.month}월 ${now.day}일';
     final registerModel = PracticeNoteRegisterModel(
       practiceId: null,
       practiceTitle: practiceTitle,
@@ -2140,13 +2171,16 @@ class _MultiProblemRegisterScreenState
               valueListenable: progress,
               builder: (context, value, _) {
                 final progressValue = total == 0 ? 0.0 : value / total;
+                // 다 올린 뒤에도 분석 요청과 목록 정리를 기다린다. 전에는 그동안
+                // 100% 에서 멈춘 것처럼 보였다.
+                final finishing = total > 0 && value >= total;
                 return Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     // 다른 로딩과 같은 모양을 쓴다.
                     AppLoadingView(
-                      message: '오답노트를 등록하고 있어요',
-                      detail: '$value / $total',
+                      message: finishing ? '마무리하고 있어요' : '오답노트를 등록하고 있어요',
+                      detail: finishing ? '거의 다 됐어요' : '$value / $total',
                       progress: progressValue,
                       color: themeProvider.primaryColor,
                     ),
