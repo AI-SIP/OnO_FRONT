@@ -300,8 +300,10 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                 if (previous == null && next == null) return false;
                 if (previous == null || next == null) return true;
 
-                // 분석 상태가 변경되었을 때만 rebuild
-                return previous.analysis?.status != next.analysis?.status ||
+                // 분석 상태나 메모가 바뀌었을 때만 rebuild. 메모는 해설 탭에서
+                // 바로 고칠 수 있다.
+                return previous.memo != next.memo ||
+                    previous.analysis?.status != next.analysis?.status ||
                     previous.analysis?.subject != next.analysis?.subject ||
                     previous.analysis?.problemType !=
                         next.analysis?.problemType;
