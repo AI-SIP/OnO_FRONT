@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:ono/Module/Motion/PressableScale.dart';
 import 'package:ono/Module/Motion/Skeleton.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:ono/Model/Common/LoginStatus.dart';
@@ -298,16 +297,9 @@ void main() {
   });
 
   group('선택 모드', () {
-    // 편집 메뉴의 삭제(선택 모드 진입) 항목은 화면에 아이콘(delete_outline)으로만
-    // 유일하게 식별된다. 텍스트로 찾으면 바텀시트 헤더 "공책 편집하기"와
-    // 라벨이 겹친다 — TODO(#174): 실제 버그. lib/Screen/Folder/DirectoryScreen.dart
-    // 의 _showActionDialog 안, 삭제 액션 아이템(Icons.delete_outline) 의
-    // title 이 '공책 편집하기'로 돼 있어 바텀시트 헤더 문구와 중복된다.
-    // (아이템 자체는 선택 모드 진입 → 삭제 기능이라 '삭제하기' 류의 문구가 맞아 보인다.)
-    Finder deleteMenuItem() => find.ancestor(
-          of: find.byIcon(Icons.delete_outline),
-          matching: find.byType(PressableScale),
-        );
+    // 예전에는 선택 모드로 들어가는 항목 이름이 바텀시트 헤더와 같은
+    // '공책 편집하기' 였다(#174). 옮기기와 지우기를 함께 하는 이름으로 바꿨다.
+    Finder deleteMenuItem() => find.text('골라서 옮기기, 지우기');
 
     testWidgets('더보기 버튼을 누르면 편집 메뉴가 열린다', (tester) async {
       await pumpDirectory(tester);
@@ -320,7 +312,7 @@ void main() {
       expect(deleteMenuItem(), findsOneWidget);
     });
 
-    testWidgets('공책 편집하기를 누르면 선택 모드로 들어가 하단 버튼이 보인다', (tester) async {
+    testWidgets('골라서 옮기기, 지우기를 누르면 선택 모드로 들어가 하단 버튼이 보인다', (tester) async {
       await pumpDirectory(tester);
 
       await tester.tap(find.byIcon(Icons.more_vert));
@@ -328,8 +320,9 @@ void main() {
       await tester.tap(deleteMenuItem());
       await tester.pumpAndSettle();
 
-      expect(find.text('삭제할 항목 선택'), findsOneWidget);
+      expect(find.text('옮기거나 지울 항목 선택'), findsOneWidget);
       expect(find.text('취소하기'), findsOneWidget);
+      expect(find.text('옮기기'), findsOneWidget);
       expect(find.text('삭제하기'), findsOneWidget);
     });
 
@@ -355,12 +348,12 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(deleteMenuItem());
       await tester.pumpAndSettle();
-      expect(find.text('삭제할 항목 선택'), findsOneWidget);
+      expect(find.text('옮기거나 지울 항목 선택'), findsOneWidget);
 
       await tester.tap(find.byIcon(Icons.close));
       await tester.pumpAndSettle();
 
-      expect(find.text('삭제할 항목 선택'), findsNothing);
+      expect(find.text('옮기거나 지울 항목 선택'), findsNothing);
       expect(find.text('취소하기'), findsNothing);
     });
   });
