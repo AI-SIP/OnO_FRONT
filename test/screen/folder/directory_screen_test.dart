@@ -263,6 +263,17 @@ void main() {
       await pumpDirectory(tester);
 
       expect(find.textContaining('공책에 저장해 관리하세요'), findsOneWidget);
+      expect(find.text('오답노트 쓰기'), findsOneWidget);
+    });
+
+    testWidgets('추천 복습이 0개여도 홈에 들어갈 줄을 남긴다', (tester) async {
+      stubDefaultFolderLoad(
+        problems: [buildProblem(problemId: 100, reference: '수학 문제집 p.12')],
+      );
+
+      await pumpDirectory(tester);
+
+      expect(find.text('지금 추천할 복습 문제가 없어요'), findsOneWidget);
     });
 
     testWidgets('하위 폴더와 문제가 있으면 폴더명과 문제 수 배지, 문제 제목이 보인다', (tester) async {

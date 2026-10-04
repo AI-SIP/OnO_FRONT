@@ -289,6 +289,7 @@ void main() {
     }
     await tapAndPump(tester, '마무리');
 
+    expect(find.text('첫 오답노트 쓰기'), findsOneWidget);
     await tapAndPump(tester, '완료');
 
     expect(provider.isVisible, isFalse);

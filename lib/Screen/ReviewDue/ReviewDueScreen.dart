@@ -6,6 +6,7 @@ import 'package:ono/Module/Problem/ProblemThumbnailCard.dart';
 import 'package:ono/Module/Text/StandardText.dart';
 import 'package:ono/Module/Theme/ThemeHandler.dart';
 import 'package:ono/Provider/ReviewDueProvider.dart';
+import 'package:ono/Provider/ScreenIndexProvider.dart';
 import 'package:ono/Screen/ProblemDetail/ProblemDetailScreen.dart';
 import 'package:ono/Service/Api/Problem/ProblemService.dart';
 import 'package:ono/Util/AppAnalytics.dart';
@@ -383,10 +384,38 @@ class _ReviewDueScreenState extends State<ReviewDueScreen> {
             color: AppColors.textSecondary,
           ),
           const SizedBox(height: 6),
+          // 전에는 '문제를 풀면 자동으로 복습 일정이 생겨요' 라고 했는데, 일정은
+          // 오답노트를 쓴 뒤 다시 풀어 기록을 남겨야 생긴다.
           const StandardText(
-            text: '문제를 풀면 자동으로 복습 일정이 생겨요',
+            text: '오답노트를 한 번 다시 풀어 보면 다음 복습일이 잡혀요.\n'
+                '그날이 되면 여기에 보여 드려요.',
             fontSize: 13,
             color: AppColors.textTertiary,
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 20),
+          OutlinedButton(
+            onPressed: () {
+              AppAnalytics.logEvent('review_due_empty_action', {});
+              Provider.of<ScreenIndexProvider>(context, listen: false)
+                  .setSelectedIndex(0);
+              Navigator.of(context).popUntil((route) => route.isFirst);
+            },
+            style: OutlinedButton.styleFrom(
+              foregroundColor: themeProvider.primaryColor,
+              side: BorderSide(
+                  color: themeProvider.primaryColor.withValues(alpha: 0.5)),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppRadius.medium),
+              ),
+            ),
+            child: StandardText(
+              text: '책장에서 다시 풀 문제 고르기',
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: themeProvider.primaryColor,
+            ),
           ),
         ],
       ),

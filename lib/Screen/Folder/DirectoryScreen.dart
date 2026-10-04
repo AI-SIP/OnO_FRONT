@@ -608,6 +608,14 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                             reviewDueProvider.dueCount > 0)
                           _buildReviewDueBadge(
                               context, reviewDueProvider, themeProvider),
+                        // 추천이 0개여도 들어갈 길을 남긴다. 전에는 카드가 통째로
+                        // 사라져 추천 복습이 어디 있는지 알 수 없었다.
+                        if (widget.folderId == null &&
+                            reviewDueProvider.data != null &&
+                            reviewDueProvider.dueCount == 0 &&
+                            (_localProblems.isNotEmpty ||
+                                _localSubfolders.isNotEmpty))
+                          _buildReviewDoneRow(context, themeProvider),
                       ],
                     ),
                   ),
@@ -1467,6 +1475,30 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                                 fontSize: 13,
                                 color: Colors.grey[600]!,
                                 textAlign: TextAlign.center,
+                              ),
+                              // 안내만 있고 누를 곳이 없어서 + 버튼을 찾아야 했다.
+                              const SizedBox(height: 20),
+                              ElevatedButton.icon(
+                                onPressed:
+                                    _navigateToSingleProblemRegisterInCurrentFolder,
+                                icon: const Icon(Icons.edit_note,
+                                    color: Colors.white),
+                                label: const StandardText(
+                                  text: '오답노트 쓰기',
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.white,
+                                ),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: themeProvider.primaryColor,
+                                  elevation: 0,
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 22, vertical: 12),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius:
+                                        BorderRadius.circular(AppRadius.large),
+                                  ),
+                                ),
                               ),
                             ],
                           ),
@@ -2506,6 +2538,42 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
       }
       _syncProblemFromProvider(problemId);
     });
+  }
+
+  /// 지금 추천할 문제가 없을 때 홈에 남기는 한 줄.
+  Widget _buildReviewDoneRow(BuildContext context, ThemeHandler themeProvider) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: PressableScale(
+        onTap: () => Navigator.push(
+          context,
+          TossPageRoute(builder: (_) => const ReviewDueScreen()),
+        ),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          decoration: BoxDecoration(
+            color: themeProvider.primaryColor.withValues(alpha: 0.05),
+            borderRadius: BorderRadius.circular(AppRadius.large),
+            border: Border.all(color: AppColors.border),
+          ),
+          child: Row(
+            children: [
+              Icon(Icons.check_circle_outline,
+                  size: 18, color: themeProvider.primaryColor),
+              const SizedBox(width: 10),
+              const Expanded(
+                child: StandardText(
+                  text: '지금 추천할 복습 문제가 없어요',
+                  fontSize: 13,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              Icon(Icons.chevron_right, size: 20, color: Colors.grey[400]),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   Widget _buildReviewDueBadge(

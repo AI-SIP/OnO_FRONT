@@ -102,6 +102,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('추천 복습 문제가 없어요'), findsOneWidget);
+    expect(find.text('책장에서 다시 풀 문제 고르기'), findsOneWidget);
   });
 
   testWidgets('카드에 오늘인지 며칠 밀렸는지 붙인다', (tester) async {

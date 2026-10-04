@@ -19,6 +19,7 @@ import '../../Provider/UserProvider.dart';
 import '../../Service/Api/Problem/ProblemSolveService.dart';
 import '../../Service/HomeWidget/HomeWidgetSyncService.dart';
 import '../../Util/AppAnalytics.dart';
+import '../../Util/NotificationService.dart';
 import '../../Util/ReviewScheduleText.dart';
 import 'ProblemSolveRegisterTemplate.dart';
 import '../../Module/Dialog/UnsavedChangesScope.dart';
@@ -262,6 +263,11 @@ class _ProblemSolveRegisterScreenState
 
         // 화면 갱신
         widget.onRefresh();
+
+        // 다음 복습일을 막 알려 준 자리라 알림 권한을 여기서 묻는다. 이미
+        // 답했으면 아무 일도 없다.
+        unawaited(NotificationService.instance
+            .requestPermissionIfNeeded(source: 'review_save'));
       }
     } catch (e) {
       if (mounted) {
