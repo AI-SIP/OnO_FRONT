@@ -17,7 +17,6 @@ import '../../../Provider/ProblemsProvider.dart';
 import '../../../Provider/ReviewDueProvider.dart';
 import '../../../Module/Emoji/OnoEmojiImage.dart';
 import '../../../Module/Dialog/LoadingDialog.dart';
-import '../../../Module/Dialog/SnackBarDialog.dart';
 import '../../../Module/Image/DisplayImage.dart';
 import '../../../Module/Image/FullScreenImage.dart';
 import '../../../Module/Text/mobile_font_size.dart';
@@ -37,6 +36,7 @@ import '../../../Model/Problem/ProblemSolveTrend.dart';
 import '../../../Util/AppAnalytics.dart';
 import 'ReviewStatusStyle.dart';
 import 'ReviewTrendPanel.dart';
+import '../../../Util/PendingDeletion.dart';
 
 class RepeatSectionV2 extends StatefulWidget {
   final ProblemModel problem;
@@ -81,6 +81,11 @@ class _RepeatSectionV2State extends State<RepeatSectionV2>
     super.initState();
     _problemSolvesFuture = problemSolveService
         .getProblemSolvesByProblemId(widget.problem.problemId);
+    PendingDeletion.instance.addListener(_onPendingDeletionChanged);
+  }
+
+  void _onPendingDeletionChanged() {
+    if (mounted) setState(() {});
   }
 
   @override
@@ -96,6 +101,7 @@ class _RepeatSectionV2State extends State<RepeatSectionV2>
 
   @override
   void dispose() {
+    PendingDeletion.instance.removeListener(_onPendingDeletionChanged);
     _scrollController.dispose();
     super.dispose();
   }
@@ -168,6 +174,8 @@ class _RepeatSectionV2State extends State<RepeatSectionV2>
 
   // 복습 기록 새로고침 (비동기 - 완료될 때까지 대기)
   Future<void> refreshAsync() async {
+    // 지우기는 되돌리기를 기다린 뒤에 끝나서, 그 사이 화면이 닫혔을 수 있다.
+    if (!mounted) return;
     final newFuture = problemSolveService
         .getProblemSolvesByProblemId(widget.problem.problemId);
 
@@ -208,7 +216,16 @@ class _RepeatSectionV2State extends State<RepeatSectionV2>
           );
         }
 
-        final problemSolves = snapshot.data ?? [];
+        // 지우고 되돌리기를 기다리는 기록은 빼고 그린다. 숨길 것이 없으면
+        // 받은 목록을 그대로 써서 추이 계산을 다시 하지 않는다.
+        final fetched = snapshot.data ?? [];
+        final pending = PendingDeletion.instance;
+        final problemSolves =
+            fetched.any((s) => pending.isSolveHidden(s.problemSolveId))
+                ? fetched
+                    .where((s) => !pending.isSolveHidden(s.problemSolveId))
+                    .toList()
+                : fetched;
 
         if (problemSolves.isEmpty) {
           return LayoutBuilder(
@@ -1153,41 +1170,28 @@ class _ProblemSolveCard extends StatelessWidget {
     }
   }
 
+  /// 목록에서 바로 빼고 잠깐 되돌리기를 보인 뒤에 지운다. 지운 뒤에는 서버가
+  /// 다시 잡은 다음 복습일과 추천 목록도 맞춘다.
   Future<void> _handleDelete(
       BuildContext context, ThemeHandler themeProvider) async {
-    final rootNavigator = Navigator.of(context, rootNavigator: true);
-    LoadingDialog.show(context, '복습 기록 삭제 중...');
+    final solveId = solve.problemSolveId;
+    final problemsProvider = context.read<ProblemsProvider?>();
+    final reviewDueProvider = context.read<ReviewDueProvider?>();
 
     try {
-      final solveId = solve.problemSolveId; // 삭제할 ID를 미리 저장
+      final deleted = await PendingDeletion.instance.schedule(
+        solveIds: [solveId],
+        message: '복습 기록을 지웠어요',
+        commit: () => service.deleteProblemSolve(solveId),
+      );
+      if (!deleted) return;
 
-      await service.deleteProblemSolve(solveId);
-
-      // 먼저 새로고침 후 로딩 닫기
       await onRefreshAsync();
-
-      if (rootNavigator.canPop()) {
-        rootNavigator.pop();
-      }
-
-      if (context.mounted) {
-        SnackBarDialog.showSnackBar(
-          context: context,
-          message: '복습 기록이 삭제되었습니다.',
-          backgroundColor: themeProvider.primaryColor,
-        );
-      }
+      await problemsProvider?.fetchProblem(solve.problemId,
+          showErrorSnackBar: false);
+      unawaited(reviewDueProvider?.fetchReviewDue());
     } catch (e) {
-      if (rootNavigator.canPop()) {
-        rootNavigator.pop();
-      }
-      if (context.mounted) {
-        SnackBarDialog.showSnackBar(
-          context: context,
-          message: '복습 기록 삭제에 실패했습니다. 잠시 후 다시 시도해주세요.',
-          backgroundColor: Colors.red,
-        );
-      }
+      AppToast.error('복습 기록을 지우지 못했어요. 잠시 후 다시 시도해 주세요.');
     }
   }
 

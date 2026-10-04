@@ -25,6 +25,7 @@ import '../../Module/Util/FolderPickerWidget.dart';
 import '../../Provider/FoldersProvider.dart';
 import '../../Provider/PracticeNoteProvider.dart';
 import '../../Provider/ProblemsProvider.dart';
+import '../../Provider/ReviewDueProvider.dart';
 import '../../Provider/ScreenIndexProvider.dart';
 import '../../Provider/UserProvider.dart';
 import '../../Service/Api/FileUpload/FileUploadService.dart';
@@ -1997,6 +1998,8 @@ class _MultiProblemRegisterScreenState
     final userProvider = Provider.of<UserProvider>(context, listen: false);
     final foldersProvider =
         Provider.of<FoldersProvider>(context, listen: false);
+    final reviewDueProvider =
+        Provider.of<ReviewDueProvider>(context, listen: false);
 
     final problemPayloads = <Map<String, dynamic>>[];
     for (final draft in drafts) {
@@ -2017,6 +2020,7 @@ class _MultiProblemRegisterScreenState
       problemsProvider: problemsProvider,
       userProvider: userProvider,
       foldersProvider: foldersProvider,
+      reviewDueProvider: reviewDueProvider,
     );
 
     return registeredProblemIds;
@@ -2049,9 +2053,12 @@ class _MultiProblemRegisterScreenState
     required ProblemsProvider problemsProvider,
     required UserProvider userProvider,
     required FoldersProvider foldersProvider,
+    required ReviewDueProvider reviewDueProvider,
   }) async {
     // 홈 화면 위젯의 오늘 칸을 새로 맞춘다. 기다리지 않는다.
     unawaited(HomeWidgetSyncService.instance.sync(force: true));
+    // 홈의 추천 복습도 다시 받는다. 전에는 앱을 다시 켜야 새 문제가 보였다.
+    unawaited(reviewDueProvider.fetchReviewDue());
 
     // AI 분석을 끈 채로 등록하면 요청하지 않는다. 문제 상세에서 따로 할 수 있다.
     if (_aiAnalysisEnabled) {

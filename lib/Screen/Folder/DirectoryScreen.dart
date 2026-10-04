@@ -66,8 +66,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
   static const double _dialogMaxWidth = 420;
   // 공책을 지우면 서버가 안에 든 공책과 오답노트까지 함께 지운다. 하위 공책의
   // 오답노트 수는 클라이언트가 정확히 모르므로 개수 없이 범위만 알린다.
-  static const String _folderDeleteScopeMessage =
-      '안에 있는 공책과 오답노트도 함께 삭제되며, 되돌릴 수 없습니다.';
+  static const String _folderDeleteScopeMessage = '안에 있는 공책과 오답노트도 함께 삭제됩니다.';
   bool _isSelectionMode = false; // 선택 모드 활성화 여부
   final List<int> _selectedFolderIds = []; // 선택된 폴더 ID 리스트
   final List<int> _selectedProblemIds = []; // 선택된 문제 ID 리스트
@@ -512,8 +511,16 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
               final missionProvider = widget.folderId == null
                   ? Provider.of<MissionProvider>(context, listen: false)
                   : null;
-              await fetchFoldersAndProblems();
-              await missionProvider?.fetchMissions();
+              final reviewDueProvider = widget.folderId == null
+                  ? Provider.of<ReviewDueProvider>(context, listen: false)
+                  : null;
+              await Future.wait([
+                fetchFoldersAndProblems(),
+                if (missionProvider != null) missionProvider.fetchMissions(),
+                // 추천 복습 카드도 같이 맞춘다. 전에는 당겨도 그대로였다.
+                if (reviewDueProvider != null)
+                  reviewDueProvider.fetchReviewDue(),
+              ]);
             },
             // 좌우 여백은 목록 안쪽에 둔다. 목록은 제 영역 밖을 잘라내서,
             // 바깥에 여백을 두면 폴더에 끌어다 댈 때 커지는 강조 테두리의

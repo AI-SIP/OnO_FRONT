@@ -22,6 +22,7 @@ import '../../Module/Design/AppColors.dart';
 import '../../Module/Design/AppRadius.dart';
 import '../../Util/AppAnalytics.dart';
 import '../../Util/AppErrorReporter.dart';
+import '../../Util/PendingDeletion.dart';
 
 enum _SearchMode { tag, title }
 
@@ -70,17 +71,23 @@ class _TagProblemSearchScreenState extends State<TagProblemSearchScreen> {
     _selectedProblems.addAll(widget.initialSelectedProblems);
     _scrollController.addListener(_onScroll);
     _queryController.addListener(_onQueryChanged);
+    PendingDeletion.instance.addListener(_onPendingDeletionChanged);
     _loadTagsAndFirstTagProblems();
   }
 
   @override
   void dispose() {
     _debounce?.cancel();
+    PendingDeletion.instance.removeListener(_onPendingDeletionChanged);
     _scrollController.removeListener(_onScroll);
     _queryController.removeListener(_onQueryChanged);
     _scrollController.dispose();
     _queryController.dispose();
     super.dispose();
+  }
+
+  void _onPendingDeletionChanged() {
+    if (mounted) setState(() {});
   }
 
   void _onScroll() {
@@ -551,7 +558,13 @@ class _TagProblemSearchScreenState extends State<TagProblemSearchScreen> {
   static const int _staggeredItemLimit = 8;
 
   Widget _buildProblemList(ThemeHandler themeProvider) {
-    if (_isLoadingProblems && _problems.isEmpty) {
+    // 지우고 되돌리기를 기다리는 문제는 빼고 그린다. 전에는 상세에서 지우고
+    // 돌아와도 검색 결과에 그대로 남아 있었다.
+    final pending = PendingDeletion.instance;
+    final problems =
+        _problems.where((p) => !pending.isProblemHidden(p.problemId)).toList();
+
+    if (_isLoadingProblems && problems.isEmpty) {
       return const SkeletonList(
         itemCount: 5,
         itemHeight: 88,
@@ -560,7 +573,7 @@ class _TagProblemSearchScreenState extends State<TagProblemSearchScreen> {
       );
     }
 
-    if (_problems.isEmpty && _loadFailed) {
+    if (problems.isEmpty && _loadFailed) {
       return _buildEmptyState(
         '오답노트를 불러오지 못했어요',
         detail: '인터넷 연결을 확인하고 다시 시도해 주세요.',
@@ -568,7 +581,7 @@ class _TagProblemSearchScreenState extends State<TagProblemSearchScreen> {
       );
     }
 
-    if (_problems.isEmpty) {
+    if (problems.isEmpty) {
       if (_mode == _SearchMode.title && _currentQuery.isEmpty) {
         // 문구만 덩그러니 있으면 화면이 비어 보인다. 다른 빈 화면처럼
         // 그림을 두되, 검색 안내라 연필 대신 돋보기를 쓴다. 둘 다 같은 손으로
@@ -587,9 +600,9 @@ class _TagProblemSearchScreenState extends State<TagProblemSearchScreen> {
     return ListView.builder(
       controller: _scrollController,
       padding: const EdgeInsets.fromLTRB(20, 4, 20, 20),
-      itemCount: _problems.length + (_hasNext || _isLoadingProblems ? 1 : 0),
+      itemCount: problems.length + (_hasNext || _isLoadingProblems ? 1 : 0),
       itemBuilder: (context, index) {
-        if (index == _problems.length) {
+        if (index == problems.length) {
           if (_loadFailed && !_isLoadingProblems) {
             return Padding(
               padding: const EdgeInsets.all(16),
@@ -602,7 +615,7 @@ class _TagProblemSearchScreenState extends State<TagProblemSearchScreen> {
           );
         }
 
-        final problem = _problems[index];
+        final problem = problems[index];
         // 검색 결과가 툭 나타나지 않고 하나씩 들어온다.
         return AppearTransition(
           enabled: index < _staggeredItemLimit,

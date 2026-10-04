@@ -2,10 +2,14 @@
 //
 // 로딩 가드(`if (_isLoading) return;`)와, 실패 시 예외를 삼키고
 // isLoading 만 되돌리는지가 관찰 대상이다.
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:ono/Model/Problem/ReviewDueProblemModel.dart';
 import 'package:ono/Provider/ReviewDueProvider.dart';
+import 'package:ono/Module/Design/AppToast.dart';
+import 'package:ono/Util/AppNavigator.dart';
+import 'package:ono/Util/PendingDeletion.dart';
 
 import '../helpers/helpers.dart';
 import 'support/provider_test_env.dart';
@@ -107,6 +111,55 @@ void main() {
       expect(provider.data, isNull);
       expect(provider.dueCount, 0);
       expect(notified.count, greaterThan(0));
+    });
+  });
+
+  group('지우는 중인 문제', () {
+    testWidgets('되돌리기를 기다리는 문제는 추천과 개수에서 뺀다', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          navigatorKey: AppNavigator.navigatorKey,
+          home: const Scaffold(body: SizedBox.shrink()),
+        ),
+      );
+      final yesterday = DateTime.now().subtract(const Duration(days: 1));
+      when(() => problemService.getReviewDueProblems()).thenAnswer(
+        (_) async => ReviewDueResponse(
+          dueCount: 2,
+          overdueCount: 1,
+          problems: [
+            ReviewDueProblemModel(
+              problemId: 9001,
+              nextReviewAt: yesterday,
+              reviewInterval: 1,
+              consecutiveCorrectCount: 0,
+            ),
+            ReviewDueProblemModel(
+              problemId: 9002,
+              reviewInterval: 1,
+              consecutiveCorrectCount: 0,
+            ),
+          ],
+        ),
+      );
+      await provider.fetchReviewDue();
+
+      final future = PendingDeletion.instance.schedule(
+        problemIds: [9001],
+        message: '오답노트를 지웠어요 9001',
+        commit: () async {},
+      );
+      await tester.pump();
+
+      expect(provider.data!.problems.map((p) => p.problemId), [9002]);
+      expect(provider.dueCount, 1);
+      expect(provider.data!.overdueCount, 0);
+
+      await tester.tap(find.text('되돌리기'));
+      await tester.pump();
+      await future;
+      expect(provider.dueCount, 2);
+      AppToast.dismiss();
     });
   });
 }

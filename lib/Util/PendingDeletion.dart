@@ -15,17 +15,24 @@ class PendingDeletion extends ChangeNotifier {
 
   final Set<int> _problemIds = {};
   final Set<int> _folderIds = {};
+  final Set<int> _solveIds = {};
 
   /// 지운 것. 문제 번호는 다시 쓰이지 않아서, 목록이 아직 옛 데이터를 들고
   /// 있어도 다시 보이지 않게 앱을 쓰는 동안 기억해 둔다.
   final Set<int> _deletedProblemIds = {};
   final Set<int> _deletedFolderIds = {};
+  final Set<int> _deletedSolveIds = {};
 
   bool isProblemHidden(int problemId) =>
       _problemIds.contains(problemId) || _deletedProblemIds.contains(problemId);
 
   bool isFolderHidden(int folderId) =>
       _folderIds.contains(folderId) || _deletedFolderIds.contains(folderId);
+
+  /// 복습 기록(풀이 기록) 하나를 지우는 중이거나 지웠는지.
+  bool isSolveHidden(int problemSolveId) =>
+      _solveIds.contains(problemSolveId) ||
+      _deletedSolveIds.contains(problemSolveId);
 
   /// [message] 와 되돌리기를 보이고, 누르지 않으면 [commit] 으로 실제로 지운다.
   ///
@@ -34,16 +41,18 @@ class PendingDeletion extends ChangeNotifier {
   Future<bool> schedule({
     List<int> problemIds = const [],
     List<int> folderIds = const [],
+    List<int> solveIds = const [],
     required String message,
     required Future<void> Function() commit,
   }) async {
     _problemIds.addAll(problemIds);
     _folderIds.addAll(folderIds);
+    _solveIds.addAll(solveIds);
     notifyListeners();
 
     final undone = await AppToast.undo(message);
     if (undone) {
-      _release(problemIds, folderIds);
+      _release(problemIds, folderIds, solveIds);
       return false;
     }
 
@@ -51,15 +60,21 @@ class PendingDeletion extends ChangeNotifier {
       await commit();
       _deletedProblemIds.addAll(problemIds);
       _deletedFolderIds.addAll(folderIds);
+      _deletedSolveIds.addAll(solveIds);
     } finally {
-      _release(problemIds, folderIds);
+      _release(problemIds, folderIds, solveIds);
     }
     return true;
   }
 
-  void _release(List<int> problemIds, List<int> folderIds) {
+  void _release(
+    List<int> problemIds,
+    List<int> folderIds,
+    List<int> solveIds,
+  ) {
     _problemIds.removeAll(problemIds);
     _folderIds.removeAll(folderIds);
+    _solveIds.removeAll(solveIds);
     notifyListeners();
   }
 }
