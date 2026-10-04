@@ -260,9 +260,9 @@ void main() {
     await tester.tap(find.text('복습하기'));
     await tester.pumpAndSettle();
 
-    expect(find.text('복습 방식 선택'), findsOneWidget);
-    expect(find.text('등록한 순서로 복습하기'), findsOneWidget);
-    expect(find.text('셔플 모드로 복습하기'), findsOneWidget);
+    expect(find.text('푸는 순서 고르기'), findsOneWidget);
+    expect(find.text('담은 순서대로 풀기'), findsOneWidget);
+    expect(find.text('섞어서 풀기'), findsOneWidget);
   });
 
   testWidgets('등록한 순서로 복습하기를 고르면 등록 순서대로 회차를 시작하고 화면이 전환된다', (tester) async {
@@ -283,7 +283,7 @@ void main() {
 
     // 다음 프레임을 그리면 ProblemDetailScreen 이 실제로 빌드되며 네트워크를
     // 태우므로, 탭 콜백이 동기로 반영하는 상태만 확인하고 pump 는 하지 않는다.
-    await tester.tap(find.text('등록한 순서로 복습하기'));
+    await tester.tap(find.text('담은 순서대로 풀기'));
 
     expect(practiceProvider.isPracticing, isTrue);
     expect(
@@ -347,7 +347,7 @@ void main() {
     expect(find.text('세트에 담은 순서대로 2문제를 풀어요.'), findsOneWidget);
 
     final pushedBefore = observer.pushed.length;
-    await tester.tap(find.text('등록한 순서로 복습하기'));
+    await tester.tap(find.text('담은 순서대로 풀기'));
 
     expect(
       practiceProvider.sessionProblems.map((p) => p.problemId),

@@ -34,12 +34,12 @@ void main() {
     );
 
     for (var i = 0;
-        i < 50 && find.text('복습 기록을 불러올 수 없습니다.').evaluate().isEmpty;
+        i < 50 && find.text('복습 기록을 불러오지 못했어요').evaluate().isEmpty;
         i++) {
       await tester.pump(const Duration(milliseconds: 100));
     }
 
-    expect(find.text('복습 기록을 불러올 수 없습니다.'), findsOneWidget);
+    expect(find.text('복습 기록을 불러오지 못했어요'), findsOneWidget);
   });
 
   testWidgets('buildRepeatSectionV2 헬퍼로 띄워도 예외 없이 그려진다', (tester) async {
@@ -158,11 +158,14 @@ void main() {
 
       expect(find.text('복습 흐름'), findsOneWidget);
       expect(find.text('3연속 정답'), findsOneWidget);
-      // 회차 번호는 오래된 기록이 1회차지만 목록은 최근 복습이 위다.
-      expect(
-        tester.getTopLeft(find.text('5회차')).dy,
-        lessThan(tester.getTopLeft(find.text('4회차')).dy),
-      );
+      // 회차 번호는 오래된 기록이 1회차지만 목록은 최근 복습이 위다. 가장
+      // 최근 회차는 펼친 채로 시작해서 4회차는 아래로 내려야 보인다.
+      expect(find.text('5회차'), findsOneWidget);
+      expect(find.text('4회차'), findsNothing);
+      // 아래로 내려서(양수 delta) 찾으면 5회차 아래에 있다는 뜻이다.
+      await tester.scrollUntilVisible(find.text('4회차'), 200,
+          scrollable: find.byType(Scrollable).first);
+      expect(find.text('4회차'), findsOneWidget);
       expect(tester.takeException(), isNull);
     });
 

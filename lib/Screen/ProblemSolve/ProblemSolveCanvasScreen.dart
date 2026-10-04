@@ -27,6 +27,7 @@ import '../../Module/Motion/PressableScale.dart';
 import '../../Module/Motion/TossPageRoute.dart';
 import '../../Module/Design/AppRadius.dart';
 import '../../Module/Design/AppColors.dart';
+import '../../Module/Design/AppToast.dart';
 
 class ProblemSolveCanvasScreen extends StatefulWidget {
   final int problemId;
@@ -53,7 +54,8 @@ enum _CanvasTool {
   move,
 }
 
-class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
+class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen>
+    with WidgetsBindingObserver {
   // 문제 캔버스와 연습장 캔버스. 폰에서는 하나만 보이고, 태블릿 가로에서는
   // 둘을 나란히 둔다.
   final _InkSurface _problemSurface = _InkSurface(isScratch: false);
@@ -76,6 +78,13 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
 
   // 타이머와 지우개 커서는 그 칸만 다시 그린다.
   final ValueNotifier<int> _elapsed = ValueNotifier(0);
+
+  /// 타이머를 눌러 멈췄는지. 전에는 멈출 수 없어서 잠깐 자리를 비우면 그만큼
+  /// 풀이 시간이 늘었다.
+  final ValueNotifier<bool> _timerPaused = ValueNotifier(false);
+
+  /// 앱이 화면에 떠 있는지. 다른 앱으로 넘어가 있는 동안은 세지 않는다.
+  bool _appActive = true;
 
   // 펜이 감지돼 손가락 필기를 처음 막았을 때 한 번만 띄우는 안내.
   final ValueNotifier<bool> _palmNotice = ValueNotifier(false);
@@ -150,6 +159,7 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
         List.generate(widget.problemImageUrls.length, (_) => false);
     _imageNaturalSizes =
         List.generate(widget.problemImageUrls.length, (_) => null);
+    WidgetsBinding.instance.addObserver(this);
     _startTimer();
     _loadImageNaturalSize(_currentImageIndex);
     _subscribeToPencilEvents();
@@ -195,8 +205,21 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
   void _startTimer() {
     _timer?.cancel();
     _timer = Timer.periodic(const Duration(seconds: 1), (_) {
-      if (mounted) _elapsed.value++;
+      if (!mounted || _timerPaused.value || !_appActive) return;
+      _elapsed.value++;
     });
+  }
+
+  void _toggleTimerPause() {
+    _timerPaused.value = !_timerPaused.value;
+    AppAnalytics.logEvent('canvas_timer_pause', {
+      'paused': _timerPaused.value,
+    });
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    _appActive = state == AppLifecycleState.resumed;
   }
 
   @override
@@ -204,6 +227,7 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
     // 풀다가 제출하지 않고 나간 것. 어디까지 쓰다 그만두는지 본다.
     if (!_submitted) _logCanvasSession('canvas_abandon');
     if (Platform.isIOS) _pencilChannel.setMethodCallHandler(null);
+    WidgetsBinding.instance.removeObserver(this);
     _timer?.cancel();
     _palmNoticeTimer?.cancel();
     _holdTimer?.cancel();
@@ -211,6 +235,7 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
     _scratchSurface.dispose();
     _ink.dispose();
     _elapsed.dispose();
+    _timerPaused.dispose();
     _palmNotice.dispose();
     super.dispose();
   }
@@ -283,25 +308,48 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
         ),
         // 타이머는 매초 바뀌어서 이 칸만 다시 그린다. 고치기 전에는 1초마다
         // 화면 전체를 다시 만들었다.
-        title: ValueListenableBuilder<int>(
-          valueListenable: _elapsed,
-          // 큰 글씨에서도 가운데 칸을 넘치지 않게 줄인다.
-          builder: (context, seconds, _) => FittedBox(
-            fit: BoxFit.scaleDown,
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.timer_outlined,
-                    size: 20, color: themeProvider.primaryColor),
-                const SizedBox(width: 6),
-                StandardText(
-                  text: _formatElapsedTime(seconds),
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: themeProvider.primaryColor,
-                  height: 1.2,
+        // 눌러서 멈추고 다시 누르면 이어서 센다.
+        title: ValueListenableBuilder<bool>(
+          valueListenable: _timerPaused,
+          builder: (context, paused, _) => Semantics(
+            button: true,
+            label: paused ? '풀이 시간 이어서 세기' : '풀이 시간 멈추기',
+            child: InkWell(
+              onTap: _toggleTimerPause,
+              borderRadius: BorderRadius.circular(AppRadius.medium),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(minHeight: 44),
+                child: ValueListenableBuilder<int>(
+                  valueListenable: _elapsed,
+                  // 큰 글씨에서도 가운데 칸을 넘치지 않게 줄인다.
+                  builder: (context, seconds, _) => FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                            paused
+                                ? Icons.play_circle_outline
+                                : Icons.pause_circle_outline,
+                            size: 20,
+                            color: paused
+                                ? AppColors.textSecondary
+                                : themeProvider.primaryColor),
+                        const SizedBox(width: 6),
+                        StandardText(
+                          text: _formatElapsedTime(seconds),
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: paused
+                              ? AppColors.textSecondary
+                              : themeProvider.primaryColor,
+                          height: 1.2,
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
-              ],
+              ),
             ),
           ),
         ),
@@ -331,7 +379,9 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
                   ),
                   // 이제 되돌릴 수 있어서 되돌리기 옆에 둔다.
                   IconButton(
-                    tooltip: '전체 지우기',
+                    // 지금 보는 페이지만 지운다. 전에는 '전체 지우기' 라고 해서
+                    // 다른 페이지 필기까지 사라지는 줄 알았다.
+                    tooltip: '이 페이지 지우기',
                     visualDensity: VisualDensity.compact,
                     onPressed: _ink.page.isEmpty ? null : _clearStrokes,
                     color: themeProvider.primaryColor,
@@ -1357,7 +1407,18 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
 
   void _clearStrokes() {
     _cleared = true;
+    final pageIndex = _ink.pageIndex;
     _ink.clear();
+    // 되돌리기 버튼으로도 되살릴 수 있지만, 지운 직후 바로 알 수 있게 한다.
+    AppToast.show(
+      message: '이 페이지의 필기를 지웠어요',
+      type: ToastType.info,
+      actionLabel: '되돌리기',
+      onAction: () {
+        if (!mounted || _ink.pageIndex != pageIndex) return;
+        _undo();
+      },
+    );
   }
 
   void _resetZoom() {

@@ -47,6 +47,9 @@ class RepeatSectionV2 extends StatefulWidget {
   /// 테스트에서 가짜 응답을 넣을 때만 넘긴다. 없으면 실제 서비스를 쓴다.
   final ProblemSolveService? service;
 
+  /// 기록이 없을 때 바로 다시 풀게 한다. 없으면 버튼을 그리지 않는다.
+  final VoidCallback? onStartSolve;
+
   const RepeatSectionV2({
     super.key,
     required this.problem,
@@ -54,6 +57,7 @@ class RepeatSectionV2 extends StatefulWidget {
     required this.isWide,
     this.refreshSignal = 0,
     this.service,
+    this.onStartSolve,
   });
 
   @override
@@ -207,10 +211,32 @@ class _RepeatSectionV2State extends State<RepeatSectionV2>
           return Center(
             child: Padding(
               padding: const EdgeInsets.all(40.0),
-              child: StandardText(
-                text: '복습 기록을 불러올 수 없습니다.',
-                fontSize: 16,
-                color: Colors.grey[600]!,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  StandardText(
+                    text: '복습 기록을 불러오지 못했어요',
+                    fontSize: 16,
+                    color: Colors.grey[600]!,
+                  ),
+                  const SizedBox(height: 14),
+                  // 전에는 문구만 있어서 화면을 나갔다 들어와야 했다.
+                  OutlinedButton(
+                    onPressed: refresh,
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: widget.iconColor,
+                      side: BorderSide(
+                          color: widget.iconColor.withValues(alpha: 0.5)),
+                      minimumSize: const Size(0, 44),
+                    ),
+                    child: StandardText(
+                      text: '다시 시도',
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: widget.iconColor,
+                    ),
+                  ),
+                ],
               ),
             ),
           );
@@ -257,6 +283,33 @@ class _RepeatSectionV2State extends State<RepeatSectionV2>
                             fontSize: MobileFontSize.reduced(context, 14),
                             color: Colors.black,
                           ),
+                          // 다시 풀기 버튼은 문제 탭에만 있어서 여기서는 할 일이
+                          // 없었다.
+                          if (widget.onStartSolve != null) ...[
+                            const SizedBox(height: 18),
+                            ElevatedButton.icon(
+                              onPressed: widget.onStartSolve,
+                              icon: const Icon(Icons.replay,
+                                  color: Colors.white, size: 18),
+                              label: const StandardText(
+                                text: '다시 풀기',
+                                fontSize: 15,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.white,
+                              ),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: widget.iconColor,
+                                elevation: 0,
+                                minimumSize: const Size(0, 44),
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 22),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius:
+                                      BorderRadius.circular(AppRadius.large),
+                                ),
+                              ),
+                            ),
+                          ],
                         ],
                       ),
                     ),
@@ -317,7 +370,10 @@ class _RepeatSectionV2State extends State<RepeatSectionV2>
                 solve: solve,
                 index: displayIndex,
                 iconColor: widget.iconColor,
-                isExpanded: _expandedStates[solve.problemSolveId] ?? false,
+                // 처음에는 가장 최근 회차만 펼쳐 둔다. 전에는 모두 접혀 있어서
+                // 하나씩 눌러 열어야 했다.
+                isExpanded: _expandedStates[solve.problemSolveId] ??
+                    (index == oldestFirst.length - 1),
                 onToggle: (value) =>
                     _toggleExpanded(solve.problemSolveId, value),
                 onRefreshAsync: refreshAsync,
@@ -441,6 +497,7 @@ class RepeatSectionV2Wrapper extends StatefulWidget {
   final Color iconColor;
   final bool isWide;
   final int refreshSignal;
+  final VoidCallback? onStartSolve;
 
   const RepeatSectionV2Wrapper({
     super.key,
@@ -448,6 +505,7 @@ class RepeatSectionV2Wrapper extends StatefulWidget {
     required this.iconColor,
     required this.isWide,
     this.refreshSignal = 0,
+    this.onStartSolve,
   });
 
   @override
@@ -462,6 +520,7 @@ class _RepeatSectionV2WrapperState extends State<RepeatSectionV2Wrapper> {
       iconColor: widget.iconColor,
       isWide: widget.isWide,
       refreshSignal: widget.refreshSignal,
+      onStartSolve: widget.onStartSolve,
     );
   }
 }
@@ -472,12 +531,14 @@ Widget buildRepeatSectionV2(
   Color iconColor,
   bool isWide, {
   int refreshSignal = 0,
+  VoidCallback? onStartSolve,
 }) {
   return RepeatSectionV2Wrapper(
     problem: problem,
     iconColor: iconColor,
     isWide: isWide,
     refreshSignal: refreshSignal,
+    onStartSolve: onStartSolve,
   );
 }
 
@@ -627,8 +688,11 @@ class _ProblemSolveCard extends StatelessWidget {
                         color: statusColor,
                         size: 20,
                       ),
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(),
+                      // 전에는 누르는 영역이 아이콘 크기(20)뿐이라 옆의 펼치기와
+                      // 헷갈려 눌렸다.
+                      tooltip: '복습 기록 관리',
+                      constraints:
+                          const BoxConstraints(minWidth: 44, minHeight: 44),
                       onPressed: () =>
                           _showOptionsDialog(context, themeProvider),
                     ),
