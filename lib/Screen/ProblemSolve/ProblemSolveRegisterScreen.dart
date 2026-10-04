@@ -95,7 +95,7 @@ class _ProblemSolveRegisterScreenState
   AppBar _buildAppBar(ThemeHandler themeProvider) {
     return AppBar(
       title: StandardText(
-        text: '문제 복습 인증',
+        text: '복습 기록',
         fontSize: 18,
         color: themeProvider.primaryColor,
       ),
@@ -131,7 +131,7 @@ class _ProblemSolveRegisterScreenState
             elevation: 0,
           ),
           child: const StandardText(
-            text: "문제 복습 완료",
+            text: '복습 저장하기',
             fontSize: 16,
             fontWeight: FontWeight.bold,
             color: Colors.white,
