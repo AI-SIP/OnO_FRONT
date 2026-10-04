@@ -17,6 +17,8 @@ import '../../Model/Problem/ProblemModel.dart';
 import '../../Model/Problem/ProblemThumbnailModel.dart';
 import '../../Exception/ApiException.dart';
 import '../../Module/Dialog/LoadingDialog.dart';
+import '../../Module/Design/AppToast.dart';
+import '../../Module/Util/FolderPickerWidget.dart';
 import '../../Module/Image/DisplayImage.dart';
 import '../../Module/Problem/ProblemThumbnailCard.dart';
 import '../../Module/Text/mobile_font_size.dart';
@@ -561,7 +563,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
       backgroundColor: Colors.white,
       title: StandardText(
         text: _isSelectionMode
-            ? '삭제할 항목 선택'
+            ? '옮기거나 지울 항목 선택'
             : ((_currentFolder?.parentFolder?.folderId != null &&
                     _currentFolder?.folderName != null)
                 ? _currentFolder!.folderName
@@ -970,10 +972,9 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                     ),
                     const SizedBox(height: 8),
                     _buildActionItem(
-                      icon: Icons.delete_outline,
-                      iconColor: Colors.red,
-                      title: '공책 편집하기',
-                      titleColor: Colors.red,
+                      icon: Icons.checklist_rounded,
+                      iconColor: themeProvider.primaryColor,
+                      title: '골라서 옮기기, 지우기',
                       onTap: () {
                         Navigator.pop(context);
                         setState(() {
@@ -1812,7 +1813,25 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
               ),
             ),
           ),
-          const SizedBox(width: 16),
+          const SizedBox(width: 10),
+          Expanded(
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                  backgroundColor: themeProvider.primaryColor,
+                  disabledBackgroundColor: Colors.grey[300],
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppRadius.small),
+                  ),
+                  padding: const EdgeInsets.symmetric(vertical: 8)),
+              onPressed: selectedCount > 0 ? _moveSelectedItems : null,
+              child: const StandardText(
+                text: '옮기기',
+                fontSize: 14,
+                color: Colors.white,
+              ),
+            ),
+          ),
+          const SizedBox(width: 10),
           Expanded(
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(
@@ -1850,6 +1869,90 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
         ],
       ),
     );
+  }
+
+  /// 고른 오답노트와 공책을 한 번에 다른 공책으로 옮긴다.
+  ///
+  /// 전에는 여러 개를 골라도 지우기만 할 수 있어서, 옮기려면 하나씩 끌어다
+  /// 놓아야 했다. 서버에 일괄 이동이 없어 한 건씩 보내고, 실패한 것은 세어
+  /// 알린다. 공책을 자기 하위로 옮기는 것은 서버가 막는다.
+  Future<void> _moveSelectedItems() async {
+    final currentFolderId = _currentFolder?.folderId;
+    final target =
+        await FolderPickerWidget.showPicker(context, currentFolderId);
+    if (target == null || !mounted) return;
+    if (target == currentFolderId) {
+      AppToast.show(message: '지금 있는 공책이에요. 다른 공책을 골라 주세요.');
+      return;
+    }
+
+    final foldersProvider =
+        Provider.of<FoldersProvider>(context, listen: false);
+    final problemsProvider =
+        Provider.of<ProblemsProvider>(context, listen: false);
+    final problemIds = List<int>.from(_selectedProblemIds);
+    final folders = _localSubfolders
+        .where((folder) => _selectedFolderIds.contains(folder.folderId))
+        .toList();
+
+    LoadingDialog.show(context, '옮기는 중...');
+    var moved = 0;
+    var failed = 0;
+    for (final problemId in problemIds) {
+      try {
+        await problemsProvider.updateProblem(
+          ProblemRegisterModel(problemId: problemId, folderId: target),
+        );
+        moved++;
+      } catch (e) {
+        debugPrint('오답노트 옮기기 실패 - problemId: $problemId, $e');
+        failed++;
+      }
+    }
+    for (final folder in folders) {
+      if (folder.folderId == target) {
+        failed++;
+        continue;
+      }
+      try {
+        await foldersProvider.updateFolder(
+            folder.folderName, folder.folderId, target);
+        moved++;
+      } catch (e) {
+        debugPrint('공책 옮기기 실패 - folderId: ${folder.folderId}, $e');
+        failed++;
+      }
+    }
+
+    if (currentFolderId != null) {
+      await foldersProvider.refreshFolder(currentFolderId);
+    }
+    await foldersProvider.refreshFolder(target);
+    if (!mounted) return;
+    LoadingDialog.hide(context);
+
+    AppAnalytics.logEvent('items_moved', {
+      'folder_count': folders.length,
+      'problem_count': problemIds.length,
+      'count': moved,
+      'failed_count': failed,
+    });
+
+    setState(() {
+      _isSelectionMode = false;
+      _selectedFolderIds.clear();
+      _selectedProblemIds.clear();
+    });
+    await _loadFolderData();
+    if (!mounted) return;
+
+    if (failed == 0) {
+      AppToast.success('$moved개를 옮겼어요');
+    } else if (moved == 0) {
+      AppToast.error('옮기지 못했어요. 잠시 후 다시 시도해 주세요.');
+    } else {
+      AppToast.error('$moved개를 옮겼고 $failed개는 옮기지 못했어요');
+    }
   }
 
   Future<void> _deleteSelectedItems() async {
