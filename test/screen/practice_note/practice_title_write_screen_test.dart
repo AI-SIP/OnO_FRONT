@@ -304,6 +304,48 @@ void main() {
     });
   });
 
+  group('세트 설정 (closeOnlySelf)', () {
+    testWidgets('저장하면 문제는 건드리지 않고 이 화면 하나만 닫는다', (tester) async {
+      when(() => practiceNoteService.updatePracticeNote(any(),
+              showErrorSnackBar: any(named: 'showErrorSnackBar')))
+          .thenAnswer((_) async {});
+      when(() => practiceNoteService.getPracticeNoteById(1,
+          showErrorSnackBar: false)).thenAnswer((_) async => _detail(1));
+
+      await _pumpTargetOntoStack(
+        tester,
+        practiceProvider,
+        PracticeTitleWriteScreen(
+          practiceNoteUpdateModel: PracticeNoteUpdateModel(
+            practiceNoteId: 1,
+            practiceTitle: '기존 복습 세트',
+            addProblemIdList: const [],
+            removeProblemIdList: const [],
+          ),
+          practiceNoteDetailModel: _detail(1),
+          closeOnlySelf: true,
+        ),
+      );
+
+      expect(appBarTitle('세트 설정'), findsOneWidget);
+      await tester.enterText(find.byType(TextField), '새 이름');
+      await tester.tap(find.widgetWithText(ElevatedButton, '저장하기'));
+      await tester.pumpAndSettle();
+
+      final captured = verify(() => practiceNoteService.updatePracticeNote(
+            captureAny(),
+            showErrorSnackBar: any(named: 'showErrorSnackBar'),
+          )).captured;
+      final body = (captured.single as PracticeNoteUpdateModel).toJson();
+      expect(body['practiceTitle'], '새 이름');
+      expect(body['addProblemIdList'], isEmpty);
+      expect(body['removeProblemIdList'], isEmpty);
+      expect(find.byType(PracticeTitleWriteScreen), findsNothing);
+      // 바로 아래 단계 화면이 그대로 남아 있다.
+      expect(find.text('다음 단계'), findsOneWidget);
+    });
+  });
+
   group('알림 설정 상호작용', () {
     testWidgets('알림 스위치를 켜면 반복 주기 선택지가 나타난다', (tester) async {
       await pumpOnoWidget(

@@ -27,7 +27,16 @@ class ProblemPracticeProvider with ChangeNotifier {
   bool _isLoading = false;
   bool _hasCachedData = false; // 캐시 데이터 존재 여부
 
+  /// 지금 열린 복습 세트의 문제들. 등록한 순서 그대로다.
   List<ProblemModel> currentProblems = [];
+
+  /// 복습하기로 시작한 이번 회차에 풀 문제 번호들. 순서가 곧 푸는 순서다.
+  ///
+  /// 셔플이나 틀린 문제만으로 시작하면 [currentProblems] 와 순서나 개수가
+  /// 달라진다. 복습 기록을 저장할 때마다 [moveToPractice] 로 세트를 다시
+  /// 받는데, 문제 목록 자체를 섞어 두면 그때 등록 순서로 되돌아가서 셔플이
+  /// 첫 문제 뒤로 풀렸다. 번호로 따로 들고 있으면 다시 받아도 그대로다.
+  List<int>? _sessionProblemIds;
   final TokenProvider tokenProvider = TokenProvider();
   final HttpService httpService = HttpService();
   final PracticeNoteService practiceNoteService;
@@ -149,6 +158,11 @@ class ProblemPracticeProvider with ChangeNotifier {
 
     if (generation != _moveGeneration) return;
 
+    // 다른 세트로 옮겨 가면 앞 세트의 회차 순서는 버린다.
+    if (currentPracticeNote?.practiceId != practiceId) {
+      _sessionProblemIds = null;
+    }
+
     debugPrint(
         'Moved to practice: $practiceId, loaded ${loadedProblems.length}/${targetPractice.problemIdList.length} problems');
     currentProblems = loadedProblems;
@@ -249,24 +263,112 @@ class ProblemPracticeProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  void useRegisteredProblemOrder() {
-    final practiceNote = currentPracticeNote;
-    if (practiceNote == null) return;
+  /// 이번 회차에 풀 문제들. 복습하기로 시작하기 전이면 세트 전체다.
+  List<ProblemModel> get sessionProblems {
+    final ids = _sessionProblemIds;
+    if (ids == null) return currentProblems;
 
     final problemById = {
       for (final problem in currentProblems) problem.problemId: problem,
     };
-
-    currentProblems = practiceNote.problemIdList
+    return ids
         .map((problemId) => problemById[problemId])
         .whereType<ProblemModel>()
         .toList();
+  }
+
+  /// 복습하기로 회차를 시작했는지. 세트 상세에서 문제 하나를 따로 열어 푸는
+  /// 것은 회차가 아니다.
+  bool get isPracticing => _sessionProblemIds != null;
+
+  /// 이번 회차에 풀 문제와 순서를 정한다.
+  ///
+  /// [onlyProblemIds] 를 넘기면 그 문제들만 푼다(틀린 문제만). [shuffle] 이면
+  /// 고른 문제들끼리 섞는다.
+  void startSession({bool shuffle = false, Set<int>? onlyProblemIds}) {
+    final registeredIds = currentPracticeNote?.problemIdList ??
+        currentProblems.map((problem) => problem.problemId).toList();
+    final loadedIds =
+        currentProblems.map((problem) => problem.problemId).toSet();
+
+    final ids = registeredIds
+        .where(loadedIds.contains)
+        .where((id) => onlyProblemIds == null || onlyProblemIds.contains(id))
+        .toList();
+    if (shuffle) ids.shuffle();
+
+    _sessionProblemIds = ids;
     notifyListeners();
   }
 
-  void shuffleCurrentProblems() {
-    currentProblems.shuffle();
+  /// 회차를 마치거나 세트 상세로 돌아와 다른 일을 하면 부른다.
+  void endSession() {
+    if (_sessionProblemIds == null) return;
+    _sessionProblemIds = null;
     notifyListeners();
+  }
+
+  /// 복습 세트 화면을 닫을 때 부른다.
+  ///
+  /// [currentPracticeNote] 를 비우지 않으면 세트를 한 번 연 뒤로는 일반 복습도
+  /// 세트 안에서 푼 것으로 기록되고, 복습을 저장할 때마다 그 세트를 다시 받았다.
+  /// 그사이 다른 세트를 열었으면 그 세트는 건드리지 않는다.
+  ///
+  /// 화면이 사라지는 중에 불리므로 알리지 않는다.
+  void leavePractice(int practiceId) {
+    if (currentPracticeNote?.practiceId != practiceId) return;
+    _moveGeneration++;
+    currentPracticeNote = null;
+    _sessionProblemIds = null;
+  }
+
+  /// 세트에서 문제를 뺀다. 서버에 반영된 뒤 화면 목록에서도 바로 지운다.
+  Future<void> removeProblems(int practiceId, List<int> problemIds) async {
+    await _changeProblems(practiceId, removeProblemIds: problemIds);
+
+    final removed = problemIds.toSet();
+    if (currentPracticeNote?.practiceId == practiceId) {
+      currentProblems = currentProblems
+          .where((problem) => !removed.contains(problem.problemId))
+          .toList();
+      _sessionProblemIds?.removeWhere(removed.contains);
+    }
+    notifyListeners();
+  }
+
+  /// 세트에 문제를 넣는다. 지금 열린 세트면 문제 목록도 다시 받는다.
+  Future<void> addProblems(int practiceId, List<int> problemIds) async {
+    await _changeProblems(practiceId, addProblemIds: problemIds);
+
+    if (currentPracticeNote?.practiceId == practiceId) {
+      await _runPostMutationRefresh(
+        () => moveToPractice(practiceId),
+        source: 'practice_add_problem_refresh',
+      );
+    }
+    notifyListeners();
+  }
+
+  /// 문제만 넣고 빼는 요청은 모두 여기서 만든다.
+  ///
+  /// 서버는 `practiceNotification` 이 없으면 그 세트의 복습 알림을 지운다
+  /// (OnO_BACKEND PracticeNoteService.updatePracticeInfo). 제목은 비워 보내면
+  /// 그대로 두지만 알림은 그렇지 않아서, 세트가 가진 알림을 꼭 다시 싣는다.
+  Future<void> _changeProblems(
+    int practiceId, {
+    List<int> addProblemIds = const [],
+    List<int> removeProblemIds = const [],
+  }) async {
+    final practiceNote = await getPracticeNote(practiceId);
+    await updatePractice(
+      PracticeNoteUpdateModel(
+        practiceNoteId: practiceId,
+        addProblemIdList: addProblemIds,
+        removeProblemIdList: removeProblemIds,
+        practiceNotificationModel: practiceNote.practiceNotificationModel,
+      ),
+      refreshAfterUpdate: false,
+    );
   }
 
   Future<void> resetProblems() async {
@@ -276,6 +378,8 @@ class ProblemPracticeProvider with ChangeNotifier {
 
   void clear() {
     currentProblems = [];
+    currentPracticeNote = null;
+    _sessionProblemIds = null;
     _hasCachedData = false;
     _nextCursor = null;
     _practiceThumbnails.clear();
@@ -408,6 +512,7 @@ class ProblemPracticeProvider with ChangeNotifier {
           practiceTitle: practiceDetail.practiceTitle,
           practiceCount: practiceDetail.practiceCount,
           lastSolvedAt: practiceDetail.lastSolvedAt,
+          lastSessionMoodEmojiKey: practiceDetail.lastSessionMoodEmojiKey,
         );
 
         _practiceThumbnails[index] = updatedThumbnail;
