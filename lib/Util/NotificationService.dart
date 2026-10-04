@@ -246,6 +246,16 @@ class NotificationService {
     }
   }
 
+  /// 기기 설정에서 알림을 꺼 두었는지. 알 수 없으면 false 다.
+  Future<bool> isPermissionDenied() async {
+    try {
+      final settings = await _messaging.getNotificationSettings();
+      return settings.authorizationStatus == AuthorizationStatus.denied;
+    } catch (_) {
+      return false;
+    }
+  }
+
   Future<NotificationSettings> _requestPermission() async {
     return _messaging.requestPermission(
       alert: true,

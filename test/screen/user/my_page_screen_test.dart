@@ -106,7 +106,7 @@ void main() {
         );
       });
 
-      expect(find.text('로그인을 통해 설정을 변경해보세요!'), findsOneWidget);
+      expect(find.text('로그인하면 설정을 바꿀 수 있어요'), findsOneWidget);
       expect(find.byType(ProfileEditCard), findsNothing);
       expect(find.byType(StreakCard), findsNothing);
       expect(find.text('학습 리포트'), findsNothing);

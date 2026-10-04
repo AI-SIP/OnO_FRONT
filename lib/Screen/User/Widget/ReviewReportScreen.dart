@@ -19,6 +19,7 @@ import '../../../Module/Design/AppColors.dart';
 import '../../../Module/Design/AppRadius.dart';
 import '../../../Module/Design/AppSpacing.dart';
 import 'package:ono/Util/AppAnalytics.dart';
+import '../../../Module/Design/AppLayout.dart';
 
 enum ReportPeriod { weekly, monthly, total }
 
@@ -100,7 +101,8 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
           ),
         ],
       ),
-      body: _buildBody(themeProvider),
+      // 태블릿 가로에서 카드가 화면 끝까지 늘어나지 않게 모은다.
+      body: AppContentWidth(child: _buildBody(themeProvider)),
     );
   }
 

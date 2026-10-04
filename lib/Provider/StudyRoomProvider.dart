@@ -127,7 +127,7 @@ class StudyRoomProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> joinRoom(String code) async {
+  Future<StudyRoomModel> joinRoom(String code) async {
     isLoading = true;
     notifyListeners();
     try {
@@ -136,6 +136,7 @@ class StudyRoomProvider extends ChangeNotifier {
         ...rooms.where((r) => r.roomId != joinedRoom.roomId),
         joinedRoom
       ];
+      return joinedRoom;
     } finally {
       isLoading = false;
       notifyListeners();

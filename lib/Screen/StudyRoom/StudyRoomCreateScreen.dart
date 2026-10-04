@@ -141,9 +141,10 @@ class _StudyRoomCreateScreenState extends State<StudyRoomCreateScreen> {
       AppAnalytics.logEvent('study_room_created', {
         'has_thumbnail': thumbnailFile != null,
       });
-      if (mounted) Navigator.pop(context, true);
+      // 목록이 만든 방을 바로 열고 초대 코드까지 보여 줄 수 있게 방 번호를 돌려준다.
+      if (mounted) Navigator.pop(context, room.roomId);
     } catch (_) {
-      AppSnackBar.showError('방 생성에 실패했습니다');
+      AppSnackBar.showError('방을 만들지 못했어요');
     } finally {
       if (mounted) setState(() => _isCreating = false);
     }
