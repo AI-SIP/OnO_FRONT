@@ -205,7 +205,7 @@ void main() {
       await tester.pump();
       expect(_canUndo(tester), isTrue);
 
-      await tester.tap(find.byTooltip('전체 지우기'));
+      await tester.tap(find.byTooltip('이 페이지 지우기'));
       await tester.pump();
       await tester.tap(find.widgetWithIcon(IconButton, Icons.undo));
       await tester.pump();
@@ -395,7 +395,7 @@ void main() {
 
       // 아이콘과 숫자를 합친 묶음의 가운데가 화면 가운데에서 4px 안에 있다.
       final group = Rect.fromPoints(
-        tester.getTopLeft(find.byIcon(Icons.timer_outlined)),
+        tester.getTopLeft(find.byIcon(Icons.pause_circle_outline)),
         tester.getBottomRight(find.text('00:00')),
       );
       expect((group.center.dx - screen / 2).abs(), lessThan(4));
