@@ -190,7 +190,7 @@ void main() {
     });
   });
 
-  testWidgets('되돌린 것을 다시 실행할 수 있고, 전체 지우기도 되돌릴 수 있다', (tester) async {
+  testWidgets('되돌린 것을 다시 실행할 수 있고, 이 페이지 지우기도 되돌릴 수 있다', (tester) async {
     await withMockedNetworkImages(() async {
       await _pumpCanvas(tester);
       final area = _canvasArea(tester);
@@ -436,5 +436,16 @@ void main() {
           tester.widget<InteractiveViewer>(find.byType(InteractiveViewer));
       expect(viewer.transformationController!.value, Matrix4.identity());
     });
+  });
+
+  testWidgets('폰에서는 색과 굵기 줄을 접어 두고 누르면 펼친다', (tester) async {
+    await _pumpCanvas(tester);
+
+    expect(find.text('굵기'), findsNothing);
+
+    await tester.tap(find.byIcon(Icons.expand_less));
+    await tester.pumpAndSettle();
+
+    expect(find.text('굵기'), findsOneWidget);
   });
 }

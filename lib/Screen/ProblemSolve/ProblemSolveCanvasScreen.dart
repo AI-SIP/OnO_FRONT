@@ -5,6 +5,7 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../Module/Dialog/UnsavedChangesScope.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
@@ -112,6 +113,11 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen>
   bool _isSubmitting = false;
   Size _canvasSize = Size.zero;
   Color _penColor = Colors.black87;
+
+  /// 색과 굵기 줄을 펼쳐 둘지. null 이면 아직 정하지 않은 것이라 화면 크기로
+  /// 정한다. 폰은 캔버스를 넓게 쓰도록 접고, 태블릿은 펼친다. 바꾸면 기억한다.
+  bool? _toolOptionsExpanded;
+  static const String _toolOptionsPrefKey = 'canvas_tool_options_expanded';
   double _penWidth = 4.0;
   double _eraserWidth = 18.0;
   double _highlighterWidth = 14.0;
@@ -160,6 +166,12 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen>
     _imageNaturalSizes =
         List.generate(widget.problemImageUrls.length, (_) => null);
     WidgetsBinding.instance.addObserver(this);
+    SharedPreferences.getInstance().then((prefs) {
+      final saved = prefs.getBool(_toolOptionsPrefKey);
+      if (saved != null && mounted) {
+        setState(() => _toolOptionsExpanded = saved);
+      }
+    }).catchError((_) {});
     _startTimer();
     _loadImageNaturalSize(_currentImageIndex);
     _subscribeToPencilEvents();
@@ -439,7 +451,63 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen>
     );
   }
 
+  bool _optionsExpanded(BuildContext context) =>
+      _toolOptionsExpanded ?? MediaQuery.sizeOf(context).shortestSide >= 600;
+
+  void _toggleToolOptions() {
+    final next = !_optionsExpanded(context);
+    setState(() => _toolOptionsExpanded = next);
+    AppAnalytics.logEvent('canvas_tool_options', {'expanded': next});
+    SharedPreferences.getInstance()
+        .then((prefs) => prefs.setBool(_toolOptionsPrefKey, next))
+        .catchError((_) => false);
+  }
+
+  /// 도구 줄 끝에 두는 단추. 지금 색과 굵기를 보여 주고 누르면 펼치거나 접는다.
+  Widget _buildToolOptionsToggle(ThemeHandler themeProvider, bool expanded) {
+    return Semantics(
+      button: true,
+      label: expanded ? '색과 굵기 접기' : '색과 굵기 펼치기',
+      child: InkWell(
+        onTap: _toggleToolOptions,
+        borderRadius: BorderRadius.circular(AppRadius.medium),
+        child: Container(
+          constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
+          padding: const EdgeInsets.symmetric(horizontal: 6),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 18,
+                height: 18,
+                decoration: BoxDecoration(
+                  color: _penColor,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: Colors.grey[300]!),
+                ),
+              ),
+              const SizedBox(width: 4),
+              StandardText(
+                text: _widthLabel(_currentStrokeWidth),
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textSecondary,
+              ),
+              Icon(
+                expanded ? Icons.expand_more : Icons.expand_less,
+                size: 20,
+                color: AppColors.textSecondary,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildToolbar(ThemeHandler themeProvider) {
+    // 색 열두 개와 굵기 줄이 늘 붙어 있어서 폰에서는 캔버스가 좁았다.
+    final expanded = _optionsExpanded(context);
     return Container(
       padding: const EdgeInsets.fromLTRB(18, 12, 18, 10),
       decoration: BoxDecoration(
@@ -511,75 +579,79 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen>
                   ),
                 ),
               ),
+              const SizedBox(width: 4),
+              _buildToolOptionsToggle(themeProvider, expanded),
             ],
           ),
-          const SizedBox(height: 12),
-          SizedBox(
-            height: 38,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              itemCount: _paletteColors.length,
-              separatorBuilder: (_, __) => const SizedBox(width: 9),
-              itemBuilder: (context, index) {
-                return _buildColorButton(_paletteColors[index]);
-              },
+          if (expanded) ...[
+            const SizedBox(height: 12),
+            SizedBox(
+              height: 38,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                itemCount: _paletteColors.length,
+                separatorBuilder: (_, __) => const SizedBox(width: 9),
+                itemBuilder: (context, index) {
+                  return _buildColorButton(_paletteColors[index]);
+                },
+              ),
             ),
-          ),
-          const SizedBox(height: 10),
-          Row(
-            children: [
-              StandardText(
-                text: '굵기',
-                fontSize: MobileFontSize.reduced(context, 13),
-                fontWeight: FontWeight.w600,
-                color: AppColors.textPrimary,
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: SliderTheme(
-                  data: SliderTheme.of(context).copyWith(
-                    trackHeight: 6,
-                    thumbShape:
-                        const RoundSliderThumbShape(enabledThumbRadius: 10),
-                    overlayShape:
-                        const RoundSliderOverlayShape(overlayRadius: 18),
-                  ),
-                  child: Slider(
-                    value: _currentStrokeWidth,
-                    min: _widthRange.$1,
-                    max: _widthRange.$2,
-                    divisions: _widthRange.$3,
-                    activeColor: themeProvider.primaryColor,
-                    inactiveColor: Colors.grey[200],
-                    label: _widthLabel(_currentStrokeWidth),
-                    onChanged: _selectedTool == _CanvasTool.move
-                        ? null
-                        : (value) => setState(() {
-                              _changedWidth = true;
-                              if (_isEraserTool) {
-                                _eraserWidth = value;
-                              } else if (_selectedTool ==
-                                  _CanvasTool.highlighter) {
-                                _highlighterWidth = value;
-                              } else {
-                                _penWidth = value;
-                              }
-                            }),
-                  ),
-                ),
-              ),
-              SizedBox(
-                width: 34,
-                child: StandardText(
-                  text: _widthLabel(_currentStrokeWidth),
-                  fontSize: 13,
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                StandardText(
+                  text: '굵기',
+                  fontSize: MobileFontSize.reduced(context, 13),
                   fontWeight: FontWeight.w600,
-                  color: themeProvider.primaryColor,
-                  textAlign: TextAlign.end,
+                  color: AppColors.textPrimary,
                 ),
-              ),
-            ],
-          ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: SliderTheme(
+                    data: SliderTheme.of(context).copyWith(
+                      trackHeight: 6,
+                      thumbShape:
+                          const RoundSliderThumbShape(enabledThumbRadius: 10),
+                      overlayShape:
+                          const RoundSliderOverlayShape(overlayRadius: 18),
+                    ),
+                    child: Slider(
+                      value: _currentStrokeWidth,
+                      min: _widthRange.$1,
+                      max: _widthRange.$2,
+                      divisions: _widthRange.$3,
+                      activeColor: themeProvider.primaryColor,
+                      inactiveColor: Colors.grey[200],
+                      label: _widthLabel(_currentStrokeWidth),
+                      onChanged: _selectedTool == _CanvasTool.move
+                          ? null
+                          : (value) => setState(() {
+                                _changedWidth = true;
+                                if (_isEraserTool) {
+                                  _eraserWidth = value;
+                                } else if (_selectedTool ==
+                                    _CanvasTool.highlighter) {
+                                  _highlighterWidth = value;
+                                } else {
+                                  _penWidth = value;
+                                }
+                              }),
+                    ),
+                  ),
+                ),
+                SizedBox(
+                  width: 34,
+                  child: StandardText(
+                    text: _widthLabel(_currentStrokeWidth),
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: themeProvider.primaryColor,
+                    textAlign: TextAlign.end,
+                  ),
+                ),
+              ],
+            ),
+          ],
         ],
       ),
     );
