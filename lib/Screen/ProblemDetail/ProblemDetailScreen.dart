@@ -61,6 +61,11 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
   bool _isExpansionTileExpanded = false; // ExpansionTile 상태 관리
   bool _isProblemDeleted = false; // 문제 삭제 여부 플래그
 
+  /// 분석을 기다리다 확인을 멈췄는지. 계속 `분석하고 있어요` 로 남겨 두지 않고
+  /// 다시 확인하기 버튼을 보인다.
+  bool _analysisTimedOut = false;
+  bool _isRequestingAnalysis = false;
+
   @override
   void initState() {
     super.initState();
@@ -91,6 +96,9 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
     _stopAnalysisPolling();
     _pollingCount = 0;
     _analysisPollingFailureCount = 0;
+    if (_analysisTimedOut && mounted) {
+      setState(() => _analysisTimedOut = false);
+    }
 
     debugPrint('🔄 Started analysis polling for problem $problemId');
 
@@ -118,6 +126,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
       debugPrint(
           '⏱️ Analysis polling timeout - stopped after ${_pollingCount} attempts');
       _stopAnalysisPolling();
+      if (mounted) setState(() => _analysisTimedOut = true);
       return;
     }
 
@@ -144,7 +153,8 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
         final status = problem.analysis?.status;
         if (status == ProblemAnalysisStatus.COMPLETED ||
             status == ProblemAnalysisStatus.FAILED ||
-            status == ProblemAnalysisStatus.NO_IMAGE) {
+            status == ProblemAnalysisStatus.NO_IMAGE ||
+            status == ProblemAnalysisStatus.RATE_LIMIT_EXCEEDED) {
           // 등록하면 AI 분석이 뒤에서 돈다. 얼마나 성공하는지 본다.
           AppAnalytics.logEvent('problem_analysis_result', {
             'result': status!.name.toLowerCase(),
@@ -165,6 +175,16 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
           debugPrint('❌ Analysis failed - polling stopped');
           _stopAnalysisPolling();
           // UI 강제 업데이트
+          if (mounted) {
+            setState(() {
+              _problemModelFuture = Future.value(problem);
+            });
+          }
+          return;
+        } else if (status == ProblemAnalysisStatus.RATE_LIMIT_EXCEEDED ||
+            status == ProblemAnalysisStatus.NOT_STARTED) {
+          // 한도를 넘겼거나 분석이 시작되지 않았다. 기다려도 바뀌지 않는다.
+          _stopAnalysisPolling();
           if (mounted) {
             setState(() {
               _problemModelFuture = Future.value(problem);
@@ -205,6 +225,46 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
         _pollAnalysisStatus(problemId);
       }
     });
+  }
+
+  /// 이 문제만 AI 분석을 다시 요청한다.
+  Future<void> _requestAnalysis(int problemId) async {
+    if (_isRequestingAnalysis) return;
+    final problemsProvider =
+        Provider.of<ProblemsProvider>(context, listen: false);
+    final before = (await problemsProvider.getProblem(problemId))
+        .analysis
+        ?.status
+        ?.name
+        .toLowerCase();
+    if (!mounted) return;
+    setState(() => _isRequestingAnalysis = true);
+    try {
+      await problemsProvider.requestProblemAnalysis(problemId);
+      AppAnalytics.logEvent('problem_analysis_request', {
+        'source': before ?? 'unknown',
+      });
+    } catch (e, stackTrace) {
+      // 요청 실패 안내는 HttpService 가 띄운다.
+      unawaited(AppErrorReporter.report(
+        e,
+        stackTrace,
+        source: 'problem_analysis_request',
+        severity: AppErrorSeverity.warning,
+      ));
+    } finally {
+      if (mounted) setState(() => _isRequestingAnalysis = false);
+    }
+    if (!mounted) return;
+
+    final problem = await problemsProvider.getProblem(problemId);
+    if (!mounted) return;
+    setState(() {
+      _problemModelFuture = Future.value(problem);
+    });
+    if (problem.analysis?.status == ProblemAnalysisStatus.PROCESSING) {
+      _startAnalysisPolling(problemId);
+    }
   }
 
   void _stopAnalysisPolling() {
@@ -1100,6 +1160,15 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
       onExpansionChanged: _onExpansionChanged,
       onSolved: widget.isPractice ? _onPracticeProblemSolved : null,
       autoStartMode: widget.autoStartMode,
+      onRequestAnalysis: _isRequestingAnalysis
+          ? null
+          : () => _requestAnalysis(problemModel.problemId),
+      analysisTimedOut: _analysisTimedOut,
+      onRefreshAnalysis: () {
+        Provider.of<ProblemsProvider>(context, listen: false)
+            .fetchProblemAnalysis(problemModel.problemId);
+        _startAnalysisPolling(problemModel.problemId);
+      },
     );
   }
 
@@ -1219,9 +1288,13 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
       // 분석 실패 - 폴링 중지
       debugPrint('❌ Analysis failed - polling not needed');
       _stopAnalysisPolling();
-    } else if (analysisStatus == ProblemAnalysisStatus.PROCESSING ||
-        analysisStatus == ProblemAnalysisStatus.NOT_STARTED) {
-      // 분석 진행 중 또는 시작 전 - 폴링 시작
+    } else if (analysisStatus == ProblemAnalysisStatus.NOT_STARTED ||
+        analysisStatus == ProblemAnalysisStatus.RATE_LIMIT_EXCEEDED) {
+      // 분석을 요청하지 않았거나 한도를 넘겼다. 기다려도 바뀌지 않아서 확인하지
+      // 않고, 화면에서 분석하기 버튼을 보인다.
+      _stopAnalysisPolling();
+    } else if (analysisStatus == ProblemAnalysisStatus.PROCESSING) {
+      // 분석 진행 중 - 폴링 시작
       debugPrint(
           '📊 Analysis in progress (status: $analysisStatus) - starting polling');
 

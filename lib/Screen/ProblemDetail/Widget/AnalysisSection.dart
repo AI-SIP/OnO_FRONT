@@ -8,8 +8,19 @@ import '../../../Module/Text/StandardText.dart';
 import '../../../Module/Design/AppRadius.dart';
 import '../../../Module/Design/AppColors.dart';
 
+/// AI 분석 결과 칸.
+///
+/// [onRequestAnalysis] 를 넘기면 분석하지 않은 문제, 한도 초과, 실패일 때
+/// 분석을 다시 요청하는 버튼을 단다. [timedOut] 은 분석을 기다리다 화면이
+/// 확인을 멈췄다는 뜻이고, 그때는 [onRefreshAnalysis] 로 다시 확인하게 한다.
 Widget buildAnalysisSection(
-    BuildContext context, ProblemAnalysisModel? analysis, Color primaryColor) {
+  BuildContext context,
+  ProblemAnalysisModel? analysis,
+  Color primaryColor, {
+  VoidCallback? onRequestAnalysis,
+  bool timedOut = false,
+  VoidCallback? onRefreshAnalysis,
+}) {
   // analysis가 null이면 숨김 (문제 이미지가 없는 경우)
   if (analysis == null) {
     return _buildNoImageState(context, primaryColor);
@@ -21,17 +32,123 @@ Widget buildAnalysisSection(
       // 이미지가 없는 경우 안내 메시지 표시
       return _buildNoImageState(context, primaryColor);
     case ProblemAnalysisStatus.NOT_STARTED:
-      // NOT_STARTED 상태도 PROCESSING으로 표시 (서버에서 분석 시작 전)
-      return _buildProcessingState(context, primaryColor);
+      // 분석을 요청하지 않은 문제다. 등록할 때 AI 분석을 끄면 이 상태로 남는다.
+      // 전에는 분석 중으로 보여서 끝나지 않는 로딩처럼 보였다.
+      return _buildNoticeState(
+        context,
+        primaryColor,
+        icon: Icons.auto_awesome_outlined,
+        iconColor: primaryColor,
+        title: 'AI 분석을 하지 않은 문제예요',
+        body: '분석하면 풀이 방향과 주의할 점을 정리해 드려요',
+        buttonLabel: 'AI 분석하기',
+        onPressed: onRequestAnalysis,
+      );
+    case ProblemAnalysisStatus.RATE_LIMIT_EXCEEDED:
+      return _buildNoticeState(
+        context,
+        primaryColor,
+        icon: Icons.hourglass_empty_rounded,
+        iconColor: Colors.orange,
+        title: '오늘 AI 분석 횟수를 모두 썼어요',
+        body: '하루에 20번까지 분석할 수 있어요. 내일 다시 분석해 주세요',
+        buttonLabel: '다시 분석하기',
+        onPressed: onRequestAnalysis,
+      );
     case ProblemAnalysisStatus.PROCESSING:
+      if (timedOut) {
+        return _buildNoticeState(
+          context,
+          primaryColor,
+          icon: Icons.schedule_rounded,
+          iconColor: primaryColor,
+          title: '분석이 생각보다 오래 걸리고 있어요',
+          body: '잠시 뒤에 다시 확인해 주세요',
+          buttonLabel: '다시 확인하기',
+          onPressed: onRefreshAnalysis,
+        );
+      }
       return _buildProcessingState(context, primaryColor);
     case ProblemAnalysisStatus.FAILED:
-      return _buildFailedState(context, analysis.errorMessage, primaryColor);
+      return _buildFailedState(
+          context, analysis.errorMessage, primaryColor, onRequestAnalysis);
     case ProblemAnalysisStatus.COMPLETED:
       return _buildCompletedState(context, analysis, primaryColor);
     default:
       return const SizedBox.shrink();
   }
+}
+
+Widget _buildNoticeState(
+  BuildContext context,
+  Color primaryColor, {
+  required IconData icon,
+  required Color iconColor,
+  required String title,
+  required String body,
+  required String buttonLabel,
+  VoidCallback? onPressed,
+}) {
+  return Container(
+    width: double.infinity,
+    padding: const EdgeInsets.all(24.0),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(AppRadius.medium),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.grey.withValues(alpha: 0.1),
+          blurRadius: 8,
+          offset: const Offset(0, 2),
+        ),
+      ],
+    ),
+    child: Column(
+      children: [
+        Icon(icon, color: iconColor, size: 44),
+        const SizedBox(height: 14),
+        StandardText(
+          text: title,
+          fontSize: MobileFontSize.reduced(context, 15),
+          fontWeight: FontWeight.bold,
+          color: AppColors.textPrimary,
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 8),
+        StandardText(
+          text: body,
+          fontSize: 13,
+          color: AppColors.textSecondary,
+          textAlign: TextAlign.center,
+        ),
+        if (onPressed != null) ...[
+          const SizedBox(height: 16),
+          _buildActionButton(buttonLabel, primaryColor, onPressed),
+        ],
+      ],
+    ),
+  );
+}
+
+Widget _buildActionButton(
+    String label, Color primaryColor, VoidCallback onPressed) {
+  return OutlinedButton(
+    onPressed: onPressed,
+    style: OutlinedButton.styleFrom(
+      foregroundColor: primaryColor,
+      side: BorderSide(color: primaryColor.withValues(alpha: 0.5)),
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppRadius.small),
+      ),
+    ),
+    child: StandardText(
+      text: label,
+      fontSize: 14,
+      fontWeight: FontWeight.w600,
+      color: primaryColor,
+    ),
+  );
 }
 
 Widget _buildNoImageState(BuildContext context, Color primaryColor) {
@@ -131,8 +248,8 @@ Widget _buildProcessingState(BuildContext context, Color primaryColor) {
   );
 }
 
-Widget _buildFailedState(
-    BuildContext context, String? errorMessage, Color primaryColor) {
+Widget _buildFailedState(BuildContext context, String? errorMessage,
+    Color primaryColor, VoidCallback? onRetry) {
   return Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
@@ -169,6 +286,10 @@ Widget _buildFailedState(
                 color: AppColors.textSecondary,
                 textAlign: TextAlign.center,
               ),
+            ],
+            if (onRetry != null) ...[
+              const SizedBox(height: 16),
+              _buildActionButton('다시 분석하기', primaryColor, onRetry),
             ],
           ],
         ),
