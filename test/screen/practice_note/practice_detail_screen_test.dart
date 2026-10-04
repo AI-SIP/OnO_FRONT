@@ -474,9 +474,9 @@ void main() {
     await tester.tap(find.text('복습 세트 삭제하기'));
     await tester.pumpAndSettle();
 
-    expect(find.text('정말로 이 복습 세트를 삭제할까요?'), findsOneWidget);
+    expect(find.text('이 복습 세트를 삭제할까요?'), findsOneWidget);
 
-    await tester.tap(find.text('삭제'));
+    await tester.tap(find.text('삭제하기'));
     await tester.pumpAndSettle();
 
     verify(() => practiceNoteService.deletePracticeNotes([42])).called(1);
@@ -499,7 +499,7 @@ void main() {
     await tester.pumpAndSettle();
 
     verifyNever(() => practiceNoteService.deletePracticeNotes(any()));
-    expect(find.text('정말로 이 복습 세트를 삭제할까요?'), findsNothing);
+    expect(find.text('이 복습 세트를 삭제할까요?'), findsNothing);
   });
 
   testWidgets('네트워크 이미지가 있는 문제 카드도 예외 없이 그려진다', (tester) async {

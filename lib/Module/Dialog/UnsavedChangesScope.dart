@@ -2,10 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../Util/AppAnalytics.dart';
-import '../Design/AppColors.dart';
-import '../Design/AppRadius.dart';
-import '../Motion/TossDialog.dart';
-import '../Text/StandardText.dart';
+import 'ConfirmDialog.dart';
 
 /// 쓰던 내용이 있으면 뒤로 가기 전에 정말 나갈지 묻는다.
 ///
@@ -135,109 +132,18 @@ Future<bool> confirmLeave(
   String stayLabel = '계속 쓰기',
   String leaveLabel = '나가기',
 }) async {
-  final leave = await showTossDialog<bool>(
-    context: context,
-    builder: (_) => _LeaveDialog(
-      title: title,
-      description: description,
-      stayLabel: stayLabel,
-      leaveLabel: leaveLabel,
-    ),
+  final leave = await showConfirmDialog(
+    context,
+    title: title,
+    message: description,
+    confirmLabel: leaveLabel,
+    cancelLabel: stayLabel,
+    destructive: true,
+    icon: Icons.edit_off_outlined,
   );
   AppAnalytics.logEvent('leave_confirm', {
     'source': source,
-    'result': leave == true ? 'leave' : 'stay',
+    'result': leave ? 'leave' : 'stay',
   });
-  return leave == true;
-}
-
-class _LeaveDialog extends StatelessWidget {
-  final String title;
-  final String description;
-  final String stayLabel;
-  final String leaveLabel;
-
-  const _LeaveDialog({
-    required this.title,
-    required this.description,
-    this.stayLabel = '계속 쓰기',
-    this.leaveLabel = '나가기',
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Dialog(
-      backgroundColor: Colors.white,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppRadius.large),
-        side: BorderSide(color: Colors.grey[200]!, width: 1),
-      ),
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 340),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 22, 20, 18),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              StandardText(
-                text: title,
-                fontSize: 17,
-                color: AppColors.textPrimary,
-                fontWeight: FontWeight.w700,
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 10),
-              StandardText(
-                text: description,
-                fontSize: 14,
-                color: AppColors.textSecondary,
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 22),
-              Row(
-                children: [
-                  Expanded(
-                    child: TextButton(
-                      onPressed: () => Navigator.pop(context, false),
-                      style: TextButton.styleFrom(
-                        backgroundColor: Colors.grey[50],
-                        padding: const EdgeInsets.symmetric(vertical: 13),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(AppRadius.medium),
-                          side: BorderSide(color: Colors.grey[200]!, width: 1),
-                        ),
-                      ),
-                      child: StandardText(
-                        text: stayLabel,
-                        fontSize: 14,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: TextButton(
-                      onPressed: () => Navigator.pop(context, true),
-                      style: TextButton.styleFrom(
-                        backgroundColor: Colors.red,
-                        padding: const EdgeInsets.symmetric(vertical: 13),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(AppRadius.medium),
-                        ),
-                      ),
-                      child: StandardText(
-                        text: leaveLabel,
-                        fontSize: 14,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
+  return leave;
 }

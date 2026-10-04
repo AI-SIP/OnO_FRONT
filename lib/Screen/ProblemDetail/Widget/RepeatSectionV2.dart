@@ -38,6 +38,7 @@ import 'ReviewStatusStyle.dart';
 import 'ReviewTrendPanel.dart';
 import '../../../Util/PendingDeletion.dart';
 import '../../../Module/Image/ImageCompareScreen.dart';
+import '../../../Module/Dialog/ConfirmDialog.dart';
 
 class RepeatSectionV2 extends StatefulWidget {
   final ProblemModel problem;
@@ -1091,103 +1092,17 @@ class _ProblemSolveCard extends StatelessWidget {
     );
   }
 
-  void _showDeleteConfirmDialog(
-      BuildContext parentContext, ThemeHandler themeProvider) {
-    showTossDialog(
-      context: parentContext,
-      builder: (dialogContext) => Dialog(
-        backgroundColor: Colors.white,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppRadius.large),
-        ),
-        child: Container(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // 헤더
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: Colors.red.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(AppRadius.small),
-                    ),
-                    child: const Icon(
-                      Icons.delete_forever,
-                      color: Colors.red,
-                      size: 20,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  StandardText(
-                    text: '삭제 확인',
-                    fontSize: MobileFontSize.reduced(parentContext, 18),
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary,
-                  ),
-                ],
-              ),
-              const SizedBox(height: 20),
-              // 내용
-              StandardText(
-                text: '이 복습 기록을 정말 삭제할까요?',
-                fontSize: MobileFontSize.reduced(parentContext, 15),
-                color: AppColors.textPrimary,
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 24),
-              // 액션 버튼
-              Row(
-                children: [
-                  Expanded(
-                    child: TextButton(
-                      onPressed: () => Navigator.pop(dialogContext),
-                      style: TextButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 12),
-                        backgroundColor: Colors.grey[100],
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(AppRadius.small),
-                        ),
-                      ),
-                      child: StandardText(
-                        text: '취소',
-                        fontSize: MobileFontSize.reduced(parentContext, 14),
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: TextButton(
-                      onPressed: () {
-                        Navigator.pop(dialogContext);
-                        _handleDelete(parentContext, themeProvider);
-                      },
-                      style: TextButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 12),
-                        backgroundColor: Colors.red,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(AppRadius.small),
-                        ),
-                      ),
-                      child: const StandardText(
-                        text: '삭제',
-                        fontSize: 14,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
+  Future<void> _showDeleteConfirmDialog(
+      BuildContext parentContext, ThemeHandler themeProvider) async {
+    final confirmed = await showConfirmDialog(
+      parentContext,
+      title: '복습 기록을 지울까요?',
+      message: '지운 뒤 몇 초 안에는 되돌릴 수 있어요.',
+      confirmLabel: '삭제하기',
+      destructive: true,
     );
+    if (!confirmed || !parentContext.mounted) return;
+    _handleDelete(parentContext, themeProvider);
   }
 
   // 삭제 핸들러

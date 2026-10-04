@@ -7,6 +7,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:ono/Module/Dialog/ConfirmDialog.dart';
 import 'package:ono/Module/Emoji/OnoEmojiImage.dart';
 import 'package:ono/Module/Motion/Skeleton.dart';
 import 'package:mocktail/mocktail.dart';
@@ -291,7 +292,7 @@ void main() {
     await tester.tap(find.widgetWithText(ElevatedButton, '삭제하기'));
     await tester.pumpAndSettle();
 
-    expect(find.text('정말로 이 복습 세트를 삭제할까요?'), findsNothing);
+    expect(find.text('복습 세트 1개를 삭제할까요?'), findsNothing);
   });
 
   testWidgets('선택 후 삭제를 확정하면 deletePracticeNotes 가 불리고 목록에서 빠지며 선택 모드가 풀린다',
@@ -326,9 +327,10 @@ void main() {
 
     await tester.tap(find.widgetWithText(ElevatedButton, '삭제하기'));
     await tester.pumpAndSettle();
-    expect(find.text('정말로 이 복습 세트를 삭제할까요?'), findsOneWidget);
+    expect(find.text('복습 세트 1개를 삭제할까요?'), findsOneWidget);
 
-    await tester.tap(find.text('삭제'));
+    await tester.tap(find.descendant(
+        of: find.byType(ConfirmDialog), matching: find.text('삭제하기')));
     await tester.pumpAndSettle();
 
     expect(deletedIds, [1]);

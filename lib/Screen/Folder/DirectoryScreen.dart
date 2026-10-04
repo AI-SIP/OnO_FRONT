@@ -50,6 +50,7 @@ import '../../Module/Design/AppColors.dart';
 import '../../Module/Design/AppRadius.dart';
 import 'package:ono/Util/AppAnalytics.dart';
 import '../../Model/Common/ListSort.dart';
+import '../../Module/Dialog/ConfirmDialog.dart';
 
 class DirectoryScreen extends StatefulWidget {
   final int? folderId; // 이 화면이 표시할 폴더 ID
@@ -2269,106 +2270,14 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
   }
 
   /// 삭제 확인 창. 삭제를 누르면 true, 취소하거나 바깥을 눌러 닫으면 false.
-  Future<bool> _showDeleteConfirmDialog({required String message}) async {
-    final confirmed = await showTossDialog<bool>(
-      context: context,
-      builder: (dialogContext) => _buildPhoneWidthDialog(
-        Dialog(
-          backgroundColor: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppRadius.large),
-          ),
-          // 가로 화면이나 글자를 크게 키운 작은 폰에서 높이가 모자라면 잘리지
-          // 않고 스크롤되게 한다.
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // 헤더
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: Colors.red.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(AppRadius.small),
-                      ),
-                      child: const Icon(
-                        Icons.delete_forever,
-                        color: Colors.red,
-                        size: 20,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    const StandardText(
-                      text: '삭제 확인',
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary,
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 20),
-                // 내용
-                StandardText(
-                  text: message,
-                  fontSize: 15,
-                  color: AppColors.textPrimary,
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 24),
-                // 액션 버튼
-                Row(
-                  children: [
-                    Expanded(
-                      child: TextButton(
-                        onPressed: () => Navigator.of(dialogContext).pop(false),
-                        style: TextButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 12, vertical: 8),
-                          backgroundColor: Colors.grey[100],
-                          shape: RoundedRectangleBorder(
-                            borderRadius:
-                                BorderRadius.circular(AppRadius.small),
-                          ),
-                        ),
-                        child: const StandardText(
-                          text: '취소',
-                          fontSize: 14,
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: TextButton(
-                        onPressed: () => Navigator.of(dialogContext).pop(true),
-                        style: TextButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 12, vertical: 8),
-                          backgroundColor: Colors.red,
-                          shape: RoundedRectangleBorder(
-                            borderRadius:
-                                BorderRadius.circular(AppRadius.small),
-                          ),
-                        ),
-                        child: const StandardText(
-                          text: '삭제',
-                          fontSize: 14,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
+  Future<bool> _showDeleteConfirmDialog({required String message}) {
+    return showConfirmDialog(
+      context,
+      title: '삭제할까요?',
+      message: message,
+      confirmLabel: '삭제하기',
+      destructive: true,
     );
-    return confirmed == true;
   }
 
   Widget _buildPhoneWidthDialog(Widget child) {
