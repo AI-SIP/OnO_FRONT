@@ -20,6 +20,7 @@ import '../../Module/Util/FolderPickerDialog.dart';
 import '../../Module/Util/FolderPickerWidget.dart';
 import '../../Provider/FoldersProvider.dart';
 import '../../Provider/MissionProvider.dart';
+import '../../Provider/ReviewDueProvider.dart';
 import '../../Provider/ProblemsProvider.dart';
 import '../../Provider/ScreenIndexProvider.dart';
 import '../../Provider/UserProvider.dart';
@@ -1081,6 +1082,12 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
     unawaited(
       Provider.of<MissionProvider>(context, listen: false).fetchMissions(),
     );
+    // 홈의 추천 복습도 다시 받는다. 전에는 앱을 다시 켜야 새 문제가 보였다.
+    if (!widget.isEditMode) {
+      unawaited(
+        Provider.of<ReviewDueProvider>(context, listen: false).fetchReviewDue(),
+      );
+    }
 
     showSuccessDialog(context);
 
