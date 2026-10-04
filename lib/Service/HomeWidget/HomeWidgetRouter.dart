@@ -5,6 +5,7 @@ import 'package:home_widget/home_widget.dart';
 import 'package:provider/provider.dart';
 
 import '../../Model/Common/LoginStatus.dart';
+import '../../Module/Dialog/UnsavedChangesScope.dart';
 import '../../Module/Motion/TossPageRoute.dart';
 import '../../Provider/UserProvider.dart';
 import '../../Screen/User/LearningCalendarScreen.dart';
@@ -133,6 +134,10 @@ class HomeWidgetRouter {
         });
         return true;
       case _HomeWidgetTarget.calendar:
+        final leave = await UnsavedChangesScope.confirmBeforeLeavingAll(
+          source: 'home_widget',
+        );
+        if (!leave) return false;
         navigator.popUntil((route) => route.isFirst);
         navigator.push(
           TossPageRoute(builder: (_) => const LearningCalendarScreen()),

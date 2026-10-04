@@ -51,7 +51,10 @@ class ImagePickerHandler {
     // 화면을 한 번 더 띄우면 같은 일을 두 번 시키는 셈이다.
     if (capture.alreadyCropped) return capture.files.first;
 
-    return cropImageFile(capture.files.first, accent: accent);
+    // 자르기에서 취소하면 자르지 않은 원본을 쓴다. 앨범과 달리 카메라로 찍은
+    // 것은 다시 고를 수 없어서, 전에는 취소 한 번에 찍은 사진이 사라졌다.
+    final original = capture.files.first;
+    return await cropImageFile(original, accent: accent) ?? original;
   }
 
   /// 카메라로 여러 장을 이어서 찍는다.

@@ -25,6 +25,7 @@ import '../Service/Api/HttpService.dart';
 import 'AppAnalytics.dart';
 import 'AppErrorReporter.dart';
 import 'AppNavigator.dart';
+import '../Module/Dialog/UnsavedChangesScope.dart';
 import '../Module/Motion/TossPageRoute.dart';
 
 /// 알림을 눌렀을 때 열어야 하는 화면.
@@ -336,6 +337,13 @@ class NotificationService {
         LoginStatus.logout) {
       return;
     }
+
+    // 쓰던 오답노트나 복습 기록이 있으면 닫기 전에 묻는다. popUntil 은
+    // 화면마다 걸어 둔 나가기 확인을 거치지 않는다.
+    final leave = await UnsavedChangesScope.confirmBeforeLeavingAll(
+      source: 'notification',
+    );
+    if (!leave) return;
 
     navigator.popUntil((route) => route.isFirst);
 

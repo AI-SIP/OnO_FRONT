@@ -965,7 +965,21 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
     });
   }
 
+  /// 작성 완료를 처리하는 중인지. 사진 업로드를 기다리는 동안에는 로딩 창이
+  /// 아직 없어서, 버튼을 한 번 더 누르면 같은 오답노트가 두 번 만들어졌다.
+  bool _isSubmitting = false;
+
   Future<void> submit() async {
+    if (_isSubmitting) return;
+    _isSubmitting = true;
+    try {
+      await _submit();
+    } finally {
+      _isSubmitting = false;
+    }
+  }
+
+  Future<void> _submit() async {
     // 등록이 끝나면 resetAll 이 입력값을 비운다. 무엇을 채워 올렸는지는
     // 지금 잡아 둔다.
     final analyticsParams = <String, Object?>{
@@ -994,18 +1008,23 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
       return;
     }
 
+    final canPopBeforeSubmit = Navigator.of(context).canPop();
+    // 사진 업로드를 기다리는 동안에도 로딩 창을 띄워 둔다. 전에는 이 사이에
+    // 아무 표시가 없었다. 로딩 창은 한 번만 띄운다. 닫자마자 다시 띄우면
+    // 닫히는 쪽의 정리가 늦게 돌아 다음 hide 가 먹히지 않는다.
+    LoadingDialog.show(
+        context, widget.isEditMode ? '오답노트 수정 중...' : '오답노트 작성 중...');
+
     if (!widget.isEditMode) {
       await _waitForPendingUploads();
       if (!mounted) return;
       if (_existingProblemImageUrls.isEmpty) {
+        LoadingDialog.hide(context);
         _showProblemImageRequiredDialog(context);
         return;
       }
     }
 
-    final canPopBeforeSubmit = Navigator.of(context).canPop();
-    LoadingDialog.show(
-        context, widget.isEditMode ? '오답노트 수정 중...' : '오답노트 작성 중...');
     bool shouldPop = false;
     bool loadingHidden = false;
     try {
