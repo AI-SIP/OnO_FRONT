@@ -10,6 +10,7 @@ import '../../Model/PracticeNote/PracticeNoteRegisterModel.dart';
 import '../../Model/Problem/ProblemRegisterModel.dart';
 import '../../Model/Tag/TagModel.dart';
 import '../../Module/Dialog/SnackBarDialog.dart';
+import '../../Module/Dialog/UnsavedChangesScope.dart';
 import '../../Module/Image/ImagePickerHandler.dart';
 import '../../Module/Text/mobile_font_size.dart';
 import '../../Module/Text/StandardText.dart';
@@ -166,18 +167,64 @@ class _MultiProblemRegisterScreenState
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeHandler>(context);
 
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: _buildAppBar(themeProvider),
-      body: _step == _BatchRegisterStep.selectImages
-          ? _buildImageSelectionBody(themeProvider)
-          : _buildDraftReviewBody(themeProvider),
-      bottomNavigationBar: _step == _BatchRegisterStep.selectImages
-          ? _isOpeningInitialGallery
-              ? null
-              : _buildCommonPanel(themeProvider)
-          : _buildReviewBottomBar(themeProvider),
+    // 고른 사진이 없을 때만 그냥 나간다. 내용 확인 단계에서 뒤로 가면 화면을
+    // 닫지 않고 사진 고르기로 돌아간다(앱바 뒤로가기와 같다).
+    return PopScope(
+      canPop: _step == _BatchRegisterStep.selectImages &&
+          _problemImages.isEmpty &&
+          !_isSubmitting,
+      onPopInvokedWithResult: (didPop, _) {
+        if (didPop) return;
+        _handleBack();
+      },
+      child: Scaffold(
+        backgroundColor: Colors.white,
+        appBar: _buildAppBar(themeProvider),
+        body: _step == _BatchRegisterStep.selectImages
+            ? _buildImageSelectionBody(themeProvider)
+            : _buildDraftReviewBody(themeProvider),
+        bottomNavigationBar: _step == _BatchRegisterStep.selectImages
+            ? _isOpeningInitialGallery
+                ? null
+                : _buildCommonPanel(themeProvider)
+            : _buildReviewBottomBar(themeProvider),
+      ),
     );
+  }
+
+  /// 앱바 뒤로가기와 기기 뒤로가기가 같이 쓴다.
+  ///
+  /// 전에는 닫기를 누르면 고른 사진이 묻지도 않고 다 날아갔고, 내용 확인
+  /// 단계에서 기기 뒤로가기를 하면 사진 고르기가 아니라 화면이 통째로 닫혔다.
+  Future<void> _handleBack() async {
+    if (_isSubmitting) return;
+    if (_step == _BatchRegisterStep.editDetails) {
+      final typed = _drafts.any((draft) =>
+          draft.memoController.text.trim().isNotEmpty ||
+          draft.answerImages.isNotEmpty);
+      if (typed &&
+          !await confirmLeave(
+            context,
+            source: 'problem_register_multi_details',
+            title: '사진 고르기로 돌아갈까요?',
+            description: '문제마다 적은 메모와 해설 사진은 지워져요.',
+          )) {
+        return;
+      }
+      if (!mounted) return;
+      _returnToImageSelection();
+      return;
+    }
+    if (_problemImages.isNotEmpty &&
+        !await confirmLeave(
+          context,
+          source: 'problem_register_multi',
+          title: '작성을 그만둘까요?',
+          description: '지금 나가면 고른 사진이 등록되지 않아요.',
+        )) {
+      return;
+    }
+    if (mounted) Navigator.of(context).pop();
   }
 
   PreferredSizeWidget _buildAppBar(ThemeHandler themeProvider) {
@@ -192,15 +239,7 @@ class _MultiProblemRegisterScreenState
               : Icons.arrow_back,
           color: AppColors.textPrimary,
         ),
-        onPressed: _isSubmitting
-            ? null
-            : () {
-                if (_step == _BatchRegisterStep.editDetails) {
-                  _returnToImageSelection();
-                  return;
-                }
-                Navigator.pop(context);
-              },
+        onPressed: _isSubmitting ? null : _handleBack,
       ),
       title: StandardText(
         text: _step == _BatchRegisterStep.selectImages

@@ -2,7 +2,9 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:camera/camera.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:provider/provider.dart';
 
 import '../../Model/Problem/ProblemModel.dart';
@@ -45,6 +47,9 @@ class ProblemRegisterTemplate extends StatefulWidget {
   final VoidCallback? onCancel;
   final VoidCallback? onSubmit;
 
+  /// 저장하지 않은 입력이 있는지 여기에 적는다. 화면이 뒤로 가기 전에 물어볼지 정한다.
+  final ValueNotifier<bool>? unsavedChanges;
+
   const ProblemRegisterTemplate({
     Key? key,
     this.problemModel,
@@ -52,6 +57,7 @@ class ProblemRegisterTemplate extends StatefulWidget {
     this.initialFolderId,
     this.onCancel,
     this.onSubmit,
+    this.unsavedChanges,
   }) : super(key: key);
 
   @override
@@ -114,12 +120,79 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
     }
     _memoCtrl.text = problemModel?.memo ?? '';
     _selectedTagIds.addAll(problemModel?.tagIdList ?? []);
+    _initialTitle = _titleCtrl.text;
+    _initialMemo = _memoCtrl.text;
+    _initialTagIds = Set.of(_selectedTagIds);
+    _initialFolderId = _selectedFolderId;
+    _initialDate = _selectedDate;
+    _initialProblemImageUrls = List.of(_existingProblemImageUrls);
+    _initialAnswerImageUrls = List.of(_existingAnswerImageUrls);
+    _titleCtrl.addListener(_syncUnsavedChanges);
+    _memoCtrl.addListener(_syncUnsavedChanges);
     _loadMyTags();
     _loadRecommendedTags(imageUrls: _existingProblemImageUrls);
   }
 
+  // 수정 화면에서 바뀐 것이 있는지 비교할 처음 값.
+  late final String _initialTitle;
+  late final String _initialMemo;
+  late final Set<int> _initialTagIds;
+  late final int? _initialFolderId;
+  late final DateTime _initialDate;
+  late final List<String> _initialProblemImageUrls;
+  late final List<String> _initialAnswerImageUrls;
+
+  /// 화면을 다시 그릴 때마다 저장하지 않은 입력이 있는지 다시 본다.
+  ///
+  /// 사진, 태그, 공책, 날짜는 모두 setState 로 바뀌어서 자리마다 따로 챙기지
+  /// 않고 여기서 한 번에 맞춘다. 글자는 컨트롤러 리스너로 맞춘다.
+  @override
+  void setState(VoidCallback fn) {
+    super.setState(fn);
+    _syncUnsavedChanges();
+  }
+
+  void _syncUnsavedChanges() {
+    final notifier = widget.unsavedChanges;
+    if (notifier == null) return;
+    final changed = _hasUnsavedChanges();
+    if (notifier.value == changed) return;
+    // 공책을 바꾸면 자동 제목이 그리는 중에 바뀔 수 있다. 그리는 중에 바깥
+    // 화면을 다시 그리게 하면 안 되므로 다음 프레임으로 미룬다.
+    if (SchedulerBinding.instance.schedulerPhase ==
+        SchedulerPhase.persistentCallbacks) {
+      SchedulerBinding.instance.addPostFrameCallback((_) {
+        if (mounted) notifier.value = _hasUnsavedChanges();
+      });
+      return;
+    }
+    notifier.value = changed;
+  }
+
+  bool _hasUnsavedChanges() {
+    if (_problemImages.isNotEmpty || _answerImages.isNotEmpty) return true;
+    if (!widget.isEditMode) {
+      // 제목은 공책 이름으로 자동으로 채워지므로, 직접 고쳤을 때만 쓴 것으로 본다.
+      return _existingProblemImageUrls.isNotEmpty ||
+          _existingAnswerImageUrls.isNotEmpty ||
+          _memoCtrl.text.trim().isNotEmpty ||
+          (_hasUserEditedTitle && _titleCtrl.text.trim().isNotEmpty) ||
+          _selectedTagIds.isNotEmpty;
+    }
+    return _deletedImageUrls.isNotEmpty ||
+        _titleCtrl.text != _initialTitle ||
+        _memoCtrl.text != _initialMemo ||
+        !setEquals(_selectedTagIds, _initialTagIds) ||
+        _selectedFolderId != _initialFolderId ||
+        _selectedDate != _initialDate ||
+        !listEquals(_existingProblemImageUrls, _initialProblemImageUrls) ||
+        !listEquals(_existingAnswerImageUrls, _initialAnswerImageUrls);
+  }
+
   @override
   void dispose() {
+    _titleCtrl.removeListener(_syncUnsavedChanges);
+    _memoCtrl.removeListener(_syncUnsavedChanges);
     _titleCtrl.dispose();
     _memoCtrl.dispose();
     super.dispose();
