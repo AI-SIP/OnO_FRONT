@@ -44,6 +44,9 @@ class ProblemsProvider with ChangeNotifier {
     }
   }
 
+  /// 받아 둔 것만 본다. 없으면 서버에 묻지 않고 null 이다.
+  ProblemModel? cachedProblem(int problemId) => _problemsMap[problemId];
+
   // O(log n) 삽입/업데이트 (SplayTreeMap이 자동으로 정렬 유지)
   void _upsertProblem(ProblemModel problem) {
     _problemsMap[problem.problemId] = problem;
