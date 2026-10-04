@@ -390,7 +390,8 @@ void main() {
       );
       await buildService(http).getPracticeNoteThumbnailsV2(cursor: 7, size: 5);
 
-      expect(http.lastRequest.queryParameters, {'cursor': '7', 'size': '5', 'sort': 'NEWEST'});
+      expect(http.lastRequest.queryParameters,
+          {'cursor': '7', 'size': '5', 'sort': 'NEWEST'});
     });
 
     // TODO(#174): 실제 버그. lib/Model/Common/PaginatedResponse.dart:23,27,28
