@@ -19,6 +19,7 @@ import '../../Service/Api/Problem/ProblemSolveService.dart';
 import '../../Service/HomeWidget/HomeWidgetSyncService.dart';
 import '../../Util/AppAnalytics.dart';
 import 'ProblemSolveRegisterTemplate.dart';
+import '../../Module/Dialog/UnsavedChangesScope.dart';
 import '../../Module/Design/AppRadius.dart';
 
 class ProblemSolveRegisterScreen extends StatefulWidget {
@@ -44,6 +45,13 @@ class _ProblemSolveRegisterScreenState
     extends State<ProblemSolveRegisterScreen> {
   final GlobalKey<ProblemSolveRegisterTemplateState> _templateKey =
       GlobalKey<ProblemSolveRegisterTemplateState>();
+  final ValueNotifier<bool> _unsavedChanges = ValueNotifier(false);
+
+  @override
+  void dispose() {
+    _unsavedChanges.dispose();
+    super.dispose();
+  }
 
   @override
   void initState() {
@@ -55,21 +63,28 @@ class _ProblemSolveRegisterScreenState
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeHandler>(context);
 
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: _buildAppBar(themeProvider),
-      body: Column(
-        children: [
-          Expanded(
-            child: ProblemSolveRegisterTemplate(
-              key: _templateKey,
-              problemId: widget.problemId,
-              initialSolutionImages: widget.initialSolutionImages,
-              initialTimeSpentSeconds: widget.initialTimeSpentSeconds,
+    return UnsavedChangesScope(
+      hasChanges: _unsavedChanges,
+      source: 'problem_solve_register',
+      title: '복습 기록을 그만둘까요?',
+      description: '지금 나가면 이번 복습 기록과 풀이 이미지가 저장되지 않아요.',
+      child: Scaffold(
+        backgroundColor: Colors.white,
+        appBar: _buildAppBar(themeProvider),
+        body: Column(
+          children: [
+            Expanded(
+              child: ProblemSolveRegisterTemplate(
+                key: _templateKey,
+                problemId: widget.problemId,
+                initialSolutionImages: widget.initialSolutionImages,
+                initialTimeSpentSeconds: widget.initialTimeSpentSeconds,
+                unsavedChanges: _unsavedChanges,
+              ),
             ),
-          ),
-          _buildSubmitButton(context, themeProvider),
-        ],
+            _buildSubmitButton(context, themeProvider),
+          ],
+        ),
       ),
     );
   }
