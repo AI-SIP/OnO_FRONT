@@ -90,6 +90,7 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
         ),
         actions: [
           IconButton(
+            tooltip: '공유하기',
             icon: Icon(
               Icons.share_rounded,
               color: _report != null
@@ -238,7 +239,7 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
               StandardText(
                 text: '학습 리포트는 매일 자정 갱신돼요.',
                 fontSize: 12,
-                color: Colors.grey,
+                color: AppColors.textSecondary,
               ),
             ],
           ),

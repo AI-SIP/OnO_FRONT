@@ -108,7 +108,7 @@ class ActivityFeedItem extends StatelessWidget {
                     StandardText(
                       text: _timeAgo(feed.createdAt),
                       fontSize: 11,
-                      color: Colors.grey[500]!,
+                      color: AppColors.textSecondary,
                       fontWeight: FontWeight.normal,
                       fontFamily: 'PretendardLight',
                     ),

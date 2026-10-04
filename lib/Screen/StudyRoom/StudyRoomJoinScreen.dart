@@ -10,6 +10,7 @@ import '../../Provider/StudyRoomProvider.dart';
 import '../../Util/AppSnackBar.dart';
 import '../../Module/Design/AppRadius.dart';
 import '../../Util/AppAnalytics.dart';
+import '../../Module/Design/AppColors.dart';
 
 class StudyRoomJoinScreen extends StatefulWidget {
   const StudyRoomJoinScreen({super.key});
@@ -82,6 +83,7 @@ class _StudyRoomJoinScreenState extends State<StudyRoomJoinScreen> {
         centerTitle: true,
         backgroundColor: Colors.white,
         leading: IconButton(
+          tooltip: '닫기',
           icon: Icon(Icons.close, color: themeProvider.primaryColor),
           onPressed: () => Navigator.pop(context),
         ),
@@ -127,7 +129,7 @@ class _StudyRoomJoinScreenState extends State<StudyRoomJoinScreen> {
                 StandardText(
                   text: '친구에게 받은 6자리 숫자 코드를 입력해 주세요.',
                   fontSize: 14,
-                  color: Colors.grey[500]!,
+                  color: AppColors.textSecondary,
                   fontWeight: FontWeight.normal,
                   fontFamily: 'PretendardLight',
                   textAlign: TextAlign.center,

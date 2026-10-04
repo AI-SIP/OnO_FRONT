@@ -560,16 +560,13 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
                       fontSize: 15,
                       color: AppColors.textPrimary,
                     ),
-                    Transform.scale(
-                      scale: 0.8,
-                      child: Switch(
-                        value: _notifyEnabled,
-                        activeColor: theme.primaryColor,
-                        inactiveTrackColor: Colors.grey.shade300,
-                        inactiveThumbColor: Colors.grey,
-                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        onChanged: (v) => setState(() => _notifyEnabled = v),
-                      ),
+                    // 줄인 스위치는 누르는 영역이 작았다. 원래 크기로 둔다.
+                    Switch(
+                      value: _notifyEnabled,
+                      activeColor: theme.primaryColor,
+                      inactiveTrackColor: Colors.grey.shade300,
+                      inactiveThumbColor: Colors.grey,
+                      onChanged: (v) => setState(() => _notifyEnabled = v),
                     ),
                   ],
                 ),

@@ -102,6 +102,7 @@ class _SettingScreenState extends State<SettingScreen> {
           Padding(
             padding: const EdgeInsets.only(right: 16.0),
             child: IconButton(
+              tooltip: '설정',
               icon: Icon(Icons.settings, color: themeProvider.primaryColor),
               onPressed: () {
                 Navigator.of(context).push(
@@ -708,7 +709,7 @@ Widget _buildTutorialReplaySection({
                   StandardText(
                     text: 'OnO 사용법을 처음부터 다시 둘러봐요',
                     fontSize: 11,
-                    color: Colors.grey,
+                    color: AppColors.textSecondary,
                   ),
                 ],
               ),

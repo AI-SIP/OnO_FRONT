@@ -6,6 +6,7 @@ import '../Text/StandardText.dart';
 import '../Theme/ThemeHandler.dart';
 import '../Design/AppRadius.dart';
 import '../../Util/ShortDate.dart';
+import '../../Module/Design/AppColors.dart';
 
 class ProblemThumbnailCard extends StatelessWidget {
   final String title;
@@ -219,7 +220,7 @@ class ProblemThumbnailCard extends StatelessWidget {
       child: StandardText(
         text: '태그 없음',
         fontSize: tagFontSize,
-        color: Colors.grey.shade400,
+        color: AppColors.textSecondary,
       ),
     );
   }
@@ -317,7 +318,7 @@ class ProblemThumbnailCard extends StatelessWidget {
                   : StandardText(
                       text: '기록 없음',
                       fontSize: 10,
-                      color: Colors.grey.shade400,
+                      color: AppColors.textSecondary,
                       textAlign: TextAlign.center,
                     ),
             ),

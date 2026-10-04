@@ -97,7 +97,7 @@ class _ActivityFeedTabState extends State<ActivityFeedTab>
                             StandardText(
                               text: '멤버들이 문제를 등록하면 여기에 표시돼요',
                               fontSize: 13,
-                              color: Colors.grey[500]!,
+                              color: AppColors.textSecondary,
                               fontWeight: FontWeight.normal,
                               fontFamily: 'PretendardLight',
                             ),

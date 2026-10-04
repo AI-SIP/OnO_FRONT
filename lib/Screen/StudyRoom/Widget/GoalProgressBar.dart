@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../Module/Text/StandardText.dart';
 import '../../../Module/Theme/ThemeHandler.dart';
 import '../../../Module/Motion/AnimatedGauge.dart';
+import '../../../Module/Design/AppColors.dart';
 
 class GoalProgressBar extends StatelessWidget {
   final int current;
@@ -30,7 +31,7 @@ class GoalProgressBar extends StatelessWidget {
             StandardText(
               text: '목표 달성률',
               fontSize: 11,
-              color: Colors.grey[500]!,
+              color: AppColors.textSecondary,
               fontWeight: FontWeight.normal,
               fontFamily: 'PretendardLight',
             ),
