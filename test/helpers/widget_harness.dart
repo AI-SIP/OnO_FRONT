@@ -26,6 +26,7 @@ import 'cosmetic_catalog_fixture.dart';
 import 'firebase_analytics_stub.dart';
 import 'secure_storage_stub.dart';
 import 'test_setup.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 /// 위젯 테스트 파일의 main() 맨 앞에서 한 번 부른다.
 ///
@@ -50,6 +51,8 @@ import 'test_setup.dart';
 /// 타임아웃난다. 반복 모션 자체를 확인하는 테스트만 스스로 다시 켠다.
 void setUpOnoWidgetTest() {
   setUpOnoTest();
+  // 기기 저장소를 쓰는 화면이 있다. 채널이 없으면 읽기가 끝나지 않는다.
+  setUp(() => SharedPreferences.setMockInitialValues({}));
   stubFirebaseAnalytics();
   stubSecureStorage();
   setUp(() => FrogMotion.loopsEnabled = false);

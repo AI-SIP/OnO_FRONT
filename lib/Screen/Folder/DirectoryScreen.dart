@@ -47,6 +47,7 @@ import '../../Module/Motion/TossDialog.dart';
 import '../../Module/Design/AppColors.dart';
 import '../../Module/Design/AppRadius.dart';
 import 'package:ono/Util/AppAnalytics.dart';
+import '../../Model/Common/ListSort.dart';
 
 class DirectoryScreen extends StatefulWidget {
   final int? folderId; // 이 화면이 표시할 폴더 ID
@@ -68,6 +69,8 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
   // 오답노트 수는 클라이언트가 정확히 모르므로 개수 없이 범위만 알린다.
   static const String _folderDeleteScopeMessage = '안에 있는 공책과 오답노트도 함께 삭제됩니다.';
   bool _isSelectionMode = false; // 선택 모드 활성화 여부
+  // 지금 목록을 받은 정렬. 다른 공책 화면에서 정렬을 바꾸고 돌아오면 다시 받는다.
+  ListSort? _loadedSort;
   final List<int> _selectedFolderIds = []; // 선택된 폴더 ID 리스트
   final List<int> _selectedProblemIds = []; // 선택된 문제 ID 리스트
   FolderModel? _currentFolder; // 이 화면의 폴더 데이터
@@ -169,6 +172,8 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     try {
       final foldersProvider =
           Provider.of<FoldersProvider>(context, listen: false);
+      await foldersProvider.loadBookshelfSort();
+      _loadedSort = foldersProvider.bookshelfSort;
 
       // 이 화면의 폴더 ID 결정
       int targetFolderId;
@@ -286,6 +291,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
         folderId: folderId,
         cursor: _subfolderNextCursor,
         size: 20,
+        sort: foldersProvider.bookshelfSort,
       );
 
       // 로컬 상태 업데이트 (모든 페이지)
@@ -410,6 +416,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
         folderId: folderId,
         cursor: _problemNextCursor,
         size: 20,
+        sort: foldersProvider.bookshelfSort,
       );
 
       // 로컬 상태 업데이트 (모든 페이지)
@@ -500,6 +507,14 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     final themeProvider = Provider.of<ThemeHandler>(context);
     final foldersProvider = Provider.of<FoldersProvider>(context);
     final reviewDueProvider = Provider.of<ReviewDueProvider>(context);
+    if (_loadedSort != null &&
+        _loadedSort != foldersProvider.bookshelfSort &&
+        !_isInitialLoading) {
+      _loadedSort = foldersProvider.bookshelfSort;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _loadFolderData();
+      });
+    }
 
     final body = !(authService.isLoggedIn == LoginStatus.login)
         ? _buildLoginPrompt(themeProvider)
@@ -615,6 +630,8 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                     );
                   },
                 ),
+              if (!_isSelectionMode)
+                _buildSortButton(themeProvider, foldersProvider),
               IconButton(
                 icon: Icon(
                   _isSelectionMode ? Icons.close : Icons.more_vert,
@@ -636,6 +653,50 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
             ],
           ),
         ),
+      ],
+    );
+  }
+
+  /// 공책과 오답노트를 어느 순서로 볼지 고른다. 전에는 늘 오래된 것이 맨
+  /// 위라 최근에 쓴 오답노트를 보려면 끝까지 내려야 했다.
+  Widget _buildSortButton(
+      ThemeHandler themeProvider, FoldersProvider foldersProvider) {
+    final current = foldersProvider.bookshelfSort;
+    return PopupMenuButton<ListSort>(
+      tooltip: '정렬: ${current.label}',
+      icon: Icon(Icons.swap_vert, color: themeProvider.primaryColor),
+      color: Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppRadius.medium),
+      ),
+      onSelected: (sort) {
+        if (sort == foldersProvider.bookshelfSort) return;
+        AppAnalytics.logEvent('bookshelf_sort_change', {'sort': sort.name});
+        foldersProvider.setBookshelfSort(sort);
+        _loadFolderData();
+      },
+      itemBuilder: (context) => [
+        for (final sort in ListSort.values)
+          PopupMenuItem<ListSort>(
+            value: sort,
+            child: Row(
+              children: [
+                SizedBox(
+                  width: 24,
+                  child: sort == current
+                      ? Icon(Icons.check,
+                          size: 18, color: themeProvider.primaryColor)
+                      : null,
+                ),
+                const SizedBox(width: 8),
+                StandardText(
+                  text: sort.label,
+                  fontSize: 15,
+                  color: AppColors.textPrimary,
+                ),
+              ],
+            ),
+          ),
       ],
     );
   }
