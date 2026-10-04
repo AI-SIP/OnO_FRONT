@@ -6,6 +6,7 @@ import 'package:ono/Model/PracticeNote/PracticeNoteUpdateModel.dart';
 import '../../../Config/AppConfig.dart';
 import '../../../Model/PracticeNote/PracticeNoteRegisterModel.dart';
 import '../HttpService.dart';
+import '../../../Model/Common/ListSort.dart';
 
 class PracticeNoteService {
   final HttpService httpService;
@@ -101,9 +102,11 @@ class PracticeNoteService {
       getPracticeNoteThumbnailsV2({
     int? cursor,
     int size = 20,
+    ListSort sort = ListSort.newest,
   }) async {
     final queryParams = <String, String>{
       'size': size.toString(),
+      'sort': sort.apiValue,
     };
     if (cursor != null) {
       queryParams['cursor'] = cursor.toString();

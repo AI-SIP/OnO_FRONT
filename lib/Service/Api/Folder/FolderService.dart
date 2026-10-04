@@ -5,6 +5,7 @@ import 'package:ono/Model/Folder/FolderThumbnailModel.dart';
 
 import '../../../Config/AppConfig.dart';
 import '../HttpService.dart';
+import '../../../Model/Common/ListSort.dart';
 
 class FolderService {
   final HttpService httpService;
@@ -95,9 +96,11 @@ class FolderService {
     required int folderId,
     int? cursor,
     int size = 20,
+    ListSort sort = ListSort.newest,
   }) async {
     final queryParams = <String, String>{
       'size': size.toString(),
+      'sort': sort.apiValue,
     };
     if (cursor != null) {
       queryParams['cursor'] = cursor.toString();
