@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:ono/Model/Problem/AnswerStatus.dart';
+import 'package:ono/Model/Problem/ImprovementType.dart';
+import 'package:ono/Model/Problem/ProblemSolveUpdateDto.dart';
 import 'package:ono/Screen/ProblemDetail/Widget/RepeatSectionV2.dart';
 
 import '../../helpers/helpers.dart';
@@ -119,6 +121,13 @@ void main() {
     // 배치(isWide: false)는 그대로 두고 화면 폭만 넓힌다.
     const phoneSurface = Size(500, 900);
 
+    setUpAll(() {
+      registerFallbackValue(ProblemSolveUpdateDto(
+          problemSolveId: 0,
+          answerStatus: AnswerStatus.CORRECT,
+          improvements: const []));
+    });
+
     setUp(() {
       service = MockProblemSolveService();
       // 서버는 최신순으로 보낸다.
@@ -155,6 +164,39 @@ void main() {
         lessThan(tester.getTopLeft(find.text('4회차')).dy),
       );
       expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('결과 고치기로 정오만 바꾸고 나머지 값은 그대로 보낸다', (tester) async {
+      when(() => service.updateProblemSolve(any())).thenAnswer((_) async {});
+      await pumpOnoWidget(
+        tester,
+        Scaffold(
+          body: RepeatSectionV2(
+            problem: buildProblem(),
+            iconColor: Colors.pink,
+            isWide: false,
+            service: service,
+          ),
+        ),
+        surfaceSize: phoneSurface,
+      );
+
+      // 맨 위 카드는 가장 최근인 5회차(정답)다.
+      await tester.tap(find.byIcon(Icons.more_vert).first);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('결과 고치기'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('오답').last);
+      await tester.pumpAndSettle();
+
+      final sent = verify(() => service.updateProblemSolve(captureAny()))
+          .captured
+          .single as ProblemSolveUpdateDto;
+      expect(sent.problemSolveId, 5);
+      expect(sent.answerStatus, AnswerStatus.WRONG);
+      expect(sent.reflection, '4회차 메모', reason: 'PATCH 는 전체 교체라 빼면 지워진다');
+      expect(sent.improvements, [ImprovementType.NO_REPEAT_MISTAKE]);
+      expect(sent.timeSpentSeconds, 740);
     });
 
     testWidgets('추이 카드 위에서 위로 밀어도 목록이 스크롤된다', (tester) async {

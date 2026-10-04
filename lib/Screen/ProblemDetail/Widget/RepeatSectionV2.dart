@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
@@ -10,6 +11,10 @@ import '../../../Model/Problem/AnswerStatus.dart';
 import '../../../Model/Problem/ImprovementType.dart';
 import '../../../Model/Problem/ProblemModel.dart';
 import '../../../Model/Problem/ProblemSolveModel.dart';
+import '../../../Model/Problem/ProblemSolveUpdateDto.dart';
+import '../../../Module/Design/AppToast.dart';
+import '../../../Provider/ProblemsProvider.dart';
+import '../../../Provider/ReviewDueProvider.dart';
 import '../../../Module/Emoji/OnoEmojiImage.dart';
 import '../../../Module/Dialog/LoadingDialog.dart';
 import '../../../Module/Dialog/SnackBarDialog.dart';
@@ -299,6 +304,7 @@ class _RepeatSectionV2State extends State<RepeatSectionV2>
                 onToggle: (value) =>
                     _toggleExpanded(solve.problemSolveId, value),
                 onRefreshAsync: refreshAsync,
+                service: problemSolveService,
               ),
             );
           },
@@ -403,6 +409,7 @@ class _RepeatSectionV2State extends State<RepeatSectionV2>
               isExpanded: true,
               onToggle: (_) {},
               onRefreshAsync: refreshAsync,
+              service: problemSolveService,
               showExpandIcon: false,
             ),
           ),
@@ -464,6 +471,7 @@ class _ProblemSolveCard extends StatelessWidget {
   final bool isExpanded;
   final Function(bool) onToggle;
   final Future<void> Function() onRefreshAsync;
+  final ProblemSolveService service;
   final bool showExpandIcon;
 
   const _ProblemSolveCard({
@@ -473,6 +481,7 @@ class _ProblemSolveCard extends StatelessWidget {
     required this.isExpanded,
     required this.onToggle,
     required this.onRefreshAsync,
+    required this.service,
     this.showExpandIcon = true,
   });
 
@@ -856,40 +865,41 @@ class _ProblemSolveCard extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 24),
-              // 수정 버튼
-              // SizedBox(
-              //   width: double.infinity,
-              //   child: TextButton(
-              //     onPressed: () {
-              //       Navigator.pop(context);
-              //       _handleEdit(context, themeProvider);
-              //     },
-              //     style: TextButton.styleFrom(
-              //       padding: const EdgeInsets.symmetric(
-              //           horizontal: 16, vertical: 12),
-              //       backgroundColor:
-              //           themeProvider.primaryColor.withOpacity(0.1),
-              //       shape: RoundedRectangleBorder(
-              //         borderRadius: BorderRadius.circular(AppRadius.small),
-              //       ),
-              //     ),
-              //     child: Row(
-              //       mainAxisAlignment: MainAxisAlignment.center,
-              //       children: [
-              //         Icon(Icons.edit,
-              //             color: themeProvider.primaryColor, size: 20),
-              //         const SizedBox(width: 8),
-              //         StandardText(
-              //           text: '수정',
-              //           fontSize: 15,
-              //           fontWeight: FontWeight.bold,
-              //           color: themeProvider.primaryColor,
-              //         ),
-              //       ],
-              //     ),
-              //   ),
-              // ),
-              // const SizedBox(height: 12),
+              // 결과 고치기. 서버가 고친 결과로 복습 일정을 다시 계산한다
+              // (OnO_BACKEND #348). 그 전에는 일정이 그대로 남아서 막아 뒀다.
+              SizedBox(
+                width: double.infinity,
+                child: TextButton(
+                  onPressed: () {
+                    Navigator.pop(dialogContext);
+                    _editAnswerStatus(parentContext, themeProvider);
+                  },
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 12),
+                    backgroundColor:
+                        themeProvider.primaryColor.withValues(alpha: 0.1),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(AppRadius.small),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.edit,
+                          color: themeProvider.primaryColor, size: 20),
+                      const SizedBox(width: 8),
+                      StandardText(
+                        text: '결과 고치기',
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                        color: themeProvider.primaryColor,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
               // 삭제 버튼
               SizedBox(
                 width: double.infinity,
@@ -1049,16 +1059,109 @@ class _ProblemSolveCard extends StatelessWidget {
   }
 
   // 삭제 핸들러
+  /// 이 회차의 결과만 다시 고른다. 회고, 개선점, 시간, 기분은 그대로 둔다.
+  Future<void> _editAnswerStatus(
+      BuildContext context, ThemeHandler themeProvider) async {
+    final picked = await showModalBottomSheet<AnswerStatus>(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (sheetContext) => SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const StandardText(
+                text: '이번 복습 결과를 고칠게요',
+                fontSize: 17,
+                fontWeight: FontWeight.w700,
+                color: AppColors.textPrimary,
+              ),
+              const SizedBox(height: 6),
+              const StandardText(
+                text: '고친 결과로 다음 복습일을 다시 잡아요',
+                fontSize: 13,
+                color: AppColors.textSecondary,
+              ),
+              const SizedBox(height: 14),
+              for (final status in const [
+                AnswerStatus.CORRECT,
+                AnswerStatus.PARTIAL,
+                AnswerStatus.WRONG,
+              ])
+                ListTile(
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 4),
+                  leading: Icon(
+                    ReviewStatusStyle.icon(status),
+                    color: ReviewStatusStyle.color(status),
+                  ),
+                  title: StandardText(
+                    text: status.displayName,
+                    fontSize: 15,
+                    color: AppColors.textPrimary,
+                  ),
+                  trailing: status == solve.answerStatus
+                      ? Icon(Icons.check, color: themeProvider.primaryColor)
+                      : null,
+                  onTap: () => Navigator.pop(sheetContext, status),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+    if (picked == null || picked == solve.answerStatus || !context.mounted) {
+      return;
+    }
+
+    final rootNavigator = Navigator.of(context, rootNavigator: true);
+    final problemsProvider = context.read<ProblemsProvider?>();
+    final reviewDueProvider = context.read<ReviewDueProvider?>();
+    LoadingDialog.show(context, '복습 기록 고치는 중...');
+    try {
+      // PATCH 는 전체 교체라 바꾸지 않는 값도 그대로 실어야 지워지지 않는다.
+      await service.updateProblemSolve(
+        ProblemSolveUpdateDto(
+          problemSolveId: solve.problemSolveId,
+          answerStatus: picked,
+          reflection: solve.reflection,
+          improvements: solve.improvements,
+          timeSpentSeconds: solve.timeSpentSeconds,
+          moodEmojiKey: solve.moodEmojiKey,
+        ),
+      );
+      AppAnalytics.logEvent('problem_solve_edit', {
+        'from': solve.answerStatus.name.toLowerCase(),
+        'to': picked.name.toLowerCase(),
+      });
+      await onRefreshAsync();
+      // 고친 결과로 다음 복습일과 추천 목록이 바뀐다.
+      await problemsProvider?.fetchProblem(solve.problemId,
+          showErrorSnackBar: false);
+      unawaited(reviewDueProvider?.fetchReviewDue());
+
+      if (rootNavigator.canPop()) rootNavigator.pop();
+      AppToast.success('복습 결과를 고쳤어요');
+    } catch (e) {
+      if (rootNavigator.canPop()) rootNavigator.pop();
+      AppToast.error('복습 결과를 고치지 못했어요. 잠시 후 다시 시도해 주세요.');
+    }
+  }
+
   Future<void> _handleDelete(
       BuildContext context, ThemeHandler themeProvider) async {
     final rootNavigator = Navigator.of(context, rootNavigator: true);
     LoadingDialog.show(context, '복습 기록 삭제 중...');
 
     try {
-      final problemSolveService = ProblemSolveService();
       final solveId = solve.problemSolveId; // 삭제할 ID를 미리 저장
 
-      await problemSolveService.deleteProblemSolve(solveId);
+      await service.deleteProblemSolve(solveId);
 
       // 먼저 새로고침 후 로딩 닫기
       await onRefreshAsync();
