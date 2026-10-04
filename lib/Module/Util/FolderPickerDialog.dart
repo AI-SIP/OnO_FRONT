@@ -467,7 +467,9 @@ class _FolderPickerDialogState extends State<FolderPickerDialog> {
       themeProvider: themeProvider,
     );
 
-    if (node.parentFolderId == null) return row;
+    // 공책을 끌어 옮기는 것은 공책 정리에서만 한다. 옮길 곳을 고르기만 하는
+    // 창에서도 길게 누르면 공책이 바로 옮겨져서, 고르다가 구조가 바뀌었다.
+    if (node.parentFolderId == null || !widget.isManagementMode) return row;
 
     return LongPressDraggable<FolderTreeNode>(
       data: node,
