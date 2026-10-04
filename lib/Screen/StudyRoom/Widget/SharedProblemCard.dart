@@ -334,7 +334,7 @@ class _SharedProblemCardState extends State<SharedProblemCard> {
                           StandardText(
                             text: _timeAgo(p.sharedAt),
                             fontSize: 11,
-                            color: Colors.grey[400]!,
+                            color: AppColors.textSecondary,
                             fontWeight: FontWeight.normal,
                             fontFamily: 'PretendardLight',
                           ),
@@ -575,7 +575,7 @@ class _SharedProblemCardState extends State<SharedProblemCard> {
           StandardText(
             text: '문제 이미지를 불러올 수 없어요',
             fontSize: 13,
-            color: Colors.grey[500]!,
+            color: AppColors.textSecondary,
             fontWeight: FontWeight.normal,
             fontFamily: 'PretendardLight',
           ),

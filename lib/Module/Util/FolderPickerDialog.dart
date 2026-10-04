@@ -578,6 +578,7 @@ class _FolderPickerDialogState extends State<FolderPickerDialog> {
                       ),
                     )
                   : IconButton(
+                      tooltip: node.isExpanded ? '접기' : '펼치기',
                       padding: EdgeInsets.zero,
                       icon: Icon(
                         node.isExpanded

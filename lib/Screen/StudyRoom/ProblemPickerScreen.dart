@@ -522,6 +522,7 @@ class _ProblemPickerScreenState extends State<ProblemPickerScreen> {
         backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
+          tooltip: '닫기',
           icon: const Icon(Icons.close, color: AppColors.textPrimary),
           onPressed: () => Navigator.pop(context),
         ),
@@ -775,7 +776,7 @@ class _ProblemPickerScreenState extends State<ProblemPickerScreen> {
           StandardText(
             text: '공유됨',
             fontSize: isCompact ? 9 : 10,
-            color: Colors.grey[500]!,
+            color: AppColors.textSecondary,
             fontFamily: 'PretendardLight',
             fontWeight: FontWeight.normal,
           ),
@@ -832,13 +833,13 @@ class _ProblemPickerScreenState extends State<ProblemPickerScreen> {
         StandardText(
           text: '폴더가 없어요',
           fontSize: 15,
-          color: Colors.grey[400]!,
+          color: AppColors.textSecondary,
         ),
         const SizedBox(height: 4),
         StandardText(
           text: '문제 폴더를 먼저 만들어 보세요',
           fontSize: 13,
-          color: Colors.grey[400]!,
+          color: AppColors.textSecondary,
           fontWeight: FontWeight.normal,
           fontFamily: 'PretendardLight',
         ),
@@ -855,7 +856,7 @@ class _ProblemPickerScreenState extends State<ProblemPickerScreen> {
         StandardText(
           text: '이 폴더에 문제가 없어요',
           fontSize: 14,
-          color: Colors.grey[400]!,
+          color: AppColors.textSecondary,
         ),
       ],
     );

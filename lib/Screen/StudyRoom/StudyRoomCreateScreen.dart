@@ -178,6 +178,7 @@ class _StudyRoomCreateScreenState extends State<StudyRoomCreateScreen> {
         centerTitle: true,
         backgroundColor: Colors.white,
         leading: IconButton(
+          tooltip: '닫기',
           icon: Icon(Icons.close, color: themeProvider.primaryColor),
           onPressed: () => Navigator.pop(context),
         ),
@@ -266,7 +267,7 @@ class _StudyRoomCreateScreenState extends State<StudyRoomCreateScreen> {
                               child: StandardText(
                                 text: '선택하지 않으면 기본 사진으로 보여요',
                                 fontSize: 12,
-                                color: Colors.grey[500]!,
+                                color: AppColors.textSecondary,
                                 fontWeight: FontWeight.normal,
                                 fontFamily: 'PretendardLight',
                               ),
@@ -350,7 +351,7 @@ class _StudyRoomCreateScreenState extends State<StudyRoomCreateScreen> {
                             StandardText(
                               text: '방을 만들면 자동으로 초대 코드가 생성됩니다.',
                               fontSize: 13,
-                              color: Colors.grey[500]!,
+                              color: AppColors.textSecondary,
                               fontWeight: FontWeight.normal,
                               fontFamily: 'PretendardLight',
                             ),

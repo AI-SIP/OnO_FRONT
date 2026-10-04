@@ -185,6 +185,7 @@ class _PracticeDetailScreenState extends State<PracticeDetailScreen> {
           child: Row(
             children: [
               IconButton(
+                tooltip: '더 보기',
                 icon: Icon(
                   Icons.more_vert,
                   color: themeProvider.primaryColor,

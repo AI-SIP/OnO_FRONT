@@ -134,6 +134,7 @@ class _StudyRoomEditScreenState extends State<StudyRoomEditScreen> {
         backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
+          tooltip: '닫기',
           icon: Icon(Icons.close, color: themeProvider.primaryColor),
           onPressed: () => Navigator.pop(context),
         ),
@@ -219,7 +220,7 @@ class _StudyRoomEditScreenState extends State<StudyRoomEditScreen> {
                                   ? '저장 전까지 기존 사진으로 되돌릴 수 있어요'
                                   : '사진과 이름을 함께 수정할 수 있어요',
                               fontSize: 12,
-                              color: Colors.grey[500]!,
+                              color: AppColors.textSecondary,
                               fontWeight: FontWeight.normal,
                               fontFamily: 'PretendardLight',
                             ),

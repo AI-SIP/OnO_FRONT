@@ -431,6 +431,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
           if (snapshot.connectionState == ConnectionState.done &&
               snapshot.hasData) {
             return IconButton(
+              tooltip: '더 보기',
               icon: Icon(Icons.more_vert, color: themeProvider.primaryColor),
               onPressed: () => _showActionDialog(snapshot.data!, themeProvider),
             );

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../Module/Text/StandardText.dart';
 import '../../../Module/Motion/PressableScale.dart';
+import '../../../Module/Design/AppColors.dart';
 
 class AccountActionButtons extends StatelessWidget {
   final VoidCallback onLogoutTap;
@@ -51,7 +52,7 @@ class AccountActionButtons extends StatelessWidget {
         child: StandardText(
           text: text,
           fontSize: 12,
-          color: Colors.grey[500]!,
+          color: AppColors.textSecondary,
         ),
       ),
     );

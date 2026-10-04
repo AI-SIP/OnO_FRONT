@@ -247,6 +247,7 @@ class _MultiProblemRegisterScreenState
       backgroundColor: Colors.white,
       surfaceTintColor: Colors.white,
       leading: IconButton(
+        tooltip: '닫기',
         icon: Icon(
           _step == _BatchRegisterStep.selectImages
               ? Icons.close
@@ -335,8 +336,7 @@ class _MultiProblemRegisterScreenState
                       horizontal: 18,
                       vertical: 8,
                     ),
-                    minimumSize: Size.zero,
-                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    minimumSize: const Size(0, 44),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(AppRadius.small),
                     ),
@@ -957,6 +957,7 @@ class _MultiProblemRegisterScreenState
                   width: 38,
                   height: 36,
                   child: IconButton(
+                    tooltip: '이 오답노트 빼기',
                     onPressed: _isSubmitting ? null : () => _removeDraft(index),
                     padding: EdgeInsets.zero,
                     style: IconButton.styleFrom(
@@ -1337,8 +1338,7 @@ class _MultiProblemRegisterScreenState
                   ),
                   padding:
                       const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
-                  minimumSize: const Size(0, 40),
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  minimumSize: const Size(0, 44),
                   visualDensity: VisualDensity.compact,
                 ),
                 child: _isLoadingTags
@@ -1371,7 +1371,7 @@ class _MultiProblemRegisterScreenState
                 ? StandardText(
                     text: emptyText,
                     fontSize: 13,
-                    color: Colors.grey[400]!,
+                    color: AppColors.textSecondary,
                   )
                 : Wrap(
                     spacing: 8,
@@ -1454,7 +1454,7 @@ class _MultiProblemRegisterScreenState
             StandardText(
               text: '최근 사용 태그가 없습니다.',
               fontSize: 13,
-              color: Colors.grey[400]!,
+              color: AppColors.textSecondary,
             )
           else
             Wrap(
@@ -1744,6 +1744,7 @@ class _MultiProblemRegisterScreenState
                   backgroundColor: Colors.white,
                   surfaceTintColor: Colors.white,
                   leading: IconButton(
+                    tooltip: '뒤로',
                     icon: const Icon(
                       Icons.arrow_back,
                       color: AppColors.textPrimary,

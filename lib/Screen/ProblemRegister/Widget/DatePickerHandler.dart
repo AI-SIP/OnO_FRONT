@@ -105,6 +105,7 @@ class _DatePickerHandlerState extends State<DatePickerHandler> {
               Row(
                 children: [
                   IconButton(
+                    tooltip: '이전 달',
                     visualDensity: compact ? VisualDensity.compact : null,
                     onPressed: _canGoPrev ? () => _changeMonth(-1) : null,
                     icon: Icon(
@@ -124,6 +125,7 @@ class _DatePickerHandlerState extends State<DatePickerHandler> {
                     ),
                   ),
                   IconButton(
+                    tooltip: '다음 달',
                     visualDensity: compact ? VisualDensity.compact : null,
                     onPressed: _canGoNext ? () => _changeMonth(1) : null,
                     icon: Icon(
@@ -154,7 +156,7 @@ class _DatePickerHandlerState extends State<DatePickerHandler> {
               text: label,
               fontSize: 12,
               fontWeight: FontWeight.w700,
-              color: Colors.grey[500]!,
+              color: AppColors.textSecondary,
             ),
           ),
         );

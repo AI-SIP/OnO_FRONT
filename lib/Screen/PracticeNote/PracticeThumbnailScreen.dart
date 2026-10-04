@@ -150,6 +150,7 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
           child: Row(
             children: [
               IconButton(
+                tooltip: '더 보기',
                 icon: Icon(
                   Icons.more_vert,
                   color: themeProvider.primaryColor,
@@ -740,7 +741,7 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
                   text:
                       '마지막 복습 날짜: ${formatDateTime(practice.lastSolvedAt) ?? '복습 기록 없음'}',
                   fontSize: 11,
-                  color: Colors.grey,
+                  color: AppColors.textSecondary,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),

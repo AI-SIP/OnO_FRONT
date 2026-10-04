@@ -372,6 +372,7 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
               tooltip: '초대 코드',
             ),
           IconButton(
+            tooltip: '더 보기',
             icon: Icon(Icons.more_vert, color: themeProvider.primaryColor),
             onPressed: () =>
                 _showMoreMenu(context, provider, isHost, themeProvider, room),
@@ -708,7 +709,7 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
                                   StandardText(
                                     text: '새 챌린지를 만들어 멤버들과 함께 도전해보세요',
                                     fontSize: 13,
-                                    color: Colors.grey[500]!,
+                                    color: AppColors.textSecondary,
                                     fontWeight: FontWeight.normal,
                                     fontFamily: 'PretendardLight',
                                   ),
@@ -1164,7 +1165,7 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
                                   StandardText(
                                     text: '이번 주 ${member.weeklyProblemCount}문제',
                                     fontSize: 11,
-                                    color: Colors.grey[500]!,
+                                    color: AppColors.textSecondary,
                                     fontWeight: FontWeight.normal,
                                     fontFamily: 'PretendardLight',
                                   ),

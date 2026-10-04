@@ -113,7 +113,7 @@ class InviteCodeSheet extends StatelessWidget {
           StandardText(
             text: '만료: $expiry',
             fontSize: 13,
-            color: Colors.grey[500]!,
+            color: AppColors.textSecondary,
             fontWeight: FontWeight.normal,
             fontFamily: 'PretendardLight',
           ),

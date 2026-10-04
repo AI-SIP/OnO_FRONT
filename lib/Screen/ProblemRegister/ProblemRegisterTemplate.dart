@@ -778,8 +778,7 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
                   ),
                   padding:
                       const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
-                  minimumSize: const Size(0, 40),
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  minimumSize: const Size(0, 44),
                   visualDensity: VisualDensity.compact,
                 ),
                 child: _isLoadingTags
@@ -812,7 +811,7 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
                 ? StandardText(
                     text: '선택된 태그가 없습니다.',
                     fontSize: 13,
-                    color: Colors.grey[400]!,
+                    color: AppColors.textSecondary,
                   )
                 : Wrap(
                     spacing: 8,
@@ -908,7 +907,7 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
                             child: StandardText(
                               text: '최근 사용 태그가 없습니다.',
                               fontSize: 13,
-                              color: Colors.grey[400]!,
+                              color: AppColors.textSecondary,
                             ),
                           )
                         else

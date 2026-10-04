@@ -682,6 +682,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
             children: [
               if (!_isSelectionMode)
                 IconButton(
+                  tooltip: '검색',
                   icon: Icon(
                     Icons.search,
                     color: themeProvider.primaryColor,
@@ -698,6 +699,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
               if (!_isSelectionMode)
                 _buildSortButton(themeProvider, foldersProvider),
               IconButton(
+                tooltip: _isSelectionMode ? '선택 끝내기' : '더 보기',
                 icon: Icon(
                   _isSelectionMode ? Icons.close : Icons.more_vert,
                   color: themeProvider.primaryColor,

@@ -708,6 +708,7 @@ class _TagSelectionScreenState extends State<TagSelectionScreen> {
         centerTitle: true,
         actions: [
           IconButton(
+            tooltip: '더 보기',
             onPressed: _showActionDialog,
             icon: Icon(
               Icons.more_vert,

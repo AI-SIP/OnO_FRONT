@@ -71,6 +71,7 @@ class LabeledTextField extends StatelessWidget {
                   if (showClearButton) ...[
                     const Spacer(),
                     IconButton(
+                      tooltip: '지우기',
                       onPressed: () {
                         controller.clear();
                         onChanged?.call('');
