@@ -191,4 +191,32 @@ void main() {
 
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets('올리는 중인 사진에는 도는 표시를, 실패한 사진에는 다시 올리기를 띄운다', (tester) async {
+    final uploading = writeFakePngFile('uploading');
+    final failed = writeFakePngFile('failed');
+    int? retried;
+
+    await pumpOnoWidget(
+      tester,
+      _wrap(ImageGridWidget(
+        label: '문제 이미지',
+        files: [uploading, failed],
+        uploadingPaths: {uploading.path},
+        failedPaths: {failed.path},
+        onRetry: (i) => retried = i,
+        onAdd: () {},
+        onRemove: (_) {},
+      )),
+      settle: false,
+    );
+    await tester.pump();
+
+    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    expect(find.text('다시 올리기'), findsOneWidget);
+
+    await tester.tap(find.text('다시 올리기'));
+    await tester.pump();
+    expect(retried, 1);
+  });
 }
