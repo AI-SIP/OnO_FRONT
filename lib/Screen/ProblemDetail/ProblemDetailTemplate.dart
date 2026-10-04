@@ -734,6 +734,7 @@ class _ProblemDetailTemplateState extends State<ProblemDetailTemplate>
       themeProvider.primaryColor,
       isWide,
       refreshSignal: _reviewRefreshSignal,
+      onStartSolve: _startSolve,
     );
   }
 }
