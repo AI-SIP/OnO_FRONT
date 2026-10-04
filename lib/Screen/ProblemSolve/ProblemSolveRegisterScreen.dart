@@ -14,10 +14,12 @@ import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/MissionProvider.dart';
 import '../../Provider/PracticeNoteProvider.dart';
 import '../../Provider/ProblemsProvider.dart';
+import '../../Provider/ReviewDueProvider.dart';
 import '../../Provider/UserProvider.dart';
 import '../../Service/Api/Problem/ProblemSolveService.dart';
 import '../../Service/HomeWidget/HomeWidgetSyncService.dart';
 import '../../Util/AppAnalytics.dart';
+import '../../Util/ReviewScheduleText.dart';
 import 'ProblemSolveRegisterTemplate.dart';
 import '../../Module/Dialog/UnsavedChangesScope.dart';
 import '../../Module/Design/AppRadius.dart';
@@ -145,6 +147,8 @@ class _ProblemSolveRegisterScreenState
     final practiceProvider =
         Provider.of<ProblemPracticeProvider>(context, listen: false);
     final userProvider = Provider.of<UserProvider>(context, listen: false);
+    final reviewDueProvider =
+        Provider.of<ReviewDueProvider>(context, listen: false);
     final missionProvider =
         Provider.of<MissionProvider>(context, listen: false);
     final problemSolveService = ProblemSolveService();
@@ -189,8 +193,12 @@ class _ProblemSolveRegisterScreenState
         );
       }
 
-      // 3. 문제 정보 갱신
+      // 3. 문제 정보 갱신. 서버가 다시 잡은 다음 복습일도 여기서 받는다.
       await problemsProvider.fetchProblem(widget.problemId);
+      final savedProblem = await problemsProvider.getProblem(widget.problemId);
+
+      // 추천 복습 목록과 홈의 추천 개수를 맞춘다. 전에는 복습해도 그대로였다.
+      unawaited(reviewDueProvider.fetchReviewDue());
 
       // 4. 복습 세트 갱신
       if (practiceProvider.currentPracticeNote != null) {
@@ -239,7 +247,10 @@ class _ProblemSolveRegisterScreenState
 
         SnackBarDialog.showSnackBar(
           context: context,
-          message: '복습이 완료되었습니다!',
+          message: ReviewScheduleText.afterSave(
+            hasReviewSchedule: savedProblem.hasReviewSchedule,
+            nextReviewAt: savedProblem.nextReviewAt,
+          ),
           backgroundColor: themeProvider.primaryColor,
         );
 
