@@ -70,8 +70,8 @@ void main() {
     );
   });
 
-  /// 상세 화면을 띄우고 "복습 세트에 추가하기" 시트에서 [practiceTitle] 을 골라
-  /// 추가까지 누른다.
+  /// 상세 화면을 띄우고 "복습 세트에 추가하기" 시트에서 [practiceTitle] 을 눌러
+  /// 체크를 바꾸고 완료까지 누른다.
   Future<void> addProblemToPractice(
     WidgetTester tester,
     String practiceTitle,
@@ -93,7 +93,7 @@ void main() {
       await tester.tap(find.text(practiceTitle));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text('추가'));
+      await tester.tap(find.text('완료'));
       await tester.pumpAndSettle();
     });
   }
@@ -149,5 +149,65 @@ void main() {
 
     expect(body['practiceNoteId'], 5);
     expect(body.containsKey('practiceNotification'), isFalse);
+  });
+
+  testWidgets('이미 담긴 세트는 담김으로 보이고, 체크를 풀고 완료하면 그 세트에서 뺀다', (tester) async {
+    final notification = PracticeNotificationModel(
+      intervalDays: 1,
+      hour: 8,
+      minute: 0,
+      repeatType: RepeatType.daily,
+    );
+    when(() => practiceNoteService.getAllPracticeNoteDetails()).thenAnswer(
+      (_) async => [
+        _practice(5, notification: notification, problemIds: [11])
+      ],
+    );
+
+    await withMockedNetworkImages(() async {
+      await pumpOnoWidget(
+        tester,
+        const ProblemDetailScreen(problemId: 11),
+        problemsProvider: problemsProvider,
+        practiceProvider: practiceProvider,
+      );
+      await tester.tap(find.byIcon(Icons.more_vert));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('복습 세트에 추가하기'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('담김'), findsOneWidget);
+      expect(find.text('새 복습 세트 만들기'), findsOneWidget);
+
+      await tester.tap(find.text('복습 세트 5'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('완료'));
+      await tester.pumpAndSettle();
+    });
+
+    final body = capturedRequestBody();
+    expect(body['removeProblemIdList'], [11]);
+    expect(body['addProblemIdList'], isEmpty);
+    expect(body['practiceNotification'], notification.toJson());
+  });
+
+  testWidgets('세트가 없어도 새 복습 세트 만들기가 보인다', (tester) async {
+    when(() => practiceNoteService.getAllPracticeNoteDetails())
+        .thenAnswer((_) async => []);
+
+    await withMockedNetworkImages(() async {
+      await pumpOnoWidget(
+        tester,
+        const ProblemDetailScreen(problemId: 11),
+        problemsProvider: problemsProvider,
+        practiceProvider: practiceProvider,
+      );
+      await tester.tap(find.byIcon(Icons.more_vert));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('복습 세트에 추가하기'));
+      await tester.pumpAndSettle();
+    });
+
+    expect(find.text('새 복습 세트 만들기'), findsOneWidget);
   });
 }
