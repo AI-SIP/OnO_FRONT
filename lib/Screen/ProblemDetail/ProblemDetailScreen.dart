@@ -46,11 +46,16 @@ class ProblemDetailScreen extends StatefulWidget {
   /// 바로 다시 풀기를 시작한다.
   final ProblemSolveMode? autoStartMode;
 
+  /// 공책에서 열었을 때 그 공책에 보이던 오답노트 순서. 있으면 아래에 이전,
+  /// 다음 버튼을 둔다. 전에는 문제마다 목록으로 돌아갔다가 다시 들어가야 했다.
+  final List<int>? folderQueue;
+
   const ProblemDetailScreen({
     required this.problemId,
     this.isPractice = false,
     this.reviewQueue,
     this.autoStartMode,
+    this.folderQueue,
     super.key,
   });
 
@@ -1308,22 +1313,43 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
         ),
       );
     } else {
-      /*
-      return Padding(
-        padding: EdgeInsets.only(top: topPadding, bottom: bottomPadding),
-        child: FolderNavigationButtons(
-          context: context,
-          foldersProvider: Provider.of<FoldersProvider>(context, listen: false),
-          currentId: widget.problemId,
-          onRefresh: _setProblemModel,
+      final queue = widget.folderQueue;
+      final index = queue?.indexOf(widget.problemId) ?? -1;
+      if (queue == null || queue.length < 2 || index < 0 || _isProblemDeleted) {
+        return const SizedBox.shrink();
+      }
+      return SafeArea(
+        top: false,
+        child: Padding(
+          padding: EdgeInsets.fromLTRB(
+              horizontalPadding, 4, horizontalPadding, bottomPadding / 2),
+          child: _FolderNavigationRow(
+            index: index,
+            total: queue.length,
+            onPrevious: index > 0
+                ? () => _openFolderQueueProblem(queue[index - 1], isNext: false)
+                : null,
+            onNext: index < queue.length - 1
+                ? () => _openFolderQueueProblem(queue[index + 1], isNext: true)
+                : null,
+          ),
         ),
       );
-       */
-
-      return const Padding(
-        padding: EdgeInsets.only(top: 0, bottom: 0),
-      );
     }
+  }
+
+  void _openFolderQueueProblem(int problemId, {required bool isNext}) {
+    AppAnalytics.logEvent('folder_problem_navigate', {
+      'direction': isNext ? 'next' : 'previous',
+    });
+    Navigator.of(context).pushReplacement(
+      TossPageRoute(
+        builder: (_) => ProblemDetailScreen(
+          problemId: problemId,
+          folderQueue: widget.folderQueue,
+        ),
+      ),
+    );
   }
 
   Future<ProblemModel?> fetchProblemDetails(
@@ -1374,5 +1400,68 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
     }
 
     return problem;
+  }
+}
+
+/// 공책에서 연 오답노트 아래에 두는 이전, 다음 줄.
+class _FolderNavigationRow extends StatelessWidget {
+  final int index;
+  final int total;
+  final VoidCallback? onPrevious;
+  final VoidCallback? onNext;
+
+  const _FolderNavigationRow({
+    required this.index,
+    required this.total,
+    required this.onPrevious,
+    required this.onNext,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final accent = Provider.of<ThemeHandler>(context).primaryColor;
+    Widget button({
+      required String label,
+      required IconData icon,
+      required VoidCallback? onTap,
+      required bool iconFirst,
+    }) {
+      final color = onTap == null ? AppColors.textDisabled : accent;
+      final children = [
+        Icon(icon, size: 20, color: color),
+        StandardText(text: label, fontSize: 14, color: color),
+      ];
+      return TextButton(
+        onPressed: onTap,
+        style: TextButton.styleFrom(minimumSize: const Size(88, 44)),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: iconFirst ? children : children.reversed.toList(),
+        ),
+      );
+    }
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        button(
+          label: '이전',
+          icon: Icons.chevron_left,
+          onTap: onPrevious,
+          iconFirst: true,
+        ),
+        StandardText(
+          text: '${index + 1} / $total',
+          fontSize: 14,
+          color: AppColors.textSecondary,
+        ),
+        button(
+          label: '다음',
+          icon: Icons.chevron_right,
+          onTap: onNext,
+          iconFirst: false,
+        ),
+      ],
+    );
   }
 }

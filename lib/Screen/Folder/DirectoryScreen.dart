@@ -71,6 +71,8 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
   // 오답노트 수는 클라이언트가 정확히 모르므로 개수 없이 범위만 알린다.
   static const String _folderDeleteScopeMessage = '안에 있는 공책과 오답노트도 함께 삭제됩니다.';
   bool _isSelectionMode = false; // 선택 모드 활성화 여부
+  late final ProblemsProvider _problemsProvider;
+
   // 지금 목록을 받은 정렬. 다른 공책 화면에서 정렬을 바꾸고 돌아오면 다시 받는다.
   ListSort? _loadedSort;
   final List<int> _selectedFolderIds = []; // 선택된 폴더 ID 리스트
@@ -112,6 +114,8 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     _scrollController = ScrollController();
     _scrollController.addListener(_onScroll);
     PendingDeletion.instance.addListener(_onPendingDeletionChanged);
+    _problemsProvider = Provider.of<ProblemsProvider>(context, listen: false)
+      ..addListener(_syncProblemsFromProvider);
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       // 이 화면의 폴더 데이터 로드
@@ -128,6 +132,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
   @override
   void dispose() {
     PendingDeletion.instance.removeListener(_onPendingDeletionChanged);
+    _problemsProvider.removeListener(_syncProblemsFromProvider);
     _scrollController.dispose();
     super.dispose();
   }
@@ -2485,45 +2490,64 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     await _loadFolderData();
   }
 
-  /// 상세에서 돌아오면 그 카드만 새로 받은 값으로 바꾼다.
+  /// 받아 둔 오답노트가 새로 받아지면 그 카드를 바꾼다.
   ///
   /// 상세는 복습을 저장하거나 고칠 때 문제를 다시 받아 [ProblemsProvider] 에
   /// 넣는다. 전에는 책장 카드가 그걸 몰라서 최근 복습일과 제목, 옮긴 공책이
-  /// 들어가기 전 모습 그대로 남았다. 다른 공책으로 옮겼으면 이 목록에서 뺀다.
-  void _syncProblemFromProvider(int problemId) {
+  /// 들어가기 전 모습 그대로 남았다. 상세에서 이전, 다음으로 여러 문제를 넘겨
+  /// 보고 와도 맞도록 목록 전체를 본다. 다른 공책으로 옮겼으면 이 목록에서 뺀다.
+  void _syncProblemsFromProvider() {
     if (!mounted || _currentFolder == null) return;
-    final latest = Provider.of<ProblemsProvider>(context, listen: false)
-        .cachedProblem(problemId);
-    if (latest == null) return;
-    final index = _localProblems.indexWhere((p) => p.problemId == problemId);
-    if (index < 0 || identical(_localProblems[index], latest)) return;
-
-    final movedOut =
-        latest.folderId != null && latest.folderId != _currentFolder!.folderId;
-    setState(() {
-      if (movedOut) {
-        _localProblems.removeAt(index);
-      } else {
-        _localProblems[index] = latest;
+    final problemsProvider =
+        Provider.of<ProblemsProvider>(context, listen: false);
+    final folderId = _currentFolder!.folderId;
+    final movedOutTo = <int>{};
+    var changed = false;
+    final next = <ProblemModel>[];
+    for (final problem in _localProblems) {
+      final latest = problemsProvider.cachedProblem(problem.problemId);
+      if (latest == null || identical(latest, problem)) {
+        next.add(problem);
+        continue;
       }
-    });
+      changed = true;
+      if (latest.folderId != null && latest.folderId != folderId) {
+        movedOutTo.add(latest.folderId!);
+      } else {
+        next.add(latest);
+      }
+    }
+    if (!changed) return;
+
+    setState(() => _localProblems = next);
     final foldersProvider =
         Provider.of<FoldersProvider>(context, listen: false);
     foldersProvider.saveProblemsToCache(
-      _currentFolder!.folderId,
+      folderId,
       _localProblems,
       _problemNextCursor,
       _problemHasNext,
     );
     // 옮겨 간 공책은 받아 둔 목록을 버려서, 열 때 새로 받게 한다.
-    if (movedOut) unawaited(foldersProvider.refreshFolder(latest.folderId!));
+    for (final id in movedOutTo) {
+      unawaited(foldersProvider.refreshFolder(id));
+    }
   }
 
   void navigateToProblemDetail(BuildContext context, int problemId) {
+    // 지금 보이는 순서대로 넘겨서 상세에서 이전, 다음으로 넘길 수 있게 한다.
+    final pending = PendingDeletion.instance;
+    final queue = _localProblems
+        .map((p) => p.problemId)
+        .where((id) => !pending.isProblemHidden(id))
+        .toList();
     Navigator.push(
       context,
       TossPageRoute(
-        builder: (context) => ProblemDetailScreen(problemId: problemId),
+        builder: (context) => ProblemDetailScreen(
+          problemId: problemId,
+          folderQueue: queue,
+        ),
       ),
     ).then((value) async {
       // 문제 삭제 또는 수정 시 화면 새로고침
@@ -2536,7 +2560,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
         await _loadFolderData();
         return;
       }
-      _syncProblemFromProvider(problemId);
+      _syncProblemsFromProvider();
     });
   }
 
