@@ -86,36 +86,39 @@ class SettingMenuButtons extends StatelessWidget {
   }) {
     double screenHeight = MediaQuery.of(context).size.height;
 
-    return Padding(
-      padding: EdgeInsets.symmetric(
-        vertical: screenHeight * 0.002,
-        horizontal: screenHeight * 0.01,
-      ),
-      child: Row(
-        children: [
-          Icon(icon, size: 20, color: themeProvider.primaryColor),
-          SizedBox(width: screenHeight * 0.015),
-          Expanded(
-            child: StandardText(
-              text: title,
-              fontSize: 14,
-              color: AppColors.textPrimary,
-            ),
+    // 전에는 줄인 스위치만 눌렸다. 줄 전체를 눌러도 바뀌게 하고 스위치는 원래
+    // 크기로 둔다.
+    return MergeSemantics(
+      child: InkWell(
+        onTap: () => onChanged(!value),
+        child: Padding(
+          padding: EdgeInsets.symmetric(
+            vertical: screenHeight * 0.002,
+            horizontal: screenHeight * 0.01,
           ),
-          Transform.scale(
-            scale: 0.8,
-            child: Switch(
-              value: value,
-              activeThumbColor: themeProvider.primaryColor,
-              activeTrackColor:
-                  themeProvider.primaryColor.withValues(alpha: 0.5),
-              inactiveTrackColor: Colors.grey.shade300,
-              inactiveThumbColor: Colors.grey,
-              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              onChanged: onChanged,
-            ),
+          child: Row(
+            children: [
+              Icon(icon, size: 20, color: themeProvider.primaryColor),
+              SizedBox(width: screenHeight * 0.015),
+              Expanded(
+                child: StandardText(
+                  text: title,
+                  fontSize: 14,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              Switch(
+                value: value,
+                activeThumbColor: themeProvider.primaryColor,
+                activeTrackColor:
+                    themeProvider.primaryColor.withValues(alpha: 0.5),
+                inactiveTrackColor: Colors.grey.shade300,
+                inactiveThumbColor: Colors.grey,
+                onChanged: onChanged,
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

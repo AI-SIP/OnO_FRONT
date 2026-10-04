@@ -31,6 +31,8 @@ import '../../Module/Design/AppColors.dart';
 import '../../Module/Design/AppToast.dart';
 import 'package:ono/Util/AppAnalytics.dart';
 import '../../Module/Dialog/LoadingDialog.dart';
+import '../../Util/NotificationService.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class SettingScreen extends StatefulWidget {
   final TutorialTargets? tutorialTargets;
@@ -200,13 +202,40 @@ class _SettingScreenState extends State<SettingScreen> {
     );
   }
 
+  /// 로그인하지 않았을 때. 전에는 문구만 있고 로그인으로 가는 길이 없었다.
+  /// 글자 크기도 화면 높이에 따라 바뀌어서 고정 크기로 둔다.
   Widget _buildLoginPrompt(ThemeHandler themeProvider) {
-    double screenHeight = MediaQuery.of(context).size.height;
     return Center(
-      child: StandardText(
-        text: '로그인을 통해 설정을 변경해보세요!',
-        fontSize: screenHeight * 0.016,
-        color: themeProvider.primaryColor,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          StandardText(
+            text: '로그인하면 설정을 바꿀 수 있어요',
+            fontSize: 15,
+            color: themeProvider.primaryColor,
+          ),
+          const SizedBox(height: 16),
+          ElevatedButton(
+            onPressed: () => Navigator.of(context).pushAndRemoveUntil(
+              TossPageRoute(builder: (context) => const LoginScreen()),
+              (route) => false,
+            ),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: themeProvider.primaryColor,
+              elevation: 0,
+              minimumSize: const Size(160, 48),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppRadius.medium),
+              ),
+            ),
+            child: const StandardText(
+              text: '로그인하기',
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -292,8 +321,10 @@ class _SettingScreenState extends State<SettingScreen> {
                         ),
                         if (!compact) ...[
                           const SizedBox(height: 3),
+                          // 아래 막대는 고정된 예시라 내 기록처럼 보이지 않게
+                          // 밝혀 둔다.
                           StandardText(
-                            text: '복습 추이와 약점 분석을 확인해요',
+                            text: '복습 추이와 약점 분석을 확인해요 · 아래는 예시',
                             fontSize: 11,
                             color: Colors.grey[700]!,
                           ),
@@ -536,8 +567,25 @@ class _MyPageSettingsScreenState extends State<_MyPageSettingsScreen> {
                       });
                     } catch (_) {
                       if (!context.mounted) return;
-                      AppToast.error('알림 설정 변경에 실패했습니다. 다시 시도해주세요.');
+                      AppToast.error('알림 설정을 바꾸지 못했어요. 잠시 후 다시 시도해 주세요.');
+                      return;
                     }
+                    // 켰는데 기기에서 알림을 막아 두었으면 받지 못한다. 전에는
+                    // 토글만 켜지고 알림은 오지 않았다.
+                    if (!value) return;
+                    await NotificationService.instance
+                        .requestPermissionIfNeeded(source: 'setting_toggle');
+                    if (!await NotificationService.instance
+                        .isPermissionDenied()) {
+                      return;
+                    }
+                    AppToast.show(
+                      message: '기기 설정에서 OnO 알림이 꺼져 있어요',
+                      type: ToastType.info,
+                      duration: const Duration(seconds: 5),
+                      actionLabel: '설정 열기',
+                      onAction: openAppSettings,
+                    );
                   },
                 ),
               ],
