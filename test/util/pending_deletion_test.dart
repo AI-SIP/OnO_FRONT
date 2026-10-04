@@ -97,4 +97,24 @@ void main() {
     expect(await future, isTrue);
     expect(committed, isTrue);
   });
+
+  testWidgets('복습 기록도 되돌리기를 기다리는 동안 숨기고 그 뒤에 지운다', (tester) async {
+    await pumpApp(tester);
+    var committed = false;
+
+    final future = PendingDeletion.instance.schedule(
+      solveIds: [501],
+      message: '복습 기록을 지웠어요 5',
+      commit: () async => committed = true,
+    );
+    await tester.pump();
+    expect(PendingDeletion.instance.isSolveHidden(501), isTrue);
+    expect(committed, isFalse);
+
+    await tester.pump(const Duration(seconds: 5));
+
+    expect(await future, isTrue);
+    expect(committed, isTrue);
+    expect(PendingDeletion.instance.isSolveHidden(501), isTrue);
+  });
 }
