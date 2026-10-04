@@ -14,6 +14,7 @@ import '../../Module/Motion/TossDialog.dart';
 import '../../Module/Design/AppColors.dart';
 import '../../Module/Design/AppRadius.dart';
 import '../../Util/AppAnalytics.dart';
+import '../../Module/Design/AppToast.dart';
 
 class TagSelectionResult {
   final List<int> selectedTagIds;
@@ -75,6 +76,9 @@ class _TagSelectionScreenState extends State<TagSelectionScreen> {
           ..clear()
           ..addAll(fetched);
       });
+    } catch (e) {
+      // 전에는 실패해도 아무 말 없이 빈 목록만 보였다.
+      if (mounted) AppToast.error('태그를 불러오지 못했어요. 잠시 후 다시 시도해 주세요.');
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
@@ -99,10 +103,17 @@ class _TagSelectionScreenState extends State<TagSelectionScreen> {
       _tags.sort((a, b) => a.name.compareTo(b.name));
       FirebaseAnalytics.instance.logEvent(name: 'tag_created');
 
+      // 만든 태그는 붙이려고 만든 것이라 바로 골라 둔다. 다섯 개가 찼으면
+      // 고르지 않고 만들기만 한다.
+      if (_selectedTagIds.length < _maxTags) {
+        _selectedTagIds.add(created.tagId);
+      }
       _tagNameCtrl.clear();
       if (mounted) {
         setState(() {});
       }
+    } catch (e) {
+      if (mounted) AppToast.error('태그를 만들지 못했어요. 잠시 후 다시 시도해 주세요.');
     } finally {
       if (mounted) {
         setState(() => _isCreating = false);
@@ -571,8 +582,15 @@ class _TagSelectionScreenState extends State<TagSelectionScreen> {
     return result ?? false;
   }
 
+  static const int _maxTags = 5;
+
   void _toggleTag(int tagId, bool isSelected) {
     if (isSelected) {
+      // 전에는 여섯 개째도 골라지고 확인을 누를 때 경고했다. 고르는 순간 막는다.
+      if (_selectedTagIds.length >= _maxTags) {
+        AppToast.info('태그는 최대 $_maxTags개까지 고를 수 있어요.');
+        return;
+      }
       _selectedTagIds.add(tagId);
     } else {
       _selectedTagIds.remove(tagId);
