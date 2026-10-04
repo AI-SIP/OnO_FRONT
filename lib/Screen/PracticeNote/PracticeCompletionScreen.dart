@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import '../../Model/Problem/AnswerStatus.dart';
 import 'package:provider/provider.dart';
 
 import '../../Provider/CosmeticProvider.dart';
@@ -27,11 +28,16 @@ class PracticeCompletionScreen extends StatefulWidget {
   final int totalProblems;
   final int practiceRound;
 
+  /// 이번 회차에 복습을 저장한 문제들의 결과. 전에는 회차 문제 수를 그대로
+  /// `풀었어요` 로 적어서, 넘기기만 하고 마쳐도 다 푼 것처럼 보였다.
+  final List<AnswerStatus> sessionResults;
+
   const PracticeCompletionScreen({
     super.key,
     required this.practiceId,
     required this.totalProblems,
     required this.practiceRound,
+    this.sessionResults = const [],
   });
 
   @override
@@ -176,14 +182,27 @@ class _PracticeCompletionScreenState extends State<PracticeCompletionScreen> {
                     AppearTransition(
                       delay: AppMotion.stagger * 5,
                       child: AnimatedCountText(
-                        value: widget.totalProblems,
-                        formatter: (value) => '총 ${value.round()}문제를 풀었어요.',
+                        value: widget.sessionResults.length,
+                        formatter: (value) =>
+                            '${widget.totalProblems}문제 중 ${value.round()}문제를 풀었어요.',
                         fontSize: 16,
                         fontWeight: FontWeight.normal,
                         color: AppColors.textSecondary,
                         textAlign: TextAlign.center,
                       ),
                     ),
+                    if (widget.sessionResults.isNotEmpty) ...[
+                      const SizedBox(height: 6),
+                      AppearTransition(
+                        delay: AppMotion.stagger * 6,
+                        child: StandardText(
+                          text: _resultSummary,
+                          fontSize: 14,
+                          color: AppColors.textSecondary,
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ],
                     const Spacer(flex: 3),
                     AppearTransition(
                       delay: AppMotion.stagger * 7,
@@ -198,6 +217,20 @@ class _PracticeCompletionScreenState extends State<PracticeCompletionScreen> {
         );
       },
     );
+  }
+
+  /// `정답 3 부분 정답 1 오답 1`. 없는 결과는 빼고 적는다.
+  String get _resultSummary {
+    int count(AnswerStatus status) =>
+        widget.sessionResults.where((result) => result == status).length;
+    return [
+      for (final status in const [
+        AnswerStatus.CORRECT,
+        AnswerStatus.PARTIAL,
+        AnswerStatus.WRONG,
+      ])
+        if (count(status) > 0) '${status.displayName} ${count(status)}',
+    ].join('  ');
   }
 
   Widget _buildMoodSection(ThemeHandler themeProvider) {
@@ -268,6 +301,7 @@ class _PracticeCompletionScreenState extends State<PracticeCompletionScreen> {
                   // 기분을 고르는지를 본다.
                   AppAnalytics.logEvent('practice_session_completed', {
                     'problem_count': widget.totalProblems,
+                    'solved_count': widget.sessionResults.length,
                     'round': widget.practiceRound,
                     'mood': _selectedMoodKey ?? 'none',
                   });

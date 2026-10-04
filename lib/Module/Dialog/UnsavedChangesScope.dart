@@ -91,10 +91,17 @@ Future<bool> confirmLeave(
   required String source,
   String title = '작성을 그만둘까요?',
   String description = '지금 나가면 쓰던 내용이 저장되지 않아요.',
+  String stayLabel = '계속 쓰기',
+  String leaveLabel = '나가기',
 }) async {
   final leave = await showTossDialog<bool>(
     context: context,
-    builder: (_) => _LeaveDialog(title: title, description: description),
+    builder: (_) => _LeaveDialog(
+      title: title,
+      description: description,
+      stayLabel: stayLabel,
+      leaveLabel: leaveLabel,
+    ),
   );
   AppAnalytics.logEvent('leave_confirm', {
     'source': source,
@@ -106,8 +113,15 @@ Future<bool> confirmLeave(
 class _LeaveDialog extends StatelessWidget {
   final String title;
   final String description;
+  final String stayLabel;
+  final String leaveLabel;
 
-  const _LeaveDialog({required this.title, required this.description});
+  const _LeaveDialog({
+    required this.title,
+    required this.description,
+    this.stayLabel = '계속 쓰기',
+    this.leaveLabel = '나가기',
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -152,8 +166,8 @@ class _LeaveDialog extends StatelessWidget {
                           side: BorderSide(color: Colors.grey[200]!, width: 1),
                         ),
                       ),
-                      child: const StandardText(
-                        text: '계속 쓰기',
+                      child: StandardText(
+                        text: stayLabel,
                         fontSize: 14,
                         color: AppColors.textPrimary,
                       ),
@@ -170,8 +184,8 @@ class _LeaveDialog extends StatelessWidget {
                           borderRadius: BorderRadius.circular(AppRadius.medium),
                         ),
                       ),
-                      child: const StandardText(
-                        text: '나가기',
+                      child: StandardText(
+                        text: leaveLabel,
                         fontSize: 14,
                         color: Colors.white,
                       ),

@@ -1,5 +1,6 @@
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
+import '../../Module/Dialog/UnsavedChangesScope.dart';
 import 'package:ono/Screen/PracticeNote/PracticeCompletionScreen.dart';
 import 'package:ono/Screen/ProblemDetail/ProblemDetailScreen.dart';
 import 'package:ono/Screen/ProblemSolve/ProblemSolveEntry.dart';
@@ -164,8 +165,22 @@ class _PracticeNavigationButtonsState extends State<PracticeNavigationButtons> {
   /// 아니라 먼저 뜬 완료 화면을 갈아 끼워서, 닫을 때 한 화면이 남았다.
   bool _openingCompletion = false;
 
-  void _showCompletionScreen() {
+  Future<void> _showCompletionScreen() async {
     if (_openingCompletion) return;
+    // 넘기기만 해도 마칠 수 있어서, 하나도 저장하지 않았으면 한 번 묻는다.
+    if (widget.practiceProvider.sessionResults.isEmpty) {
+      _openingCompletion = true;
+      final finish = await confirmLeave(
+        context,
+        source: 'practice_finish_without_solve',
+        title: '아직 저장한 복습이 없어요',
+        description: '그래도 이번 회차를 마칠까요?',
+        stayLabel: '더 풀기',
+        leaveLabel: '마치기',
+      );
+      _openingCompletion = false;
+      if (!finish || !mounted) return;
+    }
     _openingCompletion = true;
 
     openPracticeCompletion(context, widget.practiceProvider);
@@ -260,6 +275,7 @@ void openPracticeCompletion(
     BuildContext context, ProblemPracticeProvider practiceProvider) {
   final practiceId = practiceProvider.currentPracticeNote!.practiceId;
   final totalProblems = practiceProvider.sessionProblems.length;
+  final results = practiceProvider.sessionResults.values.toList();
   final matchingPractices = practiceProvider.practices
       .where((practice) => practice.practiceId == practiceId);
   final practiceRound =
@@ -271,6 +287,7 @@ void openPracticeCompletion(
         practiceId: practiceId,
         totalProblems: totalProblems,
         practiceRound: practiceRound + 1,
+        sessionResults: results,
       ),
     ),
   );

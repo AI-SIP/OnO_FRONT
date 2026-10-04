@@ -7,6 +7,7 @@ import 'package:ono/Provider/ProblemsProvider.dart';
 
 import '../Model/PracticeNote/PracticeNoteDetailModel.dart';
 import '../Model/PracticeNote/PracticeNoteThumbnailModel.dart';
+import '../Model/Problem/AnswerStatus.dart';
 import '../Model/Problem/ProblemModel.dart';
 import '../Service/Api/HttpService.dart';
 import '../Service/Api/PracticeNote/PracticeNoteService.dart';
@@ -161,6 +162,7 @@ class ProblemPracticeProvider with ChangeNotifier {
     // 다른 세트로 옮겨 가면 앞 세트의 회차 순서는 버린다.
     if (currentPracticeNote?.practiceId != practiceId) {
       _sessionProblemIds = null;
+      _sessionResults.clear();
     }
 
     debugPrint(
@@ -281,6 +283,23 @@ class ProblemPracticeProvider with ChangeNotifier {
   /// 것은 회차가 아니다.
   bool get isPracticing => _sessionProblemIds != null;
 
+  /// 이번 회차에 복습을 저장한 문제와 결과. 같은 문제를 다시 저장하면 마지막
+  /// 결과로 바뀐다.
+  ///
+  /// 완료 화면이 회차 문제 수를 그대로 `풀었어요` 로 적어서, 넘기기만 하고
+  /// 마쳐도 다 푼 것처럼 보였다.
+  final Map<int, AnswerStatus> _sessionResults = {};
+  Map<int, AnswerStatus> get sessionResults =>
+      UnmodifiableMapView(_sessionResults);
+
+  /// 회차 안에서 복습을 저장했을 때 부른다. 회차가 아니거나 회차에 없는
+  /// 문제면 남기지 않는다.
+  void recordSessionResult(int problemId, AnswerStatus status) {
+    final ids = _sessionProblemIds;
+    if (ids == null || !ids.contains(problemId)) return;
+    _sessionResults[problemId] = status;
+  }
+
   /// 이번 회차에 풀 문제와 순서를 정한다.
   ///
   /// [onlyProblemIds] 를 넘기면 그 문제들만 푼다(틀린 문제만). [shuffle] 이면
@@ -298,6 +317,7 @@ class ProblemPracticeProvider with ChangeNotifier {
     if (shuffle) ids.shuffle();
 
     _sessionProblemIds = ids;
+    _sessionResults.clear();
     notifyListeners();
   }
 
@@ -305,6 +325,7 @@ class ProblemPracticeProvider with ChangeNotifier {
   void endSession() {
     if (_sessionProblemIds == null) return;
     _sessionProblemIds = null;
+    _sessionResults.clear();
     notifyListeners();
   }
 
@@ -320,6 +341,7 @@ class ProblemPracticeProvider with ChangeNotifier {
     _moveGeneration++;
     currentPracticeNote = null;
     _sessionProblemIds = null;
+    _sessionResults.clear();
   }
 
   /// 세트에서 문제를 뺀다. 서버에 반영된 뒤 화면 목록에서도 바로 지운다.
@@ -380,6 +402,7 @@ class ProblemPracticeProvider with ChangeNotifier {
     currentProblems = [];
     currentPracticeNote = null;
     _sessionProblemIds = null;
+    _sessionResults.clear();
     _hasCachedData = false;
     _nextCursor = null;
     _practiceThumbnails.clear();

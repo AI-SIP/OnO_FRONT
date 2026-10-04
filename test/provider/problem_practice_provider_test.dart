@@ -4,6 +4,7 @@
 // 위임 여부를 확인하고, V2 무한 스크롤 썸네일 캐시(_practiceThumbnails)의
 // 동시 호출·경쟁 조건을 집중적으로 본다.
 import 'package:flutter_test/flutter_test.dart';
+import 'package:ono/Model/Problem/AnswerStatus.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:ono/Model/Common/PaginatedResponse.dart';
 import 'package:ono/Model/PracticeNote/PracticeNoteDetailModel.dart';
@@ -422,6 +423,27 @@ void main() {
       await provider.moveToPractice(1);
 
       expect(provider.sessionProblems.map((p) => p.problemId), [10, 20]);
+    });
+
+    test('회차 안에서 저장한 결과만 남기고 다시 시작하면 비운다', () async {
+      await openPractice();
+
+      provider.recordSessionResult(10, AnswerStatus.CORRECT);
+      expect(provider.sessionResults, isEmpty, reason: '회차를 시작하기 전이다');
+
+      provider.startSession(onlyProblemIds: {10, 20});
+      provider.recordSessionResult(10, AnswerStatus.WRONG);
+      provider.recordSessionResult(10, AnswerStatus.CORRECT);
+      provider.recordSessionResult(30, AnswerStatus.CORRECT);
+      expect(provider.sessionResults, {10: AnswerStatus.CORRECT},
+          reason: '같은 문제는 마지막 결과로 바뀌고 회차에 없는 문제는 남기지 않는다');
+
+      // 복습을 저장할 때마다 세트를 다시 받아도 그대로다.
+      await provider.moveToPractice(1);
+      expect(provider.sessionResults, hasLength(1));
+
+      provider.startSession();
+      expect(provider.sessionResults, isEmpty);
     });
 
     test('다른 세트를 열면 앞 세트의 회차 순서는 버린다', () async {

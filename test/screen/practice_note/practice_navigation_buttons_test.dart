@@ -4,6 +4,7 @@ import 'package:mocktail/mocktail.dart';
 import 'package:ono/Model/PracticeNote/PracticeNoteDetailModel.dart';
 import 'package:ono/Model/Problem/ProblemModel.dart';
 import 'package:ono/Provider/PracticeNoteProvider.dart';
+import 'package:ono/Model/Problem/AnswerStatus.dart';
 import 'package:ono/Screen/PracticeNote/PracticeCompletionScreen.dart';
 import 'package:ono/Screen/PracticeNote/PracticeNavigationButtons.dart';
 
@@ -13,14 +14,15 @@ class _MockNavigatorObserver extends Mock implements NavigatorObserver {}
 
 class _RouteFake extends Fake implements Route<dynamic> {}
 
-PracticeNoteDetailModel _practice(int id, {int practiceCount = 0}) {
+PracticeNoteDetailModel _practice(int id,
+    {int practiceCount = 0, List<int> problemIds = const []}) {
   return PracticeNoteDetailModel(
     practiceId: id,
     practiceTitle: 'practice-$id',
     practiceCount: practiceCount,
     createdAt: DateTime(2024, 1, 1),
     lastSolvedAt: null,
-    problemIdList: const [],
+    problemIdList: [...problemIds],
   );
 }
 
@@ -141,7 +143,10 @@ void main() {
         .thenAnswer((_) async => _practice(1, practiceCount: 2));
     await practiceProvider.fetchPracticeNote(1);
     practiceProvider.currentProblems = [_problem(10), _problem(20)];
-    practiceProvider.currentPracticeNote = _practice(1, practiceCount: 2);
+    practiceProvider.currentPracticeNote =
+        _practice(1, practiceCount: 2, problemIds: [10, 20]);
+    practiceProvider.startSession();
+    practiceProvider.recordSessionResult(10, AnswerStatus.CORRECT);
 
     final observer = _MockNavigatorObserver();
     when(() => observer.didPush(any(), any())).thenReturn(null);
@@ -159,6 +164,35 @@ void main() {
     expect(find.byType(PracticeCompletionScreen), findsOneWidget);
     // 다음 회차는 기존 practiceCount(2) + 1 이어야 한다.
     expect(find.text('3회차 복습을 완료했어요'), findsOneWidget);
+  });
+
+  testWidgets('하나도 저장하지 않고 마치려 하면 한 번 묻는다', (tester) async {
+    final service =
+        practiceProvider.practiceNoteService as MockPracticeNoteService;
+    when(() => service.getPracticeNoteById(1, showErrorSnackBar: true))
+        .thenAnswer((_) async => _practice(1, practiceCount: 2));
+    await practiceProvider.fetchPracticeNote(1);
+    practiceProvider.currentProblems = [_problem(10), _problem(20)];
+    practiceProvider.currentPracticeNote =
+        _practice(1, practiceCount: 2, problemIds: [10, 20]);
+    practiceProvider.startSession();
+
+    await pumpButtons(tester, currentProblemId: 20);
+
+    await tester.tap(find.text('복습 마치기'));
+    await tester.pumpAndSettle();
+    expect(find.text('아직 저장한 복습이 없어요'), findsOneWidget);
+
+    await tester.tap(find.text('더 풀기'));
+    await tester.pumpAndSettle();
+    expect(find.byType(PracticeCompletionScreen), findsNothing);
+
+    await tester.tap(find.text('복습 마치기'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('마치기'));
+    await tester.pumpAndSettle();
+    expect(find.byType(PracticeCompletionScreen), findsOneWidget);
+    expect(find.text('2문제 중 0문제를 풀었어요.'), findsOneWidget);
   });
 
   testWidgets('"문제 복습" 버튼은 실제로 화면에 그려지지 않는다', (tester) async {
