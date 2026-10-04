@@ -14,6 +14,7 @@ import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/AchievementProvider.dart';
 import 'Widget/AchievementCard.dart';
 import '../../Util/AppAnalytics.dart';
+import '../../Module/Design/AppLayout.dart';
 
 /// 받은 훈장과 아직 못 받은 훈장을 한 목록으로 보여 주는 화면이다.
 ///
@@ -98,10 +99,12 @@ class _AchievementScreenState extends State<AchievementScreen> {
         centerTitle: true,
         title: StandardText(text: '훈장', fontSize: 18, color: color),
       ),
-      body: SafeArea(
-        child: provider.isEmpty
-            ? _buildEmpty(provider, color)
-            : _buildList(provider, color),
+      body: AppContentWidth(
+        child: SafeArea(
+          child: provider.isEmpty
+              ? _buildEmpty(provider, color)
+              : _buildList(provider, color),
+        ),
       ),
     );
   }

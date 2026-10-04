@@ -1,3 +1,5 @@
+import 'package:flutter/widgets.dart';
+
 /// 넓은 화면에서 본문이 쓸 폭을 정한다.
 ///
 /// 그동안 화면마다 `BoxConstraints(maxWidth: 420 / 520 / 640)` 처럼 고정값을
@@ -24,5 +26,44 @@ abstract final class AppLayout {
   }) {
     if (available < phoneMaxWidth) return available;
     return (available * ratio).clamp(min, max);
+  }
+}
+
+/// 넓은 화면에서 본문을 가운데로 모은다.
+///
+/// 리포트, 미션, 훈장, 스터디룸 목록처럼 카드가 세로로 쌓이는 화면이 태블릿
+/// 가로에서 화면 끝까지 늘어나지 않게 감싼다. 폰에서는 아무 일도 하지 않는다.
+class AppContentWidth extends StatelessWidget {
+  final Widget child;
+  final double ratio;
+  final double min;
+  final double max;
+
+  const AppContentWidth({
+    super.key,
+    required this.child,
+    this.ratio = 0.8,
+    this.min = 600,
+    this.max = 960,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) => Align(
+        alignment: Alignment.topCenter,
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxWidth: AppLayout.contentWidth(
+              constraints.maxWidth,
+              ratio: ratio,
+              min: min,
+              max: max,
+            ),
+          ),
+          child: child,
+        ),
+      ),
+    );
   }
 }
