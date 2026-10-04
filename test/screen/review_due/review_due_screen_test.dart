@@ -80,4 +80,26 @@ void main() {
     expect(find.textContaining('추천에서 빠져요'), findsNothing);
     expect(find.textContaining('정답 '), findsNothing);
   });
+
+  testWidgets('처음 불러오다 실패하면 빈 목록이 아니라 다시 시도를 보인다', (tester) async {
+    var calls = 0;
+    when(() => problemService.getReviewDueProblems()).thenAnswer((_) async {
+      calls++;
+      if (calls == 1) throw Exception('네트워크');
+      return ReviewDueResponse(dueCount: 0, overdueCount: 0, problems: []);
+    });
+    await pumpOnoWidget(
+      tester,
+      ReviewDueScreen(problemService: problemService),
+      reviewDueProvider: ReviewDueProvider(problemService: problemService),
+    );
+
+    expect(find.text('추천 복습을 불러오지 못했어요'), findsOneWidget);
+    expect(find.text('추천 복습 문제가 없어요'), findsNothing);
+
+    await tester.tap(find.text('다시 시도'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('추천 복습 문제가 없어요'), findsOneWidget);
+  });
 }

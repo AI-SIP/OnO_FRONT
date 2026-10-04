@@ -103,27 +103,29 @@ class _ReviewDueScreenState extends State<ReviewDueScreen> {
               spacing: 12,
               padding: EdgeInsets.fromLTRB(20, 16, 20, 20),
             )
-          : data == null || data.problems.isEmpty
-              ? _buildEmptyState(themeProvider)
-              : RefreshIndicator(
-                  color: themeProvider.primaryColor,
-                  onRefresh: _refresh,
-                  child: ListView(
-                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
-                    children: [
-                      _buildHeader(data, themeProvider),
-                      const SizedBox(height: 16),
-                      ...data.problems.map(
-                        (p) => _buildProblemTile(
-                          context,
-                          p,
-                          data.requiredCorrectCount,
-                          themeProvider,
-                        ),
+          : data == null && reviewDueProvider.hasError
+              ? _buildErrorState(themeProvider)
+              : data == null || data.problems.isEmpty
+                  ? _buildEmptyState(themeProvider)
+                  : RefreshIndicator(
+                      color: themeProvider.primaryColor,
+                      onRefresh: _refresh,
+                      child: ListView(
+                        padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
+                        children: [
+                          _buildHeader(data, themeProvider),
+                          const SizedBox(height: 16),
+                          ...data.problems.map(
+                            (p) => _buildProblemTile(
+                              context,
+                              p,
+                              data.requiredCorrectCount,
+                              themeProvider,
+                            ),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                ),
+                    ),
     );
   }
 
@@ -247,9 +249,73 @@ class _ReviewDueScreenState extends State<ReviewDueScreen> {
     );
   }
 
+  /// 처음 불러오다 실패했을 때. 전에는 데이터가 비어 `추천 복습 문제가 없어요` 가
+  /// 떴고 다시 시도할 방법도 없었다.
+  Widget _buildErrorState(ThemeHandler themeProvider) {
+    return _buildRefreshableCenter(
+      themeProvider,
+      Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(
+            Icons.wifi_off_rounded,
+            size: 56,
+            color: AppColors.textTertiary,
+          ),
+          const SizedBox(height: 16),
+          const StandardText(
+            text: '추천 복습을 불러오지 못했어요',
+            fontSize: 16,
+            color: AppColors.textSecondary,
+          ),
+          const SizedBox(height: 6),
+          const StandardText(
+            text: '인터넷 연결을 확인하고 다시 시도해 주세요',
+            fontSize: 13,
+            color: AppColors.textTertiary,
+          ),
+          const SizedBox(height: 18),
+          OutlinedButton(
+            onPressed: _refresh,
+            style: OutlinedButton.styleFrom(
+              foregroundColor: themeProvider.primaryColor,
+              side: BorderSide(
+                  color: themeProvider.primaryColor.withValues(alpha: 0.5)),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+            ),
+            child: StandardText(
+              text: '다시 시도',
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: themeProvider.primaryColor,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// 빈 화면에서도 당겨서 새로고침이 되도록, 가운데 내용을 스크롤 가능한 칸에 둔다.
+  Widget _buildRefreshableCenter(ThemeHandler themeProvider, Widget child) {
+    return RefreshIndicator(
+      color: themeProvider.primaryColor,
+      onRefresh: _refresh,
+      child: LayoutBuilder(
+        builder: (context, constraints) => SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: constraints.maxHeight),
+            child: Center(child: child),
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildEmptyState(ThemeHandler themeProvider) {
-    return Center(
-      child: Column(
+    return _buildRefreshableCenter(
+      themeProvider,
+      Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(
