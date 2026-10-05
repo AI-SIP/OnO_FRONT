@@ -95,7 +95,7 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
   String? _currentAutoTitle;
 
   /// 등록한 뒤 AI 분석을 요청할지. 마지막으로 고른 값을 기기에서 읽어 온다.
-  bool _aiAnalysisEnabled = true;
+  bool _aiAnalysisEnabled = false;
 
   @override
   void initState() {
