@@ -118,6 +118,20 @@ void main() {
       expect(page.strokes, [a, c]);
     });
 
+    test('전체 지우기 뒤에 그리면 마지막 작업이 지우기가 아니게 된다', () {
+      // 페이지 지우기 토스트는 마지막 작업이 그 지우기일 때만 되돌린다.
+      final page = InkPage()..add(_stroke([const Offset(0.1, 0.1)]));
+      page.clear();
+      final clearOp = page.lastOp;
+      expect(clearOp, isNotNull);
+
+      page.add(_stroke([const Offset(0.5, 0.5)]));
+      expect(page.lastOp, isNot(same(clearOp)));
+
+      page.undo();
+      expect(page.lastOp, same(clearOp));
+    });
+
     test('한 번 문지르는 동안 지운 여러 획은 되돌리기 한 번에 돌아온다', () {
       final page = InkPage();
       final strokes = [
