@@ -33,9 +33,14 @@ void main() {
       );
 
       expect(find.text('2 / 3'), findsOneWidget);
-      expect(find.text('이전'), findsOneWidget);
+      expect(find.byTooltip('이전 문제'), findsOneWidget);
+      // 다시 풀기와 같은 줄에 있다.
+      expect(
+        tester.getCenter(find.byTooltip('다음 문제')).dy,
+        moreOrLessEquals(tester.getCenter(find.text('다시 풀기')).dy, epsilon: 1),
+      );
 
-      await tester.tap(find.text('다음'));
+      await tester.tap(find.byTooltip('다음 문제'));
       await tester.pumpAndSettle();
     });
 
@@ -51,8 +56,8 @@ void main() {
       );
     });
 
-    expect(find.text('이전'), findsNothing);
-    expect(find.text('다음'), findsNothing);
+    expect(find.byTooltip('이전 문제'), findsNothing);
+    expect(find.byTooltip('다음 문제'), findsNothing);
   });
 
   testWidgets('공책에 받지 않은 오답노트가 더 있으면 개수 뒤에 + 를 붙인다', (tester) async {
@@ -69,7 +74,7 @@ void main() {
 
       expect(find.text('2 / 3+'), findsOneWidget);
 
-      await tester.tap(find.text('다음'));
+      await tester.tap(find.byTooltip('다음 문제'));
       await tester.pumpAndSettle();
     });
 

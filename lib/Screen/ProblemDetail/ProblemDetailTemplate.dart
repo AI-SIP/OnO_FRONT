@@ -23,6 +23,15 @@ import '../../Module/Design/AppColors.dart';
 import '../../Module/Design/AppRadius.dart';
 import '../../Util/AppAnalytics.dart';
 
+/// 공책에서 연 상세의 이전, 다음. 다시 풀기 버튼 양옆에 화살표로 둔다.
+/// 넘길 곳이 없는 쪽은 null 이라 흐리게 막는다.
+class ProblemDetailNavigation {
+  final VoidCallback? onPrevious;
+  final VoidCallback? onNext;
+
+  const ProblemDetailNavigation({this.onPrevious, this.onNext});
+}
+
 class ProblemDetailTemplate extends StatefulWidget {
   final ProblemModel problemModel;
   final bool isExpanded;
@@ -43,6 +52,10 @@ class ProblemDetailTemplate extends StatefulWidget {
   final bool analysisTimedOut;
   final VoidCallback? onRefreshAnalysis;
 
+  /// 있으면 다시 풀기 버튼과 같은 줄에 이전, 다음 화살표를 둔다. 전에는 그
+  /// 아래에 이전, 다음 줄이 한 겹 더 쌓여서 문제 이미지를 볼 자리가 좁았다.
+  final ProblemDetailNavigation? navigation;
+
   const ProblemDetailTemplate({
     required this.problemModel,
     required this.isExpanded,
@@ -52,6 +65,7 @@ class ProblemDetailTemplate extends StatefulWidget {
     this.onRequestAnalysis,
     this.analysisTimedOut = false,
     this.onRefreshAnalysis,
+    this.navigation,
     super.key,
   });
 
@@ -475,26 +489,54 @@ class _ProblemDetailTemplateState extends State<ProblemDetailTemplate>
   }
 
   Widget _buildBottomReviewCta(ThemeHandler themeProvider, bool isWide) {
+    final navigation = widget.navigation;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
       color: Colors.white,
       alignment: Alignment.center,
       // 넓은 화면에서 버튼이 화면 폭 전체로 늘어나지 않게 막는다.
-      child: Container(
+      child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 560),
-        height: 50,
-        child: FloatingActionButton.extended(
-          onPressed: _startSolve,
-          backgroundColor: themeProvider.primaryColor,
-          icon: const Icon(Icons.replay, color: Colors.white, size: 20),
-          label: const StandardText(
-            text: '다시 풀기',
-            color: Colors.white,
-            fontSize: 15,
-            fontWeight: FontWeight.bold,
-          ),
-          elevation: 0,
+        child: Row(
+          children: [
+            if (navigation != null) ...[
+              _NavigationArrow(
+                tooltip: '이전 문제',
+                icon: Icons.chevron_left,
+                accent: themeProvider.primaryColor,
+                onTap: navigation.onPrevious,
+              ),
+              const SizedBox(width: 10),
+            ],
+            Expanded(
+              child: SizedBox(
+                height: 50,
+                child: FloatingActionButton.extended(
+                  heroTag: null,
+                  onPressed: _startSolve,
+                  backgroundColor: themeProvider.primaryColor,
+                  icon: const Icon(Icons.replay, color: Colors.white, size: 20),
+                  label: const StandardText(
+                    text: '다시 풀기',
+                    color: Colors.white,
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  elevation: 0,
+                ),
+              ),
+            ),
+            if (navigation != null) ...[
+              const SizedBox(width: 10),
+              _NavigationArrow(
+                tooltip: '다음 문제',
+                icon: Icons.chevron_right,
+                accent: themeProvider.primaryColor,
+                onTap: navigation.onNext,
+              ),
+            ],
+          ],
         ),
       ),
     );
@@ -793,6 +835,46 @@ class _ProblemDetailTemplateState extends State<ProblemDetailTemplate>
       isWide,
       refreshSignal: _reviewRefreshSignal,
       onStartSolve: _startSolve,
+    );
+  }
+}
+
+/// 다시 풀기 버튼 양옆의 이전, 다음 화살표. 버튼과 높이를 맞춘다.
+class _NavigationArrow extends StatelessWidget {
+  final String tooltip;
+  final IconData icon;
+  final Color accent;
+  final VoidCallback? onTap;
+
+  const _NavigationArrow({
+    required this.tooltip,
+    required this.icon,
+    required this.accent,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final enabled = onTap != null;
+    return Tooltip(
+      message: tooltip,
+      child: Material(
+        color: enabled ? accent.withValues(alpha: 0.1) : AppColors.surfaceMuted,
+        borderRadius: BorderRadius.circular(AppRadius.full),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(AppRadius.full),
+          child: SizedBox(
+            width: 50,
+            height: 50,
+            child: Icon(
+              icon,
+              size: 26,
+              color: enabled ? accent : AppColors.textDisabled,
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
