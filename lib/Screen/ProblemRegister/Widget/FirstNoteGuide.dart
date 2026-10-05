@@ -56,7 +56,8 @@ class _FirstNoteGuideDialog extends StatelessWidget {
       ),
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 360),
-        child: Padding(
+        // 글자를 크게 키운 작은 폰에서는 창이 화면보다 길어질 수 있다.
+        child: SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(22, 24, 22, 18),
           child: Column(
             mainAxisSize: MainAxisSize.min,

@@ -54,4 +54,25 @@ void main() {
     expect(find.text('이전'), findsNothing);
     expect(find.text('다음'), findsNothing);
   });
+
+  testWidgets('공책에 받지 않은 오답노트가 더 있으면 개수 뒤에 + 를 붙인다', (tester) async {
+    await withMockedNetworkImages(() async {
+      await pumpOnoWidget(
+        tester,
+        const ProblemDetailScreen(
+          problemId: 12,
+          folderQueue: [11, 12, 13],
+          folderQueueHasMore: true,
+        ),
+        problemsProvider: problemsProvider,
+      );
+
+      expect(find.text('2 / 3+'), findsOneWidget);
+
+      await tester.tap(find.text('다음'));
+      await tester.pumpAndSettle();
+    });
+
+    expect(find.text('3 / 3+'), findsOneWidget);
+  });
 }

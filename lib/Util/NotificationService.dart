@@ -250,7 +250,10 @@ class NotificationService {
   Future<bool> isPermissionDenied() async {
     try {
       final settings = await _messaging.getNotificationSettings();
-      return settings.authorizationStatus == AuthorizationStatus.denied;
+      // 안드로이드 13 이상에서 두 번 거절하면 deniedPermanently 로 온다.
+      final status = settings.authorizationStatus;
+      return status == AuthorizationStatus.denied ||
+          status == AuthorizationStatus.deniedPermanently;
     } catch (_) {
       return false;
     }

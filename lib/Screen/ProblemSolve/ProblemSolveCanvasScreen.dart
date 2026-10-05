@@ -1480,14 +1480,24 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen>
   void _clearStrokes() {
     _cleared = true;
     final pageIndex = _ink.pageIndex;
+    final before = _ink.page.lastOp;
     _ink.clear();
+    final clearOp = _ink.page.lastOp;
+    // 빈 페이지였으면 지운 것이 없으니 되돌리기도 띄우지 않는다.
+    if (clearOp == before) return;
     // 되돌리기 버튼으로도 되살릴 수 있지만, 지운 직후 바로 알 수 있게 한다.
     AppToast.show(
       message: '이 페이지의 필기를 지웠어요',
       type: ToastType.info,
       actionLabel: '되돌리기',
       onAction: () {
-        if (!mounted || _ink.pageIndex != pageIndex) return;
+        // 지운 뒤에 그리거나 이미 되돌렸으면, 토스트로 되돌리면 엉뚱한 작업이
+        // 취소된다. 마지막 작업이 이 지우기일 때만 되돌린다.
+        if (!mounted ||
+            _ink.pageIndex != pageIndex ||
+            _ink.page.lastOp != clearOp) {
+          return;
+        }
         _undo();
       },
     );

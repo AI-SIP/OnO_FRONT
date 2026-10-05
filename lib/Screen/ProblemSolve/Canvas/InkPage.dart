@@ -49,6 +49,9 @@ class InkPage {
 
   bool get canRedo => _redo.isNotEmpty;
 
+  /// 마지막으로 한 작업. 바로 앞 작업을 되돌리는 게 맞는지 확인할 때 쓴다.
+  Object? get lastOp => _undo.isEmpty ? null : _undo.last;
+
   void add(InkStroke stroke) {
     if (stroke.isEmpty) return;
     _strokes.add(stroke);

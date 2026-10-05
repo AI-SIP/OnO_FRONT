@@ -2565,6 +2565,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
         builder: (context) => ProblemDetailScreen(
           problemId: problemId,
           folderQueue: queue,
+          folderQueueHasMore: _problemHasNext,
         ),
       ),
     ).then((result) async {
