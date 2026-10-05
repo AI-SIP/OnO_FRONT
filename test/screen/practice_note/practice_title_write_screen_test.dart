@@ -304,7 +304,7 @@ void main() {
     });
   });
 
-  group('세트 설정 (closeOnlySelf)', () {
+  group('복습 세트 설정 (closeOnlySelf)', () {
     testWidgets('저장하면 문제는 건드리지 않고 이 화면 하나만 닫는다', (tester) async {
       when(() => practiceNoteService.updatePracticeNote(any(),
               showErrorSnackBar: any(named: 'showErrorSnackBar')))
@@ -327,7 +327,7 @@ void main() {
         ),
       );
 
-      expect(appBarTitle('세트 설정'), findsOneWidget);
+      expect(appBarTitle('복습 세트 설정'), findsOneWidget);
       await tester.enterText(find.byType(TextField), '새 이름');
       await tester.tap(find.widgetWithText(ElevatedButton, '저장하기'));
       await tester.pumpAndSettle();

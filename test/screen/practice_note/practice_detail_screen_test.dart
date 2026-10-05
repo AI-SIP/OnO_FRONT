@@ -445,7 +445,7 @@ void main() {
     expect(find.text('복습하기'), findsNothing);
   });
 
-  testWidgets('더보기 버튼을 탭하면 세트 설정과 삭제 메뉴가 뜬다', (tester) async {
+  testWidgets('더보기 버튼을 탭하면 복습 세트 설정과 삭제 메뉴가 뜬다', (tester) async {
     practiceProvider.currentProblems = [_problem(10)];
 
     await pumpOnoWidget(
@@ -457,7 +457,7 @@ void main() {
     await tester.tap(find.byIcon(Icons.more_vert));
     await tester.pumpAndSettle();
 
-    expect(find.text('세트 설정'), findsOneWidget);
+    expect(find.text('복습 세트 설정'), findsOneWidget);
     expect(find.text('복습 세트 삭제하기'), findsOneWidget);
   });
 

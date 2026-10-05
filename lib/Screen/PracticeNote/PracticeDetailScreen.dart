@@ -276,7 +276,7 @@ class _PracticeDetailScreenState extends State<PracticeDetailScreen> {
                       context: context,
                       icon: Icons.tune,
                       iconColor: themeProvider.primaryColor,
-                      title: '세트 설정',
+                      title: '복습 세트 설정',
                       subtitle: '제목과 복습 알림을 바꿔요.',
                       onTap: () {
                         Navigator.pop(sheetContext);
