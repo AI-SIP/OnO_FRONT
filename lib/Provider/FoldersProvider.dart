@@ -25,6 +25,12 @@ class FolderScrollState {
   bool isLoadingSubfolders = false;
   bool isLoadingProblems = false;
 
+  /// 하위 공책과 오답노트는 따로 받는다. 한쪽만 저장해도 이 상태가 생기니,
+  /// 각각 받았는지를 따로 둔다. 전에는 하위 공책만 저장된 공책을 오답노트도
+  /// 받은 것으로 보고 빈 목록을 그렸다.
+  bool subfoldersCached = false;
+  bool problemsCached = false;
+
   FolderScrollState();
 }
 
@@ -44,6 +50,13 @@ class FoldersProvider with ChangeNotifier {
   // 루트 폴더 새로고침 플래그
   int _rootFolderRefreshTimestamp = 0;
   int get rootFolderRefreshTimestamp => _rootFolderRefreshTimestamp;
+
+  /// 공책마다 마지막으로 다시 받으라고 알린 때. 그 공책 화면이 뒤에 깔려 있어도
+  /// 다시 받게 한다. 하위 공책에서 하나 더 쓰기로 쓴 오답노트가 돌아와도 안
+  /// 보였다.
+  final Map<int, int> _folderRefreshTimestamps = {};
+  int folderRefreshTimestamp(int folderId) =>
+      _folderRefreshTimestamps[folderId] ?? 0;
 
   FolderModel? get currentFolder => _currentFolder;
 
@@ -147,11 +160,11 @@ class FoldersProvider with ChangeNotifier {
 
   // 캐시 존재 여부 확인 (빈 리스트도 유효한 캐시)
   bool hasSubfolderCache(int folderId) {
-    return _folderCache.containsKey(folderId);
+    return _folderCache[folderId]?.subfoldersCached ?? false;
   }
 
   bool hasProblemCache(int folderId) {
-    return _folderCache.containsKey(folderId);
+    return _folderCache[folderId]?.problemsCached ?? false;
   }
 
   // 외부에서 캐시에 데이터 저장 (DirectoryScreen에서 사용)
@@ -168,6 +181,7 @@ class FoldersProvider with ChangeNotifier {
 
     final state = _folderCache[folderId]!;
     state.subfolders = List.from(subfolders); // 복사본 저장
+    state.subfoldersCached = true;
     state.subfolderNextCursor = nextCursor;
     state.subfolderHasNext = hasNext;
 
@@ -189,6 +203,7 @@ class FoldersProvider with ChangeNotifier {
 
     final state = _folderCache[folderId]!;
     state.problems = List.from(problems); // 복사본 저장
+    state.problemsCached = true;
     state.problemNextCursor = nextCursor;
     state.problemHasNext = hasNext;
 
@@ -310,6 +325,7 @@ class FoldersProvider with ChangeNotifier {
       );
 
       state.subfolders.addAll(response.content);
+      state.subfoldersCached = true;
       state.subfolderNextCursor = response.nextCursor;
       state.subfolderHasNext = response.hasNext;
 
@@ -351,6 +367,7 @@ class FoldersProvider with ChangeNotifier {
       );
 
       state.problems.addAll(response.content);
+      state.problemsCached = true;
       state.problemNextCursor = response.nextCursor;
       state.problemHasNext = response.hasNext;
 
@@ -455,6 +472,7 @@ class FoldersProvider with ChangeNotifier {
   Future<void> refreshFolder(int folderId) async {
     // 캐시 제거
     _folderCache.remove(folderId);
+    _folderRefreshTimestamps[folderId] = DateTime.now().millisecondsSinceEpoch;
 
     // 루트 폴더이면 타임스탬프 업데이트
     if (rootFolder != null && folderId == rootFolder!.folderId) {

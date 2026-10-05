@@ -102,4 +102,50 @@ void main() {
     expect(find.text('이차함수 최댓값'), findsOneWidget);
     expect(find.text('수학 1'), findsOneWidget);
   });
+
+  testWidgets('앞선 검색을 받는 중에 더 입력하면 마지막 검색어의 결과만 보인다', (tester) async {
+    when(() => problemService.getTitleProblemsV2(
+          query: '수',
+          cursor: any(named: 'cursor'),
+          size: any(named: 'size'),
+        )).thenAnswer((_) async {
+      await Future<void>.delayed(const Duration(seconds: 2));
+      return PaginatedResponse<ProblemModel>(
+        content: [ProblemModel(problemId: 1, reference: '수열 점화식')],
+        nextCursor: null,
+        hasNext: false,
+        size: 20,
+      );
+    });
+    when(() => problemService.getTitleProblemsV2(
+          query: '수학',
+          cursor: any(named: 'cursor'),
+          size: any(named: 'size'),
+        )).thenAnswer((_) async => PaginatedResponse<ProblemModel>(
+          content: [ProblemModel(problemId: 2, reference: '수학 모의고사')],
+          nextCursor: null,
+          hasNext: false,
+          size: 20,
+        ));
+
+    await pumpOnoWidget(
+      tester,
+      const TagProblemSearchScreen(),
+      problemsProvider: problemsProvider,
+    );
+
+    await tester.enterText(find.byType(TextField), '수');
+    await tester.pump(const Duration(milliseconds: 350));
+    await tester.enterText(find.byType(TextField), '수학');
+    await tester.pump(const Duration(milliseconds: 350));
+    await tester.pumpAndSettle();
+    expect(find.text('수학 모의고사'), findsOneWidget);
+
+    // 늦게 온 앞선 응답이 결과를 덮지 않는다.
+    await tester.pump(const Duration(seconds: 2));
+    await tester.pumpAndSettle();
+
+    expect(find.text('수학 모의고사'), findsOneWidget);
+    expect(find.text('수열 점화식'), findsNothing);
+  });
 }
