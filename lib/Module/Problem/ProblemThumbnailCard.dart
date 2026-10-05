@@ -18,7 +18,7 @@ class ProblemThumbnailCard extends StatelessWidget {
   final bool isSelected;
   final Widget? trailing;
 
-  /// 진행 막대 아래에 적는 글. 주면 막대가 무엇을 세는지 함께 보인다. 예) '정답 1/3'
+  /// 푼 횟수 대신 적는 글. 무엇을 세는지 다르게 보일 때 쓴다. 예) '정답 1/3'
   final String? progressLabel;
 
   /// 태그 앞에 붙이는 칩. 추천 복습에서 `오늘`, `3일 밀림` 처럼 왜 지금
@@ -54,10 +54,10 @@ class ProblemThumbnailCard extends StatelessWidget {
     this.statusLabel,
     this.statusColor,
     this.subtitle,
-    this.padding = const EdgeInsets.all(12),
+    this.padding = const EdgeInsets.all(14),
     this.imageWidth = 60,
     this.imageHeight = 76,
-    this.contentGap = 16,
+    this.contentGap = 14,
     this.trailingGap = 12,
     this.titleFontSize = 16,
     this.titleMaxLines = 1,
@@ -89,13 +89,10 @@ class ProblemThumbnailCard extends StatelessWidget {
           _buildImage(),
           SizedBox(width: contentGap),
           Expanded(child: _buildTextColumn()),
-          SizedBox(width: trailingGap),
-          trailing ??
-              _buildSolveMeta(
-                solveCount,
-                lastSolvedAt,
-                themeProvider,
-              ),
+          if (trailing != null) ...[
+            SizedBox(width: trailingGap),
+            trailing!,
+          ],
         ],
       ),
     );
@@ -135,7 +132,6 @@ class ProblemThumbnailCard extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.center,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const SizedBox(height: 4),
         StandardText(
           text: title,
           color: Colors.black,
@@ -160,6 +156,12 @@ class ProblemThumbnailCard extends StatelessWidget {
               ),
             ],
           ),
+        ],
+        // 푼 횟수와 최근 복습일. 전에는 카드 오른쪽에 따로 세워서 제목 자리를
+        // 줄이고 글자도 작았다. 제목 아래 한 줄로 둔다.
+        if (trailing == null) ...[
+          const SizedBox(height: 4),
+          _buildSolveMeta(solveCount, lastSolvedAt, themeProvider),
         ],
         const SizedBox(height: 8),
         Wrap(
@@ -236,74 +238,45 @@ class ProblemThumbnailCard extends StatelessWidget {
     DateTime? lastSolvedAt,
     ThemeHandler themeProvider,
   ) {
-    final cappedSolveCount = solveCount.clamp(0, 3);
-    final lastSolvedDateText =
-        lastSolvedAt != null ? shortDate(lastSolvedAt) : null;
+    final dateText = lastSolvedAt != null ? shortDate(lastSolvedAt) : null;
+    final neverSolved = dateText == null && solveCount <= 0;
+    final countText = progressLabel ?? '$solveCount회 풂';
 
-    final progressText = progressLabel ?? '풀이 진행 $cappedSolveCount/3';
-    // 막대만 있으면 세 번 다 틀려도 꽉 차서 맞힌 것처럼 보였다. 추천 카드의
-    // '정답 n/3' 과 다른 뜻이라 푼 횟수를 글자로 붙인다.
-    final shownLabel = progressLabel ?? '$solveCount회 풂';
+    Widget item(IconData icon, String text, Color color) {
+      return Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 13, color: color),
+          const SizedBox(width: 3),
+          StandardText(text: text, fontSize: 12, color: color),
+        ],
+      );
+    }
 
-    final neverSolved = lastSolvedDateText == null && solveCount <= 0;
-
-    // 전에는 테두리 친 상자 두 개를 세로로 쌓아서 카드 오른쪽이 무겁고 글자가
-    // 작았다. 상자 없이 오른쪽에 붙여, 진행 점과 푼 횟수, 최근 복습일을
-    // 세 줄로 놓는다.
+    if (neverSolved && progressLabel == null) {
+      return item(
+        Icons.schedule_rounded,
+        '아직 안 풀었어요',
+        AppColors.textTertiary,
+      );
+    }
     return Semantics(
-      label: lastSolvedDateText == null
-          ? '복습 기록 없음, $progressText'
-          : '최근 복습 $lastSolvedDateText, $progressText',
+      label: dateText == null
+          ? '$countText, 복습 기록 없음'
+          : '$countText, 최근 복습 $dateText',
       child: ExcludeSemantics(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(minWidth: 52, maxWidth: 72),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: List.generate(3, (index) {
-                  final filled = index < cappedSolveCount;
-                  return Container(
-                    width: 7,
-                    height: 7,
-                    margin: EdgeInsets.only(left: index == 0 ? 0 : 4),
-                    decoration: BoxDecoration(
-                      color: filled
-                          ? themeProvider.primaryColor
-                          : AppColors.border,
-                      shape: BoxShape.circle,
-                    ),
-                  );
-                }),
+        child: Wrap(
+          spacing: 10,
+          runSpacing: 2,
+          children: [
+            item(Icons.replay_rounded, countText, themeProvider.primaryColor),
+            if (dateText != null)
+              item(
+                Icons.event_available_rounded,
+                '$dateText 복습',
+                AppColors.textTertiary,
               ),
-              const SizedBox(height: 6),
-              StandardText(
-                text: neverSolved && progressLabel == null
-                    ? '아직 안 풂'
-                    : shownLabel,
-                fontSize: 12,
-                color: neverSolved
-                    ? AppColors.textTertiary
-                    : themeProvider.primaryColor,
-                textAlign: TextAlign.right,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-              if (lastSolvedDateText != null) ...[
-                const SizedBox(height: 2),
-                StandardText(
-                  text: '$lastSolvedDateText 복습',
-                  fontSize: 11,
-                  fontFamily: 'PretendardLight',
-                  color: AppColors.textTertiary,
-                  textAlign: TextAlign.right,
-                  maxLines: 1,
-                ),
-              ],
-            ],
-          ),
+          ],
         ),
       ),
     );
