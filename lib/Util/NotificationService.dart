@@ -362,20 +362,22 @@ class NotificationService {
   /// 알림 data 로 화면을 연다.
   ///
   /// 백그라운드에서 탭한 경우와 종료 상태에서 탭해 들어온 경우가 모두 여기로 모인다.
+  /// 쌓인 화면을 닫고 이동했으면 true 다. 로그아웃 상태이거나 쓰던 내용 확인에서
+  /// 머물기를 고르면 false 다.
   @visibleForTesting
-  Future<void> navigateByNotificationData(Map<String, dynamic> data) async {
+  Future<bool> navigateByNotificationData(Map<String, dynamic> data) async {
     final target = NotificationTarget.fromData(data);
-    if (target.destination == NotificationDestination.none) return;
+    if (target.destination == NotificationDestination.none) return false;
 
     final navigator = AppNavigator.navigatorKey.currentState;
     final context = AppNavigator.navigatorKey.currentContext;
-    if (navigator == null || context == null) return;
+    if (navigator == null || context == null) return false;
 
     // 로그아웃 상태면 로그인 화면 위에 데이터가 필요한 화면을 얹지 않는다.
     // waiting, unreachable 은 자동 로그인이 진행 중이거나 잠깐 끊긴 것이라 막지 않는다.
     if (_readProvider<UserProvider>(context)?.isLoggedIn ==
         LoginStatus.logout) {
-      return;
+      return false;
     }
 
     // 쓰던 오답노트나 복습 기록이 있으면 닫기 전에 묻는다. popUntil 은
@@ -383,41 +385,49 @@ class NotificationService {
     final leave = await UnsavedChangesScope.confirmBeforeLeavingAll(
       source: 'notification',
     );
-    if (!leave) return;
+    if (!leave) return false;
+    // 확인 창이 떠 있는 동안 다른 요청이 로그인 만료로 로그인 화면을 띄웠을 수
+    // 있다. 그 위에 데이터가 필요한 화면을 얹지 않는다.
+    final latestContext = AppNavigator.navigatorKey.currentContext;
+    if (latestContext == null ||
+        _readProvider<UserProvider>(latestContext)?.isLoggedIn ==
+            LoginStatus.logout) {
+      return false;
+    }
 
     navigator.popUntil((route) => route.isFirst);
 
     switch (target.destination) {
       case NotificationDestination.none:
       case NotificationDestination.home:
-        return;
+        return true;
       case NotificationDestination.reviewDue:
         navigator.push(
           TossPageRoute(builder: (_) => const ReviewDueScreen()),
         );
-        return;
+        return true;
       case NotificationDestination.problemDetail:
         final problemId = target.problemId;
-        if (problemId == null) return;
+        if (problemId == null) return true;
         navigator.push(
           TossPageRoute(
             builder: (_) => ProblemDetailScreen(problemId: problemId),
           ),
         );
-        return;
+        return true;
       case NotificationDestination.studyRoom:
         final roomId = target.roomId;
-        if (roomId == null) return;
-        _openStudyRoom(navigator, context, roomId);
-        return;
+        if (roomId == null) return true;
+        _openStudyRoom(navigator, latestContext, roomId);
+        return true;
       case NotificationDestination.sharedProblem:
-        await _openSharedProblem(navigator, context, target);
-        return;
+        await _openSharedProblem(navigator, latestContext, target);
+        return true;
       case NotificationDestination.practiceNote:
         final practiceId = target.practiceId;
-        if (practiceId == null) return;
-        await _openPracticeNote(context, practiceId);
-        return;
+        if (practiceId == null) return true;
+        await _openPracticeNote(latestContext, practiceId);
+        return true;
     }
   }
 

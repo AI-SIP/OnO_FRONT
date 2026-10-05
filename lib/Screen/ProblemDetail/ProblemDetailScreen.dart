@@ -1248,14 +1248,15 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
     AppAnalytics.logEvent('folder_problem_navigate', {
       'direction': isNext ? 'next' : 'previous',
     });
-    Navigator.of(context).pushReplacement(
-      TossPageRoute(
-        builder: (_) => ProblemDetailScreen(
-          problemId: problemId,
-          folderQueue: widget.folderQueue,
-        ),
+    final route = TossPageRoute(
+      builder: (_) => ProblemDetailScreen(
+        problemId: problemId,
+        folderQueue: widget.folderQueue,
       ),
     );
+    // 바꿔 끼우면 이 화면의 결과가 곧바로 끝난다. 처음 연 화면이 넘겨 간 상세의
+    // 수정이나 삭제 결과를 받을 수 있게, 그 상세가 닫힐 때의 결과를 넘긴다.
+    Navigator.of(context).pushReplacement(route, result: route.popped);
   }
 
   Future<ProblemModel?> fetchProblemDetails(

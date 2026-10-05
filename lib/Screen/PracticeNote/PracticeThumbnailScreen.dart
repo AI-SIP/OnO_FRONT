@@ -30,9 +30,14 @@ import '../../Module/Dialog/ConfirmDialog.dart';
 class PracticeThumbnailScreen extends StatefulWidget {
   final TutorialTargets? tutorialTargets;
 
+  /// 삭제할 세트를 고르는 중인지 홈에 알린다. 홈이 false 로 바꾸면 고르기를
+  /// 푼다. 안드로이드 뒤로 가기가 탭을 옮기기 전에 고르기부터 풀게 하려고 쓴다.
+  final ValueNotifier<bool>? selecting;
+
   const PracticeThumbnailScreen({
     super.key,
     this.tutorialTargets,
+    this.selecting,
   });
 
   @override
@@ -42,6 +47,21 @@ class PracticeThumbnailScreen extends StatefulWidget {
 class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
   bool _isSelectionMode = false;
   final List<int> _selectedPracticeIds = [];
+
+  void _setSelectionMode(bool on) {
+    setState(() {
+      _isSelectionMode = on;
+      _selectedPracticeIds.clear();
+    });
+    widget.selecting?.value = on;
+  }
+
+  void _onSelectingChanged() {
+    if (widget.selecting?.value == false && _isSelectionMode && mounted) {
+      _setSelectionMode(false);
+    }
+  }
+
   late ScrollController _scrollController;
   int _lastPracticeRefreshTimestamp = 0;
 
@@ -50,10 +70,12 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
     super.initState();
     _scrollController = ScrollController();
     _scrollController.addListener(_onScroll);
+    widget.selecting?.addListener(_onSelectingChanged);
   }
 
   @override
   void dispose() {
+    widget.selecting?.removeListener(_onSelectingChanged);
     _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
     super.dispose();
@@ -254,10 +276,7 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
                       titleColor: Colors.red,
                       onTap: () {
                         Navigator.pop(context);
-                        setState(() {
-                          _isSelectionMode = true;
-                          _selectedPracticeIds.clear();
-                        });
+                        _setSelectionMode(true);
                       },
                     ),
                     const SizedBox(height: 4),
@@ -328,10 +347,7 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
                 ),
               ),
               onPressed: () {
-                setState(() {
-                  _isSelectionMode = false;
-                  _selectedPracticeIds.clear();
-                });
+                _setSelectionMode(false);
               },
               child: const StandardText(
                 text: '취소하기',
@@ -406,10 +422,7 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
       'source': 'list',
     });
     if (mounted) {
-      setState(() {
-        _isSelectionMode = false;
-        _selectedPracticeIds.clear();
-      });
+      _setSelectionMode(false);
     }
     AppToast.success('복습 세트를 삭제했어요.');
   }

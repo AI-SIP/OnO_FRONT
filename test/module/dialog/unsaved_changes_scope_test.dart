@@ -140,4 +140,59 @@ void main() {
     await tester.pumpAndSettle();
     expect(await leave, isTrue);
   });
+
+  testWidgets('직접 등록한 화면도 쓴 것이 있으면 한꺼번에 닫기 전에 묻고, 빼면 묻지 않는다', (tester) async {
+    var hasPhotos = true;
+    final key = GlobalKey<_RegisteredHostState>();
+    await tester.pumpWidget(MaterialApp(
+      home: _RegisteredHost(key: key, hasChanges: () => hasPhotos),
+    ));
+
+    final stay =
+        UnsavedChangesScope.confirmBeforeLeavingAll(source: 'notification');
+    await tester.pumpAndSettle();
+    expect(find.text('쓰던 내용을 두고 이동할까요?'), findsOneWidget);
+    await tester.tap(find.text('계속 쓰기'));
+    await tester.pumpAndSettle();
+    expect(await stay, isFalse);
+
+    hasPhotos = false;
+    expect(
+      await UnsavedChangesScope.confirmBeforeLeavingAll(source: 'notification'),
+      isTrue,
+    );
+
+    hasPhotos = true;
+    await tester.pumpWidget(const MaterialApp(home: SizedBox()));
+    expect(
+      await UnsavedChangesScope.confirmBeforeLeavingAll(source: 'notification'),
+      isTrue,
+    );
+  });
+}
+
+class _RegisteredHost extends StatefulWidget {
+  final bool Function() hasChanges;
+
+  const _RegisteredHost({super.key, required this.hasChanges});
+
+  @override
+  State<_RegisteredHost> createState() => _RegisteredHostState();
+}
+
+class _RegisteredHostState extends State<_RegisteredHost> {
+  @override
+  void initState() {
+    super.initState();
+    UnsavedChangesScope.register(this, widget.hasChanges);
+  }
+
+  @override
+  void dispose() {
+    UnsavedChangesScope.unregister(this);
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => const Scaffold(body: Text('여러 장 등록'));
 }

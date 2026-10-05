@@ -44,15 +44,29 @@ class UnsavedChangesScope extends StatefulWidget {
 
   /// 지금 화면에 떠 있는 것들. 알림이나 홈 위젯처럼 화면을 한꺼번에 닫고
   /// 이동하는 길은 PopScope 를 거치지 않아서, 여기서 직접 물어본다.
-  static final Set<_UnsavedChangesScopeState> _mounted = {};
+  /// 이 위젯으로 감싸지 않고 PopScope 를 직접 쓰는 화면은 [register] 로
+  /// 여기에 들어온다.
+  static final Map<State, bool Function()> _mounted = {};
+
+  /// 이 위젯으로 감쌀 수 없는 화면을 확인 목록에 넣는다. 여러 장 등록이나
+  /// 카메라처럼 뒤로 가기가 단계를 되돌리는 화면이 쓴다. initState 에서 넣고
+  /// dispose 에서 [unregister] 로 뺀다.
+  static void register(State state, bool Function() hasChanges) {
+    _mounted[state] = hasChanges;
+  }
+
+  static void unregister(State state) {
+    _mounted.remove(state);
+  }
 
   /// 쓰던 내용이 있는 화면이 하나라도 있으면 그걸 두고 이동할지 묻는다.
   /// 이동해도 되면 true 다.
   ///
   /// `popUntil` 로 쌓인 화면을 한꺼번에 닫기 전에 부른다.
   static Future<bool> confirmBeforeLeavingAll({required String source}) async {
-    final changed =
-        _mounted.where((state) => state.mounted && state._hasChanges);
+    final changed = _mounted.entries
+        .where((entry) => entry.key.mounted && entry.value())
+        .map((entry) => entry.key);
     if (changed.isEmpty) return true;
     // 쓰던 화면 위에서 묻는다. 그 화면이 가장 위에 있으니 확인 창도 그 위에 뜬다.
     return confirmLeave(
@@ -75,12 +89,12 @@ class _UnsavedChangesScopeState extends State<UnsavedChangesScope> {
   @override
   void initState() {
     super.initState();
-    UnsavedChangesScope._mounted.add(this);
+    UnsavedChangesScope.register(this, () => _hasChanges);
   }
 
   @override
   void dispose() {
-    UnsavedChangesScope._mounted.remove(this);
+    UnsavedChangesScope.unregister(this);
     super.dispose();
   }
 

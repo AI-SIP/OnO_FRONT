@@ -97,6 +97,8 @@ class _MultiProblemRegisterScreenState
   void initState() {
     super.initState();
     AppAnalytics.logScreenView('MultiProblemRegisterScreen');
+    // 알림이나 홈 위젯으로 화면이 한꺼번에 닫힐 때도 고른 사진이 있으면 묻는다.
+    UnsavedChangesScope.register(this, () => _problemImages.isNotEmpty);
     AiAnalysisPreference.load().then((enabled) {
       if (mounted) setState(() => _aiAnalysisEnabled = enabled);
     });
@@ -115,6 +117,7 @@ class _MultiProblemRegisterScreenState
 
   @override
   void dispose() {
+    UnsavedChangesScope.unregister(this);
     _commonPanelScrollController.dispose();
     for (final draft in _drafts) {
       draft.dispose();

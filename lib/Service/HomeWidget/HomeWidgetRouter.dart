@@ -122,22 +122,26 @@ class HomeWidgetRouter {
     switch (target.destination) {
       case _HomeWidgetTarget.reviewDue:
         // ignore: invalid_use_of_visible_for_testing_member
-        await NotificationService.instance.navigateByNotificationData(
+        return NotificationService.instance.navigateByNotificationData(
           const {'type': 'review_due'},
         );
-        return true;
       case _HomeWidgetTarget.problem:
         // ignore: invalid_use_of_visible_for_testing_member
-        await NotificationService.instance.navigateByNotificationData({
+        return NotificationService.instance.navigateByNotificationData({
           'type': 'problem_review_reminder',
           'problemId': target.problemId,
         });
-        return true;
       case _HomeWidgetTarget.calendar:
         final leave = await UnsavedChangesScope.confirmBeforeLeavingAll(
           source: 'home_widget',
         );
         if (!leave) return false;
+        // 확인 창이 떠 있는 동안 로그인이 풀렸을 수 있다.
+        final latestContext = AppNavigator.navigatorKey.currentContext;
+        if (latestContext == null ||
+            _readLoginStatus(latestContext) == LoginStatus.logout) {
+          return false;
+        }
         navigator.popUntil((route) => route.isFirst);
         navigator.push(
           TossPageRoute(builder: (_) => const LearningCalendarScreen()),
