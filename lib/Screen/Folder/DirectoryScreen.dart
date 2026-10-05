@@ -2492,7 +2492,13 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
           folderQueue: queue,
         ),
       ),
-    ).then((value) async {
+    ).then((result) async {
+      // 상세에서 이전, 다음으로 넘기면 넘겨 간 상세의 결과가 Future 로 온다.
+      Object? value = result;
+      while (value is Future) {
+        value = await value;
+      }
+      if (!mounted) return;
       // 문제 삭제 또는 수정 시 화면 새로고침
       if (value == true && _currentFolder != null) {
         final foldersProvider =
