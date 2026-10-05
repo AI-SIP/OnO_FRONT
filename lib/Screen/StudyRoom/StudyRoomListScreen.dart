@@ -20,7 +20,6 @@ import '../../Module/Motion/AppMotion.dart';
 import '../../Module/Design/AppColors.dart';
 import '../../Module/Design/AppRadius.dart';
 import '../../Module/Design/AppToast.dart';
-import '../../Module/Design/AppLayout.dart';
 
 class StudyRoomListScreen extends StatefulWidget {
   final TutorialTargets? tutorialTargets;
@@ -256,41 +255,41 @@ class _StudyRoomListScreenState extends State<StudyRoomListScreen> {
           ),
         ),
       ),
-      body: AppContentWidth(
-        child: SizedBox.expand(
-          key: widget.tutorialTargets?.studyRoomListKey,
-          child: provider.isLoading && provider.rooms.isEmpty
-              ? Center(
-                  child: CircularProgressIndicator(
-                    color: themeProvider.primaryColor,
-                  ),
-                )
-              : RefreshIndicator(
-                  onRefresh: _refresh,
+      // 다른 탭처럼 화면 폭을 다 쓴다. 전에는 폭을 줄여 가운데에 두고 카드
+      // 여백을 또 둬서, 태블릿에서 이 화면만 양옆이 더 들어가 보였다.
+      body: SizedBox.expand(
+        key: widget.tutorialTargets?.studyRoomListKey,
+        child: provider.isLoading && provider.rooms.isEmpty
+            ? Center(
+                child: CircularProgressIndicator(
                   color: themeProvider.primaryColor,
-                  child: provider.rooms.isEmpty
-                      // 참여 중인 방이 없어도 당겨서 새로고침할 수 있어야 한다.
-                      // 빈 상태는 스크롤되지 않아서 그냥 두면 당길 것이 없다.
-                      // 화면 높이만큼 스크롤 영역을 만들어 준다.
-                      ? LayoutBuilder(
-                          builder: (context, constraints) =>
-                              SingleChildScrollView(
-                            physics: const AlwaysScrollableScrollPhysics(),
-                            child: ConstrainedBox(
-                              constraints: BoxConstraints(
-                                minHeight: constraints.maxHeight,
-                              ),
-                              child: StudyRoomEmptyState(
-                                themeProvider: themeProvider,
-                                onCreateTap: _openCreate,
-                                onJoinTap: _openJoin,
-                              ),
+                ),
+              )
+            : RefreshIndicator(
+                onRefresh: _refresh,
+                color: themeProvider.primaryColor,
+                child: provider.rooms.isEmpty
+                    // 참여 중인 방이 없어도 당겨서 새로고침할 수 있어야 한다.
+                    // 빈 상태는 스크롤되지 않아서 그냥 두면 당길 것이 없다.
+                    // 화면 높이만큼 스크롤 영역을 만들어 준다.
+                    ? LayoutBuilder(
+                        builder: (context, constraints) =>
+                            SingleChildScrollView(
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          child: ConstrainedBox(
+                            constraints: BoxConstraints(
+                              minHeight: constraints.maxHeight,
+                            ),
+                            child: StudyRoomEmptyState(
+                              themeProvider: themeProvider,
+                              onCreateTap: _openCreate,
+                              onJoinTap: _openJoin,
                             ),
                           ),
-                        )
-                      : _buildRoomList(provider, themeProvider),
-                ),
-        ),
+                        ),
+                      )
+                    : _buildRoomList(provider, themeProvider),
+              ),
       ),
     );
   }
@@ -300,16 +299,39 @@ class _StudyRoomListScreenState extends State<StudyRoomListScreen> {
     final screenHeight = MediaQuery.of(context).size.height;
     final screenWidth = MediaQuery.of(context).size.width;
 
-    return ListView.builder(
-      physics: const AlwaysScrollableScrollPhysics(),
-      padding: EdgeInsets.only(
-        top: screenHeight * 0.01,
-        bottom: screenHeight * 0.12,
-      ),
-      itemCount: provider.rooms.length,
-      itemBuilder: (_, i) => _buildRoomCard(provider.rooms[i], provider,
-          themeProvider, screenHeight, screenWidth),
-    );
+    final rooms = provider.rooms;
+    // 넓은 화면에서는 책장, 복습 세트처럼 두 열로 놓는다.
+    return LayoutBuilder(builder: (context, constraints) {
+      final columns = constraints.maxWidth >= 700 ? 2 : 1;
+      final rowCount = (rooms.length / columns).ceil();
+      return ListView.builder(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: EdgeInsets.only(
+          top: screenHeight * 0.01,
+          bottom: screenHeight * 0.12,
+        ),
+        itemCount: rowCount,
+        itemBuilder: (_, index) {
+          final first = index * columns;
+          if (columns == 1) {
+            return _buildRoomCard(rooms[first], provider, themeProvider,
+                screenHeight, screenWidth);
+          }
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              for (var i = first; i < first + columns; i++)
+                Expanded(
+                  child: i < rooms.length
+                      ? _buildRoomCard(rooms[i], provider, themeProvider,
+                          screenHeight, screenWidth)
+                      : const SizedBox.shrink(),
+                ),
+            ],
+          );
+        },
+      );
+    });
   }
 
   Widget _buildRoomCard(
