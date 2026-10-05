@@ -618,7 +618,7 @@ class _ProblemDetailTemplateState extends State<ProblemDetailTemplate>
     );
   }
 
-  /// 메모만 바로 쓰고 저장한다. 서버는 빈 메모를 무시해서 지우기는 막아 둔다.
+  /// 메모만 바로 쓰고 저장한다. 비운 채로 저장하면 메모를 지운다.
   Future<void> _editMemo(ThemeHandler themeProvider) async {
     final before = widget.problemModel.memo ?? '';
     final memo = await showMemoEditSheet(
@@ -638,7 +638,7 @@ class _ProblemDetailTemplateState extends State<ProblemDetailTemplate>
         'source': 'detail',
         'had_memo': before.isNotEmpty,
       });
-      AppToast.success('메모를 저장했어요');
+      AppToast.success(memo.isEmpty ? '메모를 지웠어요' : '메모를 저장했어요');
     } catch (_) {
       AppToast.error('메모를 저장하지 못했어요. 잠시 후 다시 시도해 주세요.');
     }

@@ -61,7 +61,8 @@ void main() {
     expect(sent.folderId, isNull);
   });
 
-  testWidgets('비우거나 그대로면 저장할 수 없다', (tester) async {
+  testWidgets('그대로면 저장할 수 없고, 비우고 저장하면 메모를 지운다', (tester) async {
+    when(() => problemsProvider.updateProblem(any())).thenAnswer((_) async {});
     await openAnswerTab(tester, buildProblem(problemId: 11, memo: '원래 메모'));
 
     await tester.scrollUntilVisible(find.byTooltip('메모 고치기'), 200,
@@ -74,10 +75,16 @@ void main() {
 
     expect(saveButton().onPressed, isNull, reason: '바뀐 것이 없다');
 
+    // 서버는 빈 메모를 받으면 메모를 지운다.
     await tester.enterText(find.byType(TextField), '   ');
     await tester.pump();
-    expect(saveButton().onPressed, isNull, reason: '서버가 빈 메모를 무시한다');
+    expect(saveButton().onPressed, isNotNull);
+    await tester.tap(find.text('저장'));
+    await tester.pumpAndSettle();
 
-    verifyNever(() => problemsProvider.updateProblem(any()));
+    final sent = verify(() => problemsProvider.updateProblem(captureAny()))
+        .captured
+        .single as ProblemRegisterModel;
+    expect(sent.memo, '');
   });
 }
