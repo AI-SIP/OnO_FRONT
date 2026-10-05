@@ -190,7 +190,7 @@ class _FolderPickerDialogState extends State<FolderPickerDialog> {
             '선택 안 됨';
     final selectedNode = _findNodeById(_rootNode, _selectedFolderId);
     final createTargetName = selectedNode?.folderName ?? selectedFolderName;
-    final dialogTitle = widget.isManagementMode ? '공책 정리' : '공책 선택';
+    final dialogTitle = widget.isManagementMode ? '공책 옮기기' : '공책 선택';
     final confirmText = widget.isManagementMode ? '완료하기' : '선택하기';
 
     final maxHeight = size.height * 0.86;
@@ -469,7 +469,7 @@ class _FolderPickerDialogState extends State<FolderPickerDialog> {
       themeProvider: themeProvider,
     );
 
-    // 공책을 끌어 옮기는 것은 공책 정리에서만 한다. 옮길 곳을 고르기만 하는
+    // 공책을 끌어 옮기는 것은 공책 옮기기에서만 한다. 옮길 곳을 고르기만 하는
     // 창에서도 길게 누르면 공책이 바로 옮겨져서, 고르다가 구조가 바뀌었다.
     if (node.parentFolderId == null || !widget.isManagementMode) return row;
 

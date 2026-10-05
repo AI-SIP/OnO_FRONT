@@ -211,7 +211,7 @@ void main() {
     // 메시지 없이 로딩 스피너가 영구히 남는다. 사용자는 헤더의 닫기(X)나 취소
     // 버튼으로 다이얼로그를 닫는 것 외에는 복구할 방법이 없다.
     // 영향 화면: FolderPickerWidget(문제 등록/수정 시 공책 선택),
-    // DirectoryScreen._showMoveFolderDialog(공책 정리).
+    // DirectoryScreen._showMoveFolderDialog(공책 옮기기).
     testWidgets(
       '루트 폴더 조회가 실패하면 로딩 스피너가 사라지고 에러가 보여야 한다',
       (tester) async {
@@ -245,7 +245,7 @@ void main() {
       expect(find.byType(LongPressDraggable<FolderTreeNode>), findsNothing);
     });
 
-    testWidgets('공책 정리에서는 하위 공책을 끌 수 있다', (tester) async {
+    testWidgets('공책 옮기기에서는 하위 공책을 끌 수 있다', (tester) async {
       stubRoot(1, children: [_buildSubfolder(10, name: '수학')]);
 
       await openDialog(tester, isManagementMode: true);
@@ -431,12 +431,12 @@ void main() {
       expect(find.text('완료하기'), findsNothing);
     });
 
-    testWidgets('관리 모드에서는 공책 정리 / 완료하기 문구가 보인다', (tester) async {
+    testWidgets('관리 모드에서는 공책 옮기기 / 완료하기 문구가 보인다', (tester) async {
       stubRoot(12);
 
       await openDialog(tester, isManagementMode: true);
 
-      expect(find.text('공책 정리'), findsOneWidget);
+      expect(find.text('공책 옮기기'), findsOneWidget);
       expect(find.text('완료하기'), findsOneWidget);
       expect(find.text('선택하기'), findsNothing);
     });
