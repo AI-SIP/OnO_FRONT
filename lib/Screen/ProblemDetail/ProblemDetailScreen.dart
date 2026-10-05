@@ -373,8 +373,6 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
               },
             ),
           ),
-          const SizedBox(height: 0),
-          _buildNavigationButtons(context, widget.isPractice),
         ],
       ),
     );
@@ -1091,6 +1089,31 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
     );
   }
 
+  /// 복습 세트에서 연 상세의 이전, 다음. 마지막 문제는 다음 대신 마치기다.
+  /// 전에는 다시 풀기 아래에 이전, 다음 줄이 한 겹 더 쌓였다.
+  ProblemDetailNavigation? _practiceNavigation() {
+    final practiceProvider =
+        Provider.of<ProblemPracticeProvider>(context, listen: false);
+    final problems = practiceProvider.sessionProblems;
+    final index = problems.indexWhere((p) => p.problemId == widget.problemId);
+    if (index < 0) return null;
+    final isLast = index == problems.length - 1;
+    return ProblemDetailNavigation(
+      positionLabel: '${index + 1} / ${problems.length}',
+      onPrevious: index > 0
+          ? () => openPracticeProblem(context, problems[index - 1].problemId,
+              isNext: false)
+          : null,
+      onNext: isLast
+          ? null
+          : () => openPracticeProblem(context, problems[index + 1].problemId,
+              isNext: true),
+      onFinish: isLast
+          ? () => finishPracticeSession(context, practiceProvider)
+          : null,
+    );
+  }
+
   /// 공책에서 연 상세에서 지금 문제가 몇 번째인지. 넘길 곳이 없으면 null.
   int? get _folderQueueIndex {
     final queue = widget.folderQueue;
@@ -1100,6 +1123,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
   }
 
   ProblemDetailNavigation? _folderNavigation() {
+    if (widget.isPractice) return _practiceNavigation();
     final index = _folderQueueIndex;
     if (index == null) return null;
     final queue = widget.folderQueue!;
@@ -1218,39 +1242,6 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
       case PracticeContinueChoice.stop:
         break;
     }
-  }
-
-  // 네비게이션 버튼 구성 함수
-  Widget _buildNavigationButtons(BuildContext context, bool isPractice) {
-    // 기기의 높이 정보를 가져옴
-    double screenHeight = MediaQuery.of(context).size.height;
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isWide = screenWidth >= 600;
-    final horizontalPadding = isWide ? 60.0 : 30.0;
-
-    // 화면 높이에 따라 패딩 값을 동적으로 설정
-    double topPadding = 0;
-    double bottomPadding = screenHeight * 0.03;
-
-    if (isPractice) {
-      return Padding(
-        padding: EdgeInsets.only(
-          left: horizontalPadding,
-          right: horizontalPadding,
-          top: topPadding,
-          bottom: bottomPadding,
-        ),
-        child: PracticeNavigationButtons(
-          context: context,
-          practiceProvider:
-              Provider.of<ProblemPracticeProvider>(context, listen: false),
-          currentProblemId: widget.problemId,
-          onRefresh: _setProblemModel,
-        ),
-      );
-    }
-    // 공책에서 연 상세의 이전, 다음은 다시 풀기 버튼과 같은 줄에 둔다.
-    return const SizedBox.shrink();
   }
 
   void _openFolderQueueProblem(int problemId, {required bool isNext}) {

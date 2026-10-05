@@ -29,13 +29,17 @@ class ProblemDetailNavigation {
   final VoidCallback? onPrevious;
   final VoidCallback? onNext;
 
-  /// 공책에서 몇 번째인지. 다시 풀기 버튼 안에 작게 붙인다. 예) '2 / 20+'
+  /// 몇 번째인지. 다시 풀기 버튼 안에 작게 붙인다. 예) '2 / 20+'
   final String? positionLabel;
+
+  /// 복습 세트의 마지막 문제에서 다음 대신 오른쪽에 두는 마치기.
+  final VoidCallback? onFinish;
 
   const ProblemDetailNavigation({
     this.onPrevious,
     this.onNext,
     this.positionLabel,
+    this.onFinish,
   });
 }
 
@@ -344,52 +348,6 @@ class _ProblemDetailTemplateState extends State<ProblemDetailTemplate>
     final problemImageCount =
         widget.problemModel.problemImageDataList?.length ?? 0;
 
-    // 태블릿 가로에서는 이미지를 왼쪽에 크게 두고, 정보와 다시 풀기 버튼을
-    // 오른쪽에 둔다. 전에는 넓은 화면에서도 한 줄로 세워서 옆이 비었다.
-    final size = MediaQuery.sizeOf(context);
-    if (size.width >= 900 && size.width > size.height) {
-      final imageUrls = widget.problemModel.problemImageDataList
-              ?.map((m) => m.imageUrl)
-              .toList() ??
-          [];
-      return Padding(
-        padding: const EdgeInsets.fromLTRB(32, 24, 32, 20),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              flex: 3,
-              child: SingleChildScrollView(
-                child: _buildSectionCard(
-                  themeProvider,
-                  title: '문제 이미지',
-                  icon: Icons.image,
-                  trailing: _buildCountChip(problemImageCount, themeProvider),
-                  child: buildImageSection(
-                    context,
-                    imageUrls,
-                    '문제 이미지',
-                    themeProvider,
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(width: 24),
-            SizedBox(
-              width: 360,
-              child: Column(
-                children: [
-                  _buildProblemMetaCard(themeProvider),
-                  const Spacer(),
-                  _buildBottomReviewCta(themeProvider, isWide),
-                ],
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-
     return Column(
       children: [
         Expanded(
@@ -559,12 +517,18 @@ class _ProblemDetailTemplateState extends State<ProblemDetailTemplate>
             ),
             if (navigation != null) ...[
               const SizedBox(width: 10),
-              _NavigationArrow(
-                tooltip: '다음 문제',
-                icon: Icons.chevron_right,
-                accent: themeProvider.primaryColor,
-                onTap: navigation.onNext,
-              ),
+              if (navigation.onNext == null && navigation.onFinish != null)
+                _FinishButton(
+                  accent: themeProvider.primaryColor,
+                  onTap: navigation.onFinish!,
+                )
+              else
+                _NavigationArrow(
+                  tooltip: '다음 문제',
+                  icon: Icons.chevron_right,
+                  accent: themeProvider.primaryColor,
+                  onTap: navigation.onNext,
+                ),
             ],
           ],
         ),
@@ -904,6 +868,32 @@ class _NavigationArrow extends StatelessWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// 복습 세트의 마지막 문제에서 다음 화살표 자리에 두는 마치기.
+class _FinishButton extends StatelessWidget {
+  final Color accent;
+  final VoidCallback onTap;
+
+  const _FinishButton({required this.accent, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 50,
+      child: OutlinedButton(
+        onPressed: onTap,
+        style: OutlinedButton.styleFrom(
+          side: BorderSide(color: accent, width: 1.5),
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppRadius.full),
+          ),
+        ),
+        child: StandardText(text: '복습 마치기', fontSize: 14, color: accent),
       ),
     );
   }
