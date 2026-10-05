@@ -188,9 +188,7 @@ class _PracticeContinueSheet extends StatelessWidget {
             _ChoiceTile(
               icon: Icons.play_arrow_rounded,
               title: '다음 문제 바로 풀기',
-              description: mode == ProblemSolveMode.inApp
-                  ? '$_nextTitle · 방금처럼 앱에서 바로 풀어요.'
-                  : '$_nextTitle · 방금처럼 풀이 사진을 올려요.',
+              description: _nextTitle,
               accentColor: accentColor,
               highlighted: true,
               onTap: () =>

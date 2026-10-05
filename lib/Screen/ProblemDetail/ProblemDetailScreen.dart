@@ -429,7 +429,18 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
   List<Widget> _buildAppBarActions() {
     final themeProvider = Provider.of<ThemeHandler>(context);
 
+    final queueIndex = _folderQueueIndex;
     return [
+      // 공책에서 몇 번째 문제인지. 아래 줄을 한 줄로 줄이면서 여기로 옮겼다.
+      if (queueIndex != null)
+        Center(
+          child: StandardText(
+            text: '${queueIndex + 1} / ${widget.folderQueue!.length}'
+                '${widget.folderQueueHasMore ? '+' : ''}',
+            fontSize: 13,
+            color: AppColors.textSecondary,
+          ),
+        ),
       FutureBuilder<ProblemModel?>(
         future: _problemModelFuture,
         builder: (context, snapshot) {
@@ -1087,6 +1098,29 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
             .fetchProblemAnalysis(problemModel.problemId);
         _startAnalysisPolling(problemModel.problemId);
       },
+      navigation: _folderNavigation(),
+    );
+  }
+
+  /// 공책에서 연 상세에서 지금 문제가 몇 번째인지. 넘길 곳이 없으면 null.
+  int? get _folderQueueIndex {
+    final queue = widget.folderQueue;
+    if (queue == null || queue.length < 2 || _isProblemDeleted) return null;
+    final index = queue.indexOf(widget.problemId);
+    return index < 0 ? null : index;
+  }
+
+  ProblemDetailNavigation? _folderNavigation() {
+    final index = _folderQueueIndex;
+    if (index == null) return null;
+    final queue = widget.folderQueue!;
+    return ProblemDetailNavigation(
+      onPrevious: index > 0
+          ? () => _openFolderQueueProblem(queue[index - 1], isNext: false)
+          : null,
+      onNext: index < queue.length - 1
+          ? () => _openFolderQueueProblem(queue[index + 1], isNext: true)
+          : null,
     );
   }
 
@@ -1223,31 +1257,9 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
           onRefresh: _setProblemModel,
         ),
       );
-    } else {
-      final queue = widget.folderQueue;
-      final index = queue?.indexOf(widget.problemId) ?? -1;
-      if (queue == null || queue.length < 2 || index < 0 || _isProblemDeleted) {
-        return const SizedBox.shrink();
-      }
-      return SafeArea(
-        top: false,
-        child: Padding(
-          padding: EdgeInsets.fromLTRB(
-              horizontalPadding, 4, horizontalPadding, bottomPadding / 2),
-          child: _FolderNavigationRow(
-            index: index,
-            total: queue.length,
-            hasMore: widget.folderQueueHasMore,
-            onPrevious: index > 0
-                ? () => _openFolderQueueProblem(queue[index - 1], isNext: false)
-                : null,
-            onNext: index < queue.length - 1
-                ? () => _openFolderQueueProblem(queue[index + 1], isNext: true)
-                : null,
-          ),
-        ),
-      );
     }
+    // 공책에서 연 상세의 이전, 다음은 다시 풀기 버튼과 같은 줄에 둔다.
+    return const SizedBox.shrink();
   }
 
   void _openFolderQueueProblem(int problemId, {required bool isNext}) {
@@ -1314,70 +1326,5 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
     }
 
     return problem;
-  }
-}
-
-/// 공책에서 연 오답노트 아래에 두는 이전, 다음 줄.
-class _FolderNavigationRow extends StatelessWidget {
-  final int index;
-  final int total;
-  final bool hasMore;
-  final VoidCallback? onPrevious;
-  final VoidCallback? onNext;
-
-  const _FolderNavigationRow({
-    required this.index,
-    required this.total,
-    this.hasMore = false,
-    required this.onPrevious,
-    required this.onNext,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final accent = Provider.of<ThemeHandler>(context).primaryColor;
-    Widget button({
-      required String label,
-      required IconData icon,
-      required VoidCallback? onTap,
-      required bool iconFirst,
-    }) {
-      final color = onTap == null ? AppColors.textDisabled : accent;
-      final children = [
-        Icon(icon, size: 20, color: color),
-        StandardText(text: label, fontSize: 14, color: color),
-      ];
-      return TextButton(
-        onPressed: onTap,
-        style: TextButton.styleFrom(minimumSize: const Size(88, 44)),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: iconFirst ? children : children.reversed.toList(),
-        ),
-      );
-    }
-
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        button(
-          label: '이전',
-          icon: Icons.chevron_left,
-          onTap: onPrevious,
-          iconFirst: true,
-        ),
-        StandardText(
-          text: '${index + 1} / $total${hasMore ? '+' : ''}',
-          fontSize: 14,
-          color: AppColors.textSecondary,
-        ),
-        button(
-          label: '다음',
-          icon: Icons.chevron_right,
-          onTap: onNext,
-          iconFirst: false,
-        ),
-      ],
-    );
   }
 }

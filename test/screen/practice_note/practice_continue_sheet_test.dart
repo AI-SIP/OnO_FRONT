@@ -52,16 +52,7 @@ void main() {
       await _pumpLauncher(tester, next: _next(), onResult: (_) {});
 
       expect(find.text('3 / 5 복습 끝!'), findsOneWidget);
-      expect(find.text('2026 9월 모평 27번 · 방금처럼 앱에서 바로 풀어요.'), findsOneWidget);
-    });
-  });
-
-  testWidgets('현장에서 풀었으면 바로 풀기 설명도 그에 맞춘다', (tester) async {
-    await withMockedNetworkImages(() async {
-      await _pumpLauncher(tester,
-          next: _next(), mode: ProblemSolveMode.offline, onResult: (_) {});
-
-      expect(find.text('2026 9월 모평 27번 · 방금처럼 풀이 사진을 올려요.'), findsOneWidget);
+      expect(find.text('2026 9월 모평 27번'), findsOneWidget);
     });
   });
 
