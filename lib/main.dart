@@ -287,6 +287,10 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   final TutorialTargets _tutorialTargets = TutorialTargets();
   final NoticeService _noticeService = NoticeService();
+
+  /// 복습 세트 탭이 삭제할 세트를 고르는 중인지. 뒤로 가기는 탭을 옮기기 전에
+  /// 고르기부터 푼다.
+  final ValueNotifier<bool> _practiceSelecting = ValueNotifier(false);
   bool _didPrepareTutorial = false;
   bool _didHandleNotice = false;
   int? _lastSyncedTutorialStepIndex;
@@ -315,6 +319,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   void dispose() {
     HomeWidgetRouter.instance.stopListening();
     _detachTutorialFinishListener();
+    _practiceSelecting.dispose();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
@@ -433,7 +438,10 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
 
     final widgetOptions = <Widget>[
       DirectoryScreen(tutorialTargets: _tutorialTargets),
-      PracticeThumbnailScreen(tutorialTargets: _tutorialTargets),
+      PracticeThumbnailScreen(
+        tutorialTargets: _tutorialTargets,
+        selecting: _practiceSelecting,
+      ),
       CharacterScreen(tutorialTargets: _tutorialTargets),
       StudyRoomListScreen(tutorialTargets: _tutorialTargets),
       SettingScreen(tutorialTargets: _tutorialTargets),
@@ -446,6 +454,10 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
       canPop: isFirstTab,
       onPopInvokedWithResult: (didPop, _) {
         if (didPop || isFirstTab) return;
+        if (screenIndexProvider.screenIndex == 1 && _practiceSelecting.value) {
+          _practiceSelecting.value = false;
+          return;
+        }
         screenIndexProvider.setSelectedIndex(0);
       },
       child: _buildTabs(context, screenIndexProvider, widgetOptions),
