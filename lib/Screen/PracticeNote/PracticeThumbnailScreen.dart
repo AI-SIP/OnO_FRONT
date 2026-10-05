@@ -524,7 +524,8 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
       return ListView.builder(
         controller: _scrollController,
         physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.symmetric(vertical: 20),
+        // 책장과 같은 간격이다. 바깥 20, 두 열 사이 16, 카드 위아래 8.
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
         itemCount: rowCount + (isLoadingMore || hasMore ? 1 : 0),
         itemBuilder: (context, index) {
           // 더 불러오는 중임을 알리는 자리. 목록 아래에 잠깐 보이는 것이라
@@ -542,12 +543,14 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
               : Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    for (var i = first; i < first + columns; i++)
+                    for (var i = first; i < first + columns; i++) ...[
+                      if (i > first) const SizedBox(width: 16),
                       Expanded(
                         child: i < thumbnails.length
                             ? _buildPracticeItem(thumbnails[i], themeProvider)
                             : const SizedBox.shrink(),
                       ),
+                    ],
                   ],
                 );
           // 첫 화면에 보이는 것만 하나씩 들어온다.
@@ -579,7 +582,7 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
         }
       },
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        padding: const EdgeInsets.symmetric(vertical: 8),
         child: Container(
           decoration: _buildBoxDecoration(isSelected, themeProvider),
           padding: const EdgeInsets.all(12),

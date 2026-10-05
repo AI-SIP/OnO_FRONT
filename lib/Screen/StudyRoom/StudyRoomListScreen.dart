@@ -306,7 +306,10 @@ class _StudyRoomListScreenState extends State<StudyRoomListScreen> {
       final rowCount = (rooms.length / columns).ceil();
       return ListView.builder(
         physics: const AlwaysScrollableScrollPhysics(),
+        // 책장과 같은 간격이다. 바깥 20, 두 열 사이 16, 카드 위아래 8.
         padding: EdgeInsets.only(
+          left: 20,
+          right: 20,
           top: screenHeight * 0.01,
           bottom: screenHeight * 0.12,
         ),
@@ -320,13 +323,15 @@ class _StudyRoomListScreenState extends State<StudyRoomListScreen> {
           return Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              for (var i = first; i < first + columns; i++)
+              for (var i = first; i < first + columns; i++) ...[
+                if (i > first) const SizedBox(width: 16),
                 Expanded(
                   child: i < rooms.length
                       ? _buildRoomCard(rooms[i], provider, themeProvider,
                           screenHeight, screenWidth)
                       : const SizedBox.shrink(),
                 ),
+              ],
             ],
           );
         },
@@ -345,10 +350,7 @@ class _StudyRoomListScreenState extends State<StudyRoomListScreen> {
     final titleFontSize = screenWidth < 600 ? 15.0 : 16.0;
 
     return Container(
-      margin: EdgeInsets.symmetric(
-        horizontal: 16,
-        vertical: screenHeight * 0.006,
-      ),
+      margin: const EdgeInsets.symmetric(vertical: 8),
       child: PressableScale(
         onTap: () => _openDetail(room.roomId),
         child: Container(
