@@ -213,7 +213,10 @@ void main() {
     testWidgets('오래된순을 고르면 기억하고 그 순서로 다시 받는다', (tester) async {
       await pumpDirectory(tester);
 
-      await tester.tap(find.byTooltip('정렬: 최근 등록순'));
+      // 정렬은 앱바가 아니라 더 보기 메뉴에 있다.
+      await tester.tap(find.byIcon(Icons.more_vert));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('정렬: 최근 등록순'));
       await tester.pumpAndSettle();
       await tester.tap(find.text('오래된순'));
       await tester.pumpAndSettle();

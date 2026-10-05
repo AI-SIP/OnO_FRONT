@@ -699,8 +699,9 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
                 child: StandardText(
                   text:
                       '마지막 복습 날짜: ${formatDateTime(practice.lastSolvedAt) ?? '복습 기록 없음'}',
-                  fontSize: 11,
-                  color: AppColors.textSecondary,
+                  // 공책의 오답노트 개수처럼 이름 아래 보조 정보라 흐리게 둔다.
+                  fontSize: 12,
+                  color: AppColors.textTertiary,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
