@@ -173,6 +173,9 @@ Future<void> _bootstrapApp() async {
         // 혼자 떠 있으면 새로 받은 훈장을 아무도 못 받아 둬서, 축하 한 번이
         // 조용히 사라진다.
         ChangeNotifierProvider(create: (_) => AchievementProvider()),
+        // 추천 복습도 마찬가지다. 비우지 않으면 다른 계정으로 로그인한 홈에
+        // 앞 사람의 추천 개수가 잠깐 뜬다.
+        ChangeNotifierProvider(create: (_) => ReviewDueProvider()),
         ChangeNotifierProvider(
           create: (context) => UserProvider(
             Provider.of<ProblemsProvider>(context, listen: false),
@@ -190,13 +193,16 @@ Future<void> _bootstrapApp() async {
               context,
               listen: false,
             ),
+            reviewDueProvider: Provider.of<ReviewDueProvider>(
+              context,
+              listen: false,
+            ),
           ),
         ),
         ChangeNotifierProvider(
           create: (context) => ThemeHandler()..loadColors(),
         ),
         ChangeNotifierProvider(create: (_) => ScreenIndexProvider()),
-        ChangeNotifierProvider(create: (_) => ReviewDueProvider()),
         ChangeNotifierProvider(create: (_) => TutorialProvider()),
         ChangeNotifierProvider(create: (_) => StudyRoomProvider()),
       ],

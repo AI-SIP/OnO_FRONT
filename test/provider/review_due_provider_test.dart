@@ -1,3 +1,5 @@
+import 'dart:async';
+
 // ReviewDueProvider 상태 전이 테스트.
 //
 // 로딩 가드(`if (_isLoading) return;`)와, 실패 시 예외를 삼키고
@@ -39,6 +41,22 @@ void main() {
   });
 
   group('fetchReviewDue', () {
+    test('비운 뒤에 늦게 돌아온 앞선 조회는 버린다', () async {
+      final completer = Completer<ReviewDueResponse>();
+      when(() => problemService.getReviewDueProblems())
+          .thenAnswer((_) => completer.future);
+
+      final pending = provider.fetchReviewDue();
+      provider.clear();
+      completer.complete(
+        ReviewDueResponse(dueCount: 5, overdueCount: 0, problems: const []),
+      );
+      await pending;
+
+      expect(provider.data, isNull);
+      expect(provider.isLoading, isFalse);
+    });
+
     test('성공하면 data 가 채워지고 isLoading 이 false 로 돌아온다', () async {
       when(() => problemService.getReviewDueProblems()).thenAnswer(
         (_) async => ReviewDueResponse(

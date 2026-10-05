@@ -16,6 +16,10 @@ class ReviewDueProvider with ChangeNotifier {
   bool _isLoading = false;
   bool _hasError = false;
 
+  /// 비울 때마다 오른다. 로그아웃 전에 나간 조회가 늦게 돌아와 다음 계정의
+  /// 화면을 앞 사람의 추천으로 채우지 않게 한다.
+  int _generation = 0;
+
   /// 받아 둔 추천에서 지우는 중이거나 지운 문제를 뺀 것.
   ///
   /// 전에는 오답노트를 지우고 되돌리기를 기다리는 동안에도 추천 목록과 홈의
@@ -52,12 +56,16 @@ class ReviewDueProvider with ChangeNotifier {
 
   Future<void> fetchReviewDue() async {
     if (_isLoading) return;
+    final generation = _generation;
     _isLoading = true;
     notifyListeners();
     try {
-      _data = await _problemService.getReviewDueProblems();
+      final data = await _problemService.getReviewDueProblems();
+      if (generation != _generation) return;
+      _data = data;
       _hasError = false;
     } catch (e, stackTrace) {
+      if (generation != _generation) return;
       _hasError = true;
       debugPrint('ReviewDueProvider fetchReviewDue error: $e');
       await AppErrorReporter.report(
@@ -67,8 +75,10 @@ class ReviewDueProvider with ChangeNotifier {
         severity: AppErrorSeverity.warning,
       );
     } finally {
-      _isLoading = false;
-      notifyListeners();
+      if (generation == _generation) {
+        _isLoading = false;
+        notifyListeners();
+      }
     }
   }
 
@@ -79,8 +89,10 @@ class ReviewDueProvider with ChangeNotifier {
   }
 
   void clear() {
+    _generation++;
     _data = null;
     _hasError = false;
+    _isLoading = false;
     notifyListeners();
   }
 }

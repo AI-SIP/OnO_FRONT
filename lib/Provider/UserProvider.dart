@@ -14,6 +14,7 @@ import 'package:ono/Provider/AchievementProvider.dart';
 import 'package:ono/Provider/CosmeticProvider.dart';
 import 'package:ono/Provider/MissionProvider.dart';
 import 'package:ono/Provider/PracticeNoteProvider.dart';
+import 'package:ono/Provider/ReviewDueProvider.dart';
 import 'package:ono/Service/Api/Problem/ProblemService.dart';
 import 'package:ono/Service/Api/User/UserService.dart';
 import 'package:ono/Service/SocialLogin/KakaoAuthService.dart';
@@ -57,6 +58,10 @@ class UserProvider with ChangeNotifier {
   /// 앱 밖(테스트 등)에서는 없을 수 있다.
   final AchievementProvider? achievementProvider;
 
+  /// 로그아웃할 때 비운다. 비우지 않으면 다른 계정으로 로그인한 홈에 앞 사람의
+  /// 추천 복습 개수와 카드가 잠깐 보인다.
+  final ReviewDueProvider? reviewDueProvider;
+
   final TokenProvider tokenProvider;
   final HttpService httpService;
   final UserService userService;
@@ -93,6 +98,7 @@ class UserProvider with ChangeNotifier {
     this.missionProvider,
     this.cosmeticProvider,
     this.achievementProvider,
+    this.reviewDueProvider,
     TokenProvider? tokenProvider,
     HttpService? httpService,
     UserService? userService,
@@ -650,6 +656,7 @@ class UserProvider with ChangeNotifier {
     // 비우지 않으면 다른 계정으로 로그인한 첫 화면에 앞 사람이 받은 훈장의
     // 축하가 뜬다. 기기에 적어 둔 축하거리까지 같이 지운다.
     achievementProvider?.clear();
+    reviewDueProvider?.clear();
     // 비우지 않으면 홈 화면 위젯에 앞 사람의 연속 일수와 학습 기록, 프로필이
     // 그대로 남는다. 위젯 저장소를 쓰는 일이라 기다리지 않는다.
     unawaited(HomeWidgetSyncService.instance.clear());

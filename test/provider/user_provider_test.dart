@@ -35,6 +35,8 @@ import 'package:ono/Exception/ApiException.dart';
 import 'package:ono/Service/SocialLogin/AppleAuthService.dart';
 import 'package:ono/Service/SocialLogin/GoogleAuthService.dart';
 import 'package:ono/Service/SocialLogin/KakaoAuthService.dart';
+import 'package:ono/Model/Problem/ReviewDueProblemModel.dart';
+import 'package:ono/Provider/ReviewDueProvider.dart';
 
 import '../helpers/helpers.dart';
 import 'support/provider_test_env.dart';
@@ -533,6 +535,34 @@ void main() {
       expect(missionProvider.board, isNull);
       expect(missionProvider.hasMissions, isFalse);
       expect(missionProvider.unclaimedCount, 0);
+    });
+
+    test('앞 계정의 추천 복습도 함께 비운다', () async {
+      when(() => problemService.getReviewDueProblems()).thenAnswer(
+        (_) async =>
+            ReviewDueResponse(dueCount: 4, overdueCount: 1, problems: const []),
+      );
+      final reviewDueProvider =
+          ReviewDueProvider(problemService: problemService);
+      final user = UserProvider(
+        problemsProvider,
+        foldersProvider,
+        practiceProvider,
+        reviewDueProvider: reviewDueProvider,
+        tokenProvider: tokenProvider,
+        userService: userService,
+        problemService: problemService,
+        appleAuthService: appleAuthService,
+        googleAuthService: googleAuthService,
+        kakaoAuthService: kakaoAuthService,
+      );
+      await reviewDueProvider.fetchReviewDue();
+      expect(reviewDueProvider.dueCount, 4);
+
+      await user.resetUserInfo();
+
+      expect(reviewDueProvider.data, isNull);
+      expect(reviewDueProvider.dueCount, 0);
     });
 
     test('로그인 상태와 하위 Provider 캐시를 모두 초기화한다', () async {
