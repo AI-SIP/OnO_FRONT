@@ -780,7 +780,8 @@ class _TagProblemSearchScreenState extends State<TagProblemSearchScreen> {
     final isSelected = _isSelected(problem);
     final title =
         problem.reference?.isNotEmpty == true ? problem.reference! : '제목 없음';
-    final isMobile = MediaQuery.of(context).size.width < 600;
+    // 크기만 본다. 키보드가 오르내릴 때마다 화면 전체를 다시 그리지 않게 한다.
+    final isMobile = MediaQuery.sizeOf(context).width < 600;
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),

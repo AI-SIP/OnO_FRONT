@@ -452,11 +452,20 @@ class _ProblemDetailTemplateState extends State<ProblemDetailTemplate>
                 fontWeight: FontWeight.w600,
                 color: AppColors.textPrimary,
               ),
-              const Spacer(),
-              UnderlinedText(
-                text: DateFormat('yyyy년 M월 d일')
-                    .format(widget.problemModel.displaySolvedAt),
-                fontSize: 16,
+              const SizedBox(width: 12),
+              // 글자를 크게 키우면 날짜가 줄을 넘어서, 남는 폭에 맞춰 줄인다.
+              Expanded(
+                child: Align(
+                  alignment: Alignment.centerRight,
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: UnderlinedText(
+                      text: DateFormat('yyyy년 M월 d일')
+                          .format(widget.problemModel.displaySolvedAt),
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
               ),
             ],
           ),
