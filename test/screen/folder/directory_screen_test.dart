@@ -287,7 +287,7 @@ void main() {
       await pumpDirectory(tester);
 
       expect(find.text('수학'), findsOneWidget);
-      expect(find.text('3개'), findsOneWidget);
+      expect(find.text('오답노트 3개'), findsOneWidget);
       expect(find.text('수학 문제집 p.12'), findsOneWidget);
       expect(find.textContaining('공책에 저장해 관리하세요'), findsNothing);
     });
@@ -438,9 +438,10 @@ void main() {
   });
 
   group('선택 모드', () {
-    // 예전에는 선택 모드로 들어가는 항목 이름이 바텀시트 헤더와 같은
-    // '공책 편집하기' 였다(#174). 옮기기와 지우기를 함께 하는 이름으로 바꿨다.
-    Finder deleteMenuItem() => find.text('골라서 옮기기, 지우기');
+    // 옮기기와 지우기를 한 메뉴로 묶었더니 무엇을 하는 화면인지 바로 보이지
+    // 않아서 둘로 나눴다.
+    Finder moveMenuItem() => find.text('골라서 옮기기');
+    Finder deleteMenuItem() => find.text('골라서 지우기');
 
     testWidgets('더보기 버튼을 누르면 편집 메뉴가 열린다', (tester) async {
       await pumpDirectory(tester);
@@ -449,11 +450,26 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('공책 만들기'), findsOneWidget);
-      expect(find.text('공책 정리하기'), findsOneWidget);
+      expect(find.text('공책 옮기기'), findsOneWidget);
+      expect(moveMenuItem(), findsOneWidget);
       expect(deleteMenuItem(), findsOneWidget);
     });
 
-    testWidgets('골라서 옮기기, 지우기를 누르면 선택 모드로 들어가 하단 버튼이 보인다', (tester) async {
+    testWidgets('골라서 옮기기는 옮기기 버튼만 보인다', (tester) async {
+      await pumpDirectory(tester);
+
+      await tester.tap(find.byIcon(Icons.more_vert));
+      await tester.pumpAndSettle();
+      await tester.tap(moveMenuItem());
+      await tester.pumpAndSettle();
+
+      expect(find.text('옮길 항목 선택'), findsOneWidget);
+      expect(find.text('취소하기'), findsOneWidget);
+      expect(find.text('옮기기'), findsOneWidget);
+      expect(find.text('삭제하기'), findsNothing);
+    });
+
+    testWidgets('골라서 지우기는 삭제하기 버튼만 보인다', (tester) async {
       await pumpDirectory(tester);
 
       await tester.tap(find.byIcon(Icons.more_vert));
@@ -461,10 +477,10 @@ void main() {
       await tester.tap(deleteMenuItem());
       await tester.pumpAndSettle();
 
-      expect(find.text('옮기거나 지울 항목 선택'), findsOneWidget);
+      expect(find.text('지울 항목 선택'), findsOneWidget);
       expect(find.text('취소하기'), findsOneWidget);
-      expect(find.text('옮기기'), findsOneWidget);
       expect(find.text('삭제하기'), findsOneWidget);
+      expect(find.text('옮기기'), findsNothing);
     });
 
     testWidgets('선택 모드에서 폴더를 탭하면 선택 개수가 올라간다', (tester) async {
@@ -489,12 +505,12 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(deleteMenuItem());
       await tester.pumpAndSettle();
-      expect(find.text('옮기거나 지울 항목 선택'), findsOneWidget);
+      expect(find.text('지울 항목 선택'), findsOneWidget);
 
       await tester.tap(find.byIcon(Icons.close));
       await tester.pumpAndSettle();
 
-      expect(find.text('옮기거나 지울 항목 선택'), findsNothing);
+      expect(find.text('지울 항목 선택'), findsNothing);
       expect(find.text('취소하기'), findsNothing);
     });
   });

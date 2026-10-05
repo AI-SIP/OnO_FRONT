@@ -72,6 +72,10 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
   // 오답노트 수는 클라이언트가 정확히 모르므로 개수 없이 범위만 알린다.
   static const String _folderDeleteScopeMessage = '안에 있는 공책과 오답노트도 함께 삭제돼요.';
   bool _isSelectionMode = false; // 선택 모드 활성화 여부
+
+  /// 고르기를 무엇 하려고 켰는지. 옮기기와 지우기를 한 메뉴로 묶었더니
+  /// 무엇을 하는 화면인지 바로 보이지 않아서 나눴다.
+  _SelectionAction _selectionAction = _SelectionAction.move;
   late final ProblemsProvider _problemsProvider;
 
   // 지금 목록을 받은 정렬. 다른 공책 화면에서 정렬을 바꾸고 돌아오면 다시 받는다.
@@ -734,7 +738,9 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
       backgroundColor: Colors.white,
       title: StandardText(
         text: _isSelectionMode
-            ? '옮기거나 지울 항목 선택'
+            ? (_selectionAction == _SelectionAction.move
+                ? '옮길 항목 선택'
+                : '지울 항목 선택')
             : ((_currentFolder?.parentFolder?.folderId != null &&
                     _currentFolder?.folderName != null)
                 ? _currentFolder!.folderName
@@ -1181,7 +1187,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                     _buildActionItem(
                       icon: Icons.drive_file_move_outline,
                       iconColor: themeProvider.primaryColor,
-                      title: '공책 정리하기',
+                      title: '공책 옮기기',
                       onTap: () {
                         Navigator.pop(context);
                         FirebaseAnalytics.instance.logEvent(
@@ -1193,11 +1199,28 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                     _buildActionItem(
                       icon: Icons.checklist_rounded,
                       iconColor: themeProvider.primaryColor,
-                      title: '골라서 옮기기, 지우기',
+                      title: '골라서 옮기기',
                       onTap: () {
                         Navigator.pop(context);
                         setState(() {
                           _isSelectionMode = true;
+                          _selectionAction = _SelectionAction.move;
+                        });
+                        FirebaseAnalytics.instance
+                            .logEvent(name: 'directory_enable_edit_mode');
+                      },
+                    ),
+                    const SizedBox(height: 8),
+                    _buildActionItem(
+                      icon: Icons.delete_outline,
+                      iconColor: Colors.red,
+                      title: '골라서 지우기',
+                      titleColor: Colors.red,
+                      onTap: () {
+                        Navigator.pop(context);
+                        setState(() {
+                          _isSelectionMode = true;
+                          _selectionAction = _SelectionAction.delete;
                         });
                         FirebaseAnalytics.instance
                             .logEvent(name: 'directory_enable_edit_mode');
@@ -1828,63 +1851,37 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                   overflow: TextOverflow.ellipsis,
                   maxLines: 1,
                 ),
+                const SizedBox(height: 4),
+                _buildFolderProblemCount(folder),
               ],
             ),
           ),
-          const SizedBox(width: 10),
-          _buildFolderProblemCountBadge(folder, themeProvider),
+          const SizedBox(width: 8),
+          if (!_isSelectionMode)
+            const Icon(
+              Icons.chevron_right_rounded,
+              size: 22,
+              color: AppColors.textDisabled,
+            ),
         ],
       ),
     );
   }
 
-  Widget _buildFolderProblemCountBadge(
-    FolderThumbnailModel folder,
-    ThemeHandler themeProvider,
-  ) {
-    final countText = NumberFormat.compact(locale: 'ko_KR')
-        .format(folder.problemCount < 0 ? 0 : folder.problemCount);
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isSmallPhone = screenWidth < 360;
-
-    return Container(
-      constraints: BoxConstraints(
-        minWidth: isSmallPhone ? 48 : 58,
-        maxWidth: isSmallPhone ? 64 : 84,
-      ),
-      padding: EdgeInsets.symmetric(
-        horizontal: isSmallPhone ? 8 : 10,
-        vertical: 7,
-      ),
-      decoration: BoxDecoration(
-        color: themeProvider.primaryColor.withValues(alpha: 0.09),
-        borderRadius: BorderRadius.circular(AppRadius.small),
-        border: Border.all(
-          color: themeProvider.primaryColor.withValues(alpha: 0.18),
-        ),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            Icons.description_outlined,
-            size: isSmallPhone ? 13 : 14,
-            color: themeProvider.primaryColor,
-          ),
-          const SizedBox(width: 4),
-          Flexible(
-            child: StandardText(
-              text: '$countText개',
-              fontSize: isSmallPhone ? 11 : 12,
-              color: themeProvider.primaryColor,
-              fontWeight: FontWeight.w700,
-              overflow: TextOverflow.ellipsis,
-              maxLines: 1,
-            ),
-          ),
-        ],
-      ),
+  /// 공책 이름 아래에 두는 오답노트 개수. 전에는 오른쪽에 테두리 친 상자로
+  /// 따로 세워서 이름보다 눈에 띄었다. 이름을 읽은 다음에 보는 정보라
+  /// 이름 아래 한 줄로 조용히 둔다.
+  Widget _buildFolderProblemCount(FolderThumbnailModel folder) {
+    final count = folder.problemCount < 0 ? 0 : folder.problemCount;
+    final countText = NumberFormat.compact(locale: 'ko_KR').format(count);
+    return StandardText(
+      // 하위 공책만 든 공책도 있어서 0개여도 비었다고 쓰지 않는다.
+      text: '오답노트 $countText개',
+      fontSize: 13,
+      fontFamily: 'PretendardLight',
+      color: AppColors.textTertiary,
+      overflow: TextOverflow.ellipsis,
+      maxLines: 1,
     );
   }
 
@@ -2102,58 +2099,59 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
             ),
           ),
           const SizedBox(width: 10),
-          Expanded(
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                  backgroundColor: themeProvider.primaryColor,
-                  disabledBackgroundColor: Colors.grey[300],
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(AppRadius.small),
-                  ),
-                  padding: const EdgeInsets.symmetric(vertical: 8)),
-              onPressed: selectedCount > 0 ? _moveSelectedItems : null,
-              child: const StandardText(
-                text: '옮기기',
-                fontSize: 14,
-                color: Colors.white,
+          if (_selectionAction == _SelectionAction.move)
+            Expanded(
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                    backgroundColor: themeProvider.primaryColor,
+                    disabledBackgroundColor: Colors.grey[300],
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(AppRadius.small),
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 8)),
+                onPressed: selectedCount > 0 ? _moveSelectedItems : null,
+                child: const StandardText(
+                  text: '옮기기',
+                  fontSize: 14,
+                  color: Colors.white,
+                ),
               ),
-            ),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.red,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(AppRadius.small),
-                  ),
-                  padding: const EdgeInsets.symmetric(vertical: 8)),
-              onPressed: selectedCount > 0 ? _confirmDelete : () {},
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const StandardText(
-                    text: '삭제하기',
-                    fontSize: 14,
-                    color: Colors.white,
-                  ),
-                  const SizedBox(width: 8),
-                  Container(
-                    padding: const EdgeInsets.all(4),
-                    decoration: const BoxDecoration(
+            )
+          else
+            Expanded(
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(AppRadius.small),
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 8)),
+                onPressed: selectedCount > 0 ? _confirmDelete : () {},
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const StandardText(
+                      text: '삭제하기',
+                      fontSize: 14,
                       color: Colors.white,
-                      shape: BoxShape.circle,
                     ),
-                    child: StandardText(
-                      text: '$selectedCount',
-                      fontSize: 12,
-                      color: Colors.red,
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: const BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                      ),
+                      child: StandardText(
+                        text: '$selectedCount',
+                        fontSize: 12,
+                        color: Colors.red,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
-          ),
         ],
       ),
     );
@@ -2836,3 +2834,5 @@ class _DropHighlight extends StatelessWidget {
     );
   }
 }
+
+enum _SelectionAction { move, delete }

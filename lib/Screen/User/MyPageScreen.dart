@@ -321,16 +321,14 @@ class _SettingScreenState extends State<SettingScreen> {
                           color: AppColors.textPrimary,
                           fontWeight: FontWeight.w700,
                         ),
-                        const SizedBox(height: 3),
-                        // 아래 막대는 고정된 예시라 내 기록처럼 보이지 않게
-                        // 밝혀 둔다. 좁은 폭에서도 막대는 그리므로 표시는 남긴다.
-                        StandardText(
-                          text: compact
-                              ? '아래는 예시'
-                              : '복습 추이와 약점 분석을 확인해요 · 아래는 예시',
-                          fontSize: 11,
-                          color: Colors.grey[700]!,
-                        ),
+                        if (!compact) ...[
+                          const SizedBox(height: 3),
+                          StandardText(
+                            text: '복습 추이와 약점 분석을 확인해요',
+                            fontSize: 11,
+                            color: Colors.grey[700]!,
+                          ),
+                        ],
                       ],
                     ),
                   ),

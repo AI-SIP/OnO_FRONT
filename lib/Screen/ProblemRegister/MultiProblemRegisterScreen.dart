@@ -91,7 +91,7 @@ class _MultiProblemRegisterScreenState
   bool _createPracticeSet = true;
 
   /// 등록한 뒤 AI 분석을 요청할지. 한 번에 올리는 문제 모두에 같이 적용한다.
-  bool _aiAnalysisEnabled = true;
+  bool _aiAnalysisEnabled = false;
 
   @override
   void initState() {

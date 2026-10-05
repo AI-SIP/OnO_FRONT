@@ -53,6 +53,7 @@ class _MemoEditSheetState extends State<_MemoEditSheet> {
   @override
   Widget build(BuildContext context) {
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+    final textStyle = const StandardText(text: '').getTextStyle();
     return Padding(
       padding: EdgeInsets.fromLTRB(20, 16, 20, bottomInset + 20),
       child: SafeArea(
@@ -88,8 +89,22 @@ class _MemoEditSheetState extends State<_MemoEditSheet> {
                 maxLines: 8,
                 maxLength: ProblemRegisterModel.memoMaxLength,
                 onChanged: (_) => setState(() {}),
+                // 시스템 글꼴로 나와서 앱의 다른 글과 어긋났다. 작성 화면의
+                // 입력칸과 같은 글꼴을 쓴다.
+                style: textStyle.copyWith(
+                  color: AppColors.textPrimary,
+                  fontSize: 15,
+                ),
                 decoration: InputDecoration(
                   hintText: '왜 틀렸는지, 다음엔 무엇부터 볼지 적어 두세요',
+                  hintStyle: textStyle.copyWith(
+                    color: AppColors.textTertiary,
+                    fontSize: 14,
+                  ),
+                  counterStyle: textStyle.copyWith(
+                    color: AppColors.textTertiary,
+                    fontSize: 12,
+                  ),
                   filled: true,
                   fillColor: Colors.grey[50],
                   border: OutlineInputBorder(

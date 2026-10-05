@@ -9,10 +9,18 @@ class DisplayImage extends StatelessWidget {
   final String defaultImagePath = 'assets/Icon/noImage.svg';
   final BoxFit fit;
 
+  /// 이미지 둘레 여백. 작은 썸네일은 0 을 넘겨 칸을 다 쓴다.
+  final EdgeInsetsGeometry padding;
+
+  /// 잘라 낼 때 어느 쪽을 남길지. 문제 사진은 위쪽에 문제가 시작한다.
+  final Alignment alignment;
+
   const DisplayImage({
     super.key,
     this.imagePath,
     this.fit = BoxFit.cover,
+    this.padding = const EdgeInsets.all(10.0),
+    this.alignment = Alignment.center,
   });
 
   @override
@@ -20,7 +28,7 @@ class DisplayImage extends StatelessWidget {
     return ClipRRect(
       borderRadius: BorderRadius.circular(AppRadius.medium), // 테두리 radius 설정
       child: Padding(
-        padding: const EdgeInsets.all(10.0), // 원하는 padding 값
+        padding: padding,
         child: imagePath == null || imagePath!.isEmpty
             ? Center(
                 child: SvgPicture.asset(
@@ -39,6 +47,7 @@ class DisplayImage extends StatelessWidget {
                     image: DecorationImage(
                       image: imageProvider,
                       fit: fit,
+                      alignment: alignment,
                     ),
                     //borderRadius: BorderRadius.circular(AppRadius.medium), // 이미지 둥근 모서리
                   ),
