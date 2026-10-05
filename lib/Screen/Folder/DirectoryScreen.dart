@@ -729,14 +729,15 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     return AppBar(
       elevation: 0, // AppBar 그림자 제거
       centerTitle: true, // 제목을 항상 가운데로 배치
+      titleSpacing: 8,
       backgroundColor: Colors.white,
       // 오른쪽 버튼이 왼쪽 뒤로 가기보다 넓어서, 긴 공책 이름은 가운데에서
       // 왼쪽으로 밀려 보였다. 양쪽에서 넓은 쪽만큼 비워 두고 넘치면 줄인다.
       title: ConstrainedBox(
         constraints: BoxConstraints(
           maxWidth: (MediaQuery.sizeOf(context).width -
-                  2 * ((_isSelectionMode ? 1 : 3) * 48.0 + 16) -
-                  32)
+                  2 * ((_isSelectionMode ? 1 : 2) * 48.0 + 4) -
+                  16)
               .clamp(80.0, double.infinity),
         ),
         child: StandardText(
@@ -754,7 +755,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
       ),
       actions: [
         Padding(
-          padding: const EdgeInsets.only(right: 16.0), // 우측에 여백 추가
+          padding: const EdgeInsets.only(right: 4.0),
           child: Row(
             children: [
               if (!_isSelectionMode)
@@ -773,8 +774,6 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                     );
                   },
                 ),
-              if (!_isSelectionMode)
-                _buildSortButton(themeProvider, foldersProvider),
               IconButton(
                 tooltip: _isSelectionMode ? '선택 끝내기' : '더 보기',
                 icon: Icon(
@@ -802,47 +801,52 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
   }
 
   /// 공책과 오답노트를 어느 순서로 볼지 고른다. 전에는 늘 오래된 것이 맨
-  /// 위라 최근에 쓴 오답노트를 보려면 끝까지 내려야 했다.
-  Widget _buildSortButton(
-      ThemeHandler themeProvider, FoldersProvider foldersProvider) {
+  /// 위라 최근에 쓴 오답노트를 보려면 끝까지 내려야 했다. 앱바에 버튼으로
+  /// 두니 공책 이름이 다섯 글자만 넘어도 잘려서 더 보기 메뉴로 옮겼다.
+  Future<void> _showSortSheet(
+      ThemeHandler themeProvider, FoldersProvider foldersProvider) async {
     final current = foldersProvider.bookshelfSort;
-    return PopupMenuButton<ListSort>(
-      tooltip: '정렬: ${current.label}',
-      icon: Icon(Icons.swap_vert, color: themeProvider.primaryColor),
-      color: Colors.white,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppRadius.medium),
+    final picked = await showModalBottomSheet<ListSort>(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      onSelected: (sort) {
-        if (sort == foldersProvider.bookshelfSort) return;
-        AppAnalytics.logEvent('bookshelf_sort_change', {'sort': sort.name});
-        foldersProvider.setBookshelfSort(sort);
-        _loadFolderData(keepVisible: false);
-      },
-      itemBuilder: (context) => [
-        for (final sort in ListSort.values)
-          PopupMenuItem<ListSort>(
-            value: sort,
-            child: Row(
-              children: [
-                SizedBox(
-                  width: 24,
-                  child: sort == current
-                      ? Icon(Icons.check,
-                          size: 18, color: themeProvider.primaryColor)
+      builder: (context) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const StandardText(
+                text: '정렬',
+                fontSize: 17,
+                color: AppColors.textPrimary,
+              ),
+              const SizedBox(height: 8),
+              for (final sort in ListSort.values)
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: StandardText(
+                    text: sort.label,
+                    fontSize: 15,
+                    color: AppColors.textPrimary,
+                  ),
+                  trailing: sort == current
+                      ? Icon(Icons.check, color: themeProvider.primaryColor)
                       : null,
+                  onTap: () => Navigator.pop(context, sort),
                 ),
-                const SizedBox(width: 8),
-                StandardText(
-                  text: sort.label,
-                  fontSize: 15,
-                  color: AppColors.textPrimary,
-                ),
-              ],
-            ),
+            ],
           ),
-      ],
+        ),
+      ),
     );
+    if (picked == null || picked == foldersProvider.bookshelfSort) return;
+    AppAnalytics.logEvent('bookshelf_sort_change', {'sort': picked.name});
+    foldersProvider.setBookshelfSort(picked);
+    _loadFolderData(keepVisible: false);
   }
 
   /// 목록에서 하나씩 들어오게 할 항목 수. 첫 화면에 보이는 만큼이다.
@@ -1197,6 +1201,16 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                         FirebaseAnalytics.instance.logEvent(
                             name: 'directory_path_change_button_click');
                         _showMoveFolderDialog();
+                      },
+                    ),
+                    const SizedBox(height: 8),
+                    _buildActionItem(
+                      icon: Icons.swap_vert,
+                      iconColor: themeProvider.primaryColor,
+                      title: '정렬: ${foldersProvider.bookshelfSort.label}',
+                      onTap: () {
+                        Navigator.pop(context);
+                        _showSortSheet(themeProvider, foldersProvider);
                       },
                     ),
                     const SizedBox(height: 8),
