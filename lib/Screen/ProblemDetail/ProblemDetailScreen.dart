@@ -429,18 +429,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
   List<Widget> _buildAppBarActions() {
     final themeProvider = Provider.of<ThemeHandler>(context);
 
-    final queueIndex = _folderQueueIndex;
     return [
-      // 공책에서 몇 번째 문제인지. 아래 줄을 한 줄로 줄이면서 여기로 옮겼다.
-      if (queueIndex != null)
-        Center(
-          child: StandardText(
-            text: '${queueIndex + 1} / ${widget.folderQueue!.length}'
-                '${widget.folderQueueHasMore ? '+' : ''}',
-            fontSize: 13,
-            color: AppColors.textSecondary,
-          ),
-        ),
       FutureBuilder<ProblemModel?>(
         future: _problemModelFuture,
         builder: (context, snapshot) {
@@ -1115,6 +1104,8 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
     if (index == null) return null;
     final queue = widget.folderQueue!;
     return ProblemDetailNavigation(
+      positionLabel: '${index + 1} / ${queue.length}'
+          '${widget.folderQueueHasMore ? '+' : ''}',
       onPrevious: index > 0
           ? () => _openFolderQueueProblem(queue[index - 1], isNext: false)
           : null,
