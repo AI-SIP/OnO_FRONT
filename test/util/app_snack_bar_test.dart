@@ -64,10 +64,10 @@ void main() {
     testWidgets('안전한 메시지는 그대로 토스트에 노출된다', (tester) async {
       await pumpAppWithMessenger(tester);
 
-      AppSnackBar.showError('폴더 이름은 20자 이하여야 합니다.');
+      AppSnackBar.showError('폴더 이름은 20자 이하여야 해요.');
       await tester.pump();
 
-      expect(find.text('폴더 이름은 20자 이하여야 합니다.'), findsOneWidget);
+      expect(find.text('폴더 이름은 20자 이하여야 해요.'), findsOneWidget);
 
       await detachMessenger(tester);
     });
@@ -78,7 +78,7 @@ void main() {
       AppSnackBar.showError('SocketException: Failed host lookup');
       await tester.pump();
 
-      expect(find.text('네트워크 연결이 원활하지 않습니다. 인터넷 상태를 확인해주세요.'), findsOneWidget);
+      expect(find.text('네트워크 연결이 원활하지 않아요. 인터넷 상태를 확인해 주세요.'), findsOneWidget);
 
       await detachMessenger(tester);
     });

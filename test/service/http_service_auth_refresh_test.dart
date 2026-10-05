@@ -97,7 +97,7 @@ void main() {
       final client = TestHttpClient.sequence([
         errorResponse(statusCode: 401, errorCode: 1007, message: '인증 실패'),
         errorResponse(
-            statusCode: 401, errorCode: 1006, message: '리프레시 토큰이 만료되었습니다.'),
+            statusCode: 401, errorCode: 1006, message: '리프레시 토큰이 만료됐어요.'),
       ]);
       final tokenProvider = buildMockTokenProvider();
 
@@ -121,7 +121,7 @@ void main() {
     // "알 수 없는 오류" 만 보였다. 그래서 파일이 아니라 만드는 방법을 받는다.
     test('1007 을 받으면 파일을 다시 만들어 재시도하고 성공한다', () async {
       final client = TestHttpClient.sequence([
-        errorResponse(statusCode: 401, errorCode: 1007, message: '인증이 실패했습니다.'),
+        errorResponse(statusCode: 401, errorCode: 1007, message: '인증이 실패했어요.'),
         jsonResponse(apiEnvelope({'ok': true})),
       ]);
       final tokenProvider = buildMockTokenProvider();
@@ -162,7 +162,7 @@ void main() {
     test('PATCH multipart 도 파일을 다시 만들어 재시도한다', () async {
       final client = TestHttpClient.sequence([
         errorResponse(
-            statusCode: 401, errorCode: 1005, message: '엑세스 토큰이 만료되었습니다.'),
+            statusCode: 401, errorCode: 1005, message: '엑세스 토큰이 만료됐어요.'),
         jsonResponse(apiEnvelope({'thumbnailUrl': 'https://cdn/t.png'})),
       ]);
       final tokenProvider = buildMockTokenProvider();
@@ -192,7 +192,7 @@ void main() {
 
     test('재시도까지 인증 오류면 알 수 없는 오류가 아니라 잠시 후 다시 시도로 끝난다', () async {
       final client = TestHttpClient.respondWith(
-        errorResponse(statusCode: 401, errorCode: 1007, message: '인증이 실패했습니다.'),
+        errorResponse(statusCode: 401, errorCode: 1007, message: '인증이 실패했어요.'),
       );
       final tokenProvider = buildMockTokenProvider();
 
@@ -212,7 +212,7 @@ void main() {
           isA<ServerException>().having(
             (e) => e.getUserMessage(),
             '사용자에게 보이는 메시지',
-            '서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.',
+            '서버 오류가 발생했어요. 잠시 후 다시 시도해 주세요.',
           ),
         ),
       );
@@ -314,7 +314,7 @@ void main() {
           return jsonResponse(apiEnvelope({'ok': true}));
         }
         return errorResponse(
-            statusCode: 401, errorCode: 1007, message: '인증이 실패했습니다.');
+            statusCode: 401, errorCode: 1007, message: '인증이 실패했어요.');
       });
       final httpService = HttpService(
         client: client.client,
@@ -355,7 +355,7 @@ void main() {
           throw const SocketException('연결 실패');
         }
         return errorResponse(
-            statusCode: 401, errorCode: 1007, message: '인증이 실패했습니다.');
+            statusCode: 401, errorCode: 1007, message: '인증이 실패했어요.');
       });
       final httpService = HttpService(
         client: client.client,
@@ -400,7 +400,7 @@ void main() {
         }
         // 블랙리스트 조회가 실패하는 동안에는 새 토큰으로도 1007 이 온다.
         return errorResponse(
-            statusCode: 401, errorCode: 1007, message: '인증이 실패했습니다.');
+            statusCode: 401, errorCode: 1007, message: '인증이 실패했어요.');
       });
       final httpService = HttpService(
         client: client.client,
@@ -430,11 +430,11 @@ void main() {
           return errorResponse(
             statusCode: 400,
             errorCode: 1001,
-            message: '유효하지 않은 리프레시토큰입니다.',
+            message: '유효하지 않은 리프레시토큰이에요.',
           );
         }
         return errorResponse(
-            statusCode: 401, errorCode: 1007, message: '인증이 실패했습니다.');
+            statusCode: 401, errorCode: 1007, message: '인증이 실패했어요.');
       });
       final httpService = HttpService(
         client: client.client,
@@ -464,11 +464,11 @@ void main() {
           return errorResponse(
             statusCode: 401,
             errorCode: 1002,
-            message: '리프레시 토큰 정보를 찾을 수 없습니다.',
+            message: '리프레시 토큰 정보를 찾을 수 없어요.',
           );
         }
         return errorResponse(
-            statusCode: 401, errorCode: 1007, message: '인증이 실패했습니다.');
+            statusCode: 401, errorCode: 1007, message: '인증이 실패했어요.');
       });
       final httpService = HttpService(
         client: client.client,

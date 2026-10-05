@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:ono/Module/Motion/PressableScale.dart';
 import 'package:ono/Module/Motion/Skeleton.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:ono/Model/Common/LoginStatus.dart';
@@ -19,6 +18,8 @@ import 'package:ono/Provider/UserProvider.dart';
 import 'package:ono/Screen/Folder/DirectoryScreen.dart';
 
 import '../../helpers/helpers.dart';
+import 'package:ono/Model/Common/ListSort.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class _FakeUserProvider extends Mock implements UserProvider {}
 
@@ -36,6 +37,7 @@ void main() {
   setUpOnoWidgetTest();
 
   setUpAll(() {
+    registerFallbackValue(ListSort.newest);
     registerFallbackValue(_FolderRegisterModelFake());
   });
 
@@ -120,6 +122,7 @@ void main() {
           folderId: any(named: 'folderId'),
           cursor: any(named: 'cursor'),
           size: any(named: 'size'),
+          sort: any(named: 'sort'),
         )).thenAnswer((_) async => PaginatedResponse(
           content: subfolders,
           nextCursor: subfolderHasNext ? 999 : null,
@@ -130,6 +133,7 @@ void main() {
           folderId: any(named: 'folderId'),
           cursor: any(named: 'cursor'),
           size: any(named: 'size'),
+          sort: any(named: 'sort'),
         )).thenAnswer((_) async => PaginatedResponse(
           content: problems,
           nextCursor: problemHasNext ? 999 : null,
@@ -194,6 +198,47 @@ void main() {
     });
   });
 
+  group('정렬', () {
+    testWidgets('처음에는 최근 등록순으로 받는다', (tester) async {
+      await pumpDirectory(tester);
+
+      verify(() => problemService.getFolderProblemsV2(
+            folderId: any(named: 'folderId'),
+            cursor: any(named: 'cursor'),
+            size: any(named: 'size'),
+            sort: ListSort.newest,
+          )).called(greaterThanOrEqualTo(1));
+    });
+
+    testWidgets('오래된순을 고르면 기억하고 그 순서로 다시 받는다', (tester) async {
+      await pumpDirectory(tester);
+
+      // 정렬은 앱바가 아니라 더 보기 메뉴에 있다.
+      await tester.tap(find.byIcon(Icons.more_vert));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('정렬: 최근 등록순'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('오래된순'));
+      await tester.pumpAndSettle();
+
+      expect(foldersProvider.bookshelfSort, ListSort.oldest);
+      verify(() => folderService.getSubfoldersV2(
+            folderId: any(named: 'folderId'),
+            cursor: any(named: 'cursor'),
+            size: any(named: 'size'),
+            sort: ListSort.oldest,
+          )).called(1);
+      verify(() => problemService.getFolderProblemsV2(
+            folderId: any(named: 'folderId'),
+            cursor: any(named: 'cursor'),
+            size: any(named: 'size'),
+            sort: ListSort.oldest,
+          )).called(1);
+      final prefs = await SharedPreferences.getInstance();
+      expect(prefs.getString('bookshelf_sort'), 'oldest');
+    });
+  });
+
   group('폴더/문제 목록', () {
     testWidgets('초기 로딩 중에는 목록 자리에 스켈레톤이 보인다', (tester) async {
       // 루트 폴더 조회에 지연을 줘서, 응답이 오기 전 로딩 상태를 붙잡는다.
@@ -221,6 +266,17 @@ void main() {
       await pumpDirectory(tester);
 
       expect(find.textContaining('공책에 저장해 관리하세요'), findsOneWidget);
+      expect(find.text('오답노트 쓰기'), findsOneWidget);
+    });
+
+    testWidgets('추천 복습이 0개여도 홈에 들어갈 줄을 남긴다', (tester) async {
+      stubDefaultFolderLoad(
+        problems: [buildProblem(problemId: 100, reference: '수학 문제집 p.12')],
+      );
+
+      await pumpDirectory(tester);
+
+      expect(find.text('지금 추천할 복습 문제가 없어요'), findsOneWidget);
     });
 
     testWidgets('하위 폴더와 문제가 있으면 폴더명과 문제 수 배지, 문제 제목이 보인다', (tester) async {
@@ -234,9 +290,96 @@ void main() {
       await pumpDirectory(tester);
 
       expect(find.text('수학'), findsOneWidget);
-      expect(find.text('3개'), findsOneWidget);
+      expect(find.text('오답노트 3개'), findsOneWidget);
       expect(find.text('수학 문제집 p.12'), findsOneWidget);
       expect(find.textContaining('공책에 저장해 관리하세요'), findsNothing);
+    });
+
+    testWidgets('당겨서 새로고침하는 동안 목록을 비우지 않는다', (tester) async {
+      stubDefaultFolderLoad(
+        problems: [buildProblem(problemId: 100, reference: '수학 문제집 p.12')],
+      );
+      await pumpDirectory(tester);
+
+      // 다시 받는 응답을 늦춰서 받는 중인 화면을 붙잡는다.
+      when(() => problemService.getFolderProblemsV2(
+            folderId: any(named: 'folderId'),
+            cursor: any(named: 'cursor'),
+            size: any(named: 'size'),
+            sort: any(named: 'sort'),
+          )).thenAnswer((_) async {
+        await Future<void>.delayed(const Duration(seconds: 2));
+        return PaginatedResponse(
+          content: [buildProblem(problemId: 100, reference: '수학 문제집 p.12')],
+          nextCursor: null,
+          hasNext: false,
+          size: 1,
+        );
+      });
+      await tester.fling(find.text('수학 문제집 p.12'), const Offset(0, 400), 1000);
+      // 새로고침이 시작되고 목록 응답은 아직 오지 않은 때.
+      for (var i = 0; i < 10; i++) {
+        await tester.pump(const Duration(milliseconds: 100));
+      }
+      verify(() => problemService.getFolderProblemsV2(
+            folderId: any(named: 'folderId'),
+            cursor: any(named: 'cursor'),
+            size: any(named: 'size'),
+            sort: any(named: 'sort'),
+          )).called(greaterThanOrEqualTo(1));
+
+      expect(find.byType(SkeletonList), findsNothing);
+      expect(find.text('수학 문제집 p.12'), findsOneWidget);
+
+      await tester.pump(const Duration(seconds: 2));
+      await tester.pumpAndSettle();
+      expect(find.text('수학 문제집 p.12'), findsOneWidget);
+    });
+
+    testWidgets('첫 쪽이 화면을 다 채우지 못하면 스크롤하지 않아도 다음 쪽을 받는다', (tester) async {
+      stubDefaultFolderLoad(
+        problems: [buildProblem(problemId: 100, reference: '첫 쪽 문제')],
+        problemHasNext: true,
+      );
+      when(() => problemService.getFolderProblemsV2(
+            folderId: any(named: 'folderId'),
+            cursor: 999,
+            size: any(named: 'size'),
+            sort: any(named: 'sort'),
+          )).thenAnswer((_) async => PaginatedResponse(
+            content: [buildProblem(problemId: 101, reference: '둘째 쪽 문제')],
+            nextCursor: null,
+            hasNext: false,
+            size: 1,
+          ));
+
+      await pumpDirectory(tester, surfaceSize: OnoSurface.tablet);
+
+      verify(() => problemService.getFolderProblemsV2(
+            folderId: any(named: 'folderId'),
+            cursor: 999,
+            size: any(named: 'size'),
+            sort: any(named: 'sort'),
+          )).called(1);
+      expect(find.text('둘째 쪽 문제'), findsOneWidget);
+    });
+
+    testWidgets('상세에서 문제를 다시 받으면 책장 카드도 그 값으로 바뀐다', (tester) async {
+      stubDefaultFolderLoad(
+        problems: [buildProblem(problemId: 100, reference: '고치기 전 제목')],
+      );
+      await pumpDirectory(tester);
+      expect(find.text('고치기 전 제목'), findsOneWidget);
+
+      when(() => problemService.getProblem(100,
+              showErrorSnackBar: any(named: 'showErrorSnackBar')))
+          .thenAnswer(
+              (_) async => buildProblem(problemId: 100, reference: '고친 제목'));
+      await problemsProvider.fetchProblem(100);
+      await tester.pumpAndSettle();
+
+      expect(find.text('고친 제목'), findsOneWidget);
+      expect(find.text('고치기 전 제목'), findsNothing);
     });
 
     testWidgets('폴더 조회가 실패하면 에러 스낵바가 뜬다', (tester) async {
@@ -298,16 +441,8 @@ void main() {
   });
 
   group('선택 모드', () {
-    // 편집 메뉴의 삭제(선택 모드 진입) 항목은 화면에 아이콘(delete_outline)으로만
-    // 유일하게 식별된다. 텍스트로 찾으면 바텀시트 헤더 "공책 편집하기"와
-    // 라벨이 겹친다 — TODO(#174): 실제 버그. lib/Screen/Folder/DirectoryScreen.dart
-    // 의 _showActionDialog 안, 삭제 액션 아이템(Icons.delete_outline) 의
-    // title 이 '공책 편집하기'로 돼 있어 바텀시트 헤더 문구와 중복된다.
-    // (아이템 자체는 선택 모드 진입 → 삭제 기능이라 '삭제하기' 류의 문구가 맞아 보인다.)
-    Finder deleteMenuItem() => find.ancestor(
-          of: find.byIcon(Icons.delete_outline),
-          matching: find.byType(PressableScale),
-        );
+    // 공책 옮기기가 따로 있어서 선택 모드는 지우기만 한다.
+    Finder deleteMenuItem() => find.text('여러 개 삭제하기');
 
     testWidgets('더보기 버튼을 누르면 편집 메뉴가 열린다', (tester) async {
       await pumpDirectory(tester);
@@ -315,12 +450,13 @@ void main() {
       await tester.tap(find.byIcon(Icons.more_vert));
       await tester.pumpAndSettle();
 
-      expect(find.text('공책 추가하기'), findsOneWidget);
-      expect(find.text('공책 정리하기'), findsOneWidget);
+      expect(find.text('공책 만들기'), findsOneWidget);
+      expect(find.text('공책 옮기기'), findsOneWidget);
       expect(deleteMenuItem(), findsOneWidget);
+      expect(find.text('골라서 옮기기'), findsNothing);
     });
 
-    testWidgets('공책 편집하기를 누르면 선택 모드로 들어가 하단 버튼이 보인다', (tester) async {
+    testWidgets('여러 개 삭제하기를 누르면 삭제하기 버튼만 보인다', (tester) async {
       await pumpDirectory(tester);
 
       await tester.tap(find.byIcon(Icons.more_vert));
@@ -331,6 +467,7 @@ void main() {
       expect(find.text('삭제할 항목 선택'), findsOneWidget);
       expect(find.text('취소하기'), findsOneWidget);
       expect(find.text('삭제하기'), findsOneWidget);
+      expect(find.text('옮기기'), findsNothing);
     });
 
     testWidgets('선택 모드에서 폴더를 탭하면 선택 개수가 올라간다', (tester) async {
@@ -365,14 +502,14 @@ void main() {
     });
   });
 
-  group('공책 생성', () {
+  group('공책 만들기', () {
     testWidgets('빠른 추가 FAB 을 열면 세 가지 옵션이 보인다', (tester) async {
       await pumpDirectory(tester);
 
       await tester.tap(find.byKey(const ValueKey('quick_fab_closed')));
       await tester.pumpAndSettle();
 
-      expect(find.text('공책 추가'), findsOneWidget);
+      expect(find.text('공책 만들기'), findsOneWidget);
       expect(find.text('오답노트 1장 작성'), findsOneWidget);
       expect(find.text('오답노트 여러장 작성'), findsOneWidget);
     });
@@ -385,7 +522,7 @@ void main() {
 
       await tester.tap(find.byKey(const ValueKey('quick_fab_closed')));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('공책 추가'));
+      await tester.tap(find.text('공책 만들기'));
       await tester.pumpAndSettle();
 
       await tester.enterText(find.byType(TextField), '영어');
@@ -400,7 +537,7 @@ void main() {
 
       await tester.tap(find.byKey(const ValueKey('quick_fab_closed')));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('공책 추가'));
+      await tester.tap(find.text('공책 만들기'));
       await tester.pumpAndSettle();
 
       await tester.enterText(find.byType(TextField), '');

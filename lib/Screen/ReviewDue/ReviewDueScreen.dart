@@ -6,9 +6,11 @@ import 'package:ono/Module/Problem/ProblemThumbnailCard.dart';
 import 'package:ono/Module/Text/StandardText.dart';
 import 'package:ono/Module/Theme/ThemeHandler.dart';
 import 'package:ono/Provider/ReviewDueProvider.dart';
+import 'package:ono/Provider/ScreenIndexProvider.dart';
 import 'package:ono/Screen/ProblemDetail/ProblemDetailScreen.dart';
 import 'package:ono/Service/Api/Problem/ProblemService.dart';
 import 'package:ono/Util/AppAnalytics.dart';
+import 'package:ono/Util/ReviewScheduleText.dart';
 import 'package:provider/provider.dart';
 import '../../Module/Motion/AppHaptic.dart';
 import '../../Module/Motion/PressableScale.dart';
@@ -18,14 +20,18 @@ import '../../Module/Design/AppRadius.dart';
 import '../../Module/Design/AppColors.dart';
 
 class ReviewDueScreen extends StatefulWidget {
-  const ReviewDueScreen({super.key});
+  const ReviewDueScreen({super.key, this.problemService});
+
+  /// 테스트에서 가짜 서비스를 넣을 때만 쓴다. 없으면 진짜 서비스를 만든다.
+  final ProblemService? problemService;
 
   @override
   State<ReviewDueScreen> createState() => _ReviewDueScreenState();
 }
 
 class _ReviewDueScreenState extends State<ReviewDueScreen> {
-  final ProblemService _problemService = ProblemService();
+  late final ProblemService _problemService =
+      widget.problemService ?? ProblemService();
   Map<int, ProblemModel> _problemDetails = {};
 
   @override
@@ -34,10 +40,10 @@ class _ReviewDueScreenState extends State<ReviewDueScreen> {
     FirebaseAnalytics.instance.logEvent(name: 'review_due_screen_view');
     AppAnalytics.logScreenView('ReviewDueScreen');
     WidgetsBinding.instance.addPostFrameCallback((_) async {
+      // 받아 둔 목록이 있으면 먼저 보이고 늘 다시 받는다. 전에는 목록이 없을
+      // 때만 받아서, 다른 곳에서 복습하고 와도 이미 푼 문제가 그대로 남았다.
       final provider = Provider.of<ReviewDueProvider>(context, listen: false);
-      if (provider.data == null) {
-        await provider.fetchReviewDue();
-      }
+      await provider.fetchReviewDue();
       if (provider.data != null) {
         await _loadProblemDetails(provider.data!.problems);
       }
@@ -99,22 +105,32 @@ class _ReviewDueScreenState extends State<ReviewDueScreen> {
               spacing: 12,
               padding: EdgeInsets.fromLTRB(20, 16, 20, 20),
             )
-          : data == null || data.problems.isEmpty
-              ? _buildEmptyState(themeProvider)
-              : RefreshIndicator(
-                  color: themeProvider.primaryColor,
-                  onRefresh: _refresh,
-                  child: ListView(
-                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
-                    children: [
-                      _buildHeader(data, themeProvider),
-                      const SizedBox(height: 16),
-                      ...data.problems.map(
-                        (p) => _buildProblemTile(context, p, themeProvider),
+          : data == null && reviewDueProvider.hasError
+              ? _buildErrorState(themeProvider)
+              : data == null || data.problems.isEmpty
+                  ? _buildEmptyState(themeProvider)
+                  : RefreshIndicator(
+                      color: themeProvider.primaryColor,
+                      onRefresh: _refresh,
+                      child: ListView(
+                        padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
+                        children: [
+                          _buildHeader(data, themeProvider),
+                          const SizedBox(height: 12),
+                          _buildStartButton(data, themeProvider),
+                          const SizedBox(height: 16),
+                          ...data.problems.map(
+                            (p) => _buildProblemTile(
+                              context,
+                              p,
+                              data.problems.map((e) => e.problemId).toList(),
+                              data.requiredCorrectCount,
+                              themeProvider,
+                            ),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                ),
+                    ),
     );
   }
 
@@ -146,6 +162,14 @@ class _ReviewDueScreenState extends State<ReviewDueScreen> {
                     ),
                   ],
                 ),
+                if (data.requiredCorrectCount != null) ...[
+                  const SizedBox(height: 3),
+                  StandardText(
+                    text: '${data.requiredCorrectCount}번 맞히면 추천에서 빠져요',
+                    fontSize: 12,
+                    color: AppColors.textSecondary,
+                  ),
+                ],
                 if (data.overdueCount > 0) ...[
                   const SizedBox(height: 3),
                   Row(
@@ -172,11 +196,55 @@ class _ReviewDueScreenState extends State<ReviewDueScreen> {
     );
   }
 
+  /// 추천 목록 순서대로 첫 문제부터 연다. 한 문제를 저장하면 다음 문제를
+  /// 바로 풀지 묻는다.
+  Widget _buildStartButton(ReviewDueResponse data, ThemeHandler themeProvider) {
+    final queue = data.problems.map((p) => p.problemId).toList();
+    return SizedBox(
+      width: double.infinity,
+      height: 48,
+      child: ElevatedButton.icon(
+        onPressed: () async {
+          AppAnalytics.logEvent('review_due_start', {'count': queue.length});
+          await Navigator.push(
+            context,
+            TossPageRoute(
+              builder: (_) => ProblemDetailScreen(
+                problemId: queue.first,
+                reviewQueue: queue,
+              ),
+            ),
+          );
+          if (!mounted) return;
+          _refresh();
+        },
+        icon: const Icon(Icons.play_arrow_rounded, color: Colors.white),
+        label: const StandardText(
+          text: '추천 문제부터 풀기',
+          fontSize: 15,
+          fontWeight: FontWeight.w600,
+          color: Colors.white,
+        ),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: themeProvider.primaryColor,
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppRadius.medium),
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildProblemTile(
     BuildContext context,
     ReviewDueProblemModel problem,
+    List<int> queue,
+    int? requiredCorrectCount,
     ThemeHandler themeProvider,
   ) {
+    final correctCount = problem.correctCount;
+    final dueChip = ReviewScheduleText.dueChip(problem.nextReviewAt);
     final detail = _problemDetails[problem.problemId];
     final imageUrl = detail?.problemImageDataList?.isNotEmpty == true
         ? detail!.problemImageDataList!.first.imageUrl
@@ -203,7 +271,10 @@ class _ReviewDueScreenState extends State<ReviewDueScreen> {
           await Navigator.push(
             context,
             TossPageRoute(
-              builder: (_) => ProblemDetailScreen(problemId: problem.problemId),
+              builder: (_) => ProblemDetailScreen(
+                problemId: problem.problemId,
+                reviewQueue: queue,
+              ),
             ),
           );
           if (!mounted) return;
@@ -213,17 +284,92 @@ class _ReviewDueScreenState extends State<ReviewDueScreen> {
           title: title,
           imageUrl: imageUrl,
           tags: detail?.tags ?? const [],
-          solveCount: detail?.solveCount ?? problem.consecutiveCorrectCount,
+          // 추천에서 빠지기까지 몇 번 남았는지 보이도록 막대를 맞힌 횟수로 채운다.
+          // 예전 서버라 맞힌 횟수가 없으면 전처럼 푼 횟수로 채운다.
+          solveCount: correctCount ??
+              detail?.solveCount ??
+              problem.consecutiveCorrectCount,
           lastSolvedAt: detail?.lastSolvedAt,
           themeProvider: themeProvider,
+          progressLabel: correctCount != null && requiredCorrectCount != null
+              ? '정답 $correctCount/$requiredCorrectCount'
+              : null,
+          statusLabel: dueChip,
+          statusColor: dueChip == null || dueChip == '오늘'
+              ? themeProvider.primaryColor
+              : Colors.orange.shade700,
+        ),
+      ),
+    );
+  }
+
+  /// 처음 불러오다 실패했을 때. 전에는 데이터가 비어 `추천 복습 문제가 없어요` 가
+  /// 떴고 다시 시도할 방법도 없었다.
+  Widget _buildErrorState(ThemeHandler themeProvider) {
+    return _buildRefreshableCenter(
+      themeProvider,
+      Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(
+            Icons.wifi_off_rounded,
+            size: 56,
+            color: AppColors.textTertiary,
+          ),
+          const SizedBox(height: 16),
+          const StandardText(
+            text: '추천 복습을 불러오지 못했어요',
+            fontSize: 16,
+            color: AppColors.textSecondary,
+          ),
+          const SizedBox(height: 6),
+          const StandardText(
+            text: '인터넷 연결을 확인하고 다시 시도해 주세요',
+            fontSize: 13,
+            color: AppColors.textTertiary,
+          ),
+          const SizedBox(height: 18),
+          OutlinedButton(
+            onPressed: _refresh,
+            style: OutlinedButton.styleFrom(
+              foregroundColor: themeProvider.primaryColor,
+              side: BorderSide(
+                  color: themeProvider.primaryColor.withValues(alpha: 0.5)),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+            ),
+            child: StandardText(
+              text: '다시 시도',
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: themeProvider.primaryColor,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// 빈 화면에서도 당겨서 새로고침이 되도록, 가운데 내용을 스크롤 가능한 칸에 둔다.
+  Widget _buildRefreshableCenter(ThemeHandler themeProvider, Widget child) {
+    return RefreshIndicator(
+      color: themeProvider.primaryColor,
+      onRefresh: _refresh,
+      child: LayoutBuilder(
+        builder: (context, constraints) => SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: constraints.maxHeight),
+            child: Center(child: child),
+          ),
         ),
       ),
     );
   }
 
   Widget _buildEmptyState(ThemeHandler themeProvider) {
-    return Center(
-      child: Column(
+    return _buildRefreshableCenter(
+      themeProvider,
+      Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(
@@ -238,10 +384,38 @@ class _ReviewDueScreenState extends State<ReviewDueScreen> {
             color: AppColors.textSecondary,
           ),
           const SizedBox(height: 6),
+          // 전에는 '문제를 풀면 자동으로 복습 일정이 생겨요' 라고 했는데, 일정은
+          // 오답노트를 쓴 뒤 다시 풀어 기록을 남겨야 생긴다.
           const StandardText(
-            text: '문제를 풀면 자동으로 복습 일정이 생겨요',
+            text: '오답노트를 한 번 다시 풀어 보면 다음 복습일이 잡혀요.\n'
+                '그날이 되면 여기에 보여 드려요.',
             fontSize: 13,
             color: AppColors.textTertiary,
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 20),
+          OutlinedButton(
+            onPressed: () {
+              AppAnalytics.logEvent('review_due_empty_action', {});
+              Provider.of<ScreenIndexProvider>(context, listen: false)
+                  .setSelectedIndex(0);
+              Navigator.of(context).popUntil((route) => route.isFirst);
+            },
+            style: OutlinedButton.styleFrom(
+              foregroundColor: themeProvider.primaryColor,
+              side: BorderSide(
+                  color: themeProvider.primaryColor.withValues(alpha: 0.5)),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppRadius.medium),
+              ),
+            ),
+            child: StandardText(
+              text: '책장에서 다시 풀 문제 고르기',
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: themeProvider.primaryColor,
+            ),
           ),
         ],
       ),

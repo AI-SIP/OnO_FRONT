@@ -14,10 +14,15 @@ import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/MissionProvider.dart';
 import '../../Provider/PracticeNoteProvider.dart';
 import '../../Provider/ProblemsProvider.dart';
+import '../../Provider/ReviewDueProvider.dart';
 import '../../Provider/UserProvider.dart';
 import '../../Service/Api/Problem/ProblemSolveService.dart';
+import '../../Service/HomeWidget/HomeWidgetSyncService.dart';
 import '../../Util/AppAnalytics.dart';
+import '../../Util/NotificationService.dart';
+import '../../Util/ReviewScheduleText.dart';
 import 'ProblemSolveRegisterTemplate.dart';
+import '../../Module/Dialog/UnsavedChangesScope.dart';
 import '../../Module/Design/AppRadius.dart';
 
 class ProblemSolveRegisterScreen extends StatefulWidget {
@@ -43,6 +48,13 @@ class _ProblemSolveRegisterScreenState
     extends State<ProblemSolveRegisterScreen> {
   final GlobalKey<ProblemSolveRegisterTemplateState> _templateKey =
       GlobalKey<ProblemSolveRegisterTemplateState>();
+  final ValueNotifier<bool> _unsavedChanges = ValueNotifier(false);
+
+  @override
+  void dispose() {
+    _unsavedChanges.dispose();
+    super.dispose();
+  }
 
   @override
   void initState() {
@@ -54,21 +66,28 @@ class _ProblemSolveRegisterScreenState
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeHandler>(context);
 
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: _buildAppBar(themeProvider),
-      body: Column(
-        children: [
-          Expanded(
-            child: ProblemSolveRegisterTemplate(
-              key: _templateKey,
-              problemId: widget.problemId,
-              initialSolutionImages: widget.initialSolutionImages,
-              initialTimeSpentSeconds: widget.initialTimeSpentSeconds,
+    return UnsavedChangesScope(
+      hasChanges: _unsavedChanges,
+      source: 'problem_solve_register',
+      title: '복습 기록을 그만둘까요?',
+      description: '지금 나가면 이번 복습 기록과 풀이 이미지가 저장되지 않아요.',
+      child: Scaffold(
+        backgroundColor: Colors.white,
+        appBar: _buildAppBar(themeProvider),
+        body: Column(
+          children: [
+            Expanded(
+              child: ProblemSolveRegisterTemplate(
+                key: _templateKey,
+                problemId: widget.problemId,
+                initialSolutionImages: widget.initialSolutionImages,
+                initialTimeSpentSeconds: widget.initialTimeSpentSeconds,
+                unsavedChanges: _unsavedChanges,
+              ),
             ),
-          ),
-          _buildSubmitButton(context, themeProvider),
-        ],
+            _buildSubmitButton(context, themeProvider),
+          ],
+        ),
       ),
     );
   }
@@ -76,7 +95,7 @@ class _ProblemSolveRegisterScreenState
   AppBar _buildAppBar(ThemeHandler themeProvider) {
     return AppBar(
       title: StandardText(
-        text: '문제 복습 인증',
+        text: '복습 기록',
         fontSize: 18,
         color: themeProvider.primaryColor,
       ),
@@ -112,7 +131,7 @@ class _ProblemSolveRegisterScreenState
             elevation: 0,
           ),
           child: const StandardText(
-            text: "문제 복습 완료",
+            text: '복습 저장하기',
             fontSize: 16,
             fontWeight: FontWeight.bold,
             color: Colors.white,
@@ -129,9 +148,16 @@ class _ProblemSolveRegisterScreenState
     final practiceProvider =
         Provider.of<ProblemPracticeProvider>(context, listen: false);
     final userProvider = Provider.of<UserProvider>(context, listen: false);
+    final reviewDueProvider =
+        Provider.of<ReviewDueProvider>(context, listen: false);
     final missionProvider =
         Provider.of<MissionProvider>(context, listen: false);
     final problemSolveService = ProblemSolveService();
+
+    // 결과를 고르지 않았으면 결과 칸으로 올려 보내고 저장하지 않는다.
+    if (_templateKey.currentState?.requireAnswerStatus() == false) {
+      return;
+    }
 
     // 템플릿에서 데이터 가져오기
     final reviewData = _templateKey.currentState?.getReviewData();
@@ -168,8 +194,18 @@ class _ProblemSolveRegisterScreenState
         );
       }
 
-      // 3. 문제 정보 갱신
+      // 3. 문제 정보 갱신. 서버가 다시 잡은 다음 복습일도 여기서 받는다.
       await problemsProvider.fetchProblem(widget.problemId);
+      final savedProblem = await problemsProvider.getProblem(widget.problemId);
+
+      // 추천 복습 목록과 홈의 추천 개수를 맞춘다. 전에는 복습해도 그대로였다.
+      unawaited(reviewDueProvider.fetchReviewDue());
+
+      // 회차 안에서 푼 것이면 완료 화면이 실제로 푼 수를 셀 수 있게 남긴다.
+      practiceProvider.recordSessionResult(
+        widget.problemId,
+        reviewData['answerStatus'] as AnswerStatus,
+      );
 
       // 4. 복습 세트 갱신
       if (practiceProvider.currentPracticeNote != null) {
@@ -192,7 +228,7 @@ class _ProblemSolveRegisterScreenState
         'has_reflection': reviewData['reflection'] != null,
         'image_count': solutionImages.length,
         'via_canvas': widget.initialTimeSpentSeconds != null,
-        'in_practice_set': practiceProvider.currentPracticeNote != null,
+        'in_practice_set': practiceProvider.isPracticing,
       });
 
       // 5. 유저 정보 갱신 (경험치 업데이트)
@@ -207,6 +243,9 @@ class _ProblemSolveRegisterScreenState
       // 로딩이 더 떠 있는다. 미션은 늦게 맞아도 되지만 저장은 그렇지 않다.
       unawaited(missionProvider.fetchMissions());
 
+      // 홈 화면 위젯의 오늘 칸과 복습 수를 새로 맞춘다. 기다리지 않는다.
+      unawaited(HomeWidgetSyncService.instance.sync(force: true));
+
       LoadingDialog.hide(context);
 
       if (mounted) {
@@ -215,19 +254,27 @@ class _ProblemSolveRegisterScreenState
 
         SnackBarDialog.showSnackBar(
           context: context,
-          message: '복습이 완료되었습니다!',
+          message: ReviewScheduleText.afterSave(
+            hasReviewSchedule: savedProblem.hasReviewSchedule,
+            nextReviewAt: savedProblem.nextReviewAt,
+          ),
           backgroundColor: themeProvider.primaryColor,
         );
 
         // 화면 갱신
         widget.onRefresh();
+
+        // 다음 복습일을 막 알려 준 자리라 알림 권한을 여기서 묻는다. 이미
+        // 답했으면 아무 일도 없다.
+        unawaited(NotificationService.instance
+            .requestPermissionIfNeeded(source: 'review_save'));
       }
     } catch (e) {
       if (mounted) {
         LoadingDialog.hide(context);
         SnackBarDialog.showSnackBar(
           context: context,
-          message: '복습 기록 저장에 실패했습니다. 잠시 후 다시 시도해주세요.',
+          message: '복습 기록 저장에 실패했어요. 잠시 후 다시 시도해 주세요.',
           backgroundColor: Colors.red,
         );
       }

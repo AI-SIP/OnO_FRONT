@@ -1,6 +1,5 @@
 import 'dart:io';
 
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -21,18 +20,22 @@ import '../../Module/Motion/TossDialog.dart';
 import '../../Module/Design/AppColors.dart';
 import '../../Module/Design/AppRadius.dart';
 import '../../Module/Design/AppSpacing.dart';
-import '../../Util/AppAnalytics.dart';
+import '../../Module/Image/FullScreenImage.dart';
 
 class ProblemSolveRegisterTemplate extends StatefulWidget {
   final int problemId;
   final List<File> initialSolutionImages;
   final int? initialTimeSpentSeconds;
 
+  /// 저장하지 않은 입력이 있는지 여기에 적는다. 화면이 뒤로 가기 전에 물어볼지 정한다.
+  final ValueNotifier<bool>? unsavedChanges;
+
   const ProblemSolveRegisterTemplate({
     Key? key,
     required this.problemId,
     this.initialSolutionImages = const [],
     this.initialTimeSpentSeconds,
+    this.unsavedChanges,
   }) : super(key: key);
 
   @override
@@ -44,8 +47,22 @@ class ProblemSolveRegisterTemplateState
     extends State<ProblemSolveRegisterTemplate> {
   final _memoCtrl = TextEditingController();
   final List<XFile> _solutionImages = [];
-  AnswerStatus _answerStatus = AnswerStatus.CORRECT; // 정답 상태 (기본값: 정답)
-  int _timeSpentSeconds = 10 * 60; // 소요 시간 (초)
+
+  /// 이번 복습 결과. 처음에는 아무것도 고르지 않은 채로 연다.
+  ///
+  /// 전에는 정답이 미리 골라져 있어서, 고르지 않고 저장하면 맞힌 것으로 남고
+  /// 추천 복습에서 빠지는 정답 수에 그대로 들어갔다.
+  AnswerStatus? _answerStatus;
+
+  /// 고르지 않고 저장하려 했을 때 결과 칸에 안내를 띄운다.
+  bool _answerMissing = false;
+  final GlobalKey _answerSectionKey = GlobalKey();
+
+  /// 소요 시간 (초). 0 이면 비어 있는 것으로 보고 시간 없이 저장한다.
+  ///
+  /// 전에는 10분이 미리 들어 있어서, 시간을 넘기지 않는 현장 풀이는 손대지
+  /// 않으면 10분으로 저장됐다.
+  int _timeSpentSeconds = 0;
   List<String> _answerImageUrls = [];
 
   /// 이 회차의 기분 이모지 키. 안 고르고 넘어가도 된다.
@@ -66,6 +83,9 @@ class ProblemSolveRegisterTemplateState
       widget.initialSolutionImages.map((file) => XFile(file.path)),
     );
     _timeSpentSeconds = widget.initialTimeSpentSeconds ?? _timeSpentSeconds;
+    _memoCtrl.addListener(_syncUnsavedChanges);
+    // 필기로 풀고 넘어온 풀이 이미지가 있으면 처음부터 쓴 것이 있는 상태다.
+    WidgetsBinding.instance.addPostFrameCallback((_) => _syncUnsavedChanges());
     WidgetsBinding.instance.addPostFrameCallback((_) => _loadAnswerImages());
   }
 
@@ -102,39 +122,45 @@ class ProblemSolveRegisterTemplateState
       onTap: () => FocusScope.of(context).unfocus(),
       child: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 24.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 30),
+        // 태블릿에서 입력칸과 선택지가 화면 폭 끝까지 늘어나지 않게 한다.
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 720),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 30),
 
-            // 복습 완료 헤더
-            _buildCompletionHeader(themeProvider),
-            SizedBox(height: spacing),
+                // 복습 완료 헤더
+                _buildCompletionHeader(themeProvider),
+                SizedBox(height: spacing),
 
-            // 정답 여부 선택
-            _buildAnswerStatusSection(themeProvider),
-            SizedBox(height: spacing),
+                // 정답 여부 선택
+                _buildAnswerStatusSection(themeProvider),
+                SizedBox(height: spacing),
 
-            // 소요 시간 입력
-            _buildTimeSpentSection(themeProvider),
-            SizedBox(height: spacing),
+                // 소요 시간 입력
+                _buildTimeSpentSection(themeProvider),
+                SizedBox(height: spacing),
 
-            // 풀이 이미지 업로드
-            _buildImageSection(themeProvider),
-            SizedBox(height: spacing),
+                // 풀이 이미지 업로드
+                _buildImageSection(themeProvider),
+                SizedBox(height: spacing),
 
-            // 개선된 점 체크리스트
-            _buildImprovementSection(themeProvider),
-            SizedBox(height: spacing),
+                // 개선된 점 체크리스트
+                _buildImprovementSection(themeProvider),
+                SizedBox(height: spacing),
 
-            // 이번 회차 기분
-            _buildMoodSection(themeProvider),
-            SizedBox(height: spacing),
+                // 이번 회차 기분
+                _buildMoodSection(themeProvider),
+                SizedBox(height: spacing),
 
-            // 복습 메모
-            _buildReflectionSection(themeProvider),
-            SizedBox(height: spacing),
-          ],
+                // 복습 메모
+                _buildReflectionSection(themeProvider),
+                SizedBox(height: spacing),
+              ],
+            ),
+          ),
         ),
       ),
     );
@@ -159,15 +185,17 @@ class ProblemSolveRegisterTemplateState
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // 저장하기 전인데 '복습 완료!' 라고 해서, 이미 저장된 줄 알고
+                // 나가는 일이 있었다.
                 StandardText(
-                  text: '문제 복습 완료!',
+                  text: '다시 풀어 봤어요',
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                   color: themeProvider.primaryColor,
                 ),
                 const SizedBox(height: 4),
                 const StandardText(
-                  text: '복습 내용을 기록해보세요',
+                  text: '결과를 남기면 다음 복습일을 잡아 드려요',
                   fontSize: 14,
                   color: AppColors.textSecondary,
                 ),
@@ -206,6 +234,7 @@ class ProblemSolveRegisterTemplateState
 
   Widget _buildAnswerStatusSection(ThemeHandler themeProvider) {
     return _buildSectionBox(
+      key: _answerSectionKey,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -231,14 +260,14 @@ class ProblemSolveRegisterTemplateState
                   ),
                   label: StandardText(
                     text: '정답 보기',
-                    fontSize: 13,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
                     color: themeProvider.primaryColor,
                   ),
+                  // 전에는 누르는 높이가 24px 남짓이었다.
                   style: TextButton.styleFrom(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    minimumSize: Size.zero,
-                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    minimumSize: const Size(44, 44),
                   ),
                 ),
             ],
@@ -252,8 +281,7 @@ class ProblemSolveRegisterTemplateState
                   icon: Icons.check_circle,
                   color: Colors.green,
                   isSelected: _answerStatus == AnswerStatus.CORRECT,
-                  onTap: () =>
-                      setState(() => _answerStatus = AnswerStatus.CORRECT),
+                  onTap: () => _selectAnswerStatus(AnswerStatus.CORRECT),
                 ),
               ),
               const SizedBox(width: 8),
@@ -263,8 +291,7 @@ class ProblemSolveRegisterTemplateState
                   icon: Icons.check_circle_outline,
                   color: Colors.orange,
                   isSelected: _answerStatus == AnswerStatus.PARTIAL,
-                  onTap: () =>
-                      setState(() => _answerStatus = AnswerStatus.PARTIAL),
+                  onTap: () => _selectAnswerStatus(AnswerStatus.PARTIAL),
                 ),
               ),
               const SizedBox(width: 8),
@@ -274,12 +301,19 @@ class ProblemSolveRegisterTemplateState
                   icon: Icons.cancel,
                   color: Colors.red,
                   isSelected: _answerStatus == AnswerStatus.WRONG,
-                  onTap: () =>
-                      setState(() => _answerStatus = AnswerStatus.WRONG),
+                  onTap: () => _selectAnswerStatus(AnswerStatus.WRONG),
                 ),
               ),
             ],
           ),
+          if (_answerMissing) ...[
+            const SizedBox(height: 10),
+            StandardText(
+              text: '이번 복습 결과를 골라 주세요',
+              fontSize: 13,
+              color: Colors.red.shade600,
+            ),
+          ],
         ],
       ),
     );
@@ -337,7 +371,7 @@ class ProblemSolveRegisterTemplateState
           ),
           const SizedBox(height: 4),
           const StandardText(
-            text: '해당되는 항목을 선택해주세요 (선택사항)',
+            text: '해당되는 항목을 선택해 주세요 (선택사항)',
             fontSize: 13,
             color: AppColors.textSecondary,
           ),
@@ -568,7 +602,7 @@ class ProblemSolveRegisterTemplateState
               ),
               fillColor: Colors.white,
               filled: true,
-              hintText: '이번 복습에서 느낀 점을 자유롭게 작성해주세요!',
+              hintText: '이번 복습에서 느낀 점을 자유롭게 작성해 주세요!',
               hintStyle: standardTextStyle.copyWith(
                 color: Colors.grey[400],
                 fontSize: 14,
@@ -586,7 +620,9 @@ class ProblemSolveRegisterTemplateState
     Navigator.push(
       context,
       TossPageRoute(
-        builder: (_) => _AnswerImagesScreen(imageUrls: _answerImageUrls),
+        // 다른 화면과 같은 뷰어로 연다. 두 번 눌러 확대, 끌어내려 닫기, 썸네일이
+        // 따로 만든 화면에는 없었다.
+        builder: (_) => FullScreenImage(imagePaths: _answerImageUrls),
       ),
     );
   }
@@ -795,8 +831,9 @@ class ProblemSolveRegisterTemplateState
     );
   }
 
-  Widget _buildSectionBox({required Widget child}) {
+  Widget _buildSectionBox({Key? key, required Widget child}) {
     return Container(
+      key: key,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.grey[50],
@@ -847,6 +884,48 @@ class ProblemSolveRegisterTemplateState
     );
   }
 
+  /// 화면을 다시 그릴 때마다 저장하지 않은 입력이 있는지 다시 본다.
+  @override
+  void setState(VoidCallback fn) {
+    super.setState(fn);
+    _syncUnsavedChanges();
+  }
+
+  void _syncUnsavedChanges() {
+    final notifier = widget.unsavedChanges;
+    if (notifier == null || !mounted) return;
+    notifier.value = _solutionImages.isNotEmpty ||
+        _answerStatus != null ||
+        _memoCtrl.text.trim().isNotEmpty ||
+        _improvements.values.any((checked) => checked) ||
+        _selectedMoodKey != null ||
+        _timeSpentSeconds != (widget.initialTimeSpentSeconds ?? 0);
+  }
+
+  void _selectAnswerStatus(AnswerStatus status) {
+    setState(() {
+      _answerStatus = status;
+      _answerMissing = false;
+    });
+  }
+
+  /// 저장하기 전에 부른다. 결과를 고르지 않았으면 결과 칸으로 올라가 안내를
+  /// 띄우고 false 를 돌려준다.
+  bool requireAnswerStatus() {
+    if (_answerStatus != null) return true;
+    setState(() => _answerMissing = true);
+    final sectionContext = _answerSectionKey.currentContext;
+    if (sectionContext != null) {
+      Scrollable.ensureVisible(
+        sectionContext,
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeOut,
+        alignment: 0.1,
+      );
+    }
+    return false;
+  }
+
   // API 연동 시 사용할 데이터 수집 메서드
   Map<String, dynamic> getReviewData() {
     return {
@@ -867,8 +946,9 @@ class ProblemSolveRegisterTemplateState
     setState(() {
       _memoCtrl.clear();
       _solutionImages.clear();
-      _answerStatus = AnswerStatus.CORRECT;
-      _timeSpentSeconds = 10 * 60;
+      _answerStatus = null;
+      _answerMissing = false;
+      _timeSpentSeconds = 0;
       _improvements.updateAll((key, value) => false);
       _selectedMoodKey = null;
     });
@@ -883,86 +963,5 @@ class ProblemSolveRegisterTemplateState
     }
 
     return '$minutes분 ${seconds.toString().padLeft(2, '0')}초';
-  }
-}
-
-class _AnswerImagesScreen extends StatefulWidget {
-  final List<String> imageUrls;
-
-  const _AnswerImagesScreen({required this.imageUrls});
-
-  @override
-  State<_AnswerImagesScreen> createState() => _AnswerImagesScreenState();
-}
-
-class _AnswerImagesScreenState extends State<_AnswerImagesScreen> {
-  @override
-  void initState() {
-    super.initState();
-    AppAnalytics.logScreenView('AnswerImagesScreen');
-  }
-
-  final PageController _pageController = PageController();
-  int _currentPage = 0;
-
-  @override
-  void dispose() {
-    _pageController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final hasMultiple = widget.imageUrls.length > 1;
-
-    return Scaffold(
-      backgroundColor: Colors.black,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Text(
-          hasMultiple
-              ? '정답 이미지 ${_currentPage + 1} / ${widget.imageUrls.length}'
-              : '정답 이미지',
-          style: const TextStyle(color: Colors.white, fontSize: 16),
-        ),
-        centerTitle: true,
-      ),
-      body: PageView.builder(
-        controller: _pageController,
-        onPageChanged: (page) => setState(() => _currentPage = page),
-        itemCount: widget.imageUrls.length,
-        itemBuilder: (context, index) {
-          return InteractiveViewer(
-            minScale: 1.0,
-            maxScale: 4.0,
-            child: Center(
-              child: CachedNetworkImage(
-                imageUrl: widget.imageUrls[index],
-                fit: BoxFit.contain,
-                placeholder: (_, __) => const Center(
-                  child: CircularProgressIndicator(color: Colors.white54),
-                ),
-                errorWidget: (_, __, ___) => const Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.broken_image, color: Colors.white54, size: 64),
-                    SizedBox(height: 12),
-                    Text(
-                      '이미지를 불러오지 못했습니다.',
-                      style: TextStyle(color: Colors.white54, fontSize: 14),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          );
-        },
-      ),
-    );
   }
 }

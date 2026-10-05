@@ -178,7 +178,7 @@ class _SharedProblemTabState extends State<SharedProblemTab>
                                   StandardText(
                                     text: '내 오답노트 문제를 룸에 공유해보세요',
                                     fontSize: 13,
-                                    color: Colors.grey[500]!,
+                                    color: AppColors.textSecondary,
                                     fontWeight: FontWeight.normal,
                                     fontFamily: 'PretendardLight',
                                   ),
@@ -315,7 +315,7 @@ class _SharedProblemTabState extends State<SharedProblemTab>
                 StandardText(
                   text: '공유 문제 $problemCount개',
                   fontSize: 12,
-                  color: Colors.grey[500]!,
+                  color: AppColors.textSecondary,
                   fontWeight: FontWeight.normal,
                   fontFamily: 'PretendardLight',
                 ),

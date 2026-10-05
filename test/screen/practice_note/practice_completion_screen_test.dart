@@ -7,6 +7,7 @@ import 'package:ono/Module/Motion/PressableScale.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:ono/Model/PracticeNote/PracticeNoteDetailModel.dart';
 import 'package:ono/Provider/PracticeNoteProvider.dart';
+import 'package:ono/Model/Problem/AnswerStatus.dart';
 import 'package:ono/Screen/PracticeNote/PracticeCompletionScreen.dart';
 
 import '../../helpers/helpers.dart';
@@ -62,7 +63,28 @@ void main() {
 
     expect(find.text('복습 완료'), findsOneWidget);
     expect(find.text('2회차 복습을 완료했어요'), findsOneWidget);
-    expect(find.text('총 5문제를 풀었어요.'), findsOneWidget);
+    expect(find.text('5문제 중 0문제를 풀었어요.'), findsOneWidget);
+  });
+
+  testWidgets('이번 회차에 저장한 수와 결과를 보인다', (tester) async {
+    await pumpOnoWidget(
+      tester,
+      const PracticeCompletionScreen(
+        practiceId: 1,
+        totalProblems: 5,
+        practiceRound: 2,
+        sessionResults: [
+          AnswerStatus.CORRECT,
+          AnswerStatus.CORRECT,
+          AnswerStatus.WRONG,
+        ],
+      ),
+      practiceProvider: practiceProvider,
+    );
+
+    expect(find.text('5문제 중 3문제를 풀었어요.'), findsOneWidget);
+    expect(find.text('정답 2  오답 1'), findsOneWidget,
+        reason: '없는 결과(부분 정답)는 빼고 적는다');
   });
 
   testWidgets('추천 기분 이모지 목록과 더보기 버튼이 보인다', (tester) async {
@@ -135,7 +157,7 @@ void main() {
     verify(() =>
             practiceNoteService.addPracticeNoteCount(1, moodEmojiKey: null))
         .called(1);
-    expect(find.text('복습을 완료했습니다!'), findsOneWidget);
+    expect(find.text('복습을 완료했어요!'), findsOneWidget);
   });
 
   // 완료 요청은 보낼 때마다 복습 횟수를 하나씩 올린다. 버튼이 잠기는 것은 화면을

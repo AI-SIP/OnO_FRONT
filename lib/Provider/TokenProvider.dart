@@ -57,7 +57,7 @@ class TokenProvider {
       await storage.delete(key: 'refreshToken');
       await _notifyAuthFailure();
       throw UnauthorizedException(
-          message: '보안 저장소가 손상되어 로그아웃되었습니다. 다시 로그인해주세요.');
+          message: '보안 저장소가 손상되어 로그아웃됐어요. 다시 로그인해 주세요.');
     }
   }
 

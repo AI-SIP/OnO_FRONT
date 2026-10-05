@@ -9,6 +9,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:ono/Model/Common/ProblemImageDataType.dart';
 import 'package:ono/Model/PracticeNote/PracticeNoteDetailModel.dart';
+import 'package:ono/Model/PracticeNote/PracticeNoteUpdateModel.dart';
+import 'package:ono/Model/Problem/AnswerStatus.dart';
+import 'package:ono/Model/Problem/ProblemSolveModel.dart';
 import 'package:ono/Model/Problem/ProblemImageDataModel.dart';
 import 'package:ono/Model/Problem/ProblemModel.dart';
 import 'package:ono/Provider/PracticeNoteProvider.dart';
@@ -47,6 +50,24 @@ PracticeNoteDetailModel _practice({
   );
 }
 
+ProblemSolveModel _solve(int solveId, int problemId, AnswerStatus status,
+    {int day = 1, int? seconds}) {
+  final at = DateTime(2026, 9, day);
+  return ProblemSolveModel(
+    problemSolveId: solveId,
+    problemId: problemId,
+    userId: 1,
+    practicedAt: at,
+    answerStatus: status,
+    improvements: const [],
+    timeSpentSeconds: seconds,
+    migratedFromLegacy: false,
+    imageUrls: const [],
+    createdAt: at,
+    updatedAt: at,
+  );
+}
+
 ProblemModel _problem(int id, {String? imageUrl, String? reference}) {
   return ProblemModel(
     problemId: id,
@@ -66,11 +87,37 @@ ProblemModel _problem(int id, {String? imageUrl, String? reference}) {
 void main() {
   setUpOnoWidgetTest();
 
+  setUpAll(() {
+    registerFallbackValue(
+      PracticeNoteUpdateModel(
+        practiceNoteId: 0,
+        addProblemIdList: const [],
+        removeProblemIdList: const [],
+      ),
+    );
+  });
+
   late MockPracticeNoteService practiceNoteService;
   late MockProblemsProvider problemsProvider;
   late ProblemPracticeProvider practiceProvider;
+  late MockProblemSolveService solveService;
+
+  /// 문제 번호별 복습 기록. 없으면 기록이 없는 문제다.
+  late Map<int, List<ProblemSolveModel>> solvesByProblem;
+
+  PracticeDetailScreen screen({required PracticeNoteDetailModel practice}) =>
+      PracticeDetailScreen(
+        practice: practice,
+        problemSolveService: solveService,
+      );
 
   setUp(() {
+    solveService = MockProblemSolveService();
+    solvesByProblem = {};
+    when(() => solveService.getProblemSolvesByProblemId(any(),
+            showErrorSnackBar: any(named: 'showErrorSnackBar')))
+        .thenAnswer((invocation) async =>
+            solvesByProblem[invocation.positionalArguments.first as int] ?? []);
     practiceNoteService = MockPracticeNoteService();
     problemsProvider = MockProblemsProvider();
     practiceProvider = ProblemPracticeProvider(
@@ -86,25 +133,28 @@ void main() {
 
     await pumpOnoWidget(
       tester,
-      PracticeDetailScreen(
+      screen(
         practice: _practice(practiceCount: 3, problemIdList: [10, 20]),
       ),
       practiceProvider: practiceProvider,
     );
 
-    expect(find.text('2'), findsOneWidget); // practiceSize == problemIdList 길이
+    // 맨 위 통계 줄 대신 세트 분석 안에 보인다.
+    // 문제 수는 위에서 빼고 목록 머리에만 둔다.
+    expect(find.text('문제 2개'), findsOneWidget);
     expect(find.text('3회'), findsOneWidget);
     expect(find.text('수학 오답노트'), findsOneWidget);
   });
 
   testWidgets('마지막 복습 일시가 없으면 "기록 없음" 이 보인다', (tester) async {
-    // 문제 목록(ProblemThumbnailCard)도 개별 lastSolvedAt 이 없으면 같은 문구를
-    // 써서 겹치므로, 여기서는 정보 영역만 보려고 문제 목록을 비워 둔다.
-    practiceProvider.currentProblems = [];
+    practiceProvider.currentProblems = [_problem(10)];
+    solvesByProblem = {
+      10: [_solve(1, 10, AnswerStatus.CORRECT)]
+    };
 
     await pumpOnoWidget(
       tester,
-      PracticeDetailScreen(
+      screen(
         practice: _practice(problemIdList: [10], lastSolvedAt: null),
       ),
       practiceProvider: practiceProvider,
@@ -113,12 +163,15 @@ void main() {
     expect(find.text('기록 없음'), findsOneWidget);
   });
 
-  testWidgets('마지막 복습 일시가 있으면 yyyy/MM/dd 형식으로 보인다', (tester) async {
-    practiceProvider.currentProblems = [];
+  testWidgets('마지막 복습 일시가 있으면 짧은 날짜로 보인다 (다른 해면 연도를 붙인다)', (tester) async {
+    practiceProvider.currentProblems = [_problem(10)];
+    solvesByProblem = {
+      10: [_solve(1, 10, AnswerStatus.CORRECT)]
+    };
 
     await pumpOnoWidget(
       tester,
-      PracticeDetailScreen(
+      screen(
         practice: _practice(
           problemIdList: [10],
           lastSolvedAt: DateTime(2024, 3, 5),
@@ -127,7 +180,7 @@ void main() {
       practiceProvider: practiceProvider,
     );
 
-    expect(find.text('2024/03/05'), findsOneWidget);
+    expect(find.text('24/3/5'), findsOneWidget);
     expect(find.text('기록 없음'), findsNothing);
   });
 
@@ -137,7 +190,7 @@ void main() {
 
     await pumpOnoWidget(
       tester,
-      PracticeDetailScreen(
+      screen(
         practice: _practice(
           problemIdList: [10],
           lastSessionMoodEmojiKey: 'cool_sunglasses',
@@ -156,11 +209,11 @@ void main() {
 
     await pumpOnoWidget(
       tester,
-      PracticeDetailScreen(practice: _practice(problemIdList: [])),
+      screen(practice: _practice(problemIdList: [])),
       practiceProvider: practiceProvider,
     );
 
-    expect(find.textContaining('복습 세트가 비어있습니다'), findsOneWidget);
+    expect(find.textContaining('복습 세트가 비어있어요'), findsOneWidget);
     expect(find.text('오답노트 추가하기'), findsOneWidget);
     expect(find.text('복습하기'), findsNothing);
   });
@@ -170,12 +223,12 @@ void main() {
 
     await pumpOnoWidget(
       tester,
-      PracticeDetailScreen(practice: _practice(problemIdList: [10])),
+      screen(practice: _practice(problemIdList: [10])),
       practiceProvider: practiceProvider,
     );
 
     expect(find.text('복습하기'), findsOneWidget);
-    expect(find.textContaining('복습 세트가 비어있습니다'), findsNothing);
+    expect(find.textContaining('복습 세트가 비어있어요'), findsNothing);
   });
 
   testWidgets('빈 상태에서 오답노트 추가하기를 탭하면 문제 선택 화면으로 전환된다', (tester) async {
@@ -184,7 +237,7 @@ void main() {
 
     await pumpOnoWidget(
       tester,
-      PracticeDetailScreen(practice: _practice(problemIdList: [])),
+      screen(practice: _practice(problemIdList: [])),
       practiceProvider: practiceProvider,
       navigatorObservers: [observer],
     );
@@ -200,31 +253,27 @@ void main() {
 
     await pumpOnoWidget(
       tester,
-      PracticeDetailScreen(practice: _practice(problemIdList: [10])),
+      screen(practice: _practice(problemIdList: [10])),
       practiceProvider: practiceProvider,
     );
 
     await tester.tap(find.text('복습하기'));
     await tester.pumpAndSettle();
 
-    expect(find.text('복습 방식 선택'), findsOneWidget);
-    expect(find.text('등록한 순서로 복습하기'), findsOneWidget);
-    expect(find.text('셔플 모드로 복습하기'), findsOneWidget);
+    expect(find.text('푸는 순서 고르기'), findsOneWidget);
+    expect(find.text('담은 순서대로 풀기'), findsOneWidget);
+    expect(find.text('섞어서 풀기'), findsOneWidget);
   });
 
-  testWidgets('등록한 순서로 복습하기를 고르면 currentProblems 가 등록 순서로 재정렬된 뒤 화면이 전환된다',
-      (tester) async {
-    // problemIdList 등록 순서는 [20, 10] 인데 currentProblems 는 뒤섞인 상태로 시작한다.
+  testWidgets('등록한 순서로 복습하기를 고르면 등록 순서대로 회차를 시작하고 화면이 전환된다', (tester) async {
     final practice = _practice(problemIdList: [20, 10]);
-    practiceProvider.currentProblems = [_problem(10), _problem(20)];
-    // useRegisteredProblemOrder() 는 화면에 넘긴 practice 가 아니라 provider 의
-    // currentPracticeNote 를 기준으로 재정렬하므로 같이 맞춰 둔다.
+    practiceProvider.currentProblems = [_problem(20), _problem(10)];
     practiceProvider.currentPracticeNote = practice;
     final observer = _RecordingNavigatorObserver();
 
     await pumpOnoWidget(
       tester,
-      PracticeDetailScreen(practice: practice),
+      screen(practice: practice),
       practiceProvider: practiceProvider,
       navigatorObservers: [observer],
     );
@@ -234,29 +283,181 @@ void main() {
 
     // 다음 프레임을 그리면 ProblemDetailScreen 이 실제로 빌드되며 네트워크를
     // 태우므로, 탭 콜백이 동기로 반영하는 상태만 확인하고 pump 는 하지 않는다.
-    await tester.tap(find.text('등록한 순서로 복습하기'));
+    await tester.tap(find.text('담은 순서대로 풀기'));
 
+    expect(practiceProvider.isPracticing, isTrue);
     expect(
-      practiceProvider.currentProblems.map((p) => p.problemId),
+      practiceProvider.sessionProblems.map((p) => p.problemId),
       [20, 10],
     );
     expect(observer.pushed.length, pushedBefore + 1);
   });
 
-  testWidgets('더보기 버튼을 탭하면 편집·삭제 메뉴가 뜬다', (tester) async {
+  testWidgets('틀린 문제가 없으면 틀린 문제만 스위치가 막혀 있고 총 0문제로 적힌다', (tester) async {
+    practiceProvider.currentProblems = [_problem(10)];
+    solvesByProblem = {
+      10: [_solve(1, 10, AnswerStatus.CORRECT)]
+    };
+
+    await pumpOnoWidget(
+      tester,
+      screen(practice: _practice(problemIdList: [10])),
+      practiceProvider: practiceProvider,
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('복습하기'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('틀린 문제만'), findsOneWidget);
+    expect(find.text('총 0문제'), findsOneWidget);
+    final toggle = tester.widget<Switch>(find.byType(Switch));
+    expect(toggle.onChanged, isNull);
+  });
+
+  testWidgets('틀린 문제만을 켜고 순서대로를 고르면 틀린 문제들만 푼다', (tester) async {
+    final practice = _practice(problemIdList: [10, 20, 30]);
+    practiceProvider.currentProblems = [
+      _problem(10),
+      _problem(20),
+      _problem(30)
+    ];
+    practiceProvider.currentPracticeNote = practice;
+    solvesByProblem = {
+      10: [_solve(1, 10, AnswerStatus.WRONG)],
+      20: [_solve(2, 20, AnswerStatus.CORRECT)],
+      30: [_solve(3, 30, AnswerStatus.PARTIAL)],
+    };
+    final observer = _RecordingNavigatorObserver();
+
+    await pumpOnoWidget(
+      tester,
+      screen(practice: practice),
+      practiceProvider: practiceProvider,
+      navigatorObservers: [observer],
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('복습하기'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('총 2문제'), findsOneWidget);
+    expect(find.text('세트에 담은 순서대로 3문제를 풀어요.'), findsOneWidget);
+
+    await tester.tap(find.byType(Switch));
+    await tester.pumpAndSettle();
+    expect(find.text('세트에 담은 순서대로 2문제를 풀어요.'), findsOneWidget);
+
+    final pushedBefore = observer.pushed.length;
+    await tester.tap(find.text('담은 순서대로 풀기'));
+
+    expect(
+      practiceProvider.sessionProblems.map((p) => p.problemId),
+      [10, 30],
+    );
+    expect(observer.pushed.length, pushedBefore + 1);
+  });
+
+  testWidgets('세트 분석에 세트 정보와 최근 결과, 문제마다 결과 배지가 보인다', (tester) async {
+    practiceProvider.currentProblems = [_problem(10), _problem(20)];
+    solvesByProblem = {
+      10: [
+        _solve(1, 10, AnswerStatus.WRONG, day: 1),
+        _solve(2, 10, AnswerStatus.CORRECT, day: 2, seconds: 120),
+      ],
+      20: [_solve(3, 20, AnswerStatus.WRONG, seconds: 240)],
+    };
+
+    await pumpOnoWidget(
+      tester,
+      screen(practice: _practice(practiceCount: 3, problemIdList: [10, 20])),
+      practiceProvider: practiceProvider,
+    );
+    await tester.pumpAndSettle();
+
+    // 제목 없이 바로 놓는다.
+    expect(find.text('세트 분석'), findsNothing);
+    expect(find.text('3회'), findsOneWidget);
+    expect(find.text('2문제 중 1문제를 최근에 맞혔어요'), findsOneWidget);
+    // 평균 풀이 시간도 맨 위 세 칸에 들어간다.
+    expect(find.text('평균 풀이 시간'), findsOneWidget);
+    expect(find.text('3분'), findsOneWidget);
+    // 범례와 카드 배지에 같이 나온다.
+    expect(find.text('정답'), findsOneWidget);
+    expect(find.text('정답 1'), findsOneWidget);
+    expect(find.text('오답'), findsOneWidget);
+  });
+
+  testWidgets('편집에서 문제를 골라 빼면 묻지 않고 바로 빠진다', (tester) async {
+    final practice = _practice(practiceId: 7, problemIdList: [10, 20]);
+    practiceProvider.currentProblems = [
+      _problem(10, reference: '첫 문제'),
+      _problem(20, reference: '둘째 문제'),
+    ];
+    practiceProvider.currentPracticeNote = practice;
+    when(() => practiceNoteService.getPracticeNoteById(7,
+            showErrorSnackBar: any(named: 'showErrorSnackBar')))
+        .thenAnswer((_) async => practice);
+    final sent = <Map<String, dynamic>>[];
+    when(() => practiceNoteService.updatePracticeNote(any(),
+            showErrorSnackBar: any(named: 'showErrorSnackBar')))
+        .thenAnswer((invocation) async {
+      sent.add((invocation.positionalArguments.first as PracticeNoteUpdateModel)
+          .toJson());
+    });
+    when(() => problemsProvider.getProblem(any())).thenAnswer(
+        (invocation) async =>
+            _problem(invocation.positionalArguments.first as int));
+
+    await pumpOnoWidget(
+      tester,
+      screen(practice: practice),
+      practiceProvider: practiceProvider,
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('편집'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('둘째 문제'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('1개 선택 · 세트에서 빼기'));
+    await tester.pumpAndSettle();
+
+    expect(sent.single['removeProblemIdList'], [20]);
+    expect(find.text('둘째 문제'), findsNothing);
+    expect(find.text('문제 1개'), findsOneWidget);
+    expect(find.text('복습하기'), findsOneWidget);
+  });
+
+  testWidgets('문제 카드를 길게 누르면 그 문제를 고른 채로 편집이 열린다', (tester) async {
+    practiceProvider.currentProblems = [_problem(10, reference: '첫 문제')];
+
+    await pumpOnoWidget(
+      tester,
+      screen(practice: _practice(problemIdList: [10])),
+      practiceProvider: practiceProvider,
+    );
+    await tester.pumpAndSettle();
+
+    await tester.longPress(find.text('첫 문제'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('완료'), findsOneWidget);
+    expect(find.text('1개 선택 · 세트에서 빼기'), findsOneWidget);
+    expect(find.text('복습하기'), findsNothing);
+  });
+
+  testWidgets('더보기 버튼을 탭하면 복습 세트 설정과 삭제 메뉴가 뜬다', (tester) async {
     practiceProvider.currentProblems = [_problem(10)];
 
     await pumpOnoWidget(
       tester,
-      PracticeDetailScreen(practice: _practice(problemIdList: [10])),
+      screen(practice: _practice(problemIdList: [10])),
       practiceProvider: practiceProvider,
     );
 
     await tester.tap(find.byIcon(Icons.more_vert));
     await tester.pumpAndSettle();
 
-    // 시트 제목도 같은 문구('복습 세트 편집하기')를 쓰기 때문에 메뉴 항목과 합쳐 2개다.
-    expect(find.text('복습 세트 편집하기'), findsNWidgets(2));
+    expect(find.text('복습 세트 설정'), findsOneWidget);
     expect(find.text('복습 세트 삭제하기'), findsOneWidget);
   });
 
@@ -265,8 +466,7 @@ void main() {
 
     await pumpOnoWidget(
       tester,
-      PracticeDetailScreen(
-          practice: _practice(practiceId: 42, problemIdList: [10])),
+      screen(practice: _practice(practiceId: 42, problemIdList: [10])),
       practiceProvider: practiceProvider,
     );
     await tester.tap(find.byIcon(Icons.more_vert));
@@ -274,9 +474,9 @@ void main() {
     await tester.tap(find.text('복습 세트 삭제하기'));
     await tester.pumpAndSettle();
 
-    expect(find.text('정말로 이 복습 세트를 삭제하시겠습니까?'), findsOneWidget);
+    expect(find.text('이 복습 세트를 삭제할까요?'), findsOneWidget);
 
-    await tester.tap(find.text('삭제'));
+    await tester.tap(find.text('삭제하기'));
     await tester.pumpAndSettle();
 
     verify(() => practiceNoteService.deletePracticeNotes([42])).called(1);
@@ -287,7 +487,7 @@ void main() {
 
     await pumpOnoWidget(
       tester,
-      PracticeDetailScreen(practice: _practice(problemIdList: [10])),
+      screen(practice: _practice(problemIdList: [10])),
       practiceProvider: practiceProvider,
     );
     await tester.tap(find.byIcon(Icons.more_vert));
@@ -299,7 +499,7 @@ void main() {
     await tester.pumpAndSettle();
 
     verifyNever(() => practiceNoteService.deletePracticeNotes(any()));
-    expect(find.text('정말로 이 복습 세트를 삭제하시겠습니까?'), findsNothing);
+    expect(find.text('이 복습 세트를 삭제할까요?'), findsNothing);
   });
 
   testWidgets('네트워크 이미지가 있는 문제 카드도 예외 없이 그려진다', (tester) async {
@@ -310,7 +510,7 @@ void main() {
     await withMockedNetworkImages(() async {
       await pumpOnoWidget(
         tester,
-        PracticeDetailScreen(practice: _practice(problemIdList: [10])),
+        screen(practice: _practice(problemIdList: [10])),
         practiceProvider: practiceProvider,
       );
     });
@@ -324,7 +524,7 @@ void main() {
 
     await pumpOnoWidget(
       tester,
-      PracticeDetailScreen(practice: _practice(problemIdList: [10, 20])),
+      screen(practice: _practice(problemIdList: [10, 20])),
       practiceProvider: practiceProvider,
       surfaceSize: OnoSurface.tablet,
     );

@@ -92,7 +92,7 @@ class _StudyRoomEditScreenState extends State<StudyRoomEditScreen> {
     if (nameSuccess && thumbnailSuccess) {
       Navigator.pop(context, true);
     } else if (!nameSuccess && !thumbnailSuccess) {
-      AppSnackBar.showError('수정에 실패했습니다. 다시 시도해 주세요');
+      AppSnackBar.showError('수정에 실패했어요. 다시 시도해 주세요');
     } else if (!nameSuccess) {
       AppSnackBar.showError('사진은 변경됐지만 이름 수정에 실패했어요');
       Navigator.pop(context, true);
@@ -134,6 +134,7 @@ class _StudyRoomEditScreenState extends State<StudyRoomEditScreen> {
         backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
+          tooltip: '닫기',
           icon: Icon(Icons.close, color: themeProvider.primaryColor),
           onPressed: () => Navigator.pop(context),
         ),
@@ -219,7 +220,7 @@ class _StudyRoomEditScreenState extends State<StudyRoomEditScreen> {
                                   ? '저장 전까지 기존 사진으로 되돌릴 수 있어요'
                                   : '사진과 이름을 함께 수정할 수 있어요',
                               fontSize: 12,
-                              color: Colors.grey[500]!,
+                              color: AppColors.textSecondary,
                               fontWeight: FontWeight.normal,
                               fontFamily: 'PretendardLight',
                             ),

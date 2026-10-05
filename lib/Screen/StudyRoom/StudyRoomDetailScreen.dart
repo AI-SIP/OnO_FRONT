@@ -21,16 +21,23 @@ import 'Widget/SharedProblemTab.dart';
 import 'Widget/WeeklyReportSheet.dart';
 import '../../Module/Motion/PressableScale.dart';
 import '../../Module/Motion/TossPageRoute.dart';
-import '../../Module/Motion/TossDialog.dart';
 import '../../Module/Motion/AppMotion.dart';
 import '../../Module/Design/AppColors.dart';
 import '../../Module/Design/AppRadius.dart';
 import '../../Util/AppAnalytics.dart';
+import '../../Module/Dialog/ConfirmDialog.dart';
 
 class StudyRoomDetailScreen extends StatefulWidget {
   final int roomId;
 
-  const StudyRoomDetailScreen({super.key, required this.roomId});
+  /// 방을 막 만들고 들어왔을 때 초대 코드를 바로 보여 준다.
+  final bool showInviteCodeOnOpen;
+
+  const StudyRoomDetailScreen({
+    super.key,
+    required this.roomId,
+    this.showInviteCodeOnOpen = false,
+  });
 
   @override
   State<StudyRoomDetailScreen> createState() => _StudyRoomDetailScreenState();
@@ -60,7 +67,16 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
     provider.updateCurrentUserId(userId);
     try {
       await provider.fetchRoomDetail(widget.roomId);
-      if (mounted) _showUnreadReport();
+      if (!mounted) return;
+      if (widget.showInviteCodeOnOpen) {
+        await _showInviteCode(
+          context,
+          provider,
+          Provider.of<ThemeHandler>(context, listen: false),
+        );
+        return;
+      }
+      _showUnreadReport();
     } catch (_) {
       if (mounted) setState(() {});
     }
@@ -138,7 +154,7 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
         themeProvider: themeProvider,
       );
     } catch (_) {
-      AppSnackBar.showError('초대 코드를 불러올 수 없습니다');
+      AppSnackBar.showError('초대 코드를 불러올 수 없어요');
     }
   }
 
@@ -171,9 +187,9 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
     final hasOtherMembers = room != null && room.members.length > 1;
     final content = isHost
         ? hasOtherMembers
-            ? '탈퇴하면 다른 멤버에게 방장이 자동으로 넘어갑니다.\n정말 탈퇴하시겠어요?'
-            : '마지막 멤버이므로 탈퇴 시 방이 삭제됩니다.\n정말 탈퇴하시겠어요?'
-        : '정말 탈퇴하시겠어요?';
+            ? '나가면 다른 멤버에게 방장이 자동으로 넘어가요.\n정말 나갈까요?'
+            : '마지막 멤버라 나가면 방이 삭제돼요.\n정말 나갈까요?'
+        : '정말 나갈까요?';
     final confirmed = await _showConfirmDialog(
       context: context,
       themeProvider: themeProvider,
@@ -181,7 +197,7 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
       iconColor: Colors.orange,
       title: '스터디룸 탈퇴',
       content: content,
-      confirmLabel: '탈퇴',
+      confirmLabel: '나가기',
       confirmColor: Colors.red,
     );
     if (confirmed == true && context.mounted) {
@@ -205,8 +221,8 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
       icon: Icons.delete_forever,
       iconColor: Colors.red,
       title: '방 삭제',
-      content: '방을 삭제하면 모든 멤버가 퇴장됩니다.\n정말 삭제하시겠어요?',
-      confirmLabel: '삭제',
+      content: '방을 삭제하면 모든 멤버가 퇴장돼요.\n정말 삭제할까요?',
+      confirmLabel: '삭제하기',
       confirmColor: Colors.red,
     );
     if (confirmed == true && context.mounted) {
@@ -226,100 +242,13 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
     required String confirmLabel,
     required Color confirmColor,
   }) {
-    return showTossDialog<bool>(
-      context: context,
-      builder: (_) => Dialog(
-        backgroundColor: Colors.white,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppRadius.large),
-          side: BorderSide(color: Colors.grey[200]!, width: 1),
-        ),
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 340),
-          child: Container(
-            padding: const EdgeInsets.fromLTRB(20, 20, 20, 18),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: iconColor.withValues(alpha: 0.10),
-                        borderRadius: BorderRadius.circular(AppRadius.small),
-                      ),
-                      child: Icon(icon, color: iconColor, size: 20),
-                    ),
-                    const SizedBox(width: 12),
-                    StandardText(
-                      text: title,
-                      fontSize: 18,
-                      color: AppColors.textPrimary,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 18),
-                StandardText(
-                  text: content,
-                  fontSize: 14,
-                  color: Colors.grey[700]!,
-                  textAlign: TextAlign.center,
-                  fontWeight: FontWeight.normal,
-                  fontFamily: 'PretendardLight',
-                ),
-                const SizedBox(height: 22),
-                Row(
-                  children: [
-                    Expanded(
-                      child: TextButton(
-                        onPressed: () => Navigator.pop(context, false),
-                        style: TextButton.styleFrom(
-                          backgroundColor: Colors.grey[50],
-                          padding: const EdgeInsets.symmetric(vertical: 13),
-                          shape: RoundedRectangleBorder(
-                            borderRadius:
-                                BorderRadius.circular(AppRadius.medium),
-                            side: BorderSide(
-                              color: Colors.grey[200]!,
-                              width: 1,
-                            ),
-                          ),
-                        ),
-                        child: const StandardText(
-                          text: '취소',
-                          fontSize: 14,
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: TextButton(
-                        onPressed: () => Navigator.pop(context, true),
-                        style: TextButton.styleFrom(
-                          backgroundColor: confirmColor,
-                          padding: const EdgeInsets.symmetric(vertical: 13),
-                          shape: RoundedRectangleBorder(
-                            borderRadius:
-                                BorderRadius.circular(AppRadius.medium),
-                          ),
-                        ),
-                        child: StandardText(
-                          text: confirmLabel,
-                          fontSize: 14,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
+    return showConfirmDialog(
+      context,
+      title: title,
+      message: content,
+      confirmLabel: confirmLabel,
+      icon: icon,
+      accentColor: confirmColor,
     );
   }
 
@@ -356,6 +285,7 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
               tooltip: '초대 코드',
             ),
           IconButton(
+            tooltip: '더 보기',
             icon: Icon(Icons.more_vert, color: themeProvider.primaryColor),
             onPressed: () =>
                 _showMoreMenu(context, provider, isHost, themeProvider, room),
@@ -398,10 +328,33 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
             )
           : room == null
               ? Center(
-                  child: StandardText(
-                    text: '방을 불러오지 못했어요',
-                    fontSize: 15,
-                    color: Colors.grey[500]!,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const StandardText(
+                        text: '방을 불러오지 못했어요',
+                        fontSize: 15,
+                        color: AppColors.textSecondary,
+                      ),
+                      const SizedBox(height: 14),
+                      // 전에는 문구만 있어서 화면을 나갔다 들어와야 했다.
+                      OutlinedButton(
+                        onPressed: _loadRoom,
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: themeProvider.primaryColor,
+                          minimumSize: const Size(0, 44),
+                          side: BorderSide(
+                              color: themeProvider.primaryColor
+                                  .withValues(alpha: 0.5)),
+                        ),
+                        child: StandardText(
+                          text: '다시 시도',
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: themeProvider.primaryColor,
+                        ),
+                      ),
+                    ],
                   ),
                 )
               : _buildTabBody(context, room, provider, themeProvider, isHost),
@@ -669,7 +622,7 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
                                   StandardText(
                                     text: '새 챌린지를 만들어 멤버들과 함께 도전해보세요',
                                     fontSize: 13,
-                                    color: Colors.grey[500]!,
+                                    color: AppColors.textSecondary,
                                     fontWeight: FontWeight.normal,
                                     fontFamily: 'PretendardLight',
                                   ),
@@ -1125,7 +1078,7 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
                                   StandardText(
                                     text: '이번 주 ${member.weeklyProblemCount}문제',
                                     fontSize: 11,
-                                    color: Colors.grey[500]!,
+                                    color: AppColors.textSecondary,
                                     fontWeight: FontWeight.normal,
                                     fontFamily: 'PretendardLight',
                                   ),

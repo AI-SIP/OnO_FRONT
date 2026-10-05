@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../../Provider/CosmeticProvider.dart';
@@ -21,18 +20,24 @@ import '../../Module/Motion/AppHaptic.dart';
 import '../../Module/Motion/PressableScale.dart';
 import '../../Module/Motion/Skeleton.dart';
 import '../../Module/Motion/TossPageRoute.dart';
-import '../../Module/Motion/TossDialog.dart';
 import '../../Module/Design/AppColors.dart';
 import '../../Module/Design/AppRadius.dart';
 import '../../Module/Design/AppToast.dart';
 import '../../Util/AppAnalytics.dart';
+import '../../Util/ShortDate.dart';
+import '../../Module/Dialog/ConfirmDialog.dart';
 
 class PracticeThumbnailScreen extends StatefulWidget {
   final TutorialTargets? tutorialTargets;
 
+  /// 삭제할 세트를 고르는 중인지 홈에 알린다. 홈이 false 로 바꾸면 고르기를
+  /// 푼다. 안드로이드 뒤로 가기가 탭을 옮기기 전에 고르기부터 풀게 하려고 쓴다.
+  final ValueNotifier<bool>? selecting;
+
   const PracticeThumbnailScreen({
     super.key,
     this.tutorialTargets,
+    this.selecting,
   });
 
   @override
@@ -42,18 +47,38 @@ class PracticeThumbnailScreen extends StatefulWidget {
 class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
   bool _isSelectionMode = false;
   final List<int> _selectedPracticeIds = [];
+
+  void _setSelectionMode(bool on) {
+    setState(() {
+      _isSelectionMode = on;
+      _selectedPracticeIds.clear();
+    });
+    widget.selecting?.value = on;
+  }
+
+  void _onSelectingChanged() {
+    if (widget.selecting?.value == false && _isSelectionMode && mounted) {
+      _setSelectionMode(false);
+    }
+  }
+
   late ScrollController _scrollController;
   int _lastPracticeRefreshTimestamp = 0;
+
+  /// 화면을 다 채웠는지 마지막으로 확인한 때의 세트 수.
+  int? _autoFillCount;
 
   @override
   void initState() {
     super.initState();
     _scrollController = ScrollController();
     _scrollController.addListener(_onScroll);
+    widget.selecting?.addListener(_onSelectingChanged);
   }
 
   @override
   void dispose() {
+    widget.selecting?.removeListener(_onSelectingChanged);
     _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
     super.dispose();
@@ -66,7 +91,11 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
       final provider =
           Provider.of<ProblemPracticeProvider>(context, listen: false);
       if (provider.hasNext && !provider.isLoading) {
-        provider.loadMorePracticeThumbnails();
+        // 다음 쪽 실패는 다음 스크롤에서 다시 받는다. 받는 곳이 없어 앱 밖으로
+        // 새던 예외를 여기서 끝낸다.
+        provider.loadMorePracticeThumbnails().catchError((Object e) {
+          debugPrint('복습 세트 다음 쪽을 받지 못했습니다: $e');
+        });
       }
     }
   }
@@ -140,7 +169,7 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
       centerTitle: true,
       backgroundColor: Colors.white,
       title: StandardText(
-        text: _isSelectionMode ? '삭제할 항목 선택' : '오답 복습',
+        text: _isSelectionMode ? '삭제할 항목 선택' : '복습 세트',
         fontSize: 18,
         color: themeProvider.primaryColor,
       ),
@@ -150,6 +179,7 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
           child: Row(
             children: [
               IconButton(
+                tooltip: '더 보기',
                 icon: Icon(
                   Icons.more_vert,
                   color: themeProvider.primaryColor,
@@ -253,10 +283,7 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
                       titleColor: Colors.red,
                       onTap: () {
                         Navigator.pop(context);
-                        setState(() {
-                          _isSelectionMode = true;
-                          _selectedPracticeIds.clear();
-                        });
+                        _setSelectionMode(true);
                       },
                     ),
                     const SizedBox(height: 4),
@@ -327,10 +354,7 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
                 ),
               ),
               onPressed: () {
-                setState(() {
-                  _isSelectionMode = false;
-                  _selectedPracticeIds.clear();
-                });
+                _setSelectionMode(false);
               },
               child: const StandardText(
                 text: '취소하기',
@@ -383,124 +407,31 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
   }
 
   Future<void> _showDeletePracticeDialog(List<int> deletePracticeIds) async {
-    return showTossDialog(
-      context: context,
-      builder: (context) {
-        return Dialog(
-          backgroundColor: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppRadius.large),
-          ),
-          child: Container(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // 헤더
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: Colors.red.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(AppRadius.small),
-                      ),
-                      child: const Icon(
-                        Icons.delete_forever,
-                        color: Colors.red,
-                        size: 20,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    StandardText(
-                      text: '복습 세트 삭제',
-                      fontSize: MobileFontSize.reduced(context, 18),
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary,
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 20),
-                // 내용
-                StandardText(
-                  text: '정말로 이 복습 세트를 삭제하시겠습니까?',
-                  fontSize: MobileFontSize.reduced(context, 15),
-                  color: AppColors.textPrimary,
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 24),
-                // 액션 버튼
-                Row(
-                  children: [
-                    Expanded(
-                      child: TextButton(
-                        onPressed: () {
-                          Navigator.pop(context);
-                        },
-                        style: TextButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 10),
-                          backgroundColor: Colors.grey[100],
-                          shape: RoundedRectangleBorder(
-                            borderRadius:
-                                BorderRadius.circular(AppRadius.small),
-                          ),
-                        ),
-                        child: StandardText(
-                          text: '취소',
-                          fontSize: MobileFontSize.reduced(context, 15),
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: TextButton(
-                        onPressed: () async {
-                          Navigator.pop(context);
-
-                          final provider = Provider.of<ProblemPracticeProvider>(
-                              context,
-                              listen: false);
-                          await provider.deletePractices(deletePracticeIds);
-                          AppAnalytics.logEvent('practice_set_deleted', {
-                            'count': deletePracticeIds.length,
-                            'source': 'list',
-                          });
-
-                          setState(() {
-                            _isSelectionMode = false;
-                            _selectedPracticeIds.clear();
-                          });
-
-                          // 다이얼로그를 닫은 뒤라 이 자리의 context 는 이미
-                          // 죽어 있다. 넘기지 않고 앱 전체 Overlay 에 맡긴다.
-                          AppToast.success('복습 세트가 삭제되었습니다!');
-                        },
-                        style: TextButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 10),
-                          backgroundColor: Colors.red,
-                          shape: RoundedRectangleBorder(
-                            borderRadius:
-                                BorderRadius.circular(AppRadius.small),
-                          ),
-                        ),
-                        child: const StandardText(
-                          text: '삭제',
-                          fontSize: 15,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        );
-      },
+    final provider =
+        Provider.of<ProblemPracticeProvider>(context, listen: false);
+    final confirmed = await showConfirmDialog(
+      context,
+      title: '복습 세트 ${deletePracticeIds.length}개를 삭제할까요?',
+      message: '세트만 지워지고 담긴 오답노트는 그대로 남아요.',
+      confirmLabel: '삭제하기',
+      destructive: true,
     );
+    if (!confirmed || !mounted) return;
+
+    try {
+      await provider.deletePractices(deletePracticeIds);
+    } catch (e) {
+      AppToast.error('복습 세트를 삭제하지 못했어요. 잠시 후 다시 시도해 주세요.');
+      return;
+    }
+    AppAnalytics.logEvent('practice_set_deleted', {
+      'count': deletePracticeIds.length,
+      'source': 'list',
+    });
+    if (mounted) {
+      _setSelectionMode(false);
+    }
+    AppToast.success('복습 세트를 삭제했어요.');
   }
 
   Widget _buildLoadingIndicator() {
@@ -575,30 +506,62 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
       return _buildLoadingIndicator();
     }
 
-    return ListView.builder(
-      controller: _scrollController,
-      physics: const AlwaysScrollableScrollPhysics(),
-      padding: const EdgeInsets.symmetric(vertical: 20),
-      itemCount: thumbnails.length + (isLoadingMore || hasMore ? 1 : 0),
-      itemBuilder: (context, index) {
-        // 더 불러오는 중임을 알리는 자리. 목록 아래에 잠깐 보이는 것이라
-        // 스켈레톤보다 작은 표시가 낫다.
-        if (index == thumbnails.length) {
-          return const Padding(
-            padding: EdgeInsets.all(16.0),
-            child: Center(child: CircularProgressIndicator()),
-          );
-        }
+    // 받은 쪽이 화면을 다 채우지 못하면 스크롤 리스너가 불리지 않는다. 두 열에서는
+    // 한 쪽이 열 줄이라 이렇게 될 수 있어서 그린 뒤에 한 번 본다.
+    // 받은 개수가 그대로면 다시 보지 않는다. 실패했을 때 되풀이하지 않게 한다.
+    if (hasMore && !isLoadingMore && _autoFillCount != thumbnails.length) {
+      _autoFillCount = thumbnails.length;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && _scrollController.hasClients) _onScroll();
+      });
+    }
 
-        final practice = thumbnails[index];
-        // 첫 화면에 보이는 것만 하나씩 들어온다.
-        return AppearTransition(
-          enabled: index < _staggeredItemLimit,
-          delay: AppMotion.stagger * index,
-          child: _buildPracticeItem(practice, themeProvider),
-        );
-      },
-    );
+    // 넓은 화면에서는 두 열로 놓는다. 태블릿에서도 한 줄이라 카드가 길게
+    // 늘어났다.
+    return LayoutBuilder(builder: (context, constraints) {
+      final columns = constraints.maxWidth >= 700 ? 2 : 1;
+      final rowCount = (thumbnails.length / columns).ceil();
+      return ListView.builder(
+        controller: _scrollController,
+        physics: const AlwaysScrollableScrollPhysics(),
+        // 책장과 같은 간격이다. 바깥 20, 두 열 사이 16, 카드 위아래 8.
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+        itemCount: rowCount + (isLoadingMore || hasMore ? 1 : 0),
+        itemBuilder: (context, index) {
+          // 더 불러오는 중임을 알리는 자리. 목록 아래에 잠깐 보이는 것이라
+          // 스켈레톤보다 작은 표시가 낫다.
+          if (index == rowCount) {
+            return const Padding(
+              padding: EdgeInsets.all(16.0),
+              child: Center(child: CircularProgressIndicator()),
+            );
+          }
+
+          final first = index * columns;
+          final row = columns == 1
+              ? _buildPracticeItem(thumbnails[first], themeProvider)
+              : Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    for (var i = first; i < first + columns; i++) ...[
+                      if (i > first) const SizedBox(width: 16),
+                      Expanded(
+                        child: i < thumbnails.length
+                            ? _buildPracticeItem(thumbnails[i], themeProvider)
+                            : const SizedBox.shrink(),
+                      ),
+                    ],
+                  ],
+                );
+          // 첫 화면에 보이는 것만 하나씩 들어온다.
+          return AppearTransition(
+            enabled: index < _staggeredItemLimit,
+            delay: AppMotion.stagger * index,
+            child: row,
+          );
+        },
+      );
+    });
   }
 
   Widget _buildPracticeItem(
@@ -619,7 +582,7 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
         }
       },
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        padding: const EdgeInsets.symmetric(vertical: 8),
         child: Container(
           decoration: _buildBoxDecoration(isSelected, themeProvider),
           padding: const EdgeInsets.all(12),
@@ -739,8 +702,9 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
                 child: StandardText(
                   text:
                       '마지막 복습 날짜: ${formatDateTime(practice.lastSolvedAt) ?? '복습 기록 없음'}',
-                  fontSize: 11,
-                  color: Colors.grey,
+                  // 공책의 오답노트 개수처럼 이름 아래 보조 정보라 흐리게 둔다.
+                  fontSize: 12,
+                  color: AppColors.textTertiary,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -862,7 +826,7 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
     if (dateTime == null) {
       return null;
     }
-    return DateFormat('yyyy/MM/dd').format(dateTime);
+    return shortDate(dateTime);
   }
 
   Future<void> _refreshPracticeThumbnails() async {

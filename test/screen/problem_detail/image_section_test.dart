@@ -26,7 +26,7 @@ void main() {
       ),
     );
 
-    expect(find.text('문제 이미지가 없습니다.'), findsOneWidget);
+    expect(find.text('문제 이미지가 없어요.'), findsOneWidget);
     expect(find.byType(ImageGallerySection), findsNothing);
   });
 
@@ -39,7 +39,7 @@ void main() {
       ),
     );
 
-    expect(find.text('해설 이미지가 없습니다.'), findsOneWidget);
+    expect(find.text('해설 이미지가 없어요.'), findsOneWidget);
   });
 
   testWidgets('이미지가 있으면 ImageGallerySection 을 그린다', (tester) async {
@@ -58,7 +58,7 @@ void main() {
     });
 
     expect(find.byType(ImageGallerySection), findsOneWidget);
-    expect(find.text('문제 이미지가 없습니다.'), findsNothing);
+    expect(find.text('문제 이미지가 없어요.'), findsNothing);
   });
 
   testWidgets('태블릿 폭에서도 예외 없이 그려진다', (tester) async {

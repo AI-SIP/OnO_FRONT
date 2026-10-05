@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -16,7 +18,8 @@ import 'package:provider/provider.dart';
 import '../../Model/Problem/ProblemModel.dart';
 import '../../Model/Problem/ProblemThumbnailModel.dart';
 import '../../Exception/ApiException.dart';
-import '../../Module/Dialog/LoadingDialog.dart';
+import '../../Module/Design/AppToast.dart';
+import '../../Util/PendingDeletion.dart';
 import '../../Module/Image/DisplayImage.dart';
 import '../../Module/Problem/ProblemThumbnailCard.dart';
 import '../../Module/Text/mobile_font_size.dart';
@@ -44,6 +47,8 @@ import '../../Module/Motion/TossDialog.dart';
 import '../../Module/Design/AppColors.dart';
 import '../../Module/Design/AppRadius.dart';
 import 'package:ono/Util/AppAnalytics.dart';
+import '../../Model/Common/ListSort.dart';
+import '../../Module/Dialog/ConfirmDialog.dart';
 
 class DirectoryScreen extends StatefulWidget {
   final int? folderId; // 이 화면이 표시할 폴더 ID
@@ -63,9 +68,12 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
   static const double _dialogMaxWidth = 420;
   // 공책을 지우면 서버가 안에 든 공책과 오답노트까지 함께 지운다. 하위 공책의
   // 오답노트 수는 클라이언트가 정확히 모르므로 개수 없이 범위만 알린다.
-  static const String _folderDeleteScopeMessage =
-      '안에 있는 공책과 오답노트도 함께 삭제되며, 되돌릴 수 없습니다.';
+  static const String _folderDeleteScopeMessage = '안에 있는 공책과 오답노트도 함께 삭제돼요.';
   bool _isSelectionMode = false; // 선택 모드 활성화 여부
+  late final ProblemsProvider _problemsProvider;
+
+  // 지금 목록을 받은 정렬. 다른 공책 화면에서 정렬을 바꾸고 돌아오면 다시 받는다.
+  ListSort? _loadedSort;
   final List<int> _selectedFolderIds = []; // 선택된 폴더 ID 리스트
   final List<int> _selectedProblemIds = []; // 선택된 문제 ID 리스트
   FolderModel? _currentFolder; // 이 화면의 폴더 데이터
@@ -91,6 +99,14 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
   // 루트 폴더 새로고침 타임스탬프 추적
   int _lastRootFolderRefreshTimestamp = 0;
 
+  // 하위 공책 새로고침 타임스탬프 추적
+  int _lastFolderRefreshTimestamp = 0;
+
+  /// 다시 받기를 시작할 때마다 오른다. 다시 받는 중에 먼저 나간 쪽 요청의
+  /// 응답이 오면 버린다. 전에는 다음 쪽을 받는 중에 정렬을 바꾸면 옛 정렬의
+  /// 쪽과 커서가 새 목록에 붙었다.
+  int _loadGeneration = 0;
+
   // 새로고침 중복 실행 방지
   bool _isRefreshing = false;
   bool _isQuickCreateOpen = false;
@@ -104,6 +120,15 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     // ScrollController 초기화
     _scrollController = ScrollController();
     _scrollController.addListener(_onScroll);
+    PendingDeletion.instance.addListener(_onPendingDeletionChanged);
+    _problemsProvider = Provider.of<ProblemsProvider>(context, listen: false)
+      ..addListener(_syncProblemsFromProvider);
+    final folderId = widget.folderId;
+    if (folderId != null) {
+      _lastFolderRefreshTimestamp =
+          Provider.of<FoldersProvider>(context, listen: false)
+              .folderRefreshTimestamp(folderId);
+    }
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       // 이 화면의 폴더 데이터 로드
@@ -119,8 +144,14 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
 
   @override
   void dispose() {
+    PendingDeletion.instance.removeListener(_onPendingDeletionChanged);
+    _problemsProvider.removeListener(_syncProblemsFromProvider);
     _scrollController.dispose();
     super.dispose();
+  }
+
+  void _onPendingDeletionChanged() {
+    if (mounted) setState(() {});
   }
 
   @override
@@ -150,9 +181,30 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     }
   }
 
-  Future<void> _loadFolderData() async {
+  /// 받은 쪽이 화면을 다 채우지 못해 스크롤이 생기지 않으면 스크롤 리스너가
+  /// 불리지 않는다. 태블릿 두 열에서는 한 쪽이 열 줄이라 이렇게 될 수 있어서,
+  /// 쪽을 받을 때마다 그린 뒤에 한 번 확인한다.
+  void _loadMoreIfListEndVisible() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !_scrollController.hasClients) return;
+      _onScroll();
+    });
+  }
+
+  /// 이 공책의 하위 공책과 오답노트를 다시 받는다.
+  ///
+  /// 이미 그려 둔 목록이 있으면 [keepVisible] 로 그대로 둔 채 받아서 바꿔
+  /// 끼우고 보던 스크롤 위치를 지킨다. 전에는 하위 공책에서 돌아오거나 무언가를
+  /// 옮기고 지울 때마다 스켈레톤이 뜨고 맨 위부터 다시 그렸다. 정렬을 바꿀
+  /// 때처럼 순서가 달라지면 false 로 불러 맨 위부터 그린다.
+  Future<void> _loadFolderData({bool? keepVisible}) async {
+    final generation = ++_loadGeneration;
+    final keep = keepVisible ?? _currentFolder != null;
+    final savedOffset =
+        keep && _scrollController.hasClients ? _scrollController.offset : null;
+
     // 초기 로딩 상태 시작
-    if (mounted) {
+    if (mounted && !keep) {
       setState(() {
         _isInitialLoading = true;
       });
@@ -161,6 +213,14 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     try {
       final foldersProvider =
           Provider.of<FoldersProvider>(context, listen: false);
+      // 스스로 다시 받는 것이니, 이 공책에 온 새로고침 신호는 이미 받은 셈이다.
+      final ownFolderId = widget.folderId;
+      if (ownFolderId != null) {
+        _lastFolderRefreshTimestamp =
+            foldersProvider.folderRefreshTimestamp(ownFolderId);
+      }
+      await foldersProvider.loadBookshelfSort();
+      _loadedSort = foldersProvider.bookshelfSort;
 
       // 이 화면의 폴더 ID 결정
       int targetFolderId;
@@ -176,17 +236,27 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
 
       // 폴더 메타데이터만 가져오기 (Provider의 currentFolder는 업데이트하지 않음)
       final folder = await foldersProvider.getFolder(targetFolderId);
+      // 그사이 더 늦게 시작한 다시 받기가 있으면 그쪽에 맡긴다.
+      if (generation != _loadGeneration) return;
 
-      // 로컬 상태 초기화
+      // 로컬 상태 초기화. 목록을 그대로 두는 경우에는 첫 쪽이 오면 바꿔 낀다.
       if (mounted) {
         setState(() {
           _currentFolder = folder;
-          _localSubfolders = [];
-          _localProblems = [];
+          if (keep) {
+            _replaceSubfoldersOnNextPage = true;
+            _replaceProblemsOnNextPage = true;
+          } else {
+            _localSubfolders = [];
+            _localProblems = [];
+          }
           _subfolderNextCursor = null;
           _problemNextCursor = null;
           _subfolderHasNext = false;
           _problemHasNext = false;
+          // 먼저 나간 쪽 요청은 응답을 버리므로, 첫 쪽 요청을 막지 않게 푼다.
+          _isLoadingSubfolders = false;
+          _isLoadingProblems = false;
         });
       }
 
@@ -195,6 +265,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
         _loadMoreSubfoldersLocal(targetFolderId),
         _loadMoreProblemsLocal(targetFolderId),
       ]);
+      if (savedOffset != null) _restoreScrollOffset(savedOffset);
     } on UnauthorizedException catch (e) {
       debugPrint('Directory auth failure: $e');
       if (mounted) {
@@ -214,18 +285,52 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
       if (mounted) {
         SnackBarDialog.showSnackBar(
           context: context,
-          message: '서버 응답이 올바르지 않아 데이터를 불러오지 못했습니다.',
+          message: '서버 응답이 올바르지 않아 데이터를 불러오지 못했어요.',
           backgroundColor: Colors.redAccent,
         );
       }
     } finally {
-      // 초기 로딩 완료
-      if (mounted) {
+      // 초기 로딩 완료. 바꿔 끼우기 표시는 여기서 지우지 않는다. 다시 받기가
+      // 겹치면 늦게 시작한 쪽이 먼저 끝나는데, 그때 지우면 먼저 시작한 쪽의
+      // 첫 쪽이 예전 목록 뒤에 붙어 같은 카드가 두 번 보였다. 실패해서 남아
+      // 있으면 다음에 받는 첫 쪽이 바꿔 낀다.
+      if (mounted && generation == _loadGeneration) {
         setState(() {
           _isInitialLoading = false;
         });
       }
     }
+  }
+
+  // 다시 받는 동안 예전 목록을 그대로 보이다가 첫 쪽이 오면 바꿔 낀다.
+  bool _replaceSubfoldersOnNextPage = false;
+  bool _replaceProblemsOnNextPage = false;
+
+  void _putSubfolders(List<FolderThumbnailModel> page) {
+    if (_replaceSubfoldersOnNextPage) {
+      _replaceSubfoldersOnNextPage = false;
+      _localSubfolders = List.of(page);
+    } else {
+      _localSubfolders.addAll(page);
+    }
+  }
+
+  void _putProblems(List<ProblemModel> page) {
+    if (_replaceProblemsOnNextPage) {
+      _replaceProblemsOnNextPage = false;
+      _localProblems = List.of(page);
+    } else {
+      _localProblems.addAll(page);
+    }
+  }
+
+  /// 다시 받은 목록이 짧아졌을 수 있어서 끝을 넘지 않게 맞춘다.
+  void _restoreScrollOffset(double offset) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !_scrollController.hasClients) return;
+      final max = _scrollController.position.maxScrollExtent;
+      _scrollController.jumpTo(offset.clamp(0.0, max));
+    });
   }
 
   // 로컬 하위 폴더 로드 (캐시 우선 사용)
@@ -235,6 +340,9 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
 
     if (!mounted) return;
 
+    final generation = _loadGeneration;
+    // 실패했을 때 끝이 보인다고 곧바로 다시 부르면 실패를 되풀이한다.
+    var loaded = false;
     setState(() {
       _isLoadingSubfolders = true;
     });
@@ -257,7 +365,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
             '✅ Using cached subfolders for folder $folderId (${cachedSubfolders.length} items)');
         if (mounted) {
           setState(() {
-            _localSubfolders.addAll(cachedSubfolders);
+            _putSubfolders(cachedSubfolders);
             // Provider의 상태 복사
             _subfolderNextCursor = cachedSubfolders.isNotEmpty
                 ? cachedSubfolders.last.folderId
@@ -278,12 +386,14 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
         folderId: folderId,
         cursor: _subfolderNextCursor,
         size: 20,
+        sort: foldersProvider.bookshelfSort,
       );
+      if (generation != _loadGeneration) return;
 
       // 로컬 상태 업데이트 (모든 페이지)
       if (mounted) {
         setState(() {
-          _localSubfolders.addAll(response.content);
+          _putSubfolders(response.content);
           _subfolderNextCursor = response.nextCursor;
           _subfolderHasNext = response.hasNext;
         });
@@ -298,9 +408,11 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
       debugPrint(
           '💾 Saved total ${_localSubfolders.length} subfolders to cache for folder $folderId');
 
+      loaded = true;
       debugPrint(
           'Loaded ${response.content.length} subfolders from server for folder $folderId');
     } catch (e, stackTrace) {
+      if (generation != _loadGeneration) return;
       debugPrint('Error loading subfolders locally: $e');
       debugPrint(stackTrace.toString());
       await AppErrorReporter.report(
@@ -312,15 +424,16 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
       if (mounted) {
         SnackBarDialog.showSnackBar(
           context: context,
-          message: '폴더 목록을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.',
+          message: '폴더 목록을 불러오지 못했어요. 잠시 후 다시 시도해 주세요.',
           backgroundColor: Colors.redAccent,
         );
       }
     } finally {
-      if (mounted) {
+      if (mounted && generation == _loadGeneration) {
         setState(() {
           _isLoadingSubfolders = false;
         });
+        if (loaded) _loadMoreIfListEndVisible();
       }
     }
   }
@@ -360,6 +473,9 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
 
     if (!mounted) return;
 
+    final generation = _loadGeneration;
+    // 실패했을 때 끝이 보인다고 곧바로 다시 부르면 실패를 되풀이한다.
+    var loaded = false;
     setState(() {
       _isLoadingProblems = true;
     });
@@ -381,7 +497,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
             '✅ Using cached problems for folder $folderId (${cachedProblems.length} items)');
         if (mounted) {
           setState(() {
-            _localProblems.addAll(cachedProblems);
+            _putProblems(cachedProblems);
             // Provider의 상태 복사
             _problemNextCursor = cachedProblems.isNotEmpty
                 ? cachedProblems.last.problemId
@@ -402,12 +518,14 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
         folderId: folderId,
         cursor: _problemNextCursor,
         size: 20,
+        sort: foldersProvider.bookshelfSort,
       );
+      if (generation != _loadGeneration) return;
 
       // 로컬 상태 업데이트 (모든 페이지)
       if (mounted) {
         setState(() {
-          _localProblems.addAll(response.content);
+          _putProblems(response.content);
           _problemNextCursor = response.nextCursor;
           _problemHasNext = response.hasNext;
         });
@@ -422,9 +540,11 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
       debugPrint(
           '💾 Saved total ${_localProblems.length} problems to cache for folder $folderId');
 
+      loaded = true;
       debugPrint(
           'Loaded ${response.content.length} problems from server for folder $folderId');
     } catch (e, stackTrace) {
+      if (generation != _loadGeneration) return;
       debugPrint('Error loading problems locally: $e');
       debugPrint(stackTrace.toString());
       await AppErrorReporter.report(
@@ -436,15 +556,16 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
       if (mounted) {
         SnackBarDialog.showSnackBar(
           context: context,
-          message: '문제 목록을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.',
+          message: '문제 목록을 불러오지 못했어요. 잠시 후 다시 시도해 주세요.',
           backgroundColor: Colors.redAccent,
         );
       }
     } finally {
-      if (mounted) {
+      if (mounted && generation == _loadGeneration) {
         setState(() {
           _isLoadingProblems = false;
         });
+        if (loaded) _loadMoreIfListEndVisible();
       }
     }
   }
@@ -452,6 +573,19 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+
+    // 하위 공책 화면은 그 공책에 온 새로고침 신호를 본다.
+    final folderId = widget.folderId;
+    if (folderId != null) {
+      final latest = Provider.of<FoldersProvider>(context, listen: false)
+          .folderRefreshTimestamp(folderId);
+      if (latest != _lastFolderRefreshTimestamp && _currentFolder != null) {
+        _lastFolderRefreshTimestamp = latest;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) _loadFolderData();
+        });
+      }
+    }
 
     // 루트 폴더 화면인 경우에만 타임스탬프 감지
     if (widget.folderId == null) {
@@ -492,6 +626,17 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     final themeProvider = Provider.of<ThemeHandler>(context);
     final foldersProvider = Provider.of<FoldersProvider>(context);
     final reviewDueProvider = Provider.of<ReviewDueProvider>(context);
+    // 뒤에 깔린 공책 화면은 지금 다시 받지 않고 돌아올 때 받는다. 전에는
+    // 깊은 공책에서 정렬을 바꾸면 뒤에 쌓인 화면이 모두 한꺼번에 다시 받았다.
+    if (_loadedSort != null &&
+        _loadedSort != foldersProvider.bookshelfSort &&
+        !_isInitialLoading &&
+        (ModalRoute.of(context)?.isCurrent ?? true)) {
+      _loadedSort = foldersProvider.bookshelfSort;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _loadFolderData(keepVisible: false);
+      });
+    }
 
     final body = !(authService.isLoggedIn == LoginStatus.login)
         ? _buildLoginPrompt(themeProvider)
@@ -503,8 +648,16 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
               final missionProvider = widget.folderId == null
                   ? Provider.of<MissionProvider>(context, listen: false)
                   : null;
-              await fetchFoldersAndProblems();
-              await missionProvider?.fetchMissions();
+              final reviewDueProvider = widget.folderId == null
+                  ? Provider.of<ReviewDueProvider>(context, listen: false)
+                  : null;
+              await Future.wait([
+                fetchFoldersAndProblems(),
+                if (missionProvider != null) missionProvider.fetchMissions(),
+                // 추천 복습 카드도 같이 맞춘다. 전에는 당겨도 그대로였다.
+                if (reviewDueProvider != null)
+                  reviewDueProvider.fetchReviewDue(),
+              ]);
             },
             // 좌우 여백은 목록 안쪽에 둔다. 목록은 제 영역 밖을 잘라내서,
             // 바깥에 여백을 두면 폴더에 끌어다 댈 때 커지는 강조 테두리의
@@ -525,6 +678,14 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                             reviewDueProvider.dueCount > 0)
                           _buildReviewDueBadge(
                               context, reviewDueProvider, themeProvider),
+                        // 추천이 0개여도 들어갈 길을 남긴다. 전에는 카드가 통째로
+                        // 사라져 추천 복습이 어디 있는지 알 수 없었다.
+                        if (widget.folderId == null &&
+                            reviewDueProvider.data != null &&
+                            reviewDueProvider.dueCount == 0 &&
+                            (_localProblems.isNotEmpty ||
+                                _localSubfolders.isNotEmpty))
+                          _buildReviewDoneRow(context, themeProvider),
                       ],
                     ),
                   ),
@@ -534,8 +695,18 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
             ),
           );
 
+    // 선택 모드에서 뒤로 가기는 선택만 푼다. 전에는 첫 화면에서 앱이 꺼졌다.
     return PopScope(
-        canPop: true,
+        canPop: !_isSelectionMode,
+        onPopInvokedWithResult: (didPop, _) {
+          if (didPop || !_isSelectionMode) return;
+          setState(() {
+            _isSelectionMode = false;
+            _isQuickCreateOpen = false;
+            _selectedFolderIds.clear();
+            _selectedProblemIds.clear();
+          });
+        },
         child: Scaffold(
           backgroundColor: Colors.white,
           appBar: _buildAppBar(themeProvider, foldersProvider), // 상단 AppBar 추가
@@ -558,24 +729,38 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     return AppBar(
       elevation: 0, // AppBar 그림자 제거
       centerTitle: true, // 제목을 항상 가운데로 배치
+      titleSpacing: 8,
       backgroundColor: Colors.white,
-      title: StandardText(
-        text: _isSelectionMode
-            ? '삭제할 항목 선택'
-            : ((_currentFolder?.parentFolder?.folderId != null &&
-                    _currentFolder?.folderName != null)
-                ? _currentFolder!.folderName
-                : '책장'),
-        fontSize: 18,
-        color: themeProvider.primaryColor,
+      // 오른쪽 버튼이 왼쪽 뒤로 가기보다 넓어서, 긴 공책 이름은 가운데에서
+      // 왼쪽으로 밀려 보였다. 양쪽에서 넓은 쪽만큼 비워 두고 넘치면 줄인다.
+      title: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxWidth: (MediaQuery.sizeOf(context).width -
+                  2 * ((_isSelectionMode ? 1 : 2) * 48.0 + 4) -
+                  16)
+              .clamp(80.0, double.infinity),
+        ),
+        child: StandardText(
+          text: _isSelectionMode
+              ? '삭제할 항목 선택'
+              : ((_currentFolder?.parentFolder?.folderId != null &&
+                      _currentFolder?.folderName != null)
+                  ? _currentFolder!.folderName
+                  : '책장'),
+          fontSize: 18,
+          color: themeProvider.primaryColor,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
       ),
       actions: [
         Padding(
-          padding: const EdgeInsets.only(right: 16.0), // 우측에 여백 추가
+          padding: const EdgeInsets.only(right: 4.0),
           child: Row(
             children: [
               if (!_isSelectionMode)
                 IconButton(
+                  tooltip: '검색',
                   icon: Icon(
                     Icons.search,
                     color: themeProvider.primaryColor,
@@ -590,6 +775,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                   },
                 ),
               IconButton(
+                tooltip: _isSelectionMode ? '선택 끝내기' : '더 보기',
                 icon: Icon(
                   _isSelectionMode ? Icons.close : Icons.more_vert,
                   color: themeProvider.primaryColor,
@@ -614,6 +800,55 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     );
   }
 
+  /// 공책과 오답노트를 어느 순서로 볼지 고른다. 전에는 늘 오래된 것이 맨
+  /// 위라 최근에 쓴 오답노트를 보려면 끝까지 내려야 했다. 앱바에 버튼으로
+  /// 두니 공책 이름이 다섯 글자만 넘어도 잘려서 더 보기 메뉴로 옮겼다.
+  Future<void> _showSortSheet(
+      ThemeHandler themeProvider, FoldersProvider foldersProvider) async {
+    final current = foldersProvider.bookshelfSort;
+    final picked = await showModalBottomSheet<ListSort>(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const StandardText(
+                text: '정렬',
+                fontSize: 17,
+                color: AppColors.textPrimary,
+              ),
+              const SizedBox(height: 8),
+              for (final sort in ListSort.values)
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: StandardText(
+                    text: sort.label,
+                    fontSize: 15,
+                    color: AppColors.textPrimary,
+                  ),
+                  trailing: sort == current
+                      ? Icon(Icons.check, color: themeProvider.primaryColor)
+                      : null,
+                  onTap: () => Navigator.pop(context, sort),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+    if (picked == null || picked == foldersProvider.bookshelfSort) return;
+    AppAnalytics.logEvent('bookshelf_sort_change', {'sort': picked.name});
+    foldersProvider.setBookshelfSort(picked);
+    _loadFolderData(keepVisible: false);
+  }
+
   /// 목록에서 하나씩 들어오게 할 항목 수. 첫 화면에 보이는 만큼이다.
   static const int _staggeredItemLimit = 8;
 
@@ -635,7 +870,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
                       _buildQuickCreateAction(
-                        label: '공책 추가',
+                        label: '공책 만들기',
                         icon: Icons.create_new_folder_outlined,
                         themeProvider: themeProvider,
                         onTap: () async {
@@ -785,7 +1020,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
   // 공책 생성 다이얼로그 출력
   Future<void> _showCreateFolderDialog() async {
     await _showFolderNameDialog(
-      dialogTitle: '공책 추가',
+      dialogTitle: '공책 만들기',
       defaultFolderName: '', // 폴더 생성 시에는 기본값이 없음
       onFolderNameSubmitted: (folderName) async {
         final foldersProvider =
@@ -934,7 +1169,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                     _buildActionItem(
                       icon: Icons.add_circle_outline,
                       iconColor: themeProvider.primaryColor,
-                      title: '공책 추가하기',
+                      title: '공책 만들기',
                       onTap: () {
                         Navigator.pop(context);
                         FirebaseAnalytics.instance.logEvent(
@@ -947,7 +1182,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                       _buildActionItem(
                         icon: Icons.drive_file_rename_outline,
                         iconColor: themeProvider.primaryColor,
-                        title: '공책 이름 수정하기',
+                        title: '공책 이름 바꾸기',
                         onTap: () {
                           Navigator.pop(context);
                           FirebaseAnalytics.instance
@@ -960,7 +1195,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                     _buildActionItem(
                       icon: Icons.drive_file_move_outline,
                       iconColor: themeProvider.primaryColor,
-                      title: '공책 정리하기',
+                      title: '공책 옮기기',
                       onTap: () {
                         Navigator.pop(context);
                         FirebaseAnalytics.instance.logEvent(
@@ -970,9 +1205,19 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                     ),
                     const SizedBox(height: 8),
                     _buildActionItem(
+                      icon: Icons.swap_vert,
+                      iconColor: themeProvider.primaryColor,
+                      title: '정렬: ${foldersProvider.bookshelfSort.label}',
+                      onTap: () {
+                        Navigator.pop(context);
+                        _showSortSheet(themeProvider, foldersProvider);
+                      },
+                    ),
+                    const SizedBox(height: 8),
+                    _buildActionItem(
                       icon: Icons.delete_outline,
                       iconColor: Colors.red,
-                      title: '공책 편집하기',
+                      title: '여러 개 삭제하기',
                       titleColor: Colors.red,
                       onTap: () {
                         Navigator.pop(context);
@@ -1045,7 +1290,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
 
   Future<void> _showRenameFolderDialog(FoldersProvider foldersProvider) async {
     await _showFolderNameDialog(
-      dialogTitle: '공책 이름 변경',
+      dialogTitle: '공책 이름 바꾸기',
       defaultFolderName: _currentFolder?.folderName ?? '',
       onFolderNameSubmitted: (newName) async {
         await _renameFolder(newName);
@@ -1269,11 +1514,19 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
         child: Column(
           children: [
             Expanded(
-              child: Builder(
-                builder: (context) {
+              child: LayoutBuilder(
+                builder: (context, constraints) {
                   // 로컬 상태 사용 (Provider와 독립적)
-                  var currentSubfolders = _localSubfolders;
-                  var currentProblems = _localProblems;
+                  // 지우고 되돌리기를 기다리는 것은 목록에서 뺀다.
+                  final pending = PendingDeletion.instance;
+                  var currentSubfolders = _localSubfolders
+                      .where(
+                          (folder) => !pending.isFolderHidden(folder.folderId))
+                      .toList();
+                  var currentProblems = _localProblems
+                      .where((problem) =>
+                          !pending.isProblemHidden(problem.problemId))
+                      .toList();
                   final isLoadingMore =
                       _isLoadingSubfolders || _isLoadingProblems;
 
@@ -1322,6 +1575,30 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                                 color: Colors.grey[600]!,
                                 textAlign: TextAlign.center,
                               ),
+                              // 안내만 있고 누를 곳이 없어서 + 버튼을 찾아야 했다.
+                              const SizedBox(height: 20),
+                              ElevatedButton.icon(
+                                onPressed:
+                                    _navigateToSingleProblemRegisterInCurrentFolder,
+                                icon: const Icon(Icons.edit_note,
+                                    color: Colors.white),
+                                label: const StandardText(
+                                  text: '오답노트 쓰기',
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.white,
+                                ),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: themeProvider.primaryColor,
+                                  elevation: 0,
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 22, vertical: 12),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius:
+                                        BorderRadius.circular(AppRadius.large),
+                                  ),
+                                ),
+                              ),
                             ],
                           ),
                         ),
@@ -1333,15 +1610,39 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                       currentSubfolders.length + currentProblems.length;
                   final hasMore = _subfolderHasNext || _problemHasNext;
 
+                  Widget tileAt(int index) => index < currentSubfolders.length
+                      ? _buildFolderTile(
+                          currentSubfolders[index], themeProvider, index)
+                      : _buildProblemTile(
+                          currentProblems[index - currentSubfolders.length],
+                          themeProvider);
+
+                  // 넓은 화면에서는 두 열로 놓는다. 전에는 태블릿에서도 한 줄이라
+                  // 카드가 길게 늘어나고 한 화면에 몇 개 보이지 않았다. 공책과
+                  // 오답노트는 서로 섞이지 않게 각자 짝을 짓는다.
+                  final twoColumns = constraints.maxWidth >= 700;
+                  final rows = <List<int>>[];
+                  if (twoColumns) {
+                    void pairUp(int from, int to) {
+                      for (var i = from; i < to; i += 2) {
+                        rows.add([i, if (i + 1 < to) i + 1]);
+                      }
+                    }
+
+                    pairUp(0, currentSubfolders.length);
+                    pairUp(currentSubfolders.length, totalItems);
+                  }
+                  final rowCount = twoColumns ? rows.length : totalItems;
+
                   return ListView.builder(
                     controller: _scrollController,
                     physics: const AlwaysScrollableScrollPhysics(),
                     padding:
                         const EdgeInsets.symmetric(horizontal: _pagePadding),
-                    itemCount: totalItems + (isLoadingMore || hasMore ? 1 : 0),
+                    itemCount: rowCount + (isLoadingMore || hasMore ? 1 : 0),
                     itemBuilder: (context, index) {
                       // 로딩 인디케이터 표시
-                      if (index == totalItems) {
+                      if (index == rowCount) {
                         return const Padding(
                           padding: EdgeInsets.all(16.0),
                           child: Center(
@@ -1350,12 +1651,20 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                         );
                       }
 
-                      final tile = index < currentSubfolders.length
-                          ? _buildFolderTile(
-                              currentSubfolders[index], themeProvider, index)
-                          : _buildProblemTile(
-                              currentProblems[index - currentSubfolders.length],
-                              themeProvider);
+                      final tile = twoColumns
+                          ? Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Expanded(child: tileAt(rows[index][0])),
+                                const SizedBox(width: 16),
+                                Expanded(
+                                  child: rows[index].length > 1
+                                      ? tileAt(rows[index][1])
+                                      : const SizedBox.shrink(),
+                                ),
+                              ],
+                            )
+                          : tileAt(index);
 
                       // 첫 화면에 보이는 것만 하나씩 들어온다. 아래쪽까지
                       // 지연을 매기면 스크롤해 내려갔을 때 항목이 뒤늦게
@@ -1408,8 +1717,13 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                 return DirectoryScreen(folderId: folder.folderId);
               }),
             ).then((_) {
-              // 하위 폴더에서 돌아왔을 때 현재 폴더 데이터 새로고침
-              _loadFolderData();
+              if (!mounted) return;
+              // 하위 폴더에서 돌아왔을 때 현재 폴더 데이터 새로고침. 그사이
+              // 정렬이 바뀌었으면 순서가 달라지니 맨 위부터 그린다.
+              final sortChanged = _loadedSort !=
+                  Provider.of<FoldersProvider>(context, listen: false)
+                      .bookshelfSort;
+              _loadFolderData(keepVisible: sortChanged ? false : null);
             });
           }
         },
@@ -1539,63 +1853,36 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                   overflow: TextOverflow.ellipsis,
                   maxLines: 1,
                 ),
+                const SizedBox(height: 4),
+                _buildFolderProblemCount(folder),
               ],
             ),
           ),
-          const SizedBox(width: 10),
-          _buildFolderProblemCountBadge(folder, themeProvider),
+          const SizedBox(width: 8),
+          if (!_isSelectionMode)
+            const Icon(
+              Icons.chevron_right_rounded,
+              size: 22,
+              color: AppColors.textDisabled,
+            ),
         ],
       ),
     );
   }
 
-  Widget _buildFolderProblemCountBadge(
-    FolderThumbnailModel folder,
-    ThemeHandler themeProvider,
-  ) {
-    final countText = NumberFormat.compact(locale: 'ko_KR')
-        .format(folder.problemCount < 0 ? 0 : folder.problemCount);
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isSmallPhone = screenWidth < 360;
-
-    return Container(
-      constraints: BoxConstraints(
-        minWidth: isSmallPhone ? 48 : 58,
-        maxWidth: isSmallPhone ? 64 : 84,
-      ),
-      padding: EdgeInsets.symmetric(
-        horizontal: isSmallPhone ? 8 : 10,
-        vertical: 7,
-      ),
-      decoration: BoxDecoration(
-        color: themeProvider.primaryColor.withValues(alpha: 0.09),
-        borderRadius: BorderRadius.circular(AppRadius.small),
-        border: Border.all(
-          color: themeProvider.primaryColor.withValues(alpha: 0.18),
-        ),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            Icons.description_outlined,
-            size: isSmallPhone ? 13 : 14,
-            color: themeProvider.primaryColor,
-          ),
-          const SizedBox(width: 4),
-          Flexible(
-            child: StandardText(
-              text: '$countText개',
-              fontSize: isSmallPhone ? 11 : 12,
-              color: themeProvider.primaryColor,
-              fontWeight: FontWeight.w700,
-              overflow: TextOverflow.ellipsis,
-              maxLines: 1,
-            ),
-          ),
-        ],
-      ),
+  /// 공책 이름 아래에 두는 오답노트 개수. 전에는 오른쪽에 테두리 친 상자로
+  /// 따로 세워서 이름보다 눈에 띄었다. 이름을 읽은 다음에 보는 정보라
+  /// 이름 아래 한 줄로 조용히 둔다.
+  Widget _buildFolderProblemCount(FolderThumbnailModel folder) {
+    final count = folder.problemCount < 0 ? 0 : folder.problemCount;
+    final countText = NumberFormat.compact(locale: 'ko_KR').format(count);
+    return StandardText(
+      // 하위 공책만 든 공책도 있어서 0개여도 비었다고 쓰지 않는다.
+      text: '오답노트 $countText개',
+      fontSize: 12.5,
+      color: AppColors.textTertiary,
+      overflow: TextOverflow.ellipsis,
+      maxLines: 1,
     );
   }
 
@@ -1812,7 +2099,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
               ),
             ),
           ),
-          const SizedBox(width: 16),
+          const SizedBox(width: 10),
           Expanded(
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(
@@ -1855,26 +2142,26 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
   Future<void> _deleteSelectedItems() async {
     final folderIds = List<int>.from(_selectedFolderIds);
     final problemIds = List<int>.from(_selectedProblemIds);
+    // 목록에서는 바로 빠지므로 선택 모드도 바로 푼다. 실제로 지우는 것은
+    // 되돌리기 시간이 지난 뒤다.
+    setState(() {
+      _isSelectionMode = false;
+      _selectedFolderIds.clear();
+      _selectedProblemIds.clear();
+    });
     final deleted = await _deleteItems(
       folderIds: folderIds,
       problemIds: problemIds,
-      loadingMessage: '폴더 정리 중...',
-      successMessage: '선택된 항목이 삭제되었습니다!',
-      errorMessage: '항목 삭제 중 오류가 발생했습니다.',
+      successMessage: '${folderIds.length + problemIds.length}개를 지웠어요',
+      errorMessage: '항목 삭제 중 오류가 발생했어요.',
     );
 
-    if (!deleted || !mounted) return;
+    if (!deleted) return;
 
     AppAnalytics.logEvent('items_deleted', {
       'folder_count': folderIds.length,
       'problem_count': problemIds.length,
       'source': 'selection',
-    });
-
-    setState(() {
-      _isSelectionMode = false;
-      _selectedFolderIds.clear();
-      _selectedProblemIds.clear();
     });
   }
 
@@ -1886,14 +2173,14 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
 
     if (item is FolderThumbnailModel) {
       folderIds.add(item.folderId);
-      successMessage = '${item.folderName} 공책을 삭제했어요.';
+      successMessage = '${item.folderName} 공책을 지웠어요';
       final folderName = item.folderName.isNotEmpty ? item.folderName : '제목 없음';
-      confirmMessage = '\'$folderName\' 공책을 정말 삭제하시겠습니까?\n'
+      confirmMessage = '\'$folderName\' 공책을 정말 삭제할까요?\n'
           '$_folderDeleteScopeMessage';
     } else if (item is ProblemModel) {
       problemIds.add(item.problemId);
-      successMessage = '오답노트를 삭제했어요.';
-      confirmMessage = '정말로 이 오답노트를 삭제하시겠습니까?';
+      successMessage = '오답노트를 지웠어요';
+      confirmMessage = '정말로 이 오답노트를 삭제할까요?';
     } else {
       return;
     }
@@ -1906,9 +2193,8 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     final deleted = await _deleteItems(
       folderIds: folderIds,
       problemIds: problemIds,
-      loadingMessage: '삭제 중...',
       successMessage: successMessage,
-      errorMessage: '삭제 중 오류가 발생했습니다.',
+      errorMessage: '삭제 중 오류가 발생했어요.',
     );
     if (!deleted) return;
     AppAnalytics.logEvent('items_deleted', {
@@ -1918,10 +2204,14 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     });
   }
 
+  /// 고른 항목을 목록에서 바로 빼고, 잠깐 `되돌리기` 를 보인 뒤에 실제로 지운다.
+  ///
+  /// 전에는 확인 창 뒤에 바로 지워서 잘못 지운 오답노트를 되살릴 수 없었다.
+  /// 지웠으면 true, 되돌렸거나 실패했으면 false 다. 이 화면을 벗어나도
+  /// 시간이 지나면 지운다.
   Future<bool> _deleteItems({
     required List<int> folderIds,
     required List<int> problemIds,
-    required String loadingMessage,
     required String successMessage,
     required String errorMessage,
   }) async {
@@ -1933,170 +2223,62 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
         Provider.of<FoldersProvider>(context, listen: false);
     final problemsProvider =
         Provider.of<ProblemsProvider>(context, listen: false);
-
-    LoadingDialog.show(context, loadingMessage);
+    final currentFolderId = _currentFolder!.folderId;
 
     try {
-      if (folderIds.isNotEmpty) {
-        await foldersProvider.deleteFolders(folderIds);
-      }
-
-      if (problemIds.isNotEmpty) {
-        await problemsProvider.deleteProblems(problemIds);
-      }
-
-      await foldersProvider.refreshFolder(_currentFolder!.folderId);
+      final deleted = await PendingDeletion.instance.schedule(
+        folderIds: folderIds,
+        problemIds: problemIds,
+        message: successMessage,
+        commit: () async {
+          if (folderIds.isNotEmpty) {
+            await foldersProvider.deleteFolders(folderIds);
+          }
+          if (problemIds.isNotEmpty) {
+            await problemsProvider.deleteProblems(problemIds);
+          }
+          await foldersProvider.refreshFolder(currentFolderId);
+        },
+      );
+      if (!deleted) return false;
 
       if (mounted) {
-        LoadingDialog.hide(context);
+        setState(() {
+          _localSubfolders.removeWhere(
+            (folder) => folderIds.contains(folder.folderId),
+          );
+          _localProblems.removeWhere(
+            (problem) => problemIds.contains(problem.problemId),
+          );
+        });
+        await _loadFolderData();
       }
-
-      if (!mounted) return true;
-
-      setState(() {
-        _localSubfolders.removeWhere(
-          (folder) => folderIds.contains(folder.folderId),
-        );
-        _localProblems.removeWhere(
-          (problem) => problemIds.contains(problem.problemId),
-        );
-      });
-
-      SnackBarDialog.showSnackBar(
-        context: context,
-        message: successMessage,
-        backgroundColor: Theme.of(context).primaryColor,
-      );
-
-      await _loadFolderData();
       return true;
     } catch (e) {
-      if (mounted) {
-        LoadingDialog.hide(context);
-      }
-
       debugPrint('Error deleting items: $e');
-      if (mounted) {
-        SnackBarDialog.showSnackBar(
-          context: context,
-          message: errorMessage,
-          backgroundColor: Colors.red,
-        );
-      }
+      AppToast.error(errorMessage);
       return false;
     }
   }
 
   Future<void> _confirmDelete() async {
     final message = _selectedFolderIds.isNotEmpty
-        ? '선택한 항목을 정말 삭제하시겠습니까?\n$_folderDeleteScopeMessage'
-        : '선택한 항목을 정말 삭제하시겠습니까?';
+        ? '선택한 항목을 정말 삭제할까요?\n$_folderDeleteScopeMessage'
+        : '선택한 항목을 정말 삭제할까요?';
     final confirmed = await _showDeleteConfirmDialog(message: message);
     if (!confirmed || !mounted) return;
     _deleteSelectedItems();
   }
 
   /// 삭제 확인 창. 삭제를 누르면 true, 취소하거나 바깥을 눌러 닫으면 false.
-  Future<bool> _showDeleteConfirmDialog({required String message}) async {
-    final confirmed = await showTossDialog<bool>(
-      context: context,
-      builder: (dialogContext) => _buildPhoneWidthDialog(
-        Dialog(
-          backgroundColor: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppRadius.large),
-          ),
-          // 가로 화면이나 글자를 크게 키운 작은 폰에서 높이가 모자라면 잘리지
-          // 않고 스크롤되게 한다.
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // 헤더
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: Colors.red.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(AppRadius.small),
-                      ),
-                      child: const Icon(
-                        Icons.delete_forever,
-                        color: Colors.red,
-                        size: 20,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    const StandardText(
-                      text: '삭제 확인',
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary,
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 20),
-                // 내용
-                StandardText(
-                  text: message,
-                  fontSize: 15,
-                  color: AppColors.textPrimary,
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 24),
-                // 액션 버튼
-                Row(
-                  children: [
-                    Expanded(
-                      child: TextButton(
-                        onPressed: () => Navigator.of(dialogContext).pop(false),
-                        style: TextButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 12, vertical: 8),
-                          backgroundColor: Colors.grey[100],
-                          shape: RoundedRectangleBorder(
-                            borderRadius:
-                                BorderRadius.circular(AppRadius.small),
-                          ),
-                        ),
-                        child: const StandardText(
-                          text: '취소',
-                          fontSize: 14,
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: TextButton(
-                        onPressed: () => Navigator.of(dialogContext).pop(true),
-                        style: TextButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 12, vertical: 8),
-                          backgroundColor: Colors.red,
-                          shape: RoundedRectangleBorder(
-                            borderRadius:
-                                BorderRadius.circular(AppRadius.small),
-                          ),
-                        ),
-                        child: const StandardText(
-                          text: '삭제',
-                          fontSize: 14,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
+  Future<bool> _showDeleteConfirmDialog({required String message}) {
+    return showConfirmDialog(
+      context,
+      title: '삭제할까요?',
+      message: message,
+      confirmLabel: '삭제하기',
+      destructive: true,
     );
-    return confirmed == true;
   }
 
   Widget _buildPhoneWidthDialog(Widget child) {
@@ -2145,7 +2327,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     if (mounted) {
       SnackBarDialog.showSnackBar(
         context: context,
-        message: '공책이 성공적으로 이동되었습니다!',
+        message: '공책이 성공적으로 이동됐어요!',
         backgroundColor: Theme.of(context).primaryColor,
       );
     }
@@ -2184,7 +2366,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     if (mounted) {
       SnackBarDialog.showSnackBar(
         context: context,
-        message: '오답노트가 이동되었습니다!',
+        message: '오답노트가 이동됐어요!',
         backgroundColor: Theme.of(context).primaryColor,
       );
     }
@@ -2218,13 +2400,77 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     await _loadFolderData();
   }
 
+  /// 받아 둔 오답노트가 새로 받아지면 그 카드를 바꾼다.
+  ///
+  /// 상세는 복습을 저장하거나 고칠 때 문제를 다시 받아 [ProblemsProvider] 에
+  /// 넣는다. 전에는 책장 카드가 그걸 몰라서 최근 복습일과 제목, 옮긴 공책이
+  /// 들어가기 전 모습 그대로 남았다. 상세에서 이전, 다음으로 여러 문제를 넘겨
+  /// 보고 와도 맞도록 목록 전체를 본다. 다른 공책으로 옮겼으면 이 목록에서 뺀다.
+  void _syncProblemsFromProvider() {
+    if (!mounted || _currentFolder == null) return;
+    final problemsProvider =
+        Provider.of<ProblemsProvider>(context, listen: false);
+    final folderId = _currentFolder!.folderId;
+    final movedOutTo = <int>{};
+    var changed = false;
+    final next = <ProblemModel>[];
+    for (final problem in _localProblems) {
+      final latest = problemsProvider.cachedProblem(problem.problemId);
+      if (latest == null || identical(latest, problem)) {
+        next.add(problem);
+        continue;
+      }
+      changed = true;
+      if (latest.folderId != null && latest.folderId != folderId) {
+        movedOutTo.add(latest.folderId!);
+      } else {
+        next.add(latest);
+      }
+    }
+    if (!changed) return;
+
+    setState(() => _localProblems = next);
+    final foldersProvider =
+        Provider.of<FoldersProvider>(context, listen: false);
+    // 다시 받는 중에는 커서가 비어 있어서, 이때 저장하면 다음 쪽이 없는 것으로
+    // 캐시에 남는다. 첫 쪽이 오면 그쪽이 저장한다.
+    if (!_replaceProblemsOnNextPage && !_isLoadingProblems) {
+      foldersProvider.saveProblemsToCache(
+        folderId,
+        _localProblems,
+        _problemNextCursor,
+        _problemHasNext,
+      );
+    }
+    // 옮겨 간 공책은 받아 둔 목록을 버려서, 열 때 새로 받게 한다.
+    for (final id in movedOutTo) {
+      unawaited(foldersProvider.refreshFolder(id));
+    }
+  }
+
   void navigateToProblemDetail(BuildContext context, int problemId) {
+    // 지금 보이는 순서대로 넘겨서 상세에서 이전, 다음으로 넘길 수 있게 한다.
+    final pending = PendingDeletion.instance;
+    final queue = _localProblems
+        .map((p) => p.problemId)
+        .where((id) => !pending.isProblemHidden(id))
+        .toList();
     Navigator.push(
       context,
       TossPageRoute(
-        builder: (context) => ProblemDetailScreen(problemId: problemId),
+        builder: (context) => ProblemDetailScreen(
+          problemId: problemId,
+          folderQueue: queue,
+          folderQueueHasMore: _problemHasNext,
+        ),
       ),
-    ).then((value) async {
+    ).then((result) async {
+      // 상세에서 이전, 다음으로 넘기면 넘겨 간 상세의 결과가 Future 로 온다.
+      Object? value = result;
+      while (value is Future) {
+        value = await value;
+      }
+      if (!mounted) return;
       // 문제 삭제 또는 수정 시 화면 새로고침
       if (value == true && _currentFolder != null) {
         final foldersProvider =
@@ -2233,8 +2479,46 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
         // 캐시 삭제 후 새로고침
         await foldersProvider.refreshFolder(_currentFolder!.folderId);
         await _loadFolderData();
+        return;
       }
+      _syncProblemsFromProvider();
     });
+  }
+
+  /// 지금 추천할 문제가 없을 때 홈에 남기는 한 줄.
+  Widget _buildReviewDoneRow(BuildContext context, ThemeHandler themeProvider) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: PressableScale(
+        onTap: () => Navigator.push(
+          context,
+          TossPageRoute(builder: (_) => const ReviewDueScreen()),
+        ),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          decoration: BoxDecoration(
+            color: themeProvider.primaryColor.withValues(alpha: 0.05),
+            borderRadius: BorderRadius.circular(AppRadius.large),
+            border: Border.all(color: AppColors.border),
+          ),
+          child: Row(
+            children: [
+              Icon(Icons.check_circle_outline,
+                  size: 18, color: themeProvider.primaryColor),
+              const SizedBox(width: 10),
+              const Expanded(
+                child: StandardText(
+                  text: '지금 추천할 복습 문제가 없어요',
+                  fontSize: 13,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              Icon(Icons.chevron_right, size: 20, color: Colors.grey[400]),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   Widget _buildReviewDueBadge(

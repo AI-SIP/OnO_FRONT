@@ -27,7 +27,7 @@ Widget buildReferenceRow(String? ref, Color iconColor) => Row(children: [
         ]),
         const SizedBox(height: 10),
         UnderlinedText(
-            text: (ref?.isNotEmpty == true) ? ref! : '작성한 출처가 없습니다!',
+            text: (ref?.isNotEmpty == true) ? ref! : '작성한 출처가 없어요!',
             fontSize: 18),
       ]))
     ]);
@@ -43,6 +43,6 @@ Widget buildMemoSection(String? memo, Color iconColor) => Padding(
         ]),
         const SizedBox(height: 8),
         UnderlinedText(
-            text: (memo?.isNotEmpty == true) ? memo! : '작성한 메모가 없습니다!'),
+            text: (memo?.isNotEmpty == true) ? memo! : '작성한 메모가 없어요!'),
       ]),
     );

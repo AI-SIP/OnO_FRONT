@@ -8,6 +8,10 @@ import 'package:provider/provider.dart';
 import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/TutorialProvider.dart';
+import '../../Provider/ScreenIndexProvider.dart';
+import '../../Module/Motion/TossPageRoute.dart';
+import '../ProblemRegister/ProblemRegisterScreen.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
 import '../../Provider/CosmeticProvider.dart';
 import '../User/Widget/FrogCharacter.dart';
 import 'TutorialStep.dart';
@@ -312,6 +316,31 @@ class _TutorialOverlayState extends State<TutorialOverlay>
     );
   }
 
+  /// 안내를 마치고 첫 탭으로 돌아간다. [writeNote] 면 오답노트 작성 화면을 연다.
+  Future<void> _finish(
+    TutorialProvider tutorialProvider, {
+    bool writeNote = false,
+  }) async {
+    final screenIndexProvider =
+        Provider.of<ScreenIndexProvider>(context, listen: false);
+    final navigator = Navigator.of(context);
+    FirebaseAnalytics.instance.logEvent(
+      name: 'tutorial_outro_choice',
+      parameters: {'choice': writeNote ? 'write_note' : 'done'},
+    );
+    await tutorialProvider.complete();
+    screenIndexProvider.setSelectedIndex(0);
+    if (!writeNote) return;
+    navigator.push(
+      TossPageRoute(
+        builder: (_) => const ProblemRegisterScreen(
+          problemModel: null,
+          isEditMode: false,
+        ),
+      ),
+    );
+  }
+
   Widget _buildOutroCard(
     TutorialProvider tutorialProvider,
     ThemeHandler themeProvider,
@@ -373,7 +402,7 @@ class _TutorialOverlayState extends State<TutorialOverlay>
                           const SizedBox(height: 14),
                           StandardText(
                             text:
-                                '공책에 오답을 모으고, 복습 세트로 다시 복습하면서 100점을 향해 한 걸음씩 나아가요!',
+                                '오답노트를 쓰고 한 번 다시 풀면, 복습할 날에 책장 맨 위에서 추천해 드려요. 첫 오답노트부터 써 볼까요?',
                             fontSize: bodySize,
                             color: Colors.grey[700]!,
                             fontWeight: FontWeight.w500,
@@ -410,8 +439,25 @@ class _TutorialOverlayState extends State<TutorialOverlay>
                         runSpacing: 8,
                         crossAxisAlignment: WrapCrossAlignment.center,
                         children: [
+                          // 끝나는 자리가 마이 페이지라 무엇부터 해야 할지 몰랐다.
+                          // 첫 탭으로 돌아가고, 바로 쓰고 싶으면 작성 화면을 연다.
+                          TextButton(
+                            onPressed: () => _finish(tutorialProvider),
+                            style: TextButton.styleFrom(
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 12, vertical: 12),
+                              minimumSize: Size.zero,
+                            ),
+                            child: StandardText(
+                              text: '완료',
+                              fontSize: buttonSize,
+                              color: Colors.grey[700]!,
+                            ),
+                          ),
                           ElevatedButton(
-                            onPressed: tutorialProvider.complete,
+                            onPressed: () =>
+                                _finish(tutorialProvider, writeNote: true),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: themeProvider.primaryColor,
                               foregroundColor: Colors.white,
@@ -425,7 +471,7 @@ class _TutorialOverlayState extends State<TutorialOverlay>
                               ),
                             ),
                             child: StandardText(
-                              text: '완료',
+                              text: '첫 오답노트 쓰기',
                               fontSize: buttonSize,
                               color: Colors.white,
                             ),

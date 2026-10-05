@@ -204,7 +204,7 @@ void main() {
       );
     });
 
-    await tester.tap(find.text('스터디룸 참여'));
+    await tester.tap(find.text('방 추가'));
     await tester.pumpAndSettle();
 
     expect(find.text('새 방 만들기'), findsOneWidget);
@@ -223,7 +223,7 @@ void main() {
       );
     });
 
-    await tester.tap(find.text('스터디룸 참여'));
+    await tester.tap(find.text('방 추가'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('새 방 만들기'));
     await tester.pumpAndSettle();
@@ -243,7 +243,7 @@ void main() {
       );
     });
 
-    await tester.tap(find.text('스터디룸 참여'));
+    await tester.tap(find.text('방 추가'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('초대 코드로 참여하기'));
     await tester.pumpAndSettle();

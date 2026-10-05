@@ -11,6 +11,7 @@ import '../Model/Problem/ProblemRegisterModel.dart';
 import '../Module/Util/ReviewHandler.dart';
 import '../Service/Api/FileUpload/FileUploadService.dart';
 import '../Util/AppErrorReporter.dart';
+import '../Model/Common/ListSort.dart';
 
 class ProblemsProvider with ChangeNotifier {
   // SplayTreeMap: O(log n) 삽입, O(log n) 조회, 자동 정렬
@@ -42,6 +43,9 @@ class ProblemsProvider with ChangeNotifier {
       return _problemsMap[problemId]!;
     }
   }
+
+  /// 받아 둔 것만 본다. 없으면 서버에 묻지 않고 null 이다.
+  ProblemModel? cachedProblem(int problemId) => _problemsMap[problemId];
 
   // O(log n) 삽입/업데이트 (SplayTreeMap이 자동으로 정렬 유지)
   void _upsertProblem(ProblemModel problem) {
@@ -113,7 +117,7 @@ class ProblemsProvider with ChangeNotifier {
             _problemsMap[problemId]!.updateAnalysis(analysisResult);
         notifyListeners();
         debugPrint(
-            'ProblemModel 업데이트 완료 (status: ${analysisResult.status}) - UI가 자동으로 갱신됩니다');
+            'ProblemModel 업데이트 완료 (status: ${analysisResult.status}) - UI가 자동으로 갱신돼요');
       }
 
       debugPrint('문제 분석 결과 조회 완료');
@@ -188,6 +192,16 @@ class ProblemsProvider with ChangeNotifier {
       debugPrint('스택트레이스: $stackTrace');
       rethrow;
     }
+  }
+
+  /// 이 문제만 AI 분석을 요청하고 바뀐 분석 상태를 받아 둔다.
+  ///
+  /// 등록할 때 분석을 껐거나, 하루 한도를 넘겼거나, 분석이 실패한 문제를
+  /// 문제 상세에서 다시 분석할 때 쓴다. 서버가 한도를 넘기면 예외 대신 분석
+  /// 상태를 RATE_LIMIT_EXCEEDED 로 바꿔 둔다.
+  Future<void> requestProblemAnalysis(int problemId) async {
+    await problemService.requestProblemAnalysis(problemId);
+    await fetchProblemAnalysis(problemId);
   }
 
   Future<void> updateProblemAnalysisStatus({required int problemId}) async {
@@ -270,12 +284,14 @@ class ProblemsProvider with ChangeNotifier {
     required int folderId,
     int? cursor,
     int size = 20,
+    ListSort sort = ListSort.newest,
   }) async {
     try {
       final response = await problemService.getFolderProblemsV2(
         folderId: folderId,
         cursor: cursor,
         size: size,
+        sort: sort,
       );
 
       // O(log n) 삽입으로 로컬 캐시에 추가 (중복 방지 및 자동 정렬)

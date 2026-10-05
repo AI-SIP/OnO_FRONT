@@ -20,6 +20,13 @@ class ProblemModel {
   final DateTime? updateAt;
   final int solveCount;
 
+  /// 다음 추천 복습일. 추천에서 빠졌으면 null 이다.
+  final DateTime? nextReviewAt;
+
+  /// 서버가 다음 복습일을 내려 주는지. 예전 서버는 이 필드가 없어서, null 이
+  /// 추천에서 빠졌다는 뜻인지 모르는 것인지 가를 때 쓴다.
+  final bool hasReviewSchedule;
+
   final List<ProblemImageDataModel>? problemImageDataList;
   final List<ProblemImageDataModel>? answerImageDataList;
   final List<ProblemImageDataModel>? solveImageDataList;
@@ -38,6 +45,8 @@ class ProblemModel {
     this.createdAt,
     this.updateAt,
     this.solveCount = 0,
+    this.nextReviewAt,
+    this.hasReviewSchedule = false,
     this.problemImageDataList,
     this.answerImageDataList,
     this.solveImageDataList,
@@ -89,6 +98,10 @@ class ProblemModel {
           ? DateTime.parse(json['updatedAt'] as String)
           : null,
       solveCount: (json['solveCount'] as num?)?.toInt() ?? 0,
+      nextReviewAt: json['nextReviewAt'] != null
+          ? DateTime.tryParse(json['nextReviewAt'] as String)
+          : null,
+      hasReviewSchedule: json.containsKey('nextReviewAt'),
       problemImageDataList: problemImages,
       answerImageDataList: answerImages,
       solveImageDataList: solveImages,
@@ -112,6 +125,8 @@ class ProblemModel {
       createdAt: createdAt,
       updateAt: updateAt,
       solveCount: solveCount,
+      nextReviewAt: nextReviewAt,
+      hasReviewSchedule: hasReviewSchedule,
       problemImageDataList: problemImageDataList,
       answerImageDataList: answerImageDataList,
       solveImageDataList: solveImageDataList,

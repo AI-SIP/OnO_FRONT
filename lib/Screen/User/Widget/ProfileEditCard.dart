@@ -16,6 +16,7 @@ import '../../../Module/User/ProfileAvatar.dart';
 import '../../../Provider/CosmeticProvider.dart';
 import '../../../Provider/UserProvider.dart';
 import '../../../Service/Api/FileUpload/FileUploadService.dart';
+import '../../../Service/HomeWidget/HomeWidgetSyncService.dart';
 
 /// 마이페이지 맨 위의 프로필 카드다.
 ///
@@ -138,9 +139,11 @@ class _ProfileEditCardState extends State<ProfileEditCard> {
       final imageUrl = await _fileUploadService.uploadImageFile(pickedFile);
       await userProvider.updateUserProfileImageUrl(imageUrl);
       FirebaseAnalytics.instance.logEvent(name: 'profile_image_updated');
+      // 홈 화면 위젯의 프로필 그림도 새 사진으로 다시 찍는다. 기다리지 않는다.
+      HomeWidgetSyncService.instance.refreshProfile();
     } catch (_) {
       if (!mounted) return;
-      _showProfileSnackBar('프로필 이미지 변경에 실패했습니다. 다시 시도해주세요.');
+      _showProfileSnackBar('프로필 이미지 변경에 실패했어요. 다시 시도해 주세요.');
     } finally {
       if (mounted) setState(() => _isUploadingProfileImage = false);
     }
@@ -152,9 +155,11 @@ class _ProfileEditCardState extends State<ProfileEditCard> {
     try {
       await userProvider.deleteUserProfileImage();
       FirebaseAnalytics.instance.logEvent(name: 'profile_image_reset');
+      // 홈 화면 위젯의 프로필 그림도 개구리로 다시 찍는다. 기다리지 않는다.
+      HomeWidgetSyncService.instance.refreshProfile();
     } catch (_) {
       if (!mounted) return;
-      _showProfileSnackBar('기본 이미지 변경에 실패했습니다. 다시 시도해주세요.');
+      _showProfileSnackBar('기본 이미지 변경에 실패했어요. 다시 시도해 주세요.');
     } finally {
       if (mounted) setState(() => _isUploadingProfileImage = false);
     }
@@ -361,11 +366,11 @@ class _NameChangeDialogState extends State<_NameChangeDialog> {
 
     final newName = _controller.text.trim();
     if (newName.isEmpty) {
-      widget.onError('이름을 입력해주세요.');
+      widget.onError('이름을 입력해 주세요.');
       return;
     }
     if (newName.length > 20) {
-      widget.onError('이름은 20자 이하로 입력해주세요.');
+      widget.onError('이름은 20자 이하로 입력해 주세요.');
       return;
     }
     if (newName == widget.currentName) {
@@ -379,7 +384,7 @@ class _NameChangeDialogState extends State<_NameChangeDialog> {
       if (!mounted) return;
       Navigator.of(context).pop();
     } catch (_) {
-      widget.onError('이름 변경에 실패했습니다. 다시 시도해주세요.');
+      widget.onError('이름 변경에 실패했어요. 다시 시도해 주세요.');
       if (mounted) {
         setState(() => _isSaving = false);
       }

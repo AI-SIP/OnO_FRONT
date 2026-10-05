@@ -2,7 +2,9 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:camera/camera.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:provider/provider.dart';
 
 import '../../Model/Problem/ProblemModel.dart';
@@ -18,14 +20,18 @@ import '../../Module/Util/FolderPickerDialog.dart';
 import '../../Module/Util/FolderPickerWidget.dart';
 import '../../Provider/FoldersProvider.dart';
 import '../../Provider/MissionProvider.dart';
+import '../../Provider/ReviewDueProvider.dart';
 import '../../Provider/ProblemsProvider.dart';
 import '../../Provider/ScreenIndexProvider.dart';
 import '../../Provider/UserProvider.dart';
 import '../../Service/Api/FileUpload/FileUploadService.dart';
 import '../../Service/Api/Problem/ProblemService.dart';
 import '../../Service/Api/Tag/TagService.dart';
+import '../../Service/HomeWidget/HomeWidgetSyncService.dart';
+import '../../Util/AiAnalysisPreference.dart';
 import '../../Util/AppErrorReporter.dart';
 import 'TagSelectionScreen.dart';
+import 'Widget/AiAnalysisToggle.dart';
 import 'Widget/DatePickerWidget.dart';
 import 'Widget/ImageGridWidget.dart';
 import 'Widget/LabeledTextField.dart';
@@ -36,6 +42,10 @@ import '../../Module/Motion/TossDialog.dart';
 import '../../Module/Design/AppColors.dart';
 import '../../Module/Design/AppRadius.dart';
 import '../../Util/AppAnalytics.dart';
+import 'Widget/FirstNoteGuide.dart';
+import '../../Module/Design/AppToast.dart';
+import '../../Util/AppNavigator.dart';
+import 'ProblemRegisterScreen.dart';
 
 class ProblemRegisterTemplate extends StatefulWidget {
   final ProblemModel? problemModel;
@@ -44,6 +54,9 @@ class ProblemRegisterTemplate extends StatefulWidget {
   final VoidCallback? onCancel;
   final VoidCallback? onSubmit;
 
+  /// 저장하지 않은 입력이 있는지 여기에 적는다. 화면이 뒤로 가기 전에 물어볼지 정한다.
+  final ValueNotifier<bool>? unsavedChanges;
+
   const ProblemRegisterTemplate({
     Key? key,
     this.problemModel,
@@ -51,6 +64,7 @@ class ProblemRegisterTemplate extends StatefulWidget {
     this.initialFolderId,
     this.onCancel,
     this.onSubmit,
+    this.unsavedChanges,
   }) : super(key: key);
 
   @override
@@ -80,9 +94,17 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
   bool _isApplyingDefaultTitle = false;
   String? _currentAutoTitle;
 
+  /// 등록한 뒤 AI 분석을 요청할지. 마지막으로 고른 값을 기기에서 읽어 온다.
+  bool _aiAnalysisEnabled = false;
+
   @override
   void initState() {
     super.initState();
+    if (!widget.isEditMode) {
+      AiAnalysisPreference.load().then((enabled) {
+        if (mounted) setState(() => _aiAnalysisEnabled = enabled);
+      });
+    }
     final problemModel = widget.problemModel;
     _selectedDate = problemModel?.solvedAt ?? DateTime.now();
     if (widget.isEditMode) {
@@ -113,12 +135,79 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
     }
     _memoCtrl.text = problemModel?.memo ?? '';
     _selectedTagIds.addAll(problemModel?.tagIdList ?? []);
+    _initialTitle = _titleCtrl.text;
+    _initialMemo = _memoCtrl.text;
+    _initialTagIds = Set.of(_selectedTagIds);
+    _initialFolderId = _selectedFolderId;
+    _initialDate = _selectedDate;
+    _initialProblemImageUrls = List.of(_existingProblemImageUrls);
+    _initialAnswerImageUrls = List.of(_existingAnswerImageUrls);
+    _titleCtrl.addListener(_syncUnsavedChanges);
+    _memoCtrl.addListener(_syncUnsavedChanges);
     _loadMyTags();
     _loadRecommendedTags(imageUrls: _existingProblemImageUrls);
   }
 
+  // 수정 화면에서 바뀐 것이 있는지 비교할 처음 값.
+  late final String _initialTitle;
+  late final String _initialMemo;
+  late final Set<int> _initialTagIds;
+  late final int? _initialFolderId;
+  late final DateTime _initialDate;
+  late final List<String> _initialProblemImageUrls;
+  late final List<String> _initialAnswerImageUrls;
+
+  /// 화면을 다시 그릴 때마다 저장하지 않은 입력이 있는지 다시 본다.
+  ///
+  /// 사진, 태그, 공책, 날짜는 모두 setState 로 바뀌어서 자리마다 따로 챙기지
+  /// 않고 여기서 한 번에 맞춘다. 글자는 컨트롤러 리스너로 맞춘다.
+  @override
+  void setState(VoidCallback fn) {
+    super.setState(fn);
+    _syncUnsavedChanges();
+  }
+
+  void _syncUnsavedChanges() {
+    final notifier = widget.unsavedChanges;
+    if (notifier == null) return;
+    final changed = _hasUnsavedChanges();
+    if (notifier.value == changed) return;
+    // 공책을 바꾸면 자동 제목이 그리는 중에 바뀔 수 있다. 그리는 중에 바깥
+    // 화면을 다시 그리게 하면 안 되므로 다음 프레임으로 미룬다.
+    if (SchedulerBinding.instance.schedulerPhase ==
+        SchedulerPhase.persistentCallbacks) {
+      SchedulerBinding.instance.addPostFrameCallback((_) {
+        if (mounted) notifier.value = _hasUnsavedChanges();
+      });
+      return;
+    }
+    notifier.value = changed;
+  }
+
+  bool _hasUnsavedChanges() {
+    if (_problemImages.isNotEmpty || _answerImages.isNotEmpty) return true;
+    if (!widget.isEditMode) {
+      // 제목은 공책 이름으로 자동으로 채워지므로, 직접 고쳤을 때만 쓴 것으로 본다.
+      return _existingProblemImageUrls.isNotEmpty ||
+          _existingAnswerImageUrls.isNotEmpty ||
+          _memoCtrl.text.trim().isNotEmpty ||
+          (_hasUserEditedTitle && _titleCtrl.text.trim().isNotEmpty) ||
+          _selectedTagIds.isNotEmpty;
+    }
+    return _deletedImageUrls.isNotEmpty ||
+        _titleCtrl.text != _initialTitle ||
+        _memoCtrl.text != _initialMemo ||
+        !setEquals(_selectedTagIds, _initialTagIds) ||
+        _selectedFolderId != _initialFolderId ||
+        _selectedDate != _initialDate ||
+        !listEquals(_existingProblemImageUrls, _initialProblemImageUrls) ||
+        !listEquals(_existingAnswerImageUrls, _initialAnswerImageUrls);
+  }
+
   @override
   void dispose() {
+    _titleCtrl.removeListener(_syncUnsavedChanges);
+    _memoCtrl.removeListener(_syncUnsavedChanges);
     _titleCtrl.dispose();
     _memoCtrl.dispose();
     super.dispose();
@@ -165,7 +254,7 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
             SizedBox(height: spacing),
             LabeledTextField(
               label: '제목',
-              hintText: '오답노트의 제목을 작성해주세요!',
+              hintText: '오답노트의 제목을 작성해 주세요!',
               icon: Icons.info,
               controller: _titleCtrl,
               maxLength: ProblemRegisterModel.referenceMaxLength,
@@ -183,12 +272,29 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
               label: '메모',
               controller: _memoCtrl,
               icon: Icons.edit,
-              hintText: '기록하고 싶은 내용을 간단하게 작성해주세요!',
+              hintText: '기록하고 싶은 내용을 간단하게 작성해 주세요!',
               maxLines: 3,
               maxLength: ProblemRegisterModel.memoMaxLength,
             ),
+            if (!widget.isEditMode) ...[
+              SizedBox(height: spacing),
+              AiAnalysisToggle(
+                value: _aiAnalysisEnabled,
+                color: Provider.of<ThemeHandler>(context).primaryColor,
+                onChanged: _changeAiAnalysis,
+              ),
+            ],
           ],
         ));
+  }
+
+  void _changeAiAnalysis(bool enabled) {
+    setState(() => _aiAnalysisEnabled = enabled);
+    unawaited(AiAnalysisPreference.save(enabled));
+    AppAnalytics.logEvent('ai_analysis_toggle', {
+      'enabled': enabled,
+      'mode': 'single',
+    });
   }
 
   Widget _buildImageSections({required bool isWide}) {
@@ -197,6 +303,9 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
         label: '문제 이미지',
         files: _problemImages,
         existingImageUrls: _existingProblemImageUrls,
+        uploadingPaths: _uploadTasks.keys.toSet(),
+        failedPaths: _failedUploadPaths,
+        onRetry: (i) => _retryUpload(_problemImages[i], isProblemImage: true),
         onAdd: _pickProblemImage,
         onRemove: widget.isEditMode
             ? (i) => setState(() => _problemImages.removeAt(i))
@@ -219,6 +328,9 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
         label: '해설 이미지',
         files: _answerImages,
         existingImageUrls: _existingAnswerImageUrls,
+        uploadingPaths: _uploadTasks.keys.toSet(),
+        failedPaths: _failedUploadPaths,
+        onRetry: (i) => _retryUpload(_answerImages[i], isProblemImage: false),
         onAdd: _pickAnswerImage,
         onRemove: widget.isEditMode
             ? (i) => setState(() => _answerImages.removeAt(i))
@@ -383,6 +495,7 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
     if (index < 0 || index >= _problemImages.length) return;
     final removed = _problemImages.removeAt(index);
     _canceledUploadLocalPaths.add(removed.path);
+    _failedUploadPaths.remove(removed.path);
     setState(() {});
   }
 
@@ -390,6 +503,7 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
     if (index < 0 || index >= _answerImages.length) return;
     final removed = _answerImages.removeAt(index);
     _canceledUploadLocalPaths.add(removed.path);
+    _failedUploadPaths.remove(removed.path);
     setState(() {});
   }
 
@@ -415,13 +529,24 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
       if (!mounted) return;
       SnackBarDialog.showSnackBar(
         context: context,
-        message: '이미지 삭제에 실패했습니다.',
+        message: '이미지 삭제에 실패했어요.',
         backgroundColor: Colors.red,
       );
     }
   }
 
+  /// 사진을 고른 순서. 업로드는 끝나는 순서가 제각각이라, 올라간 주소를 이
+  /// 순서대로 끼워 넣는다. 전에는 끝난 순서대로 붙어서 여러 쪽짜리 문제의
+  /// 쪽 순서가 바뀔 수 있었다.
+  int _pickSequence = 0;
+  final Map<String, int> _pickOrderByPath = {};
+  final Map<String, int> _pickOrderByUrl = {};
+
+  /// 올리지 못한 사진. 목록에서 빼지 않고 남겨 두어 눌러서 다시 올리게 한다.
+  final Set<String> _failedUploadPaths = {};
+
   void _uploadImageImmediately(XFile file, {required bool isProblemImage}) {
+    _pickOrderByPath[file.path] = _pickSequence++;
     setState(() {
       if (isProblemImage) {
         _problemImages.add(file);
@@ -430,9 +555,22 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
       }
     });
 
+    _startUpload(file, isProblemImage: isProblemImage);
+  }
+
+  void _startUpload(XFile file, {required bool isProblemImage}) {
     final task = _uploadSingleImage(file, isProblemImage: isProblemImage);
     _uploadTasks[file.path] = task;
   }
+
+  void _retryUpload(XFile file, {required bool isProblemImage}) {
+    if (!_failedUploadPaths.remove(file.path)) return;
+    setState(() {});
+    _startUpload(file, isProblemImage: isProblemImage);
+  }
+
+  void _insertInPickOrder(List<String> urls, String url, int order) =>
+      insertInPickOrder(urls, _pickOrderByUrl, url, order);
 
   Future<void> _uploadSingleImage(
     XFile file, {
@@ -447,13 +585,14 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
       }
 
       if (!mounted) return;
+      final order = _pickOrderByPath[file.path] ?? _pickSequence++;
       setState(() {
         if (isProblemImage) {
           _problemImages.removeWhere((f) => f.path == file.path);
-          _existingProblemImageUrls.add(imageUrl);
+          _insertInPickOrder(_existingProblemImageUrls, imageUrl, order);
         } else {
           _answerImages.removeWhere((f) => f.path == file.path);
-          _existingAnswerImageUrls.add(imageUrl);
+          _insertInPickOrder(_existingAnswerImageUrls, imageUrl, order);
         }
       });
       if (isProblemImage) {
@@ -461,18 +600,10 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
       }
     } catch (e) {
       if (!mounted) return;
-      setState(() {
-        if (isProblemImage) {
-          _problemImages.removeWhere((f) => f.path == file.path);
-        } else {
-          _answerImages.removeWhere((f) => f.path == file.path);
-        }
-      });
-      SnackBarDialog.showSnackBar(
-        context: context,
-        message: '이미지 업로드에 실패했습니다.',
-        backgroundColor: Colors.red,
-      );
+      // 지운 사진이면 남길 것이 없다.
+      if (_canceledUploadLocalPaths.contains(file.path)) return;
+      setState(() => _failedUploadPaths.add(file.path));
+      AppToast.error('사진을 올리지 못했어요. 사진을 눌러 다시 올려 주세요.');
     } finally {
       _canceledUploadLocalPaths.remove(file.path);
       _uploadTasks.remove(file.path);
@@ -647,8 +778,7 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
                   ),
                   padding:
                       const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
-                  minimumSize: const Size(0, 40),
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  minimumSize: const Size(0, 44),
                   visualDensity: VisualDensity.compact,
                 ),
                 child: _isLoadingTags
@@ -679,9 +809,9 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
             ),
             child: _selectedTagIds.isEmpty
                 ? StandardText(
-                    text: '선택된 태그가 없습니다.',
+                    text: '선택된 태그가 없어요.',
                     fontSize: 13,
-                    color: Colors.grey[400]!,
+                    color: AppColors.textSecondary,
                   )
                 : Wrap(
                     spacing: 8,
@@ -739,7 +869,9 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
             duration: const Duration(milliseconds: 220),
             switchInCurve: Curves.easeOutCubic,
             switchOutCurve: Curves.easeInCubic,
-            child: _existingProblemImageUrls.isEmpty
+            // 서버는 사진과 상관없이 최근에 쓴 태그를 준다. 전에는 문제 사진이
+            // 올라가야 보여서, 태그를 먼저 고르려는 사람은 찾지 못했다.
+            child: _recommendedTags.isEmpty && !_isLoadingRecommendations
                 ? const SizedBox.shrink()
                 : Padding(
                     key: const ValueKey('recommended_tags'),
@@ -773,9 +905,9 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
                           Padding(
                             padding: const EdgeInsets.only(left: 4),
                             child: StandardText(
-                              text: '최근 사용 태그가 없습니다.',
+                              text: '최근 사용 태그가 없어요.',
                               fontSize: 13,
-                              color: Colors.grey[400]!,
+                              color: AppColors.textSecondary,
                             ),
                           )
                         else
@@ -856,6 +988,7 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
       _memoCtrl.clear();
       _problemImages.clear();
       _answerImages.clear();
+      _failedUploadPaths.clear();
       _existingProblemImageUrls.clear();
       _existingAnswerImageUrls.clear();
       _deletedImageUrls.clear();
@@ -864,7 +997,36 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
     });
   }
 
+  /// 작성 완료를 처리하는 중인지. 사진 업로드를 기다리는 동안에는 로딩 창이
+  /// 아직 없어서, 버튼을 한 번 더 누르면 같은 오답노트가 두 번 만들어졌다.
+  bool _isSubmitting = false;
+
+  /// 방금 등록한 오답노트. 첫 오답노트면 바로 풀어 보라고 권할 때 쓴다.
+  int? _registeredProblemId;
+
+  /// 서버에 오답노트 수를 물어 방금 쓴 것이 첫 오답노트인지 본다. 앱이 들고
+  /// 있는 개수는 로그인할 때 받지 않아서 믿을 수 없다. 묻지 못하면 아니라고 본다.
+  Future<bool> _isFirstNote() async {
+    try {
+      final count = await Provider.of<ProblemsProvider>(context, listen: false)
+          .getUserProblemCount(showErrorSnackBar: false);
+      return count == 1;
+    } catch (_) {
+      return false;
+    }
+  }
+
   Future<void> submit() async {
+    if (_isSubmitting) return;
+    _isSubmitting = true;
+    try {
+      await _submit();
+    } finally {
+      _isSubmitting = false;
+    }
+  }
+
+  Future<void> _submit() async {
     // 등록이 끝나면 resetAll 이 입력값을 비운다. 무엇을 채워 올렸는지는
     // 지금 잡아 둔다.
     final analyticsParams = <String, Object?>{
@@ -893,19 +1055,31 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
       return;
     }
 
+    final canPopBeforeSubmit = Navigator.of(context).canPop();
+    // 사진 업로드를 기다리는 동안에도 로딩 창을 띄워 둔다. 전에는 이 사이에
+    // 아무 표시가 없었다. 로딩 창은 한 번만 띄운다. 닫자마자 다시 띄우면
+    // 닫히는 쪽의 정리가 늦게 돌아 다음 hide 가 먹히지 않는다.
+    LoadingDialog.show(
+        context, widget.isEditMode ? '오답노트 수정 중...' : '오답노트 작성 중...');
+
     if (!widget.isEditMode) {
       await _waitForPendingUploads();
       if (!mounted) return;
+      // 올리지 못한 사진을 빼고 저장하면 쪽이 빠진 오답노트가 된다.
+      if (_failedUploadPaths.isNotEmpty) {
+        LoadingDialog.hide(context);
+        AppToast.error('올리지 못한 사진이 있어요. 다시 올리거나 지운 뒤 저장해 주세요.');
+        return;
+      }
       if (_existingProblemImageUrls.isEmpty) {
+        LoadingDialog.hide(context);
         _showProblemImageRequiredDialog(context);
         return;
       }
     }
 
-    final canPopBeforeSubmit = Navigator.of(context).canPop();
-    LoadingDialog.show(
-        context, widget.isEditMode ? '오답노트 수정 중...' : '오답노트 작성 중...');
     bool shouldPop = false;
+    bool isFirstNote = false;
     bool loadingHidden = false;
     try {
       if (widget.isEditMode) {
@@ -914,6 +1088,8 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
       } else {
         await _registerProblem();
         shouldPop = canPopBeforeSubmit;
+        // 로딩 창이 떠 있는 동안 물어서 화면이 닫히기 전에 멈칫하지 않게 한다.
+        isFirstNote = _registeredProblemId != null && await _isFirstNote();
       }
     } catch (e, stackTrace) {
       debugPrint('오답노트 ${widget.isEditMode ? "수정" : "등록"} 실패: $e');
@@ -924,8 +1100,8 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
         SnackBarDialog.showSnackBar(
           context: context,
           message: widget.isEditMode
-              ? '오답노트 수정에 실패했습니다. 잠시 후 다시 시도해주세요.'
-              : '오답노트 등록에 실패했습니다. 잠시 후 다시 시도해주세요.',
+              ? '오답노트 수정에 실패했어요. 잠시 후 다시 시도해 주세요.'
+              : '오답노트 등록에 실패했어요. 잠시 후 다시 시도해 주세요.',
           backgroundColor: Colors.red,
         );
       }
@@ -951,6 +1127,7 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
       {
         if (!widget.isEditMode) 'mode': 'single',
         if (!widget.isEditMode) 'count': 1,
+        if (!widget.isEditMode) 'ai_analysis': _aiAnalysisEnabled,
         ...analyticsParams,
       },
     );
@@ -960,8 +1137,28 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
     unawaited(
       Provider.of<MissionProvider>(context, listen: false).fetchMissions(),
     );
+    // 홈의 추천 복습도 다시 받는다. 전에는 앱을 다시 켜야 새 문제가 보였다.
+    if (!widget.isEditMode) {
+      unawaited(
+        Provider.of<ReviewDueProvider>(context, listen: false).fetchReviewDue(),
+      );
+    }
 
-    showSuccessDialog(context);
+    // 첫 오답노트면 저장 알림 대신 다음에 할 일을 알려 준다. 등록 화면이
+    // 닫히거나 탭이 바뀐 뒤에 뜨도록 다음 프레임에 띄운다.
+    final registeredProblemId = _registeredProblemId;
+    if (isFirstNote && registeredProblemId != null) {
+      final accent =
+          Provider.of<ThemeHandler>(context, listen: false).primaryColor;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        showFirstNoteGuide(
+          problemId: registeredProblemId,
+          accentColor: accent,
+        );
+      });
+    } else {
+      showSuccessDialog(context);
+    }
 
     if (shouldPop) {
       Navigator.of(context).pop(true);
@@ -1136,7 +1333,8 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
     final foldersProvider =
         Provider.of<FoldersProvider>(context, listen: false);
     final problemService = ProblemService();
-    final registeredProblemId = await problemService.registerProblemV2(
+    final registeredProblemId =
+        _registeredProblemId = await problemService.registerProblemV2(
       problemId: null,
       memo: ProblemRegisterModel.clampMemo(_memoCtrl.text),
       reference: ProblemRegisterModel.clampReference(_titleCtrl.text),
@@ -1147,14 +1345,20 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
       tagIds: _selectedTagIds.toList(),
     );
 
+    // 홈 화면 위젯의 오늘 칸을 새로 맞춘다. 기다리지 않는다.
+    unawaited(HomeWidgetSyncService.instance.sync(force: true));
+
     // 등록 후 분석/캐시 갱신은 후처리이므로 실패해도 등록 성공을 막지 않습니다.
-    await _runPostSaveTask(
-      () => problemService.requestProblemAnalysis(
-        registeredProblemId,
-        showErrorSnackBar: false,
-      ),
-      source: 'problem_register_analysis_request',
-    );
+    // AI 분석을 끈 채로 등록하면 요청하지 않는다. 문제 상세에서 따로 할 수 있다.
+    if (_aiAnalysisEnabled) {
+      await _runPostSaveTask(
+        () => problemService.requestProblemAnalysis(
+          registeredProblemId,
+          showErrorSnackBar: false,
+        ),
+        source: 'problem_register_analysis_request',
+      );
+    }
 
     // Provider를 통해 문제 조회 및 상태 업데이트
     await _runPostSaveTask(
@@ -1315,10 +1519,54 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
   }
 
   void showSuccessDialog(BuildContext context) {
-    final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
-    SnackBarDialog.showSnackBar(
-        context: context,
-        message: "오답노트가 성공적으로 저장되었습니다.",
-        backgroundColor: themeProvider.primaryColor);
+    if (widget.isEditMode) {
+      final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
+      SnackBarDialog.showSnackBar(
+          context: context,
+          message: "오답노트가 성공적으로 저장됐어요.",
+          backgroundColor: themeProvider.primaryColor);
+      return;
+    }
+
+    // 문제집 몇 쪽을 이어서 올릴 때 매번 + 버튼부터 다시 눌러야 했다. 같은
+    // 공책으로 작성 화면을 바로 다시 연다.
+    final folderId = _selectedFolderId;
+    AppToast.show(
+      message: '오답노트를 저장했어요',
+      type: ToastType.success,
+      duration: const Duration(seconds: 4),
+      actionLabel: '하나 더 쓰기',
+      onAction: () {
+        AppAnalytics.logEvent('problem_register_another', {});
+        AppNavigator.navigatorKey.currentState?.push(
+          TossPageRoute(
+            builder: (_) => ProblemRegisterScreen(
+              problemModel: null,
+              isEditMode: false,
+              initialFolderId: folderId,
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+/// 고른 순서를 지키며 올라간 주소를 끼워 넣는다.
+///
+/// [orderByUrl] 에 없는 주소(수정 화면에서 이미 있던 사진)는 맨 앞 순서로 본다.
+@visibleForTesting
+void insertInPickOrder(
+  List<String> urls,
+  Map<String, int> orderByUrl,
+  String url,
+  int order,
+) {
+  orderByUrl[url] = order;
+  final index = urls.indexWhere((u) => (orderByUrl[u] ?? -1) > order);
+  if (index < 0) {
+    urls.add(url);
+  } else {
+    urls.insert(index, url);
   }
 }

@@ -32,6 +32,7 @@ import '../../Module/Motion/Skeleton.dart';
 import '../../Module/Motion/TossDialog.dart';
 import '../../Module/Design/AppColors.dart';
 import '../../Module/Design/AppRadius.dart';
+import '../../Module/Design/AppToast.dart';
 import 'package:ono/Util/AppAnalytics.dart';
 
 enum _PracticeSearchMode { folder, tag, title }
@@ -39,7 +40,15 @@ enum _PracticeSearchMode { folder, tag, title }
 class PracticeProblemSelectionScreen extends StatefulWidget {
   final PracticeNoteDetailModel? practiceModel;
 
-  const PracticeProblemSelectionScreen({super.key, this.practiceModel});
+  /// 세트 상세의 `+ 추가` 로 열었는지. 이미 담긴 문제는 고를 수 없고, 제목과
+  /// 알림 화면을 건너뛰고 바로 저장한 뒤 세트 상세로 돌아간다(`true` 로 닫힌다).
+  final bool addMode;
+
+  const PracticeProblemSelectionScreen({
+    super.key,
+    this.practiceModel,
+    this.addMode = false,
+  }) : assert(!addMode || practiceModel != null);
 
   @override
   _PracticeProblemSelectionScreenState createState() =>
@@ -88,18 +97,19 @@ class _PracticeProblemSelectionScreenState
     _problemScrollController.addListener(_onProblemScroll);
     _titleQueryController.addListener(_onTitleQueryChanged);
 
+    _originalProblemIds = widget.practiceModel != null
+        ? List<int>.from(widget.practiceModel!.problemIdList)
+        : [];
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadInitialFolders();
       _loadTags();
-      if (widget.practiceModel != null) {
-        _originalProblemIds =
-            List<int>.from(widget.practiceModel!.problemIdList);
+      // 추가 모드는 새로 고른 문제만 센다. 담긴 문제는 목록에서 막는다.
+      if (widget.practiceModel != null && !widget.addMode) {
         if (mounted) {
           setState(() => _selectedProblemIds.addAll(_originalProblemIds));
         }
         _fetchProblems();
-      } else {
-        _originalProblemIds = [];
       }
     });
   }
@@ -186,7 +196,7 @@ class _PracticeProblemSelectionScreenState
         e,
         stackTrace,
         source: 'practice_selection_load_folders',
-        message: '폴더 목록을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.',
+        message: '폴더 목록을 불러오지 못했어요. 잠시 후 다시 시도해 주세요.',
       );
     } finally {
       if (mounted) {
@@ -222,7 +232,7 @@ class _PracticeProblemSelectionScreenState
         e,
         stackTrace,
         source: 'practice_selection_load_more_folders',
-        message: '폴더 목록을 더 불러오지 못했습니다. 잠시 후 다시 시도해주세요.',
+        message: '폴더 목록을 더 불러오지 못했어요. 잠시 후 다시 시도해 주세요.',
       );
     } finally {
       if (mounted) {
@@ -250,7 +260,7 @@ class _PracticeProblemSelectionScreenState
         e,
         stackTrace,
         source: 'practice_selection_load_tags',
-        message: '태그 목록을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.',
+        message: '태그 목록을 불러오지 못했어요. 잠시 후 다시 시도해 주세요.',
       );
     } finally {
       if (mounted) {
@@ -317,7 +327,7 @@ class _PracticeProblemSelectionScreenState
         e,
         stackTrace,
         source: 'practice_selection_load_folder_problems',
-        message: '문제 목록을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.',
+        message: '문제 목록을 불러오지 못했어요. 잠시 후 다시 시도해 주세요.',
       );
     } finally {
       if (mounted) {
@@ -369,7 +379,7 @@ class _PracticeProblemSelectionScreenState
         e,
         stackTrace,
         source: 'practice_selection_load_tag_problems',
-        message: '태그 문제를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.',
+        message: '태그 문제를 불러오지 못했어요. 잠시 후 다시 시도해 주세요.',
       );
     } finally {
       if (mounted) {
@@ -434,7 +444,7 @@ class _PracticeProblemSelectionScreenState
         e,
         stackTrace,
         source: 'practice_selection_search_title_problems',
-        message: '검색 결과를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.',
+        message: '검색 결과를 불러오지 못했어요. 잠시 후 다시 시도해 주세요.',
       );
     } finally {
       if (mounted) {
@@ -472,7 +482,7 @@ class _PracticeProblemSelectionScreenState
           e,
           stackTrace,
           source: 'practice_selection_load_more_folder_problems',
-          message: '문제 목록을 더 불러오지 못했습니다. 잠시 후 다시 시도해주세요.',
+          message: '문제 목록을 더 불러오지 못했어요. 잠시 후 다시 시도해 주세요.',
         );
       } finally {
         if (mounted) {
@@ -592,7 +602,7 @@ class _PracticeProblemSelectionScreenState
     return AppBar(
       centerTitle: true,
       title: StandardText(
-        text: '추가할 오답노트 선택',
+        text: widget.addMode ? '세트에 추가할 오답노트' : '추가할 오답노트 선택',
         fontSize: 18,
         color: themeProvider.primaryColor,
       ),
@@ -708,7 +718,7 @@ class _PracticeProblemSelectionScreenState
             border: Border.all(color: AppColors.border),
           ),
           child: StandardText(
-            text: '생성된 태그가 없습니다.',
+            text: '생성된 태그가 없어요.',
             fontSize: 13,
             color: Colors.grey[600]!,
           ),
@@ -1024,6 +1034,23 @@ class _PracticeProblemSelectionScreenState
                     final problem = _currentFolderProblems[index];
                     final isSelected =
                         _selectedProblemIds.contains(problem.problemId);
+                    final alreadyAdded = widget.addMode &&
+                        _originalProblemIds.contains(problem.problemId);
+
+                    if (alreadyAdded) {
+                      return AppearTransition(
+                        delay: AppMotion.stagger * (index < 6 ? index : 6),
+                        child: Opacity(
+                          opacity: 0.45,
+                          child: _problemTileContent(
+                            problem,
+                            themeProvider,
+                            false,
+                            alreadyAdded: true,
+                          ),
+                        ),
+                      );
+                    }
 
                     return AppearTransition(
                       delay: AppMotion.stagger * (index < 6 ? index : 6),
@@ -1058,8 +1085,8 @@ class _PracticeProblemSelectionScreenState
 
   Widget _buildEmptyProblemMessage() {
     final message = _searchMode == _PracticeSearchMode.title
-        ? (_titleQuery.isEmpty ? '검색어를 입력해주세요.' : '검색 결과가 없습니다.')
-        : '작성한 오답노트가 없습니다!';
+        ? (_titleQuery.isEmpty ? '검색어를 입력해 주세요.' : '검색 결과가 없어요.')
+        : '작성한 오답노트가 없어요!';
 
     if (_searchMode == _PracticeSearchMode.title && _titleQuery.isEmpty) {
       // 문구만 있으면 화면이 비어 보인다. 검색 안내라 연필 대신 돋보기를 쓴다.
@@ -1122,7 +1149,8 @@ class _PracticeProblemSelectionScreenState
   }
 
   Widget _problemTileContent(
-      ProblemModel problem, ThemeHandler themeProvider, bool isSelected) {
+      ProblemModel problem, ThemeHandler themeProvider, bool isSelected,
+      {bool alreadyAdded = false}) {
     final isCompact = MediaQuery.of(context).size.width < 600;
     final problemImageUrl = problem.problemImageDataList != null &&
             problem.problemImageDataList!.isNotEmpty
@@ -1159,13 +1187,65 @@ class _PracticeProblemSelectionScreenState
         ),
         tagSpacing: isCompact ? 4 : 6,
         tagRunSpacing: isCompact ? 4 : 6,
-        trailing: _buildSelectionTrailing(
-          themeProvider,
-          isSelected: isSelected,
-          isCompact: isCompact,
-        ),
+        trailing: alreadyAdded
+            ? _buildAddedChip(isCompact: isCompact)
+            : _buildSelectionTrailing(
+                themeProvider,
+                isSelected: isSelected,
+                isCompact: isCompact,
+              ),
       ),
     );
+  }
+
+  /// 추가 모드에서 이미 세트에 든 문제 오른쪽에 붙는다.
+  Widget _buildAddedChip({required bool isCompact}) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: Colors.grey[100],
+        borderRadius: BorderRadius.circular(AppRadius.medium),
+      ),
+      child: StandardText(
+        text: '담김',
+        fontSize: isCompact ? 11 : 12,
+        color: Colors.grey[700]!,
+      ),
+    );
+  }
+
+  bool _submitting = false;
+
+  /// 추가 모드: 고른 문제를 바로 세트에 넣고 세트 상세로 돌아간다.
+  Future<void> _submitAdd() async {
+    if (_submitting) return;
+    final practiceProvider = context.read<ProblemPracticeProvider>();
+    final problemIds = _selectedProblemIds.toList();
+    setState(() => _submitting = true);
+
+    try {
+      await practiceProvider.addProblems(
+        widget.practiceModel!.practiceId,
+        problemIds,
+      );
+      AppAnalytics.logEvent('practice_set_add_problem', {
+        'set_count': 1,
+        'source': 'detail',
+      });
+      if (!mounted) return;
+      AppToast.success('${problemIds.length}문제를 추가했어요.');
+      Navigator.pop(context, true);
+    } catch (e, stackTrace) {
+      await AppErrorReporter.report(
+        e,
+        stackTrace,
+        source: 'practice_selection_add_problems',
+        severity: AppErrorSeverity.warning,
+      );
+      if (!mounted) return;
+      setState(() => _submitting = false);
+      AppToast.error('문제를 추가하지 못했어요. 잠시 후 다시 시도해 주세요.');
+    }
   }
 
   Widget _buildSelectionTrailing(
@@ -1212,55 +1292,59 @@ class _PracticeProblemSelectionScreenState
         width: double.infinity,
         height: 50,
         child: ElevatedButton(
-          onPressed: _selectedProblemIds.isNotEmpty
-              ? () {
-                  final newIds = _selectedProblemIds.toList();
+          onPressed: widget.addMode
+              ? (_selectedProblemIds.isEmpty
+                  ? () => _showSelectProblemDialog(context)
+                  : (_submitting ? null : _submitAdd))
+              : _selectedProblemIds.isNotEmpty
+                  ? () {
+                      final newIds = _selectedProblemIds.toList();
 
-                  // 추가된 문제: newIds 에는 있지만 원본에는 없는 것
-                  final addList = newIds
-                      .where((id) => !_originalProblemIds.contains(id))
-                      .toList();
-                  // 삭제된 문제: 원본에는 있고 newIds에는 없는 것
-                  final removeList = _originalProblemIds
-                      .where((id) => !newIds.contains(id))
-                      .toList();
+                      // 추가된 문제: newIds 에는 있지만 원본에는 없는 것
+                      final addList = newIds
+                          .where((id) => !_originalProblemIds.contains(id))
+                          .toList();
+                      // 삭제된 문제: 원본에는 있고 newIds에는 없는 것
+                      final removeList = _originalProblemIds
+                          .where((id) => !newIds.contains(id))
+                          .toList();
 
-                  if (widget.practiceModel != null) {
-                    // 수정 모드
-                    final updateModel = PracticeNoteUpdateModel(
-                      practiceNoteId: widget.practiceModel!.practiceId,
-                      practiceTitle: widget.practiceModel!.practiceTitle,
-                      addProblemIdList: addList,
-                      removeProblemIdList: removeList,
-                    );
-                    // 다음 화면으로 updateModel 넘기기
-                    Navigator.push(
-                      context,
-                      TossPageRoute(
-                        builder: (context) => PracticeTitleWriteScreen(
-                          practiceNoteUpdateModel: updateModel,
-                          practiceNoteDetailModel: widget.practiceModel!,
-                        ),
-                      ),
-                    );
-                  } else {
-                    // 신규 등록 모드 → 기존대로 RegisterModel
-                    final registerModel = PracticeNoteRegisterModel(
-                      practiceId: null,
-                      practiceTitle: "",
-                      registerProblemIdList: newIds,
-                    );
-                    Navigator.push(
-                      context,
-                      TossPageRoute(
-                        builder: (context) => PracticeTitleWriteScreen(
-                          practiceRegisterModel: registerModel,
-                        ),
-                      ),
-                    );
-                  }
-                }
-              : () => _showSelectProblemDialog(context),
+                      if (widget.practiceModel != null) {
+                        // 수정 모드
+                        final updateModel = PracticeNoteUpdateModel(
+                          practiceNoteId: widget.practiceModel!.practiceId,
+                          practiceTitle: widget.practiceModel!.practiceTitle,
+                          addProblemIdList: addList,
+                          removeProblemIdList: removeList,
+                        );
+                        // 다음 화면으로 updateModel 넘기기
+                        Navigator.push(
+                          context,
+                          TossPageRoute(
+                            builder: (context) => PracticeTitleWriteScreen(
+                              practiceNoteUpdateModel: updateModel,
+                              practiceNoteDetailModel: widget.practiceModel!,
+                            ),
+                          ),
+                        );
+                      } else {
+                        // 신규 등록 모드 → 기존대로 RegisterModel
+                        final registerModel = PracticeNoteRegisterModel(
+                          practiceId: null,
+                          practiceTitle: "",
+                          registerProblemIdList: newIds,
+                        );
+                        Navigator.push(
+                          context,
+                          TossPageRoute(
+                            builder: (context) => PracticeTitleWriteScreen(
+                              practiceRegisterModel: registerModel,
+                            ),
+                          ),
+                        );
+                      }
+                    }
+                  : () => _showSelectProblemDialog(context),
           style: ElevatedButton.styleFrom(
             backgroundColor: themeProvider.primaryColor,
             shape: RoundedRectangleBorder(
@@ -1271,37 +1355,41 @@ class _PracticeProblemSelectionScreenState
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Expanded(
+              Expanded(
                 child: Center(
                   child: StandardText(
-                    text: "다음",
+                    text: widget.addMode
+                        ? '${_selectedProblemIds.length}개 추가하기'
+                        : "다음",
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
                   ),
                 ),
               ),
-              Container(
-                width: 24,
-                height: 24,
-                alignment: Alignment.center,
-                decoration: const BoxDecoration(
-                  color: Colors.white,
-                  shape: BoxShape.circle,
-                ),
-                // 개수가 바뀔 때마다 숫자가 한 번 튀어서, 눌린 것이 셈에
-                // 반영됐다는 걸 알 수 있게 한다.
-                child: SelectionPop(
-                  key: ValueKey<int>(_selectedProblemIds.length),
-                  selected: true,
-                  peak: 1.3,
-                  child: StandardText(
-                    text: _selectedProblemIds.length.toString(),
-                    fontSize: 12,
-                    color: themeProvider.primaryColor,
+              // 추가 모드는 버튼 문구에 개수가 들어가서 따로 세지 않는다.
+              if (!widget.addMode)
+                Container(
+                  width: 24,
+                  height: 24,
+                  alignment: Alignment.center,
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                  ),
+                  // 개수가 바뀔 때마다 숫자가 한 번 튀어서, 눌린 것이 셈에
+                  // 반영됐다는 걸 알 수 있게 한다.
+                  child: SelectionPop(
+                    key: ValueKey<int>(_selectedProblemIds.length),
+                    selected: true,
+                    peak: 1.3,
+                    child: StandardText(
+                      text: _selectedProblemIds.length.toString(),
+                      fontSize: 12,
+                      color: themeProvider.primaryColor,
+                    ),
                   ),
                 ),
-              ),
             ],
           ),
         ),
@@ -1350,7 +1438,7 @@ class _PracticeProblemSelectionScreenState
                 ),
                 const SizedBox(height: 20),
                 StandardText(
-                  text: '하나 이상의 문제를 선택해주세요!',
+                  text: '하나 이상의 문제를 선택해 주세요!',
                   fontSize: MobileFontSize.reduced(context, 15),
                   color: AppColors.textPrimary,
                   textAlign: TextAlign.center,

@@ -27,6 +27,10 @@ class AppToast {
   static OverlayEntry? _entry;
   static Timer? _timer;
 
+  /// 지금 떠 있는 알림이 닫힐 때 한 번 부른다. 되돌리기 알림이 버튼 없이
+  /// 닫혔는지 알 때 쓴다.
+  static VoidCallback? _onClosed;
+
   /// 같은 문구가 연달아 뜨는 것을 막는다.
   static DateTime? _lastShownAt;
   static String? _lastMessage;
@@ -39,6 +43,33 @@ class AppToast {
 
   static void info(String message) =>
       show(message: message, type: ToastType.info);
+
+  /// 되돌리기 버튼이 달린 알림을 띄우고, 버튼을 눌렀는지 돌려준다.
+  ///
+  /// 시간이 지나거나, 손으로 닫거나, 다른 알림이 덮어서 닫히면 false 다.
+  /// 지우기처럼 되돌릴 수 없는 일을 잠깐 미룰 때 쓴다.
+  static Future<bool> undo(
+    String message, {
+    String actionLabel = '되돌리기',
+    Duration duration = const Duration(seconds: 4),
+  }) {
+    final completer = Completer<bool>();
+    show(
+      message: message,
+      type: ToastType.success,
+      duration: duration,
+      actionLabel: actionLabel,
+      onAction: () {
+        if (!completer.isCompleted) completer.complete(true);
+      },
+      onClosed: () {
+        if (!completer.isCompleted) completer.complete(false);
+      },
+    );
+    // 띄울 곳이 없어 알림이 뜨지 않았으면 바로 미루지 않고 진행한다.
+    if (_entry == null && !completer.isCompleted) completer.complete(false);
+    return completer.future;
+  }
 
   /// 알림이 떠 있는 시간은 성격이 정한다.
   ///
@@ -62,13 +93,22 @@ class AppToast {
     ToastType type = ToastType.info,
     BuildContext? context,
     Duration? duration,
+    String? actionLabel,
+    VoidCallback? onAction,
+    VoidCallback? onClosed,
   }) {
-    if (message.trim().isEmpty) return;
+    if (message.trim().isEmpty) {
+      onClosed?.call();
+      return;
+    }
 
     final now = DateTime.now();
     if (_lastMessage == message &&
         _lastShownAt != null &&
         now.difference(_lastShownAt!) < const Duration(milliseconds: 800)) {
+      // 띄우지 않았으니 닫힌 것으로 알린다. 안 그러면 되돌리기를 기다리는
+      // 쪽이 끝나지 않는다.
+      onClosed?.call();
       return;
     }
     _lastMessage = message;
@@ -81,7 +121,10 @@ class AppToast {
             ? Overlay.maybeOf(context, rootOverlay: true)
             : null) ??
         AppNavigator.navigatorKey.currentState?.overlay;
-    if (overlay == null) return;
+    if (overlay == null) {
+      onClosed?.call();
+      return;
+    }
 
     dismiss();
 
@@ -91,9 +134,17 @@ class AppToast {
         type: type,
         duration: duration ?? _durationOf(type),
         onDismiss: dismiss,
+        actionLabel: actionLabel,
+        onAction: onAction == null
+            ? null
+            : () {
+                onAction();
+                dismiss();
+              },
       ),
     );
     _entry = entry;
+    _onClosed = onClosed;
     overlay.insert(entry);
   }
 
@@ -107,6 +158,9 @@ class AppToast {
     final entry = _entry;
     _entry = null;
     entry?.remove();
+    final onClosed = _onClosed;
+    _onClosed = null;
+    onClosed?.call();
   }
 }
 
@@ -115,12 +169,16 @@ class _ToastView extends StatefulWidget {
   final ToastType type;
   final Duration duration;
   final VoidCallback onDismiss;
+  final String? actionLabel;
+  final VoidCallback? onAction;
 
   const _ToastView({
     required this.message,
     required this.type,
     required this.duration,
     required this.onDismiss,
+    this.actionLabel,
+    this.onAction,
   });
 
   @override
@@ -235,6 +293,25 @@ class _ToastViewState extends State<_ToastView>
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
+                      if (widget.actionLabel != null &&
+                          widget.onAction != null) ...[
+                        const SizedBox(width: AppSpacing.sm),
+                        TextButton(
+                          onPressed: widget.onAction,
+                          style: TextButton.styleFrom(
+                            foregroundColor: style.accent,
+                            minimumSize: const Size(64, 36),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: AppSpacing.md),
+                          ),
+                          child: StandardText(
+                            text: widget.actionLabel!,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            color: style.accent,
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 ),

@@ -19,6 +19,7 @@ import '../../../Module/Design/AppColors.dart';
 import '../../../Module/Design/AppRadius.dart';
 import '../../../Module/Design/AppSpacing.dart';
 import 'package:ono/Util/AppAnalytics.dart';
+import '../../../Module/Design/AppLayout.dart';
 
 enum ReportPeriod { weekly, monthly, total }
 
@@ -66,7 +67,7 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
       if (!mounted) return;
       setState(() {
         _isLoading = false;
-        _errorMessage = '학습 리포트를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.';
+        _errorMessage = '학습 리포트를 불러오지 못했어요. 잠시 후 다시 시도해 주세요.';
       });
     }
   }
@@ -89,6 +90,7 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
         ),
         actions: [
           IconButton(
+            tooltip: '공유하기',
             icon: Icon(
               Icons.share_rounded,
               color: _report != null
@@ -100,7 +102,8 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
           ),
         ],
       ),
-      body: _buildBody(themeProvider),
+      // 태블릿 가로에서 카드가 화면 끝까지 늘어나지 않게 모은다.
+      body: AppContentWidth(child: _buildBody(themeProvider)),
     );
   }
 
@@ -171,7 +174,7 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
     if (_report == null) {
       return const Center(
         child: StandardText(
-          text: '표시할 리포트가 없습니다.',
+          text: '표시할 리포트가 없어요.',
           fontSize: 14,
           color: AppColors.textPrimary,
         ),
@@ -234,9 +237,9 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
               ),
               SizedBox(width: 6),
               StandardText(
-                text: '학습 리포트는 매일 자정 갱신됩니다.',
+                text: '학습 리포트는 매일 자정 갱신돼요.',
                 fontSize: 12,
-                color: Colors.grey,
+                color: AppColors.textSecondary,
               ),
             ],
           ),
@@ -857,7 +860,7 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
 
   Widget _buildWeakTopicCard(ThemeHandler themeProvider, _ReportViewData data) {
     final items = data.weakAreas.isEmpty
-        ? ['현재 취약 영역 데이터가 없습니다.']
+        ? ['현재 취약 영역 데이터가 없어요.']
         : data.weakAreas
             .map((e) => '${e.topic} (오답 ${e.wrongCount}회)')
             .toList();

@@ -141,9 +141,10 @@ class _StudyRoomCreateScreenState extends State<StudyRoomCreateScreen> {
       AppAnalytics.logEvent('study_room_created', {
         'has_thumbnail': thumbnailFile != null,
       });
-      if (mounted) Navigator.pop(context, true);
+      // 목록이 만든 방을 바로 열고 초대 코드까지 보여 줄 수 있게 방 번호를 돌려준다.
+      if (mounted) Navigator.pop(context, room.roomId);
     } catch (_) {
-      AppSnackBar.showError('방 생성에 실패했습니다');
+      AppSnackBar.showError('방을 만들지 못했어요');
     } finally {
       if (mounted) setState(() => _isCreating = false);
     }
@@ -177,6 +178,7 @@ class _StudyRoomCreateScreenState extends State<StudyRoomCreateScreen> {
         centerTitle: true,
         backgroundColor: Colors.white,
         leading: IconButton(
+          tooltip: '닫기',
           icon: Icon(Icons.close, color: themeProvider.primaryColor),
           onPressed: () => Navigator.pop(context),
         ),
@@ -265,7 +267,7 @@ class _StudyRoomCreateScreenState extends State<StudyRoomCreateScreen> {
                               child: StandardText(
                                 text: '선택하지 않으면 기본 사진으로 보여요',
                                 fontSize: 12,
-                                color: Colors.grey[500]!,
+                                color: AppColors.textSecondary,
                                 fontWeight: FontWeight.normal,
                                 fontFamily: 'PretendardLight',
                               ),
@@ -347,9 +349,9 @@ class _StudyRoomCreateScreenState extends State<StudyRoomCreateScreen> {
                             ),
                             SizedBox(height: screenHeight * 0.01),
                             StandardText(
-                              text: '방을 만들면 자동으로 초대 코드가 생성됩니다.',
+                              text: '방을 만들면 자동으로 초대 코드가 생성돼요.',
                               fontSize: 13,
-                              color: Colors.grey[500]!,
+                              color: AppColors.textSecondary,
                               fontWeight: FontWeight.normal,
                               fontFamily: 'PretendardLight',
                             ),

@@ -541,7 +541,7 @@ void main() {
 
       expect(
         http.lastRequest.url.toString(),
-        '$testBaseUrl/api/problems/folder/3/V2?size=20',
+        '$testBaseUrl/api/problems/folder/3/V2?size=20&sort=NEWEST',
       );
       expect(result.content, hasLength(1));
       expect(result.nextCursor, 10);
@@ -565,7 +565,7 @@ void main() {
 
       expect(
         http.lastRequest.url.toString(),
-        '$testBaseUrl/api/problems/tag/9/V2?size=5&cursor=1',
+        '$testBaseUrl/api/problems/tag/9/V2?size=5&sort=NEWEST&cursor=1',
       );
     });
 

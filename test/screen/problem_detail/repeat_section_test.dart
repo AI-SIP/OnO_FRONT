@@ -130,7 +130,7 @@ void main() {
           .onLongPress!();
       await tester.pumpAndSettle();
 
-      expect(find.text('이 복습 이미지를 정말 삭제하시겠습니까?'), findsOneWidget);
+      expect(find.text('이 복습 이미지를 정말 삭제할까요?'), findsOneWidget);
 
       await tester.tap(find.text('취소'));
       await tester.pumpAndSettle();

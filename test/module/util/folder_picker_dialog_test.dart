@@ -198,7 +198,7 @@ void main() {
 
       final addButton = tester.widget<IconButton>(
         find.byWidgetPredicate(
-          (widget) => widget is IconButton && widget.tooltip == '공책 추가',
+          (widget) => widget is IconButton && widget.tooltip == '공책 만들기',
         ),
       );
       expect(addButton.onPressed, isNull);
@@ -211,7 +211,7 @@ void main() {
     // 메시지 없이 로딩 스피너가 영구히 남는다. 사용자는 헤더의 닫기(X)나 취소
     // 버튼으로 다이얼로그를 닫는 것 외에는 복구할 방법이 없다.
     // 영향 화면: FolderPickerWidget(문제 등록/수정 시 공책 선택),
-    // DirectoryScreen._showMoveFolderDialog(공책 정리).
+    // DirectoryScreen._showMoveFolderDialog(공책 옮기기).
     testWidgets(
       '루트 폴더 조회가 실패하면 로딩 스피너가 사라지고 에러가 보여야 한다',
       (tester) async {
@@ -234,6 +234,24 @@ void main() {
       },
       skip: true, // #174 에서 수정 예정
     );
+  });
+
+  group('공책 끌어 옮기기', () {
+    testWidgets('고르기만 하는 창에서는 공책을 끌 수 없다', (tester) async {
+      stubRoot(1, children: [_buildSubfolder(10, name: '수학')]);
+
+      await openDialog(tester);
+
+      expect(find.byType(LongPressDraggable<FolderTreeNode>), findsNothing);
+    });
+
+    testWidgets('공책 옮기기에서는 하위 공책을 끌 수 있다', (tester) async {
+      stubRoot(1, children: [_buildSubfolder(10, name: '수학')]);
+
+      await openDialog(tester, isManagementMode: true);
+
+      expect(find.byType(LongPressDraggable<FolderTreeNode>), findsOneWidget);
+    });
   });
 
   group('폴더 트리 표시', () {
@@ -413,26 +431,26 @@ void main() {
       expect(find.text('완료하기'), findsNothing);
     });
 
-    testWidgets('관리 모드에서는 공책 정리 / 완료하기 문구가 보인다', (tester) async {
+    testWidgets('관리 모드에서는 공책 옮기기 / 완료하기 문구가 보인다', (tester) async {
       stubRoot(12);
 
       await openDialog(tester, isManagementMode: true);
 
-      expect(find.text('공책 정리'), findsOneWidget);
+      expect(find.text('공책 옮기기'), findsOneWidget);
       expect(find.text('완료하기'), findsOneWidget);
       expect(find.text('선택하기'), findsNothing);
     });
   });
 
-  group('공책 생성', () {
+  group('공책 만들기', () {
     testWidgets('공책 추가 버튼을 누르면 이름 입력 다이얼로그가 뜬다', (tester) async {
       stubRoot(13);
 
       await openDialog(tester);
-      await tester.tap(find.byTooltip('공책 추가'));
+      await tester.tap(find.byTooltip('공책 만들기'));
       await tester.pumpAndSettle();
 
-      expect(find.text('공책 생성'), findsOneWidget);
+      expect(find.text('공책 만들기'), findsOneWidget);
       expect(find.textContaining('책장 아래에 만들어요'), findsOneWidget);
       expect(find.byType(TextField), findsOneWidget);
     });
@@ -446,7 +464,7 @@ void main() {
           .thenAnswer((_) async => _buildRootFolder(140, name: '영어'));
 
       await openDialog(tester);
-      await tester.tap(find.byTooltip('공책 추가'));
+      await tester.tap(find.byTooltip('공책 만들기'));
       await tester.pumpAndSettle();
       await tester.enterText(find.byType(TextField), '영어');
       await tester.tap(find.text('확인'));
@@ -454,21 +472,21 @@ void main() {
 
       verify(() => folderService.registerFolder(any())).called(1);
       // 생성 다이얼로그는 닫히고 폴더 선택 다이얼로그로 돌아온다.
-      expect(find.text('공책 생성'), findsNothing);
+      expect(find.text('공책 만들기'), findsNothing);
     });
 
     testWidgets('이름을 비운 채 확인을 눌러도 registerFolder 가 호출되지 않는다', (tester) async {
       stubRoot(15);
 
       await openDialog(tester);
-      await tester.tap(find.byTooltip('공책 추가'));
+      await tester.tap(find.byTooltip('공책 만들기'));
       await tester.pumpAndSettle();
       await tester.tap(find.text('확인'));
       await tester.pumpAndSettle();
 
       verifyNever(() => folderService.registerFolder(any()));
       // 빈 값이면 다이얼로그가 닫히지 않는다.
-      expect(find.text('공책 생성'), findsOneWidget);
+      expect(find.text('공책 만들기'), findsOneWidget);
     });
   });
 

@@ -10,6 +10,7 @@ import 'package:ono/Model/Problem/ReviewDueProblemModel.dart';
 
 import '../../../Config/AppConfig.dart';
 import '../HttpService.dart';
+import '../../../Model/Common/ListSort.dart';
 
 class ProblemService {
   final HttpService httpService;
@@ -207,9 +208,11 @@ class ProblemService {
     required int folderId,
     int? cursor,
     int size = 20,
+    ListSort sort = ListSort.newest,
   }) async {
     final queryParams = <String, String>{
       'size': size.toString(),
+      'sort': sort.apiValue,
     };
     if (cursor != null) {
       queryParams['cursor'] = cursor.toString();
@@ -232,9 +235,11 @@ class ProblemService {
     required int tagId,
     int? cursor,
     int size = 20,
+    ListSort sort = ListSort.newest,
   }) async {
     final queryParams = <String, String>{
       'size': size.toString(),
+      'sort': sort.apiValue,
     };
     if (cursor != null) {
       queryParams['cursor'] = cursor.toString();
@@ -257,10 +262,12 @@ class ProblemService {
     required String query,
     int? cursor,
     int size = 20,
+    ListSort sort = ListSort.newest,
   }) async {
     final queryParams = <String, String>{
       'query': query,
       'size': size.toString(),
+      'sort': sort.apiValue,
     };
     if (cursor != null) {
       queryParams['cursor'] = cursor.toString();
@@ -278,10 +285,13 @@ class ProblemService {
     );
   }
 
-  Future<ReviewDueResponse> getReviewDueProblems() async {
+  Future<ReviewDueResponse> getReviewDueProblems({
+    bool showErrorSnackBar = true,
+  }) async {
     final data = await httpService.sendRequest(
       method: 'GET',
       url: '${AppConfig.baseUrl}/api/problems/review-due',
+      showErrorSnackBar: showErrorSnackBar,
     );
     return ReviewDueResponse.fromJson(data as Map<String, dynamic>);
   }

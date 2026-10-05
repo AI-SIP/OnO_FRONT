@@ -30,6 +30,8 @@
 	<string>$(FLUTTER_BUILD_NAME)</string>
 	<key>CFBundleSignature</key>
 	<string>????</string>
+	<key>FlutterDeepLinkingEnabled</key>
+	<false/>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
@@ -45,6 +47,18 @@
 			<key>CFBundleURLSchemes</key>
 			<array>
 				<string>kakao7fd2fa49895af63319fd6b11e084d0d5</string>
+			</array>
+		</dict>
+		<!-- 홈 화면 위젯을 눌렀을 때 여는 주소(onowidget://review-due 등). 기존 OnO scheme 은
+		     어디서 쓰는지 몰라 겹치지 않게 따로 둔다. -->
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>com.aisip.OnO.widget</string>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>onowidget</string>
 			</array>
 		</dict>
 	</array>

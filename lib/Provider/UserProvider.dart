@@ -14,6 +14,7 @@ import 'package:ono/Provider/AchievementProvider.dart';
 import 'package:ono/Provider/CosmeticProvider.dart';
 import 'package:ono/Provider/MissionProvider.dart';
 import 'package:ono/Provider/PracticeNoteProvider.dart';
+import 'package:ono/Provider/ReviewDueProvider.dart';
 import 'package:ono/Service/Api/Problem/ProblemService.dart';
 import 'package:ono/Service/Api/User/UserService.dart';
 import 'package:ono/Service/SocialLogin/KakaoAuthService.dart';
@@ -26,6 +27,7 @@ import '../Exception/ApiException.dart';
 import '../Screen/Onboarding/LoginScreen.dart';
 import '../Module/Motion/TossPageRoute.dart';
 import '../Service/Api/HttpService.dart';
+import '../Service/HomeWidget/HomeWidgetSyncService.dart';
 import '../Service/SocialLogin/AppleAuthService.dart';
 import '../Service/SocialLogin/GoogleAuthService.dart';
 import 'ProblemsProvider.dart';
@@ -55,6 +57,10 @@ class UserProvider with ChangeNotifier {
   /// 동안에는 서른 날을 채운 개근 훈장도 조용히 `earned` 로 바뀌고 만다.
   /// 앱 밖(테스트 등)에서는 없을 수 있다.
   final AchievementProvider? achievementProvider;
+
+  /// 로그아웃할 때 비운다. 비우지 않으면 다른 계정으로 로그인한 홈에 앞 사람의
+  /// 추천 복습 개수와 카드가 잠깐 보인다.
+  final ReviewDueProvider? reviewDueProvider;
 
   final TokenProvider tokenProvider;
   final HttpService httpService;
@@ -92,6 +98,7 @@ class UserProvider with ChangeNotifier {
     this.missionProvider,
     this.cosmeticProvider,
     this.achievementProvider,
+    this.reviewDueProvider,
     TokenProvider? tokenProvider,
     HttpService? httpService,
     UserService? userService,
@@ -129,7 +136,7 @@ class UserProvider with ChangeNotifier {
   Future<void> signInWithMember(BuildContext context,
       Future<UserRegisterModel?> Function(BuildContext) socialLogin) async {
     try {
-      LoadingDialog.show(context, '로그인 중 입니다...');
+      LoadingDialog.show(context, '로그인하는 중...');
       final userRegisterModel = await socialLogin(context);
       debugPrint('[signInWithMember] userRegisterModel: $userRegisterModel');
 
@@ -191,7 +198,7 @@ class UserProvider with ChangeNotifier {
   Future<void> signInWithGuest(BuildContext context) async {
     AppAnalytics.logEvent('login_start', {'method': 'guest'});
     try {
-      LoadingDialog.show(context, '로그인 중 입니다...');
+      LoadingDialog.show(context, '로그인하는 중...');
       final response = await userService.signInWithGuest();
 
       await saveUserLoginInfo('GUEST');
@@ -275,21 +282,21 @@ class UserProvider with ChangeNotifier {
 
   String _mapLoginErrorMessage(Object error) {
     if (error is UnauthorizedException) {
-      return '로그인 정보가 만료되었어요. 다시 시도해주세요.';
+      return '로그인 정보가 만료되었어요. 다시 시도해 주세요.';
     }
     if (error is NetworkException || error is TimeoutException) {
-      return '네트워크가 불안정해 로그인에 실패했어요. 잠시 후 다시 시도해주세요.';
+      return '네트워크가 불안정해 로그인에 실패했어요. 잠시 후 다시 시도해 주세요.';
     }
     if (error is ServerException) {
-      return '서버 상태가 불안정해요. 잠시 후 다시 시도해주세요.';
+      return '서버 상태가 불안정해요. 잠시 후 다시 시도해 주세요.';
     }
     if (error is BadRequestException) {
-      return '로그인 요청을 처리하지 못했어요. 다시 시도해주세요.';
+      return '로그인 요청을 처리하지 못했어요. 다시 시도해 주세요.';
     }
     if (error is ApiException) {
-      return '로그인 처리 중 문제가 발생했어요. 다시 시도해주세요.';
+      return '로그인 처리 중 문제가 발생했어요. 다시 시도해 주세요.';
     }
-    return '로그인 과정에서 오류가 발생했습니다. 다시 시도해주세요.';
+    return '로그인 과정에서 오류가 발생했어요. 다시 시도해 주세요.';
   }
 
   void changeIsFirstLogin() {
@@ -649,6 +656,10 @@ class UserProvider with ChangeNotifier {
     // 비우지 않으면 다른 계정으로 로그인한 첫 화면에 앞 사람이 받은 훈장의
     // 축하가 뜬다. 기기에 적어 둔 축하거리까지 같이 지운다.
     achievementProvider?.clear();
+    reviewDueProvider?.clear();
+    // 비우지 않으면 홈 화면 위젯에 앞 사람의 연속 일수와 학습 기록, 프로필이
+    // 그대로 남는다. 위젯 저장소를 쓰는 일이라 기다리지 않는다.
+    unawaited(HomeWidgetSyncService.instance.clear());
     notifyListeners();
   }
 

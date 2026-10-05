@@ -25,6 +25,7 @@ import '../Service/Api/HttpService.dart';
 import 'AppAnalytics.dart';
 import 'AppErrorReporter.dart';
 import 'AppNavigator.dart';
+import '../Module/Dialog/UnsavedChangesScope.dart';
 import '../Module/Motion/TossPageRoute.dart';
 
 /// 알림을 눌렀을 때 열어야 하는 화면.
@@ -205,18 +206,61 @@ class NotificationService {
       }
     }
 
-    await _requestPermission();
-    _configureMessageHandlers();
-  }
-
-  Future<void> _requestPermission() async {
+    // 알림 권한은 앱을 켜자마자 묻지 않는다. 무엇을 알려 주는지 모르는
+    // 상태에서 물으면 거절하기 쉽다. 첫 오답노트를 쓰거나 첫 복습을 저장한 뒤
+    // [requestPermissionIfNeeded] 로 묻는다. 토큰을 받고 서버에 보내는 것은
+    // 권한과 상관없이 지금처럼 로그인할 때 한다.
     await _messaging.setForegroundNotificationPresentationOptions(
       alert: true,
       badge: true,
       sound: true,
     );
+    _configureMessageHandlers();
+  }
 
-    await _messaging.requestPermission(
+  /// 아직 알림 권한을 묻지 않았으면 묻는다. 이미 허용하거나 거절했으면
+  /// 시스템이 다시 묻지 않으니 아무 일도 없다.
+  ///
+  /// [source] 는 어디서 물었는지다. 실패해도 저장 흐름을 막지 않는다.
+  Future<void> requestPermissionIfNeeded({required String source}) async {
+    try {
+      if (Platform.isIOS) {
+        final iosInfo = await _deviceInfo.iosInfo;
+        if (!iosInfo.isPhysicalDevice) return;
+      }
+      final settings = await _messaging.getNotificationSettings();
+      if (settings.authorizationStatus != AuthorizationStatus.notDetermined) {
+        return;
+      }
+      final result = await _requestPermission();
+      AppAnalytics.logEvent('notification_permission_prompt', {
+        'source': source,
+        'result': result.authorizationStatus ==
+                    AuthorizationStatus.authorized ||
+                result.authorizationStatus == AuthorizationStatus.provisional
+            ? 'success'
+            : 'rejected',
+      });
+    } catch (error) {
+      debugPrint('알림 권한 요청 실패: $error');
+    }
+  }
+
+  /// 기기 설정에서 알림을 꺼 두었는지. 알 수 없으면 false 다.
+  Future<bool> isPermissionDenied() async {
+    try {
+      final settings = await _messaging.getNotificationSettings();
+      // 안드로이드 13 이상에서 두 번 거절하면 deniedPermanently 로 온다.
+      final status = settings.authorizationStatus;
+      return status == AuthorizationStatus.denied ||
+          status == AuthorizationStatus.deniedPermanently;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<NotificationSettings> _requestPermission() async {
+    return _messaging.requestPermission(
       alert: true,
       announcement: false,
       badge: true,
@@ -321,20 +365,37 @@ class NotificationService {
   /// 알림 data 로 화면을 연다.
   ///
   /// 백그라운드에서 탭한 경우와 종료 상태에서 탭해 들어온 경우가 모두 여기로 모인다.
+  /// 쌓인 화면을 닫고 이동했으면 true 다. 로그아웃 상태이거나 쓰던 내용 확인에서
+  /// 머물기를 고르면 false 다.
   @visibleForTesting
-  Future<void> navigateByNotificationData(Map<String, dynamic> data) async {
+  Future<bool> navigateByNotificationData(Map<String, dynamic> data) async {
     final target = NotificationTarget.fromData(data);
-    if (target.destination == NotificationDestination.none) return;
+    if (target.destination == NotificationDestination.none) return false;
 
     final navigator = AppNavigator.navigatorKey.currentState;
     final context = AppNavigator.navigatorKey.currentContext;
-    if (navigator == null || context == null) return;
+    if (navigator == null || context == null) return false;
 
     // 로그아웃 상태면 로그인 화면 위에 데이터가 필요한 화면을 얹지 않는다.
     // waiting, unreachable 은 자동 로그인이 진행 중이거나 잠깐 끊긴 것이라 막지 않는다.
     if (_readProvider<UserProvider>(context)?.isLoggedIn ==
         LoginStatus.logout) {
-      return;
+      return false;
+    }
+
+    // 쓰던 오답노트나 복습 기록이 있으면 닫기 전에 묻는다. popUntil 은
+    // 화면마다 걸어 둔 나가기 확인을 거치지 않는다.
+    final leave = await UnsavedChangesScope.confirmBeforeLeavingAll(
+      source: 'notification',
+    );
+    if (!leave) return false;
+    // 확인 창이 떠 있는 동안 다른 요청이 로그인 만료로 로그인 화면을 띄웠을 수
+    // 있다. 그 위에 데이터가 필요한 화면을 얹지 않는다.
+    final latestContext = AppNavigator.navigatorKey.currentContext;
+    if (latestContext == null ||
+        _readProvider<UserProvider>(latestContext)?.isLoggedIn ==
+            LoginStatus.logout) {
+      return false;
     }
 
     navigator.popUntil((route) => route.isFirst);
@@ -342,34 +403,34 @@ class NotificationService {
     switch (target.destination) {
       case NotificationDestination.none:
       case NotificationDestination.home:
-        return;
+        return true;
       case NotificationDestination.reviewDue:
         navigator.push(
           TossPageRoute(builder: (_) => const ReviewDueScreen()),
         );
-        return;
+        return true;
       case NotificationDestination.problemDetail:
         final problemId = target.problemId;
-        if (problemId == null) return;
+        if (problemId == null) return true;
         navigator.push(
           TossPageRoute(
             builder: (_) => ProblemDetailScreen(problemId: problemId),
           ),
         );
-        return;
+        return true;
       case NotificationDestination.studyRoom:
         final roomId = target.roomId;
-        if (roomId == null) return;
-        _openStudyRoom(navigator, context, roomId);
-        return;
+        if (roomId == null) return true;
+        _openStudyRoom(navigator, latestContext, roomId);
+        return true;
       case NotificationDestination.sharedProblem:
-        await _openSharedProblem(navigator, context, target);
-        return;
+        await _openSharedProblem(navigator, latestContext, target);
+        return true;
       case NotificationDestination.practiceNote:
         final practiceId = target.practiceId;
-        if (practiceId == null) return;
-        await _openPracticeNote(context, practiceId);
-        return;
+        if (practiceId == null) return true;
+        await _openPracticeNote(latestContext, practiceId);
+        return true;
     }
   }
 

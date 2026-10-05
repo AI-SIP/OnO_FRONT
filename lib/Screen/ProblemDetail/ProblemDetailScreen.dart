@@ -2,12 +2,13 @@ import 'dart:async';
 
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
-import 'package:ono/Model/PracticeNote/PracticeNoteUpdateModel.dart';
+import 'package:ono/Model/PracticeNote/PracticeNoteRegisterModel.dart';
 import 'package:ono/Module/Dialog/SnackBarDialog.dart';
 import 'package:ono/Provider/PracticeNoteProvider.dart';
 import 'package:ono/Screen/ProblemRegister/ProblemRegisterScreen.dart';
 import 'package:ono/Util/AppAnalytics.dart';
 import 'package:ono/Util/AppErrorReporter.dart';
+import 'package:ono/Util/PendingDeletion.dart';
 import 'package:provider/provider.dart';
 
 import '../../Model/Problem/ProblemAnalysisStatus.dart';
@@ -17,25 +18,51 @@ import '../../Module/Text/mobile_font_size.dart';
 import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/ProblemsProvider.dart';
+import '../PracticeNote/PracticeContinueSheet.dart';
 import '../PracticeNote/PracticeNavigationButtons.dart';
+import '../PracticeNote/PracticeTitleWriteScreen.dart';
+import '../ProblemSolve/ProblemSolveEntry.dart';
 import 'ProblemDetailTemplate.dart';
 import '../../Module/Motion/AppHaptic.dart';
 import '../../Module/Motion/PressableScale.dart';
 import '../../Module/Motion/TossPageRoute.dart';
-import '../../Module/Motion/TossDialog.dart';
 import '../../Module/Motion/AppMotion.dart';
 import '../../Module/Design/AppColors.dart';
 import '../../Module/Design/AppToast.dart';
 import '../../Module/Design/AppRadius.dart';
 import '../../Module/Motion/AppearTransition.dart';
 import '../../Module/Motion/Skeleton.dart';
+import '../../Module/Dialog/ConfirmDialog.dart';
 
 class ProblemDetailScreen extends StatefulWidget {
   final int problemId;
   final bool isPractice;
 
-  const ProblemDetailScreen(
-      {required this.problemId, this.isPractice = false, super.key});
+  /// 추천 복습에서 열었을 때 추천 목록의 문제 순서. 있으면 한 문제를 저장하고
+  /// 돌아왔을 때 다음 추천 문제를 바로 풀지 묻는다.
+  final List<int>? reviewQueue;
+
+  /// 복습 세트에서 `다음 문제 바로 풀기` 로 넘어왔을 때, 앞 문제와 같은 방식으로
+  /// 바로 다시 풀기를 시작한다.
+  final ProblemSolveMode? autoStartMode;
+
+  /// 공책에서 열었을 때 그 공책에 보이던 오답노트 순서. 있으면 아래에 이전,
+  /// 다음 버튼을 둔다. 전에는 문제마다 목록으로 돌아갔다가 다시 들어가야 했다.
+  final List<int>? folderQueue;
+
+  /// 공책에 아직 받지 않은 오답노트가 더 있는지. 순서는 받아 둔 것까지라,
+  /// 더 있으면 개수 뒤에 + 를 붙여 전체가 아님을 보인다.
+  final bool folderQueueHasMore;
+
+  const ProblemDetailScreen({
+    required this.problemId,
+    this.isPractice = false,
+    this.reviewQueue,
+    this.autoStartMode,
+    this.folderQueue,
+    this.folderQueueHasMore = false,
+    super.key,
+  });
 
   @override
   _ProblemDetailScreenState createState() => _ProblemDetailScreenState();
@@ -49,6 +76,11 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
   static const int _maxAnalysisPollingFailures = 3;
   bool _isExpansionTileExpanded = false; // ExpansionTile 상태 관리
   bool _isProblemDeleted = false; // 문제 삭제 여부 플래그
+
+  /// 분석을 기다리다 확인을 멈췄는지. 계속 `분석하고 있어요` 로 남겨 두지 않고
+  /// 다시 확인하기 버튼을 보인다.
+  bool _analysisTimedOut = false;
+  bool _isRequestingAnalysis = false;
 
   @override
   void initState() {
@@ -80,6 +112,9 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
     _stopAnalysisPolling();
     _pollingCount = 0;
     _analysisPollingFailureCount = 0;
+    if (_analysisTimedOut && mounted) {
+      setState(() => _analysisTimedOut = false);
+    }
 
     debugPrint('🔄 Started analysis polling for problem $problemId');
 
@@ -107,6 +142,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
       debugPrint(
           '⏱️ Analysis polling timeout - stopped after ${_pollingCount} attempts');
       _stopAnalysisPolling();
+      if (mounted) setState(() => _analysisTimedOut = true);
       return;
     }
 
@@ -133,7 +169,8 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
         final status = problem.analysis?.status;
         if (status == ProblemAnalysisStatus.COMPLETED ||
             status == ProblemAnalysisStatus.FAILED ||
-            status == ProblemAnalysisStatus.NO_IMAGE) {
+            status == ProblemAnalysisStatus.NO_IMAGE ||
+            status == ProblemAnalysisStatus.RATE_LIMIT_EXCEEDED) {
           // 등록하면 AI 분석이 뒤에서 돈다. 얼마나 성공하는지 본다.
           AppAnalytics.logEvent('problem_analysis_result', {
             'result': status!.name.toLowerCase(),
@@ -154,6 +191,16 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
           debugPrint('❌ Analysis failed - polling stopped');
           _stopAnalysisPolling();
           // UI 강제 업데이트
+          if (mounted) {
+            setState(() {
+              _problemModelFuture = Future.value(problem);
+            });
+          }
+          return;
+        } else if (status == ProblemAnalysisStatus.RATE_LIMIT_EXCEEDED ||
+            status == ProblemAnalysisStatus.NOT_STARTED) {
+          // 한도를 넘겼거나 분석이 시작되지 않았다. 기다려도 바뀌지 않는다.
+          _stopAnalysisPolling();
           if (mounted) {
             setState(() {
               _problemModelFuture = Future.value(problem);
@@ -196,6 +243,46 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
     });
   }
 
+  /// 이 문제만 AI 분석을 다시 요청한다.
+  Future<void> _requestAnalysis(int problemId) async {
+    if (_isRequestingAnalysis) return;
+    final problemsProvider =
+        Provider.of<ProblemsProvider>(context, listen: false);
+    final before = (await problemsProvider.getProblem(problemId))
+        .analysis
+        ?.status
+        ?.name
+        .toLowerCase();
+    if (!mounted) return;
+    setState(() => _isRequestingAnalysis = true);
+    try {
+      await problemsProvider.requestProblemAnalysis(problemId);
+      AppAnalytics.logEvent('problem_analysis_request', {
+        'source': before ?? 'unknown',
+      });
+    } catch (e, stackTrace) {
+      // 요청 실패 안내는 HttpService 가 띄운다.
+      unawaited(AppErrorReporter.report(
+        e,
+        stackTrace,
+        source: 'problem_analysis_request',
+        severity: AppErrorSeverity.warning,
+      ));
+    } finally {
+      if (mounted) setState(() => _isRequestingAnalysis = false);
+    }
+    if (!mounted) return;
+
+    final problem = await problemsProvider.getProblem(problemId);
+    if (!mounted) return;
+    setState(() {
+      _problemModelFuture = Future.value(problem);
+    });
+    if (problem.analysis?.status == ProblemAnalysisStatus.PROCESSING) {
+      _startAnalysisPolling(problemId);
+    }
+  }
+
   void _stopAnalysisPolling() {
     _analysisPollingTimer?.cancel();
     _analysisPollingTimer = null;
@@ -229,8 +316,10 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                 if (previous == null && next == null) return false;
                 if (previous == null || next == null) return true;
 
-                // 분석 상태가 변경되었을 때만 rebuild
-                return previous.analysis?.status != next.analysis?.status ||
+                // 분석 상태나 메모가 바뀌었을 때만 rebuild. 메모는 해설 탭에서
+                // 바로 고칠 수 있다.
+                return previous.memo != next.memo ||
+                    previous.analysis?.status != next.analysis?.status ||
                     previous.analysis?.subject != next.analysis?.subject ||
                     previous.analysis?.problemType !=
                         next.analysis?.problemType;
@@ -256,7 +345,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                       } else if (snapshot.hasError) {
                         return Center(
                           child: StandardText(
-                            text: '오답노트를 찾을 수 없습니다.',
+                            text: '오답노트를 찾을 수 없어요.',
                             color: themeProvider.primaryColor,
                           ),
                         );
@@ -270,7 +359,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                       } else {
                         return Center(
                           child: StandardText(
-                            text: '오답노트를 찾을 수 없습니다.',
+                            text: '오답노트를 찾을 수 없어요.',
                             color: themeProvider.primaryColor,
                           ),
                         );
@@ -284,8 +373,6 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
               },
             ),
           ),
-          const SizedBox(height: 0),
-          _buildNavigationButtons(context, widget.isPractice),
         ],
       ),
     );
@@ -347,6 +434,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
           if (snapshot.connectionState == ConnectionState.done &&
               snapshot.hasData) {
             return IconButton(
+              tooltip: '더 보기',
               icon: Icon(Icons.more_vert, color: themeProvider.primaryColor),
               onPressed: () => _showActionDialog(snapshot.data!, themeProvider),
             );
@@ -555,7 +643,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
       LoadingDialog.hide(context);
       SnackBarDialog.showSnackBar(
         context: context,
-        message: '복습 세트 목록을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.',
+        message: '복습 세트 목록을 불러오지 못했어요. 잠시 후 다시 시도해 주세요.',
         backgroundColor: Colors.red,
       );
       return;
@@ -564,7 +652,13 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
     if (!mounted) return;
     LoadingDialog.hide(context);
 
-    final selectedPracticeIds = <int>{};
+    // 이미 담긴 세트도 체크된 채로 보여 주고, 체크를 풀면 그 세트에서 뺀다.
+    final initialPracticeIds = practiceProvider.practices
+        .where((practice) =>
+            practice.problemIdList.contains(problemModel.problemId))
+        .map((practice) => practice.practiceId)
+        .toSet();
+    final checkedPracticeIds = {...initialPracticeIds};
     final openTime = DateTime.now();
 
     showModalBottomSheet(
@@ -576,6 +670,9 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
         return StatefulBuilder(
           builder: (context, setSheetState) {
             final practices = practiceProvider.practices;
+            final changed =
+                checkedPracticeIds.length != initialPracticeIds.length ||
+                    !checkedPracticeIds.containsAll(initialPracticeIds);
 
             return TapRegion(
               onTapOutside: (_) {
@@ -603,7 +700,9 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                     left: 20,
                     right: 20,
                     top: 24,
-                    bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+                    bottom: MediaQuery.of(context).viewInsets.bottom +
+                        MediaQuery.of(context).padding.bottom +
+                        20,
                   ),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
@@ -636,7 +735,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                           const SizedBox(width: 12),
                           Expanded(
                             child: StandardText(
-                              text: '복습 세트에 추가하기',
+                              text: '복습 세트에 담기',
                               fontSize: MobileFontSize.reduced(context, 20),
                               fontWeight: FontWeight.w600,
                               color: AppColors.textPrimary,
@@ -645,139 +744,111 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                         ],
                       ),
                       const SizedBox(height: 20),
-                      if (practices.isEmpty)
-                        Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 32),
-                          child: Column(
-                            children: [
-                              Icon(
-                                Icons.playlist_add_check,
-                                size: 44,
-                                color: Colors.grey[350],
-                              ),
-                              const SizedBox(height: 12),
-                              StandardText(
-                                text: '아직 복습 세트가 없습니다.',
-                                fontSize: MobileFontSize.reduced(context, 16),
-                                color: AppColors.textPrimary,
-                              ),
-                            ],
-                          ),
-                        )
-                      else
-                        Flexible(
-                          child: ListView.separated(
-                            shrinkWrap: true,
-                            itemCount: practices.length,
-                            separatorBuilder: (_, __) =>
-                                const SizedBox(height: 10),
-                            itemBuilder: (context, index) {
-                              final practice = practices[index];
-                              final alreadyAdded = practice.problemIdList
-                                  .contains(problemModel.problemId);
-                              final selected = selectedPracticeIds
-                                  .contains(practice.practiceId);
-                              final itemColor = alreadyAdded
-                                  ? Colors.green.shade600
-                                  : selected
-                                      ? themeProvider.primaryColor
-                                      : Colors.grey.shade500;
-                              final itemBackgroundColor = alreadyAdded
-                                  ? Colors.green.withValues(alpha: 0.08)
-                                  : selected
+                      Flexible(
+                        child: ListView.separated(
+                          shrinkWrap: true,
+                          itemCount: practices.length + 1,
+                          separatorBuilder: (_, __) =>
+                              const SizedBox(height: 10),
+                          itemBuilder: (context, index) {
+                            if (index == practices.length) {
+                              return _buildNewPracticeSetItem(
+                                themeProvider,
+                                onTap: () {
+                                  Navigator.pop(sheetContext);
+                                  _openNewPracticeSet(problemModel.problemId);
+                                },
+                              );
+                            }
+
+                            final practice = practices[index];
+                            final alreadyAdded = initialPracticeIds
+                                .contains(practice.practiceId);
+                            final checked = checkedPracticeIds
+                                .contains(practice.practiceId);
+
+                            return PressableScale(
+                              haptic: HapticLevel.selection,
+                              onTap: () {
+                                setSheetState(() {
+                                  if (!checkedPracticeIds
+                                      .remove(practice.practiceId)) {
+                                    checkedPracticeIds.add(practice.practiceId);
+                                  }
+                                });
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 14, vertical: 12),
+                                decoration: BoxDecoration(
+                                  color: checked
                                       ? themeProvider.primaryColor
                                           .withValues(alpha: 0.08)
-                                      : Colors.white;
-                              final itemBorderColor = alreadyAdded
-                                  ? Colors.green.withValues(alpha: 0.28)
-                                  : selected
-                                      ? themeProvider.primaryColor
-                                      : Colors.grey.shade200;
-
-                              return PressableScale(
-                                haptic: HapticLevel.selection,
-                                enabled: !alreadyAdded,
-                                onTap: alreadyAdded
-                                    ? null
-                                    : () {
-                                        setSheetState(() {
-                                          if (selected) {
-                                            selectedPracticeIds
-                                                .remove(practice.practiceId);
-                                          } else {
-                                            selectedPracticeIds
-                                                .add(practice.practiceId);
-                                          }
-                                        });
-                                      },
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 14, vertical: 12),
-                                  decoration: BoxDecoration(
-                                    color: itemBackgroundColor,
-                                    borderRadius:
-                                        BorderRadius.circular(AppRadius.medium),
-                                    border: Border.all(
-                                      color: itemBorderColor,
-                                      width: selected || alreadyAdded ? 1.5 : 1,
-                                    ),
+                                      : Colors.white,
+                                  borderRadius:
+                                      BorderRadius.circular(AppRadius.medium),
+                                  border: Border.all(
+                                    color: checked
+                                        ? themeProvider.primaryColor
+                                        : Colors.grey.shade200,
+                                    width: checked ? 1.5 : 1,
                                   ),
-                                  child: Row(
-                                    children: [
+                                ),
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      checked
+                                          ? Icons.check_box
+                                          : Icons.check_box_outline_blank,
+                                      color: checked
+                                          ? themeProvider.primaryColor
+                                          : Colors.grey.shade400,
+                                      size: 24,
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          StandardText(
+                                            text: practice.practiceTitle,
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w500,
+                                            color: AppColors.textPrimary,
+                                          ),
+                                          const SizedBox(height: 4),
+                                          StandardText(
+                                            text:
+                                                '문제 ${practice.practiceSize}개',
+                                            fontSize: 13,
+                                            color: Colors.grey[600]!,
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    if (alreadyAdded)
                                       Container(
-                                        width: 34,
-                                        height: 34,
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 8, vertical: 3),
                                         decoration: BoxDecoration(
-                                          color:
-                                              itemColor.withValues(alpha: 0.12),
+                                          color: Colors.grey[100],
                                           borderRadius: BorderRadius.circular(
                                               AppRadius.medium),
                                         ),
-                                        child: Icon(
-                                          alreadyAdded
-                                              ? Icons.playlist_add_check
-                                              : selected
-                                                  ? Icons.check
-                                                  : Icons.add,
-                                          color: itemColor,
-                                          size: 20,
+                                        child: StandardText(
+                                          text: '담김',
+                                          fontSize: 12,
+                                          color: Colors.grey[700]!,
                                         ),
                                       ),
-                                      const SizedBox(width: 12),
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            StandardText(
-                                              text: practice.practiceTitle,
-                                              fontSize: 16,
-                                              fontWeight: FontWeight.w500,
-                                              color: AppColors.textPrimary,
-                                            ),
-                                            const SizedBox(height: 4),
-                                            StandardText(
-                                              text: alreadyAdded
-                                                  ? '이미 세트에 포함했습니다.'
-                                                  : '문제 ${practice.practiceSize}개',
-                                              fontSize: 13,
-                                              color: alreadyAdded
-                                                  ? Colors.green.shade700
-                                                  : selected
-                                                      ? themeProvider
-                                                          .primaryColor
-                                                      : Colors.grey[600]!,
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ],
-                                  ),
+                                  ],
                                 ),
-                              );
-                            },
-                          ),
+                              ),
+                            );
+                          },
                         ),
+                      ),
                       const SizedBox(height: 18),
                       Row(
                         children: [
@@ -803,22 +874,27 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                           const SizedBox(width: 12),
                           Expanded(
                             child: TextButton(
-                              onPressed: selectedPracticeIds.isEmpty
+                              onPressed: !changed
                                   ? null
                                   : () {
-                                      final targetPracticeIds =
-                                          selectedPracticeIds.toList();
+                                      final addIds = checkedPracticeIds
+                                          .difference(initialPracticeIds)
+                                          .toList();
+                                      final removeIds = initialPracticeIds
+                                          .difference(checkedPracticeIds)
+                                          .toList();
                                       Navigator.pop(sheetContext);
-                                      _addProblemToPracticeSets(
+                                      _applyPracticeSetChanges(
                                         problemModel.problemId,
-                                        targetPracticeIds,
-                                        themeProvider,
+                                        addPracticeIds: addIds,
+                                        removePracticeIds: removeIds,
+                                        themeProvider: themeProvider,
                                       );
                                     },
                               style: TextButton.styleFrom(
                                 padding:
                                     const EdgeInsets.symmetric(vertical: 13),
-                                backgroundColor: selectedPracticeIds.isEmpty
+                                backgroundColor: !changed
                                     ? Colors.grey[300]
                                     : themeProvider.primaryColor,
                                 shape: RoundedRectangleBorder(
@@ -827,7 +903,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                                 ),
                               ),
                               child: const StandardText(
-                                text: '추가',
+                                text: '완료',
                                 fontSize: 15,
                                 color: Colors.white,
                               ),
@@ -846,42 +922,93 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
     );
   }
 
-  Future<void> _addProblemToPracticeSets(
-      int problemId, List<int> practiceIds, ThemeHandler themeProvider) async {
+  Widget _buildNewPracticeSetItem(ThemeHandler themeProvider,
+      {required VoidCallback onTap}) {
+    return PressableScale(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(AppRadius.medium),
+          border: Border.all(
+            color: themeProvider.primaryColor.withValues(alpha: 0.4),
+          ),
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.add, color: themeProvider.primaryColor, size: 24),
+            const SizedBox(width: 12),
+            Expanded(
+              child: StandardText(
+                text: '새 복습 세트 만들기',
+                fontSize: 16,
+                color: themeProvider.primaryColor,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// 이 문제를 넣은 채로 세트 만들기(제목과 알림) 화면을 연다.
+  void _openNewPracticeSet(int problemId) {
+    Navigator.push(
+      context,
+      TossPageRoute(
+        builder: (context) => PracticeTitleWriteScreen(
+          practiceRegisterModel: PracticeNoteRegisterModel(
+            practiceId: null,
+            practiceTitle: '',
+            registerProblemIdList: [problemId],
+          ),
+          closeOnlySelf: true,
+        ),
+      ),
+    );
+  }
+
+  Future<void> _applyPracticeSetChanges(
+    int problemId, {
+    required List<int> addPracticeIds,
+    required List<int> removePracticeIds,
+    required ThemeHandler themeProvider,
+  }) async {
     final practiceProvider =
         Provider.of<ProblemPracticeProvider>(context, listen: false);
 
-    LoadingDialog.show(context, '복습 세트에 추가 중...');
+    LoadingDialog.show(context, '복습 세트에 반영 중...');
 
     try {
-      for (final practiceId in practiceIds) {
-        // 서버는 practiceNotification 키가 없으면 그 세트의 복습 알림을 지운다.
-        // 문제만 담는 요청이므로 세트가 이미 가진 알림 설정을 그대로 실어 보낸다.
-        // 바로 위에서 fetchAllPracticeContents 로 받아 둔 캐시라 추가 요청은 없다.
-        final practiceNote = await practiceProvider.getPracticeNote(practiceId);
-        final updateModel = PracticeNoteUpdateModel(
-          practiceNoteId: practiceId,
-          addProblemIdList: [problemId],
-          removeProblemIdList: const [],
-          practiceNotificationModel: practiceNote.practiceNotificationModel,
-        );
-        await practiceProvider.updatePractice(
-          updateModel,
-          refreshAfterUpdate: false,
-          showErrorSnackBar: false,
-        );
+      for (final practiceId in addPracticeIds) {
+        await practiceProvider.addProblems(practiceId, [problemId]);
+      }
+      for (final practiceId in removePracticeIds) {
+        await practiceProvider.removeProblems(practiceId, [problemId]);
       }
 
-      AppAnalytics.logEvent('practice_set_add_problem', {
-        'set_count': practiceIds.length,
-      });
+      if (addPracticeIds.isNotEmpty) {
+        AppAnalytics.logEvent('practice_set_add_problem', {
+          'set_count': addPracticeIds.length,
+          'source': 'problem_sheet',
+        });
+      }
+      if (removePracticeIds.isNotEmpty) {
+        AppAnalytics.logEvent('practice_set_remove_problem', {
+          'count': removePracticeIds.length,
+          'source': 'problem_sheet',
+        });
+      }
       if (!mounted) return;
       LoadingDialog.hide(context);
       SnackBarDialog.showSnackBar(
         context: context,
-        message: practiceIds.length == 1
-            ? '복습 세트에 추가되었습니다.'
-            : '${practiceIds.length}개의 복습 세트에 추가되었습니다.',
+        message: removePracticeIds.isEmpty
+            ? '복습 세트에 담았어요.'
+            : addPracticeIds.isEmpty
+                ? '복습 세트에서 뺐어요.'
+                : '복습 세트를 바꿨어요.',
         backgroundColor: themeProvider.primaryColor,
       );
     } catch (e) {
@@ -889,157 +1016,52 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
       LoadingDialog.hide(context);
       SnackBarDialog.showSnackBar(
         context: context,
-        message: '복습 세트에 추가하지 못했습니다. 잠시 후 다시 시도해주세요.',
+        message: '복습 세트에 반영하지 못했어요. 잠시 후 다시 시도해 주세요.',
         backgroundColor: Colors.red,
       );
-      debugPrint('복습 세트 문제 추가 실패: $e');
+      debugPrint('복습 세트 반영 실패: $e');
     }
   }
 
   Future<void> _showDeleteProblemDialog(
       int problemId, ThemeHandler themeProvider) async {
-    return showTossDialog(
-      context: context,
-      builder: (dialogContext) {
-        return Dialog(
-          backgroundColor: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppRadius.large),
-          ),
-          child: Container(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // 헤더
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: Colors.red.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(AppRadius.small),
-                      ),
-                      child: const Icon(
-                        Icons.delete_forever,
-                        color: Colors.red,
-                        size: 20,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    StandardText(
-                      text: '오답노트 삭제',
-                      fontSize: MobileFontSize.reduced(context, 18),
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary,
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 20),
-                // 내용
-                StandardText(
-                  text: '정말로 이 오답노트를 삭제하시겠습니까?',
-                  fontSize: MobileFontSize.reduced(context, 15),
-                  color: AppColors.textPrimary,
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 24),
-                // 액션 버튼
-                Row(
-                  children: [
-                    Expanded(
-                      child: TextButton(
-                        onPressed: () {
-                          Navigator.pop(dialogContext);
-                        },
-                        style: TextButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          backgroundColor: Colors.grey[100],
-                          shape: RoundedRectangleBorder(
-                            borderRadius:
-                                BorderRadius.circular(AppRadius.small),
-                          ),
-                        ),
-                        child: StandardText(
-                          text: '취소',
-                          fontSize: MobileFontSize.reduced(context, 15),
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: TextButton(
-                        onPressed: () async {
-                          // context가 유효할 때 Provider와 Navigator 가져오기
-                          final problemsProvider =
-                              Provider.of<ProblemsProvider>(context,
-                                  listen: false);
-                          final navigator = Navigator.of(context);
-
-                          // 다이얼로그 닫기
-                          Navigator.pop(dialogContext);
-
-                          // 로딩 다이얼로그 표시
-                          LoadingDialog.show(context, '오답노트 지우는 중...');
-
-                          try {
-                            // 삭제 작업 수행
-                            await problemsProvider.deleteProblems([problemId]);
-                            // 예전에는 삭제를 요청하기 전에 남겨서 실패도 셌다.
-                            AppAnalytics.logEvent('problem_delete', {
-                              'count': 1,
-                              'source': 'detail',
-                            });
-                            //await practiceProvider.fetchAllPracticeContents();
-
-                            if (mounted) {
-                              setState(() {
-                                _isProblemDeleted = true; // Set the flag
-                              });
-                              // 로딩 다이얼로그 닫기
-                              LoadingDialog.hide(context);
-                            }
-
-                            // 상세 화면 닫고 DirectoryScreen에 삭제 완료 알림 (true 반환)
-                            if (mounted) {
-                              navigator.pop(true);
-                            }
-                            // 화면을 닫은 뒤에 알린다. 토스트는 앱 전체
-                            // Overlay 를 쓰므로 이 화면이 사라져도 뜬다.
-                            AppToast.success('오답노트를 삭제했어요.');
-                          } catch (e) {
-                            // 에러 발생 시 로딩 다이얼로그 닫기
-                            if (mounted) {
-                              LoadingDialog.hide(context);
-                            }
-                            debugPrint('문제 삭제 실패: $e');
-                            AppToast.error('오답노트를 삭제하지 못했어요. 잠시 후 다시 시도해주세요.');
-                          }
-                        },
-                        style: TextButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          backgroundColor: Colors.red,
-                          shape: RoundedRectangleBorder(
-                            borderRadius:
-                                BorderRadius.circular(AppRadius.small),
-                          ),
-                        ),
-                        child: const StandardText(
-                          text: '삭제',
-                          fontSize: 15,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        );
-      },
+    // context가 유효할 때 Provider와 Navigator 가져오기
+    final problemsProvider =
+        Provider.of<ProblemsProvider>(context, listen: false);
+    final navigator = Navigator.of(context);
+    final confirmed = await showConfirmDialog(
+      context,
+      title: '이 오답노트를 삭제할까요?',
+      message: '지운 뒤 몇 초 안에는 되돌릴 수 있어요.',
+      confirmLabel: '삭제하기',
+      destructive: true,
     );
+    if (!confirmed) return;
+
+    // 상세를 바로 닫고 잠깐 되돌리기를 보인 뒤에 지운다. 전에는 바로 지워서
+    // 잘못 지운 오답노트를 되살릴 수 없었다. 목록은 지우기를 기다리는 문제를
+    // 걸러 그린다.
+    if (mounted) {
+      setState(() => _isProblemDeleted = true);
+      navigator.pop(true);
+    }
+    try {
+      final deleted = await PendingDeletion.instance.schedule(
+        problemIds: [problemId],
+        message: '오답노트를 지웠어요',
+        commit: () => problemsProvider.deleteProblems([problemId]),
+      );
+      if (deleted) {
+        // 예전에는 삭제를 요청하기 전에 남겨서 실패도 셌다.
+        AppAnalytics.logEvent('problem_delete', {
+          'count': 1,
+          'source': 'detail',
+        });
+      }
+    } catch (e) {
+      debugPrint('문제 삭제 실패: $e');
+      AppToast.error('오답노트를 삭제하지 못했어요. 잠시 후 다시 시도해 주세요.');
+    }
   }
 
   Widget _buildContent(ProblemModel problemModel) {
@@ -1048,54 +1070,194 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
       problemModel: problemModel,
       isExpanded: _isExpansionTileExpanded,
       onExpansionChanged: _onExpansionChanged,
+      onSolved: widget.isPractice
+          ? _onPracticeProblemSolved
+          : widget.reviewQueue != null
+              ? _onReviewQueueProblemSolved
+              : null,
+      autoStartMode: widget.autoStartMode,
+      onRequestAnalysis: _isRequestingAnalysis
+          ? null
+          : () => _requestAnalysis(problemModel.problemId),
+      analysisTimedOut: _analysisTimedOut,
+      onRefreshAnalysis: () {
+        Provider.of<ProblemsProvider>(context, listen: false)
+            .fetchProblemAnalysis(problemModel.problemId);
+        _startAnalysisPolling(problemModel.problemId);
+      },
+      navigation: _folderNavigation(),
     );
   }
 
-  // 네비게이션 버튼 구성 함수
-  Widget _buildNavigationButtons(BuildContext context, bool isPractice) {
-    // 기기의 높이 정보를 가져옴
-    double screenHeight = MediaQuery.of(context).size.height;
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isWide = screenWidth >= 600;
-    final horizontalPadding = isWide ? 60.0 : 30.0;
+  /// 복습 세트에서 연 상세의 이전, 다음. 마지막 문제는 다음 대신 마치기다.
+  /// 전에는 다시 풀기 아래에 이전, 다음 줄이 한 겹 더 쌓였다.
+  ProblemDetailNavigation? _practiceNavigation() {
+    final practiceProvider =
+        Provider.of<ProblemPracticeProvider>(context, listen: false);
+    final problems = practiceProvider.sessionProblems;
+    final index = problems.indexWhere((p) => p.problemId == widget.problemId);
+    if (index < 0) return null;
+    final isLast = index == problems.length - 1;
+    return ProblemDetailNavigation(
+      positionLabel: '${index + 1} / ${problems.length}',
+      onPrevious: index > 0
+          ? () => openPracticeProblem(context, problems[index - 1].problemId,
+              isNext: false)
+          : null,
+      onNext: isLast
+          ? null
+          : () => openPracticeProblem(context, problems[index + 1].problemId,
+              isNext: true),
+      onFinish: isLast
+          ? () => finishPracticeSession(context, practiceProvider)
+          : null,
+    );
+  }
 
-    // 화면 높이에 따라 패딩 값을 동적으로 설정
-    double topPadding = 0;
-    double bottomPadding = screenHeight * 0.03;
+  /// 공책에서 연 상세에서 지금 문제가 몇 번째인지. 넘길 곳이 없으면 null.
+  int? get _folderQueueIndex {
+    final queue = widget.folderQueue;
+    if (queue == null || queue.length < 2 || _isProblemDeleted) return null;
+    final index = queue.indexOf(widget.problemId);
+    return index < 0 ? null : index;
+  }
 
-    if (isPractice) {
-      return Padding(
-        padding: EdgeInsets.only(
-          left: horizontalPadding,
-          right: horizontalPadding,
-          top: topPadding,
-          bottom: bottomPadding,
-        ),
-        child: PracticeNavigationButtons(
-          context: context,
-          practiceProvider:
-              Provider.of<ProblemPracticeProvider>(context, listen: false),
-          currentProblemId: widget.problemId,
-          onRefresh: _setProblemModel,
-        ),
-      );
-    } else {
-      /*
-      return Padding(
-        padding: EdgeInsets.only(top: topPadding, bottom: bottomPadding),
-        child: FolderNavigationButtons(
-          context: context,
-          foldersProvider: Provider.of<FoldersProvider>(context, listen: false),
-          currentId: widget.problemId,
-          onRefresh: _setProblemModel,
-        ),
-      );
-       */
+  ProblemDetailNavigation? _folderNavigation() {
+    if (widget.isPractice) return _practiceNavigation();
+    final index = _folderQueueIndex;
+    if (index == null) return null;
+    final queue = widget.folderQueue!;
+    return ProblemDetailNavigation(
+      positionLabel: '${index + 1} / ${queue.length}'
+          '${widget.folderQueueHasMore ? '+' : ''}',
+      onPrevious: index > 0
+          ? () => _openFolderQueueProblem(queue[index - 1], isNext: false)
+          : null,
+      onNext: index < queue.length - 1
+          ? () => _openFolderQueueProblem(queue[index + 1], isNext: true)
+          : null,
+    );
+  }
 
-      return const Padding(
-        padding: EdgeInsets.only(top: 0, bottom: 0),
-      );
+  /// 추천 복습에서 연 문제를 저장하고 돌아오면 다음 추천 문제를 바로 풀지 묻는다.
+  ///
+  /// 복습 세트와 같은 시트를 쓴다. 다음 문제는 연 순간의 추천 목록 순서를 따른다.
+  Future<void> _onReviewQueueProblemSolved(ProblemSolveMode mode) async {
+    final queue = widget.reviewQueue!;
+    final index = queue.indexOf(widget.problemId);
+    if (index < 0) return;
+    final nextId = index + 1 < queue.length ? queue[index + 1] : null;
+    final problemsProvider =
+        Provider.of<ProblemsProvider>(context, listen: false);
+    final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
+
+    ProblemModel? next;
+    if (nextId != null) {
+      try {
+        next = await problemsProvider.getProblem(nextId);
+      } catch (_) {
+        // 다음 문제를 못 받으면 제목 없이 묻는다.
+        next = ProblemModel(problemId: nextId);
+      }
+      if (!mounted) return;
     }
+
+    final choice = await showPracticeContinueSheet(
+      context,
+      solvedPosition: index + 1,
+      total: queue.length,
+      next: next,
+      mode: mode,
+      accentColor: themeProvider.primaryColor,
+      finishQuestion: '추천 복습 목록으로 돌아갈까요?',
+      finishLabel: '목록으로 돌아가기',
+      finishDescription: '남은 추천 문제를 확인해요.',
+    );
+    AppAnalytics.logEvent('review_due_continue_choice', {
+      'choice': choice.analyticsName,
+      'mode': mode == ProblemSolveMode.inApp ? 'canvas' : 'offline',
+      'count': queue.length,
+    });
+    if (!mounted) return;
+
+    switch (choice) {
+      case PracticeContinueChoice.solveNext:
+        _openReviewQueueProblem(nextId!, autoStartMode: mode);
+      case PracticeContinueChoice.viewNext:
+        _openReviewQueueProblem(nextId!);
+      case PracticeContinueChoice.finish:
+        Navigator.of(context).pop();
+      case PracticeContinueChoice.stop:
+        break;
+    }
+  }
+
+  void _openReviewQueueProblem(int problemId,
+      {ProblemSolveMode? autoStartMode}) {
+    Navigator.of(context).pushReplacement(
+      TossPageRoute(
+        builder: (_) => ProblemDetailScreen(
+          problemId: problemId,
+          reviewQueue: widget.reviewQueue,
+          autoStartMode: autoStartMode,
+        ),
+      ),
+    );
+  }
+
+  /// 복습 세트에서 한 문제를 저장하고 돌아오면 다음 문제를 바로 풀지 묻는다.
+  Future<void> _onPracticeProblemSolved(ProblemSolveMode mode) async {
+    final practiceProvider =
+        Provider.of<ProblemPracticeProvider>(context, listen: false);
+    final problems = practiceProvider.sessionProblems;
+    final index =
+        problems.indexWhere((problem) => problem.problemId == widget.problemId);
+    if (index < 0) return;
+    final next = index + 1 < problems.length ? problems[index + 1] : null;
+    final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
+
+    final choice = await showPracticeContinueSheet(
+      context,
+      solvedPosition: index + 1,
+      total: problems.length,
+      next: next,
+      mode: mode,
+      accentColor: themeProvider.primaryColor,
+    );
+    AppAnalytics.logEvent('practice_continue_choice', {
+      'choice': choice.analyticsName,
+      'mode': mode == ProblemSolveMode.inApp ? 'canvas' : 'offline',
+      'count': problems.length,
+    });
+    if (!mounted) return;
+
+    switch (choice) {
+      case PracticeContinueChoice.solveNext:
+        openPracticeProblem(context, next!.problemId,
+            isNext: true, autoStartMode: mode);
+      case PracticeContinueChoice.viewNext:
+        openPracticeProblem(context, next!.problemId, isNext: true);
+      case PracticeContinueChoice.finish:
+        openPracticeCompletion(context, practiceProvider);
+      case PracticeContinueChoice.stop:
+        break;
+    }
+  }
+
+  void _openFolderQueueProblem(int problemId, {required bool isNext}) {
+    AppAnalytics.logEvent('folder_problem_navigate', {
+      'direction': isNext ? 'next' : 'previous',
+    });
+    final route = TossPageRoute(
+      builder: (_) => ProblemDetailScreen(
+        problemId: problemId,
+        folderQueue: widget.folderQueue,
+        folderQueueHasMore: widget.folderQueueHasMore,
+      ),
+    );
+    // 바꿔 끼우면 이 화면의 결과가 곧바로 끝난다. 처음 연 화면이 넘겨 간 상세의
+    // 수정이나 삭제 결과를 받을 수 있게, 그 상세가 닫힐 때의 결과를 넘긴다.
+    Navigator.of(context).pushReplacement(route, result: route.popped);
   }
 
   Future<ProblemModel?> fetchProblemDetails(
@@ -1128,9 +1290,13 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
       // 분석 실패 - 폴링 중지
       debugPrint('❌ Analysis failed - polling not needed');
       _stopAnalysisPolling();
-    } else if (analysisStatus == ProblemAnalysisStatus.PROCESSING ||
-        analysisStatus == ProblemAnalysisStatus.NOT_STARTED) {
-      // 분석 진행 중 또는 시작 전 - 폴링 시작
+    } else if (analysisStatus == ProblemAnalysisStatus.NOT_STARTED ||
+        analysisStatus == ProblemAnalysisStatus.RATE_LIMIT_EXCEEDED) {
+      // 분석을 요청하지 않았거나 한도를 넘겼다. 기다려도 바뀌지 않아서 확인하지
+      // 않고, 화면에서 분석하기 버튼을 보인다.
+      _stopAnalysisPolling();
+    } else if (analysisStatus == ProblemAnalysisStatus.PROCESSING) {
+      // 분석 진행 중 - 폴링 시작
       debugPrint(
           '📊 Analysis in progress (status: $analysisStatus) - starting polling');
 

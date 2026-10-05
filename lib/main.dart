@@ -6,6 +6,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:home_widget/home_widget.dart';
 import 'package:kakao_flutter_sdk/kakao_flutter_sdk.dart';
 import 'package:ono/Model/Common/LoginStatus.dart';
 import 'package:ono/Module/Text/StandardText.dart';
@@ -44,6 +45,8 @@ import 'Util/SentryEnvironment.dart';
 import 'Util/NotificationService.dart';
 import 'Module/Notice/ServiceNoticeDialog.dart';
 import 'Service/Api/Notice/NoticeService.dart';
+import 'Service/HomeWidget/HomeWidgetRouter.dart';
+import 'Service/HomeWidget/HomeWidgetSyncService.dart';
 import 'Module/Motion/AppHaptic.dart';
 import 'Module/Motion/AppScrollBehavior.dart';
 import 'Module/Motion/BouncyNavIcon.dart';
@@ -123,6 +126,16 @@ Future<void> _bootstrapApp() async {
   await NotificationService.instance.init();
   FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
 
+  // 홈 화면 위젯과 같은 저장소(iOS App Group)를 쓰게 한다. 위젯은 있으면
+  // 좋은 것이라 실패해도 앱 실행을 막지 않는다.
+  try {
+    await HomeWidget.setAppGroupId(HomeWidgetSyncService.appGroupId);
+  } catch (error) {
+    debugPrint('HomeWidget.setAppGroupId failed: $error');
+  }
+  // 앱이 꺼진 상태에서 위젯을 눌러 열렸는지 읽어 둔다. 홈 화면이 뜬 뒤 옮긴다.
+  HomeWidgetRouter.instance.captureInitialLaunch();
+
   final kakaoNativeAppKey = dotenv.env['KAKAO_NATIVE_APP_KEY']?.trim();
   if (kakaoNativeAppKey == null || kakaoNativeAppKey.isEmpty) {
     debugPrint('KAKAO_NATIVE_APP_KEY is not configured.');
@@ -160,6 +173,9 @@ Future<void> _bootstrapApp() async {
         // 혼자 떠 있으면 새로 받은 훈장을 아무도 못 받아 둬서, 축하 한 번이
         // 조용히 사라진다.
         ChangeNotifierProvider(create: (_) => AchievementProvider()),
+        // 추천 복습도 마찬가지다. 비우지 않으면 다른 계정으로 로그인한 홈에
+        // 앞 사람의 추천 개수가 잠깐 뜬다.
+        ChangeNotifierProvider(create: (_) => ReviewDueProvider()),
         ChangeNotifierProvider(
           create: (context) => UserProvider(
             Provider.of<ProblemsProvider>(context, listen: false),
@@ -177,13 +193,16 @@ Future<void> _bootstrapApp() async {
               context,
               listen: false,
             ),
+            reviewDueProvider: Provider.of<ReviewDueProvider>(
+              context,
+              listen: false,
+            ),
           ),
         ),
         ChangeNotifierProvider(
           create: (context) => ThemeHandler()..loadColors(),
         ),
         ChangeNotifierProvider(create: (_) => ScreenIndexProvider()),
-        ChangeNotifierProvider(create: (_) => ReviewDueProvider()),
         ChangeNotifierProvider(create: (_) => TutorialProvider()),
         ChangeNotifierProvider(create: (_) => StudyRoomProvider()),
       ],
@@ -274,6 +293,10 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   final TutorialTargets _tutorialTargets = TutorialTargets();
   final NoticeService _noticeService = NoticeService();
+
+  /// 복습 세트 탭이 삭제할 세트를 고르는 중인지. 뒤로 가기는 탭을 옮기기 전에
+  /// 고르기부터 푼다.
+  final ValueNotifier<bool> _practiceSelecting = ValueNotifier(false);
   bool _didPrepareTutorial = false;
   bool _didHandleNotice = false;
   int? _lastSyncedTutorialStepIndex;
@@ -287,7 +310,12 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    // 앱이 떠 있을 때 홈 화면 위젯을 누르면 해당 화면으로 옮긴다.
+    HomeWidgetRouter.instance.listenClicks();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
+      _syncHomeWidget();
+      // 앱이 꺼진 상태에서 위젯으로 열렸으면 그 화면으로 옮긴다.
+      unawaited(HomeWidgetRouter.instance.processPending());
       await _prepareInitialTutorial();
       await _prepareServiceNotice();
     });
@@ -295,7 +323,9 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
 
   @override
   void dispose() {
+    HomeWidgetRouter.instance.stopListening();
     _detachTutorialFinishListener();
+    _practiceSelecting.dispose();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
@@ -392,9 +422,18 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
       // 로그아웃 상태에서는 부르지 않는다. 토큰이 없는 채로 요청을 보내면
       // 인증 실패 처리를 괜히 건드린다.
       if (userProvider.isLoggedIn == LoginStatus.login) {
+        _syncHomeWidget();
         await missionProvider.fetchMissions();
       }
     }
+  }
+
+  /// 홈 화면 위젯 값을 새로 맞춘다. 로그인 상태일 때만 부르고 기다리지 않는다.
+  void _syncHomeWidget() {
+    if (!mounted) return;
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    if (userProvider.isLoggedIn != LoginStatus.login) return;
+    unawaited(HomeWidgetSyncService.instance.sync());
   }
 
   @override
@@ -405,12 +444,37 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
 
     final widgetOptions = <Widget>[
       DirectoryScreen(tutorialTargets: _tutorialTargets),
-      PracticeThumbnailScreen(tutorialTargets: _tutorialTargets),
+      PracticeThumbnailScreen(
+        tutorialTargets: _tutorialTargets,
+        selecting: _practiceSelecting,
+      ),
       CharacterScreen(tutorialTargets: _tutorialTargets),
       StudyRoomListScreen(tutorialTargets: _tutorialTargets),
       SettingScreen(tutorialTargets: _tutorialTargets),
     ];
 
+    // 안드로이드 뒤로 가기는 첫 탭이 아니면 첫 탭으로 돌아간다. 전에는 어느
+    // 탭에서든 바로 앱이 꺼졌다.
+    final isFirstTab = screenIndexProvider.screenIndex == 0;
+    return PopScope(
+      canPop: isFirstTab,
+      onPopInvokedWithResult: (didPop, _) {
+        if (didPop || isFirstTab) return;
+        if (screenIndexProvider.screenIndex == 1 && _practiceSelecting.value) {
+          _practiceSelecting.value = false;
+          return;
+        }
+        screenIndexProvider.setSelectedIndex(0);
+      },
+      child: _buildTabs(context, screenIndexProvider, widgetOptions),
+    );
+  }
+
+  Widget _buildTabs(
+    BuildContext context,
+    ScreenIndexProvider screenIndexProvider,
+    List<Widget> widgetOptions,
+  ) {
     return Stack(
       children: [
         Scaffold(
@@ -506,7 +570,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
       (
         icon: Icons.menu_book_outlined,
         activeIcon: Icons.menu_book,
-        label: '오답노트 관리'
+        label: '책장'
       ),
       (icon: Icons.history_outlined, activeIcon: Icons.history, label: '복습 세트'),
       // 캐릭터 탭. 아이콘은 아래에서 개구리로 바꿔 끼운다.

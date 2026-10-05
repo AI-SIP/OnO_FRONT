@@ -4,12 +4,15 @@
 // 위임 여부를 확인하고, V2 무한 스크롤 썸네일 캐시(_practiceThumbnails)의
 // 동시 호출·경쟁 조건을 집중적으로 본다.
 import 'package:flutter_test/flutter_test.dart';
+import 'package:ono/Model/Problem/AnswerStatus.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:ono/Model/Common/PaginatedResponse.dart';
 import 'package:ono/Model/PracticeNote/PracticeNoteDetailModel.dart';
 import 'package:ono/Model/PracticeNote/PracticeNoteRegisterModel.dart';
 import 'package:ono/Model/PracticeNote/PracticeNoteThumbnailModel.dart';
 import 'package:ono/Model/PracticeNote/PracticeNoteUpdateModel.dart';
+import 'package:ono/Model/PracticeNote/PracticeNotificationModel.dart';
+import 'package:ono/Model/PracticeNote/RepeatType.dart';
 import 'package:ono/Model/Problem/ProblemModel.dart';
 import 'package:ono/Provider/PracticeNoteProvider.dart';
 
@@ -374,22 +377,232 @@ void main() {
     );
   });
 
-  group('useRegisteredProblemOrder / shuffleCurrentProblems', () {
-    test('등록된 순서대로 currentProblems 를 재정렬한다', () async {
+  group('회차 순서 (startSession)', () {
+    Future<void> openPractice() async {
       when(() => practiceNoteService.getPracticeNoteById(1,
               showErrorSnackBar: true))
-          .thenAnswer((_) async => _practice(1, problemIds: [20, 10]));
-      when(() => problemsProvider.getProblem(20))
-          .thenAnswer((_) async => _problem(20));
+          .thenAnswer((_) async => _practice(1, problemIds: [30, 10, 20]));
+      for (final id in [10, 20, 30]) {
+        when(() => problemsProvider.getProblem(id))
+            .thenAnswer((_) async => _problem(id));
+      }
+      await provider.moveToPractice(1);
+    }
+
+    test('시작하기 전에는 세트 전체를 등록한 순서로 푼다', () async {
+      await openPractice();
+
+      expect(provider.isPracticing, isFalse);
+      expect(provider.sessionProblems.map((p) => p.problemId), [30, 10, 20]);
+    });
+
+    test('틀린 문제만 고르면 그 문제들만 등록한 순서로 푼다', () async {
+      await openPractice();
+
+      provider.startSession(onlyProblemIds: {20, 30});
+
+      expect(provider.isPracticing, isTrue);
+      expect(provider.sessionProblems.map((p) => p.problemId), [30, 20]);
+      // 세트 상세에 보이는 목록은 그대로다.
+      expect(provider.currentProblems.map((p) => p.problemId), [30, 10, 20]);
+    });
+
+    test('셔플은 고른 문제들끼리만 섞는다', () async {
+      await openPractice();
+
+      provider.startSession(shuffle: true, onlyProblemIds: {10, 20});
+
+      expect(
+          provider.sessionProblems.map((p) => p.problemId).toSet(), {10, 20});
+    });
+
+    test('복습을 저장하고 세트를 다시 받아도 회차 순서가 풀리지 않는다', () async {
+      await openPractice();
+      provider.startSession(onlyProblemIds: {20, 10});
+
+      await provider.moveToPractice(1);
+
+      expect(provider.sessionProblems.map((p) => p.problemId), [10, 20]);
+    });
+
+    test('회차 안에서 저장한 결과만 남기고 다시 시작하면 비운다', () async {
+      await openPractice();
+
+      provider.recordSessionResult(10, AnswerStatus.CORRECT);
+      expect(provider.sessionResults, isEmpty, reason: '회차를 시작하기 전이다');
+
+      provider.startSession(onlyProblemIds: {10, 20});
+      provider.recordSessionResult(10, AnswerStatus.WRONG);
+      provider.recordSessionResult(10, AnswerStatus.CORRECT);
+      provider.recordSessionResult(30, AnswerStatus.CORRECT);
+      expect(provider.sessionResults, {10: AnswerStatus.CORRECT},
+          reason: '같은 문제는 마지막 결과로 바뀌고 회차에 없는 문제는 남기지 않는다');
+
+      // 복습을 저장할 때마다 세트를 다시 받아도 그대로다.
+      await provider.moveToPractice(1);
+      expect(provider.sessionResults, hasLength(1));
+
+      provider.startSession();
+      expect(provider.sessionResults, isEmpty);
+    });
+
+    test('다른 세트를 열면 앞 세트의 회차 순서는 버린다', () async {
+      await openPractice();
+      provider.startSession(onlyProblemIds: {20});
+      when(() => practiceNoteService.getPracticeNoteById(2,
+              showErrorSnackBar: true))
+          .thenAnswer((_) async => _practice(2, problemIds: [10]));
+
+      await provider.moveToPractice(2);
+
+      expect(provider.isPracticing, isFalse);
+      expect(provider.sessionProblems.map((p) => p.problemId), [10]);
+    });
+
+    test('endSession 뒤에는 다시 세트 전체를 푼다', () async {
+      await openPractice();
+      provider.startSession(onlyProblemIds: {20});
+
+      provider.endSession();
+
+      expect(provider.isPracticing, isFalse);
+      expect(provider.sessionProblems, hasLength(3));
+    });
+  });
+
+  group('leavePractice', () {
+    test('세트 화면을 닫으면 currentPracticeNote 와 회차를 비운다', () async {
+      when(() => practiceNoteService.getPracticeNoteById(1,
+              showErrorSnackBar: true))
+          .thenAnswer((_) async => _practice(1, problemIds: [10]));
       when(() => problemsProvider.getProblem(10))
           .thenAnswer((_) async => _problem(10));
       await provider.moveToPractice(1);
-      // 화면에서 뒤섞인 상태를 흉내낸다.
-      provider.currentProblems = [_problem(10), _problem(20)];
+      provider.startSession();
 
-      provider.useRegisteredProblemOrder();
+      provider.leavePractice(1);
 
-      expect(provider.currentProblems.map((p) => p.problemId), [20, 10]);
+      expect(provider.currentPracticeNote, isNull);
+      expect(provider.isPracticing, isFalse);
+    });
+
+    test('그사이 다른 세트를 열었으면 그 세트는 건드리지 않는다', () async {
+      when(() => practiceNoteService.getPracticeNoteById(2,
+              showErrorSnackBar: true))
+          .thenAnswer((_) async => _practice(2, problemIds: []));
+      await provider.moveToPractice(2);
+
+      provider.leavePractice(1);
+
+      expect(provider.currentPracticeNote?.practiceId, 2);
+    });
+  });
+
+  group('removeProblems / addProblems', () {
+    late List<PracticeNoteUpdateModel> sent;
+
+    setUp(() {
+      sent = [];
+      when(() => practiceNoteService.updatePracticeNote(any(),
+              showErrorSnackBar: any(named: 'showErrorSnackBar')))
+          .thenAnswer((invocation) async {
+        sent.add(
+            invocation.positionalArguments.first as PracticeNoteUpdateModel);
+      });
+    });
+
+    Future<void> openPractice({PracticeNotificationModel? notification}) async {
+      when(() => practiceNoteService.getPracticeNoteById(1,
+              showErrorSnackBar: true))
+          .thenAnswer((_) async => PracticeNoteDetailModel(
+                practiceId: 1,
+                practiceTitle: '수학',
+                practiceCount: 0,
+                createdAt: DateTime(2024, 1, 1),
+                lastSolvedAt: null,
+                practiceNotificationModel: notification,
+                problemIdList: [10, 20, 30],
+              ));
+      for (final id in [10, 20, 30]) {
+        when(() => problemsProvider.getProblem(id))
+            .thenAnswer((_) async => _problem(id));
+      }
+      await provider.fetchPracticeNote(1);
+      await provider.moveToPractice(1);
+    }
+
+    test('빼기 요청에 세트의 알림을 그대로 다시 싣는다', () async {
+      final notification = PracticeNotificationModel(
+        intervalDays: 3,
+        hour: 21,
+        minute: 0,
+        repeatType: RepeatType.daily,
+      );
+      await openPractice(notification: notification);
+
+      await provider.removeProblems(1, [20]);
+
+      expect(sent.single.removeProblemIdList, [20]);
+      expect(
+          sent.single.toJson()['practiceNotification'], notification.toJson());
+    });
+
+    test('빼면 화면 목록과 회차에서도 바로 빠진다', () async {
+      await openPractice();
+      provider.startSession();
+
+      await provider.removeProblems(1, [20]);
+
+      expect(provider.currentProblems.map((p) => p.problemId), [10, 30]);
+      expect(provider.sessionProblems.map((p) => p.problemId), [10, 30]);
+      expect(provider.currentPracticeNote?.problemIdList, [10, 30]);
+    });
+
+    test('넣기 요청에도 알림을 다시 싣는다', () async {
+      final notification = PracticeNotificationModel(
+        intervalDays: 7,
+        hour: 9,
+        minute: 30,
+        repeatType: RepeatType.weekly,
+        weekDays: [1, 3],
+      );
+      await openPractice(notification: notification);
+
+      await provider.addProblems(1, [40]);
+
+      expect(sent.single.addProblemIdList, [40]);
+      expect(
+          sent.single.toJson()['practiceNotification'], notification.toJson());
+    });
+  });
+
+  group('updateSinglePracticeThumbnail', () {
+    test('복습을 마치고 썸네일을 바꿔도 기분 이모지가 남는다', () async {
+      when(() => practiceNoteService.getPracticeNoteThumbnailsV2(
+            cursor: null,
+            size: 20,
+          )).thenAnswer((_) async => PaginatedResponse(
+            content: [_thumb(1)],
+            nextCursor: null,
+            hasNext: false,
+            size: 20,
+          ));
+      await provider.loadInitialPracticeThumbnails();
+      when(() => practiceNoteService.getPracticeNoteById(1))
+          .thenAnswer((_) async => PracticeNoteDetailModel(
+                practiceId: 1,
+                practiceTitle: 'practice-1',
+                practiceCount: 1,
+                createdAt: DateTime(2024, 1, 1),
+                lastSolvedAt: DateTime(2024, 2, 1),
+                lastSessionMoodEmojiKey: 'excited_happy',
+                problemIdList: const [],
+              ));
+
+      await provider.updateSinglePracticeThumbnail(1);
+
+      expect(provider.practiceThumbnails.single.lastSessionMoodEmojiKey,
+          'excited_happy');
     });
   });
 

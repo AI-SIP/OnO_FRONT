@@ -70,7 +70,7 @@ class GoogleAuthService {
       }
     } catch (error, stackTrace) {
       debugPrint('Google sign-out error: $error');
-      AppSnackBar.showError('구글 계정 연동 해제에 실패했습니다.');
+      AppSnackBar.showError('구글 계정 연동 해제에 실패했어요.');
       await Sentry.captureException(
         error,
         stackTrace: stackTrace,

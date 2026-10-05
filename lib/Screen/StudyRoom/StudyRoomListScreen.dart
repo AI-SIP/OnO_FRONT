@@ -19,6 +19,7 @@ import '../../Module/Motion/PressableScale.dart';
 import '../../Module/Motion/AppMotion.dart';
 import '../../Module/Design/AppColors.dart';
 import '../../Module/Design/AppRadius.dart';
+import '../../Module/Design/AppToast.dart';
 
 class StudyRoomListScreen extends StatefulWidget {
   final TutorialTargets? tutorialTargets;
@@ -66,25 +67,38 @@ class _StudyRoomListScreenState extends State<StudyRoomListScreen> {
     }
   }
 
-  void _openCreate() {
-    Navigator.push(
+  /// 방을 만들면 그 방을 열고 초대 코드까지 보여 준다. 전에는 목록으로만
+  /// 돌아와서 초대 코드를 찾으려고 방에 다시 들어가야 했다.
+  Future<void> _openCreate() async {
+    final roomId = await Navigator.push<int>(
       context,
       TossPageRoute(builder: (_) => const StudyRoomCreateScreen()),
     );
+    if (roomId == null || !mounted) return;
+    AppToast.success('방을 만들었어요. 초대 코드로 친구를 불러 보세요');
+    _openDetail(roomId, showInviteCode: true);
   }
 
-  void _openJoin() {
-    Navigator.push(
+  /// 참여하면 그 방을 바로 연다. 전에는 아무 말 없이 목록으로 돌아와서
+  /// 참여가 됐는지 알 수 없었다.
+  Future<void> _openJoin() async {
+    final roomId = await Navigator.push<int>(
       context,
       TossPageRoute(builder: (_) => const StudyRoomJoinScreen()),
     );
+    if (roomId == null || !mounted) return;
+    AppToast.success('방에 참여했어요');
+    _openDetail(roomId);
   }
 
-  void _openDetail(int roomId) {
+  void _openDetail(int roomId, {bool showInviteCode = false}) {
     Navigator.push(
       context,
       TossPageRoute(
-        builder: (_) => StudyRoomDetailScreen(roomId: roomId),
+        builder: (_) => StudyRoomDetailScreen(
+          roomId: roomId,
+          showInviteCodeOnOpen: showInviteCode,
+        ),
       ),
     );
   }
@@ -230,17 +244,19 @@ class _StudyRoomListScreenState extends State<StudyRoomListScreen> {
           onPressed: () => _showAddMenu(themeProvider),
           backgroundColor: themeProvider.primaryColor,
           elevation: 2,
-          tooltip: '방 추가',
-          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          tooltip: '방 만들기 또는 참여하기',
           icon: const Icon(Icons.add, color: Colors.white),
+          // 누르면 만들기와 참여하기가 함께 나와서 '참여' 만 적으면 맞지 않았다.
           label: const StandardText(
-            text: '스터디룸 참여',
+            text: '방 추가',
             fontSize: 15,
             color: Colors.white,
             fontWeight: FontWeight.w600,
           ),
         ),
       ),
+      // 다른 탭처럼 화면 폭을 다 쓴다. 전에는 폭을 줄여 가운데에 두고 카드
+      // 여백을 또 둬서, 태블릿에서 이 화면만 양옆이 더 들어가 보였다.
       body: SizedBox.expand(
         key: widget.tutorialTargets?.studyRoomListKey,
         child: provider.isLoading && provider.rooms.isEmpty
@@ -283,16 +299,44 @@ class _StudyRoomListScreenState extends State<StudyRoomListScreen> {
     final screenHeight = MediaQuery.of(context).size.height;
     final screenWidth = MediaQuery.of(context).size.width;
 
-    return ListView.builder(
-      physics: const AlwaysScrollableScrollPhysics(),
-      padding: EdgeInsets.only(
-        top: screenHeight * 0.01,
-        bottom: screenHeight * 0.12,
-      ),
-      itemCount: provider.rooms.length,
-      itemBuilder: (_, i) => _buildRoomCard(provider.rooms[i], provider,
-          themeProvider, screenHeight, screenWidth),
-    );
+    final rooms = provider.rooms;
+    // 넓은 화면에서는 책장, 복습 세트처럼 두 열로 놓는다.
+    return LayoutBuilder(builder: (context, constraints) {
+      final columns = constraints.maxWidth >= 700 ? 2 : 1;
+      final rowCount = (rooms.length / columns).ceil();
+      return ListView.builder(
+        physics: const AlwaysScrollableScrollPhysics(),
+        // 책장과 같은 간격이다. 바깥 20, 두 열 사이 16, 카드 위아래 8.
+        padding: EdgeInsets.only(
+          left: 20,
+          right: 20,
+          top: screenHeight * 0.01,
+          bottom: screenHeight * 0.12,
+        ),
+        itemCount: rowCount,
+        itemBuilder: (_, index) {
+          final first = index * columns;
+          if (columns == 1) {
+            return _buildRoomCard(rooms[first], provider, themeProvider,
+                screenHeight, screenWidth);
+          }
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              for (var i = first; i < first + columns; i++) ...[
+                if (i > first) const SizedBox(width: 16),
+                Expanded(
+                  child: i < rooms.length
+                      ? _buildRoomCard(rooms[i], provider, themeProvider,
+                          screenHeight, screenWidth)
+                      : const SizedBox.shrink(),
+                ),
+              ],
+            ],
+          );
+        },
+      );
+    });
   }
 
   Widget _buildRoomCard(
@@ -306,10 +350,7 @@ class _StudyRoomListScreenState extends State<StudyRoomListScreen> {
     final titleFontSize = screenWidth < 600 ? 15.0 : 16.0;
 
     return Container(
-      margin: EdgeInsets.symmetric(
-        horizontal: 16,
-        vertical: screenHeight * 0.006,
-      ),
+      margin: const EdgeInsets.symmetric(vertical: 8),
       child: PressableScale(
         onTap: () => _openDetail(room.roomId),
         child: Container(

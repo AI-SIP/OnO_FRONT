@@ -12,6 +12,7 @@ import 'package:provider/provider.dart';
 import 'CameraCapture.dart';
 import 'CropImage.dart';
 import '../Design/AppColors.dart';
+import '../Dialog/UnsavedChangesScope.dart';
 import '../Design/AppToast.dart';
 import '../Design/AppRadius.dart';
 import '../Design/AppSpacing.dart';
@@ -146,6 +147,8 @@ class _CameraScreenState extends State<CameraScreen>
   void initState() {
     super.initState();
     AppAnalytics.logScreenView('CameraScreen');
+    // 알림이나 홈 위젯으로 화면이 한꺼번에 닫힐 때도 담아 둔 사진이 있으면 묻는다.
+    UnsavedChangesScope.register(this, () => _shots.isNotEmpty);
 
     // 화면 방향을 세로로 고정
     SystemChrome.setPreferredOrientations([
@@ -279,6 +282,7 @@ class _CameraScreenState extends State<CameraScreen>
 
   @override
   void dispose() {
+    UnsavedChangesScope.unregister(this);
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.portraitUp,
       DeviceOrientation.portraitDown,
@@ -666,11 +670,6 @@ class _CameraScreenState extends State<CameraScreen>
   /// 기본값도 그쪽이 정한다. 패키지의 `iosScannerOptions` 는 앨범에서 가져올
   /// 때 쓰는 자체 크롭 화면에만 걸리는 값이라(CunningDocumentScannerPlugin
   /// .swift:292) 여기서는 넘겨도 아무 일이 없다.
-  ///
-  /// 필터가 신경 쓰이는 이유가 있다. 오답노트는 찍은 뒤에 색을 골라 필기를
-  /// 지우는 기능([ImageColorPickerHandler])을 쓰는데, 사용자가 흑백 필터로
-  /// 저장하면 고를 색이 남지 않는다. 양쪽 다 기본값은 색을 살리는 쪽이라
-  /// 그대로 두면 문제가 없다.
   Future<void> _scanDocument() async {
     if (_isCapturing || _isScanning) return;
 
@@ -1427,7 +1426,7 @@ class _CameraScreenState extends State<CameraScreen>
                   StandardText(
                     text: denied
                         ? '설정에서 카메라 권한을 켜면 바로 촬영할 수 있어요.'
-                        : '다른 앱이 카메라를 쓰고 있는지 확인한 뒤 다시 시도해주세요.',
+                        : '다른 앱이 카메라를 쓰고 있는지 확인한 뒤 다시 시도해 주세요.',
                     fontSize: 14,
                     height: 1.5,
                     fontFamily: 'PretendardLight',

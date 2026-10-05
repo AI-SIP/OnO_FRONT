@@ -29,10 +29,13 @@ class ProblemSolveService {
 
   // 특정 문제의 모든 복습 기록 조회
   Future<List<ProblemSolveModel>> getProblemSolvesByProblemId(
-      int problemId) async {
+    int problemId, {
+    bool showErrorSnackBar = true,
+  }) async {
     final data = await httpService.sendRequest(
       method: 'GET',
       url: '$baseUrl/problem/$problemId',
+      showErrorSnackBar: showErrorSnackBar,
     ) as List<dynamic>;
 
     return data

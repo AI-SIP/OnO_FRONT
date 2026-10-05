@@ -29,6 +29,13 @@ class ImageGridWidget extends StatelessWidget {
   final double titleIconBorderRadius;
   final bool showHeader;
 
+  /// 올리는 중인 로컬 사진 경로. 칸 위에 도는 표시를 올린다.
+  final Set<String> uploadingPaths;
+
+  /// 올리지 못한 로컬 사진 경로. 누르면 [onRetry] 로 다시 올린다.
+  final Set<String> failedPaths;
+  final ValueChanged<int>? onRetry;
+
   const ImageGridWidget({
     Key? key,
     required this.label,
@@ -43,6 +50,9 @@ class ImageGridWidget extends StatelessWidget {
     this.titleIconSize = 18,
     this.titleIconBorderRadius = 6.0,
     this.showHeader = true,
+    this.uploadingPaths = const {},
+    this.failedPaths = const {},
+    this.onRetry,
   }) : super(key: key);
 
   @override
@@ -211,11 +221,15 @@ class ImageGridWidget extends StatelessWidget {
               // 새로 추가된 로컬 파일 표시
               final fileIdx = idx - existingImageUrls.length - 1;
               final file = files[fileIdx];
+              final failed = failedPaths.contains(file.path);
+              final uploading = !failed && uploadingPaths.contains(file.path);
               return Stack(
                 children: [
                   PressableScale(
                     haptic: HapticLevel.none,
-                    onTap: () => _openLocalImage(context, file),
+                    onTap: failed && onRetry != null
+                        ? () => onRetry!(fileIdx)
+                        : () => _openLocalImage(context, file),
                     child: Container(
                       decoration: BoxDecoration(
                         color: Colors.white,
@@ -228,11 +242,19 @@ class ImageGridWidget extends StatelessWidget {
                       clipBehavior: Clip.antiAlias,
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(AppRadius.medium),
-                        child: Image.file(
-                          File(file.path),
-                          width: 100,
-                          height: 100,
-                          fit: BoxFit.cover,
+                        child: Stack(
+                          children: [
+                            Image.file(
+                              File(file.path),
+                              width: 100,
+                              height: 100,
+                              fit: BoxFit.cover,
+                            ),
+                            if (uploading || failed)
+                              Positioned.fill(
+                                child: _UploadStateOverlay(failed: failed),
+                              ),
+                          ],
                         ),
                       ),
                     ),
@@ -277,6 +299,7 @@ class ImageGridWidget extends StatelessWidget {
             backgroundColor: Colors.transparent,
             elevation: 0,
             leading: IconButton(
+              tooltip: '뒤로',
               icon: const Icon(Icons.arrow_back, color: Colors.white),
               onPressed: () => Navigator.of(context).pop(),
             ),
@@ -300,6 +323,46 @@ class ImageGridWidget extends StatelessWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// 사진 칸 위에 올리는 중이거나 올리지 못했다는 표시를 덮는다.
+class _UploadStateOverlay extends StatelessWidget {
+  final bool failed;
+
+  const _UploadStateOverlay({required this.failed});
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      label: failed ? '올리지 못한 사진, 눌러서 다시 올리기' : '사진 올리는 중',
+      child: Container(
+        color: Colors.black.withValues(alpha: failed ? 0.55 : 0.35),
+        alignment: Alignment.center,
+        child: failed
+            ? const Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.refresh, color: Colors.white, size: 24),
+                  SizedBox(height: 4),
+                  StandardText(
+                    text: '다시 올리기',
+                    fontSize: 11,
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ],
+              )
+            : const SizedBox(
+                width: 22,
+                height: 22,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2.5,
+                  color: Colors.white,
+                ),
+              ),
       ),
     );
   }

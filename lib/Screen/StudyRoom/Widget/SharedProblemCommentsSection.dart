@@ -546,7 +546,7 @@ class _SharedProblemCommentsSectionState
                           ? '${_timeAgo(comment.updatedAt ?? comment.createdAt)} · 수정됨'
                           : _timeAgo(comment.createdAt),
                       fontSize: 11,
-                      color: Colors.grey[500]!,
+                      color: AppColors.textSecondary,
                       fontWeight: FontWeight.normal,
                       fontFamily: 'PretendardLight',
                     ),
@@ -555,6 +555,7 @@ class _SharedProblemCommentsSectionState
               ),
               if (comment.isMine || comment.canDelete)
                 IconButton(
+                  tooltip: '더 보기',
                   icon:
                       Icon(Icons.more_vert, size: 18, color: Colors.grey[400]),
                   padding: EdgeInsets.zero,
@@ -750,7 +751,7 @@ class _SharedProblemCommentsSectionState
                       StandardText(
                         text: '$displayCommentCount',
                         fontSize: 12,
-                        color: Colors.grey[500]!,
+                        color: AppColors.textSecondary,
                         fontWeight: FontWeight.normal,
                         fontFamily: 'PretendardLight',
                       ),
@@ -782,7 +783,7 @@ class _SharedProblemCommentsSectionState
                   StandardText(
                     text: '$displayCommentCount',
                     fontSize: 12,
-                    color: Colors.grey[500]!,
+                    color: AppColors.textSecondary,
                     fontWeight: FontWeight.normal,
                     fontFamily: 'PretendardLight',
                   ),

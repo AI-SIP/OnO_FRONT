@@ -10,6 +10,7 @@ import '../../Model/PracticeNote/PracticeNoteRegisterModel.dart';
 import '../../Model/Problem/ProblemRegisterModel.dart';
 import '../../Model/Tag/TagModel.dart';
 import '../../Module/Dialog/SnackBarDialog.dart';
+import '../../Module/Dialog/UnsavedChangesScope.dart';
 import '../../Module/Image/ImagePickerHandler.dart';
 import '../../Module/Text/mobile_font_size.dart';
 import '../../Module/Text/StandardText.dart';
@@ -24,20 +25,26 @@ import '../../Module/Util/FolderPickerWidget.dart';
 import '../../Provider/FoldersProvider.dart';
 import '../../Provider/PracticeNoteProvider.dart';
 import '../../Provider/ProblemsProvider.dart';
+import '../../Provider/ReviewDueProvider.dart';
 import '../../Provider/ScreenIndexProvider.dart';
 import '../../Provider/UserProvider.dart';
 import '../../Service/Api/FileUpload/FileUploadService.dart';
 import '../../Service/Api/Problem/ProblemService.dart';
 import '../../Service/Api/Tag/TagService.dart';
+import '../../Service/HomeWidget/HomeWidgetSyncService.dart';
 import '../../Util/AppAnalytics.dart';
+import '../../Util/AiAnalysisPreference.dart';
 import '../../Util/AppErrorReporter.dart';
 import 'TagSelectionScreen.dart';
+import 'Widget/AiAnalysisToggle.dart';
 import 'Widget/DatePickerWidget.dart';
 import 'Widget/ImageGridWidget.dart';
 import 'Widget/LabeledTextField.dart';
 import '../../Module/Motion/TossDialog.dart';
 import '../../Module/Design/AppColors.dart';
 import '../../Module/Design/AppRadius.dart';
+import '../../Util/BatchPracticeSetPreference.dart';
+import '../../Module/Design/AppToast.dart';
 
 enum _BatchRegisterStep {
   selectImages,
@@ -83,10 +90,21 @@ class _MultiProblemRegisterScreenState
   bool _isOpeningInitialGallery = true;
   bool _createPracticeSet = true;
 
+  /// 등록한 뒤 AI 분석을 요청할지. 한 번에 올리는 문제 모두에 같이 적용한다.
+  bool _aiAnalysisEnabled = false;
+
   @override
   void initState() {
     super.initState();
     AppAnalytics.logScreenView('MultiProblemRegisterScreen');
+    // 알림이나 홈 위젯으로 화면이 한꺼번에 닫힐 때도 고른 사진이 있으면 묻는다.
+    UnsavedChangesScope.register(this, () => _problemImages.isNotEmpty);
+    AiAnalysisPreference.load().then((enabled) {
+      if (mounted) setState(() => _aiAnalysisEnabled = enabled);
+    });
+    BatchPracticeSetPreference.load().then((enabled) {
+      if (mounted) setState(() => _createPracticeSet = enabled);
+    });
     _selectedFolderId = widget.initialFolderId;
     _loadTags();
     _loadRecommendedTags();
@@ -99,6 +117,7 @@ class _MultiProblemRegisterScreenState
 
   @override
   void dispose() {
+    UnsavedChangesScope.unregister(this);
     _commonPanelScrollController.dispose();
     for (final draft in _drafts) {
       draft.dispose();
@@ -165,18 +184,64 @@ class _MultiProblemRegisterScreenState
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeHandler>(context);
 
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: _buildAppBar(themeProvider),
-      body: _step == _BatchRegisterStep.selectImages
-          ? _buildImageSelectionBody(themeProvider)
-          : _buildDraftReviewBody(themeProvider),
-      bottomNavigationBar: _step == _BatchRegisterStep.selectImages
-          ? _isOpeningInitialGallery
-              ? null
-              : _buildCommonPanel(themeProvider)
-          : _buildReviewBottomBar(themeProvider),
+    // 고른 사진이 없을 때만 그냥 나간다. 내용 확인 단계에서 뒤로 가면 화면을
+    // 닫지 않고 사진 고르기로 돌아간다(앱바 뒤로가기와 같다).
+    return PopScope(
+      canPop: _step == _BatchRegisterStep.selectImages &&
+          _problemImages.isEmpty &&
+          !_isSubmitting,
+      onPopInvokedWithResult: (didPop, _) {
+        if (didPop) return;
+        _handleBack();
+      },
+      child: Scaffold(
+        backgroundColor: Colors.white,
+        appBar: _buildAppBar(themeProvider),
+        body: _step == _BatchRegisterStep.selectImages
+            ? _buildImageSelectionBody(themeProvider)
+            : _buildDraftReviewBody(themeProvider),
+        bottomNavigationBar: _step == _BatchRegisterStep.selectImages
+            ? _isOpeningInitialGallery
+                ? null
+                : _buildCommonPanel(themeProvider)
+            : _buildReviewBottomBar(themeProvider),
+      ),
     );
+  }
+
+  /// 앱바 뒤로가기와 기기 뒤로가기가 같이 쓴다.
+  ///
+  /// 전에는 닫기를 누르면 고른 사진이 묻지도 않고 다 날아갔고, 내용 확인
+  /// 단계에서 기기 뒤로가기를 하면 사진 고르기가 아니라 화면이 통째로 닫혔다.
+  Future<void> _handleBack() async {
+    if (_isSubmitting) return;
+    if (_step == _BatchRegisterStep.editDetails) {
+      final typed = _drafts.any((draft) =>
+          draft.memoController.text.trim().isNotEmpty ||
+          draft.answerImages.isNotEmpty);
+      if (typed &&
+          !await confirmLeave(
+            context,
+            source: 'problem_register_multi_details',
+            title: '사진 고르기로 돌아갈까요?',
+            description: '문제마다 적은 메모와 해설 사진은 지워져요.',
+          )) {
+        return;
+      }
+      if (!mounted) return;
+      _returnToImageSelection();
+      return;
+    }
+    if (_problemImages.isNotEmpty &&
+        !await confirmLeave(
+          context,
+          source: 'problem_register_multi',
+          title: '작성을 그만둘까요?',
+          description: '지금 나가면 고른 사진이 등록되지 않아요.',
+        )) {
+      return;
+    }
+    if (mounted) Navigator.of(context).pop();
   }
 
   PreferredSizeWidget _buildAppBar(ThemeHandler themeProvider) {
@@ -185,21 +250,14 @@ class _MultiProblemRegisterScreenState
       backgroundColor: Colors.white,
       surfaceTintColor: Colors.white,
       leading: IconButton(
+        tooltip: '닫기',
         icon: Icon(
           _step == _BatchRegisterStep.selectImages
               ? Icons.close
               : Icons.arrow_back,
           color: AppColors.textPrimary,
         ),
-        onPressed: _isSubmitting
-            ? null
-            : () {
-                if (_step == _BatchRegisterStep.editDetails) {
-                  _returnToImageSelection();
-                  return;
-                }
-                Navigator.pop(context);
-              },
+        onPressed: _isSubmitting ? null : _handleBack,
       ),
       title: StandardText(
         text: _step == _BatchRegisterStep.selectImages
@@ -281,8 +339,7 @@ class _MultiProblemRegisterScreenState
                       horizontal: 18,
                       vertical: 8,
                     ),
-                    minimumSize: Size.zero,
-                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    minimumSize: const Size(0, 44),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(AppRadius.small),
                     ),
@@ -361,7 +418,8 @@ class _MultiProblemRegisterScreenState
             ),
             const SizedBox(height: 18),
             StandardText(
-              text: '갤러리를 여는 중입니다.',
+              // 카메라와 앨범 중 고르는 창이 먼저 뜬다. 갤러리만 여는 게 아니다.
+              text: '사진을 가져오는 중이에요.',
               fontSize: MobileFontSize.reduced(context, 16),
               color: AppColors.textPrimary,
               fontWeight: FontWeight.w600,
@@ -369,7 +427,7 @@ class _MultiProblemRegisterScreenState
             ),
             const SizedBox(height: 7),
             StandardText(
-              text: '이미지 선택창이 열릴 때까지 잠시만 기다려 주세요.',
+              text: '카메라나 앨범을 고르는 창이 곧 열려요.',
               fontSize: 13,
               color: Colors.grey[600]!,
               textAlign: TextAlign.center,
@@ -420,7 +478,7 @@ class _MultiProblemRegisterScreenState
                   ),
                   SizedBox(height: isTight ? 4 : 8),
                   StandardText(
-                    text: '이미지 1장당 오답노트 1개 초안이 생성됩니다.',
+                    text: '이미지 1장당 오답노트 1개 초안이 생성돼요.',
                     fontSize: isTight ? 12 : 14,
                     color: Colors.grey[600]!,
                     textAlign: TextAlign.center,
@@ -441,7 +499,7 @@ class _MultiProblemRegisterScreenState
                       ),
                       icon: const Icon(Icons.photo_library_outlined, size: 18),
                       label: const StandardText(
-                        text: '갤러리에서 선택',
+                        text: '사진 가져오기',
                         fontSize: 14,
                         color: Colors.white,
                         fontWeight: FontWeight.w600,
@@ -635,6 +693,12 @@ class _MultiProblemRegisterScreenState
               ),
               const SizedBox(height: 12),
               _buildPracticeSetOption(themeProvider),
+              const SizedBox(height: 8),
+              AiAnalysisToggle(
+                value: _aiAnalysisEnabled,
+                color: themeProvider.primaryColor,
+                onChanged: _isSubmitting ? null : _changeAiAnalysis,
+              ),
             ],
           );
         }
@@ -736,7 +800,7 @@ class _MultiProblemRegisterScreenState
               refresh();
             },
             onChanged: refresh,
-            emptyText: '선택된 태그가 없습니다.',
+            emptyText: '선택된 태그가 없어요.',
           ),
           const SizedBox(height: 14),
           LabeledTextField(
@@ -896,6 +960,7 @@ class _MultiProblemRegisterScreenState
                   width: 38,
                   height: 36,
                   child: IconButton(
+                    tooltip: '이 오답노트 빼기',
                     onPressed: _isSubmitting ? null : () => _removeDraft(index),
                     padding: EdgeInsets.zero,
                     style: IconButton.styleFrom(
@@ -983,7 +1048,7 @@ class _MultiProblemRegisterScreenState
           if (draft.problemImages.length == 1) {
             SnackBarDialog.showSnackBar(
               context: context,
-              message: '문제 이미지는 최소 1장이 필요합니다.',
+              message: '문제 이미지는 최소 1장이 필요해요.',
               backgroundColor: Colors.orange,
             );
             return;
@@ -1058,7 +1123,7 @@ class _MultiProblemRegisterScreenState
                       _selectedTagIds.remove(tagId);
                     }),
                     onChanged: () => setState(() {}),
-                    emptyText: '선택된 태그가 없습니다.',
+                    emptyText: '선택된 태그가 없어요.',
                   ),
                   const SizedBox(height: 16),
                   DatePickerWidget(
@@ -1104,14 +1169,26 @@ class _MultiProblemRegisterScreenState
     );
   }
 
+  void _changeAiAnalysis(bool enabled) {
+    setState(() => _aiAnalysisEnabled = enabled);
+    unawaited(AiAnalysisPreference.save(enabled));
+    AppAnalytics.logEvent('ai_analysis_toggle', {
+      'enabled': enabled,
+      'mode': 'multi',
+    });
+  }
+
+  void _setCreatePracticeSet(bool enabled) {
+    setState(() => _createPracticeSet = enabled);
+    unawaited(BatchPracticeSetPreference.save(enabled));
+  }
+
   Widget _buildPracticeSetOption(ThemeHandler themeProvider) {
     return PressableScale(
       haptic: HapticLevel.selection,
       onTap: _isSubmitting
           ? null
-          : () => setState(() {
-                _createPracticeSet = !_createPracticeSet;
-              }),
+          : () => _setCreatePracticeSet(!_createPracticeSet),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
@@ -1152,9 +1229,7 @@ class _MultiProblemRegisterScreenState
               materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
               onChanged: _isSubmitting
                   ? null
-                  : (value) => setState(() {
-                        _createPracticeSet = value ?? false;
-                      }),
+                  : (value) => _setCreatePracticeSet(value ?? false),
             ),
           ],
         ),
@@ -1266,8 +1341,7 @@ class _MultiProblemRegisterScreenState
                   ),
                   padding:
                       const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
-                  minimumSize: const Size(0, 40),
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  minimumSize: const Size(0, 44),
                   visualDensity: VisualDensity.compact,
                 ),
                 child: _isLoadingTags
@@ -1300,7 +1374,7 @@ class _MultiProblemRegisterScreenState
                 ? StandardText(
                     text: emptyText,
                     fontSize: 13,
-                    color: Colors.grey[400]!,
+                    color: AppColors.textSecondary,
                   )
                 : Wrap(
                     spacing: 8,
@@ -1381,9 +1455,9 @@ class _MultiProblemRegisterScreenState
           const SizedBox(height: 8),
           if (_recommendedTags.isEmpty && !_isLoadingRecommendations)
             StandardText(
-              text: '최근 사용 태그가 없습니다.',
+              text: '최근 사용 태그가 없어요.',
               fontSize: 13,
-              color: Colors.grey[400]!,
+              color: AppColors.textSecondary,
             )
           else
             Wrap(
@@ -1457,7 +1531,7 @@ class _MultiProblemRegisterScreenState
     if (selectedTagIds.length >= 5) {
       SnackBarDialog.showSnackBar(
         context: context,
-        message: '태그는 최대 5개까지 선택할 수 있습니다.',
+        message: '태그는 최대 5개까지 선택할 수 있어요.',
         backgroundColor: Colors.orange,
       );
       return;
@@ -1487,7 +1561,7 @@ class _MultiProblemRegisterScreenState
       clearInitialOpeningState();
       SnackBarDialog.showSnackBar(
         context: context,
-        message: '여러 장 작성은 한 번에 최대 20장까지 등록할 수 있습니다.',
+        message: '여러 장 작성은 한 번에 최대 20장까지 등록할 수 있어요.',
         backgroundColor: Colors.orange,
       );
       return;
@@ -1517,7 +1591,7 @@ class _MultiProblemRegisterScreenState
       clearInitialOpeningState();
       SnackBarDialog.showSnackBar(
         context: context,
-        message: '여러 장 작성은 한 번에 최대 20장까지 등록할 수 있습니다.',
+        message: '여러 장 작성은 한 번에 최대 20장까지 등록할 수 있어요.',
         backgroundColor: Colors.orange,
       );
       return;
@@ -1534,7 +1608,7 @@ class _MultiProblemRegisterScreenState
     if (pickedImages.length > remainingCount) {
       SnackBarDialog.showSnackBar(
         context: context,
-        message: '최대 20장까지만 추가했습니다.',
+        message: '최대 20장까지만 추가했어요.',
         backgroundColor: Colors.orange,
       );
     }
@@ -1673,6 +1747,7 @@ class _MultiProblemRegisterScreenState
                   backgroundColor: Colors.white,
                   surfaceTintColor: Colors.white,
                   leading: IconButton(
+                    tooltip: '뒤로',
                     icon: const Icon(
                       Icons.arrow_back,
                       color: AppColors.textPrimary,
@@ -1803,17 +1878,38 @@ class _MultiProblemRegisterScreenState
     }
   }
 
-  void _removeDraft(int index) {
+  /// 초안을 빼고 잠깐 되돌리기를 보인다. 전에는 확인도 되돌리기도 없어서
+  /// 적어 둔 메모가 한 번 누르면 사라졌다.
+  Future<void> _removeDraft(int index) async {
     final removedDraft = _drafts.removeAt(index);
-    removedDraft.dispose();
-    if (index < _problemImages.length) {
-      _problemImages.removeAt(index);
-    }
+    final removedImage =
+        index < _problemImages.length ? _problemImages.removeAt(index) : null;
+    final wasLast = _drafts.isEmpty;
+    final stepBefore = _step;
 
     setState(() {
-      if (_drafts.isEmpty) {
+      if (wasLast) {
         _step = _BatchRegisterStep.selectImages;
       }
+    });
+
+    final undone = await AppToast.undo('오답노트 하나를 뺐어요');
+    if (!mounted) {
+      removedDraft.dispose();
+      return;
+    }
+    if (!undone) {
+      removedDraft.dispose();
+      return;
+    }
+    setState(() {
+      final draftIndex = index.clamp(0, _drafts.length);
+      _drafts.insert(draftIndex, removedDraft);
+      if (removedImage != null) {
+        _problemImages.insert(
+            index.clamp(0, _problemImages.length), removedImage);
+      }
+      _step = stepBefore;
     });
   }
 
@@ -1821,7 +1917,7 @@ class _MultiProblemRegisterScreenState
     if (_drafts.isEmpty) {
       SnackBarDialog.showSnackBar(
         context: context,
-        message: '등록할 오답노트가 없습니다.',
+        message: '등록할 오답노트가 없어요.',
         backgroundColor: Colors.orange,
       );
       return;
@@ -1857,7 +1953,7 @@ class _MultiProblemRegisterScreenState
         Navigator.of(context, rootNavigator: true).pop();
         SnackBarDialog.showSnackBar(
           context: context,
-          message: '오답노트 묶음 등록에 실패했습니다. 잠시 후 다시 시도해주세요.',
+          message: '오답노트 묶음 등록에 실패했어요. 잠시 후 다시 시도해 주세요.',
           backgroundColor: Colors.red,
         );
       }
@@ -1873,7 +1969,11 @@ class _MultiProblemRegisterScreenState
     // 몇 장을 한 번에 올렸는지는 count 로 따로 본다.
     FirebaseAnalytics.instance.logEvent(
       name: 'problem_created',
-      parameters: {'mode': 'multi', 'count': registeredProblemIds.length},
+      parameters: {
+        'mode': 'multi',
+        'count': registeredProblemIds.length,
+        'ai_analysis': _aiAnalysisEnabled.toString(),
+      },
     );
 
     if (!mounted) {
@@ -1911,8 +2011,8 @@ class _MultiProblemRegisterScreenState
     SnackBarDialog.showSnackBar(
       context: context,
       message: _createPracticeSet && !practiceSetCreated
-          ? '${draftsToRegister.length}개의 문제는 등록됐지만 복습 세트 생성에 실패했습니다.'
-          : '${draftsToRegister.length}개의 문제가 등록되었습니다.',
+          ? '${draftsToRegister.length}개의 문제는 등록됐지만 복습 세트 생성에 실패했어요.'
+          : '${draftsToRegister.length}개의 문제가 등록됐어요.',
       backgroundColor: _createPracticeSet && !practiceSetCreated
           ? Colors.orange
           : Provider.of<ThemeHandler>(context, listen: false).primaryColor,
@@ -1930,6 +2030,8 @@ class _MultiProblemRegisterScreenState
     final userProvider = Provider.of<UserProvider>(context, listen: false);
     final foldersProvider =
         Provider.of<FoldersProvider>(context, listen: false);
+    final reviewDueProvider =
+        Provider.of<ReviewDueProvider>(context, listen: false);
 
     final problemPayloads = <Map<String, dynamic>>[];
     for (final draft in drafts) {
@@ -1950,6 +2052,7 @@ class _MultiProblemRegisterScreenState
       problemsProvider: problemsProvider,
       userProvider: userProvider,
       foldersProvider: foldersProvider,
+      reviewDueProvider: reviewDueProvider,
     );
 
     return registeredProblemIds;
@@ -1982,18 +2085,27 @@ class _MultiProblemRegisterScreenState
     required ProblemsProvider problemsProvider,
     required UserProvider userProvider,
     required FoldersProvider foldersProvider,
+    required ReviewDueProvider reviewDueProvider,
   }) async {
-    await Future.wait(
-      registeredProblemIds.map(
-        (problemId) => _runPostSaveTask(
-          () => _problemService.requestProblemAnalysis(
-            problemId,
-            showErrorSnackBar: false,
+    // 홈 화면 위젯의 오늘 칸을 새로 맞춘다. 기다리지 않는다.
+    unawaited(HomeWidgetSyncService.instance.sync(force: true));
+    // 홈의 추천 복습도 다시 받는다. 전에는 앱을 다시 켜야 새 문제가 보였다.
+    unawaited(reviewDueProvider.fetchReviewDue());
+
+    // AI 분석을 끈 채로 등록하면 요청하지 않는다. 문제 상세에서 따로 할 수 있다.
+    if (_aiAnalysisEnabled) {
+      await Future.wait(
+        registeredProblemIds.map(
+          (problemId) => _runPostSaveTask(
+            () => _problemService.requestProblemAnalysis(
+              problemId,
+              showErrorSnackBar: false,
+            ),
+            source: 'batch_problem_register_analysis_request',
           ),
-          source: 'batch_problem_register_analysis_request',
         ),
-      ),
-    );
+      );
+    }
     await Future.wait(
       registeredProblemIds.map(
         (problemId) => _runPostSaveTask(
@@ -2033,7 +2145,10 @@ class _MultiProblemRegisterScreenState
 
     final practiceProvider =
         Provider.of<ProblemPracticeProvider>(context, listen: false);
-    final practiceTitle = _resolvePracticeSetTitle(registeredDrafts);
+    // 같은 공책으로 여러 번 올리면 이름이 같은 세트가 쌓여서 날짜를 붙인다.
+    final now = DateTime.now();
+    final practiceTitle =
+        '${_resolvePracticeSetTitle(registeredDrafts)} ${now.month}월 ${now.day}일';
     final registerModel = PracticeNoteRegisterModel(
       practiceId: null,
       practiceTitle: practiceTitle,
@@ -2060,13 +2175,16 @@ class _MultiProblemRegisterScreenState
               valueListenable: progress,
               builder: (context, value, _) {
                 final progressValue = total == 0 ? 0.0 : value / total;
+                // 다 올린 뒤에도 분석 요청과 목록 정리를 기다린다. 전에는 그동안
+                // 100% 에서 멈춘 것처럼 보였다.
+                final finishing = total > 0 && value >= total;
                 return Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     // 다른 로딩과 같은 모양을 쓴다.
                     AppLoadingView(
-                      message: '오답노트를 등록하고 있어요',
-                      detail: '$value / $total',
+                      message: finishing ? '마무리하고 있어요' : '오답노트를 등록하고 있어요',
+                      detail: finishing ? '거의 다 됐어요' : '$value / $total',
                       progress: progressValue,
                       color: themeProvider.primaryColor,
                     ),

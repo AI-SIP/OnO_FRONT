@@ -192,7 +192,7 @@ void main() {
         (captured.single as PracticeNoteRegisterModel).practiceTitle,
         '9월 모의고사 오답',
       );
-      expect(find.text('복습 세트가 생성되었습니다.'), findsOneWidget);
+      expect(find.text('복습 세트가 생성됐어요.'), findsOneWidget);
     });
 
     testWidgets('등록이 실패하면 실패 스낵바가 뜨고 화면에 남는다', (tester) async {
@@ -214,7 +214,7 @@ void main() {
       await tester.tap(find.widgetWithText(ElevatedButton, '복습 세트 만들기'));
       await tester.pumpAndSettle();
 
-      expect(find.text('복습 세트 생성에 실패했습니다. 잠시 후 다시 시도해주세요.'), findsOneWidget);
+      expect(find.text('복습 세트 생성에 실패했어요. 잠시 후 다시 시도해 주세요.'), findsOneWidget);
       expect(find.byType(PracticeTitleWriteScreen), findsOneWidget);
     });
   });
@@ -300,7 +300,49 @@ void main() {
         (captured.single as PracticeNoteUpdateModel).practiceTitle,
         '고친 제목',
       );
-      expect(find.text('복습 세트가 수정되었습니다.'), findsOneWidget);
+      expect(find.text('복습 세트가 수정됐어요.'), findsOneWidget);
+    });
+  });
+
+  group('복습 세트 설정 (closeOnlySelf)', () {
+    testWidgets('저장하면 문제는 건드리지 않고 이 화면 하나만 닫는다', (tester) async {
+      when(() => practiceNoteService.updatePracticeNote(any(),
+              showErrorSnackBar: any(named: 'showErrorSnackBar')))
+          .thenAnswer((_) async {});
+      when(() => practiceNoteService.getPracticeNoteById(1,
+          showErrorSnackBar: false)).thenAnswer((_) async => _detail(1));
+
+      await _pumpTargetOntoStack(
+        tester,
+        practiceProvider,
+        PracticeTitleWriteScreen(
+          practiceNoteUpdateModel: PracticeNoteUpdateModel(
+            practiceNoteId: 1,
+            practiceTitle: '기존 복습 세트',
+            addProblemIdList: const [],
+            removeProblemIdList: const [],
+          ),
+          practiceNoteDetailModel: _detail(1),
+          closeOnlySelf: true,
+        ),
+      );
+
+      expect(appBarTitle('복습 세트 설정'), findsOneWidget);
+      await tester.enterText(find.byType(TextField), '새 이름');
+      await tester.tap(find.widgetWithText(ElevatedButton, '저장하기'));
+      await tester.pumpAndSettle();
+
+      final captured = verify(() => practiceNoteService.updatePracticeNote(
+            captureAny(),
+            showErrorSnackBar: any(named: 'showErrorSnackBar'),
+          )).captured;
+      final body = (captured.single as PracticeNoteUpdateModel).toJson();
+      expect(body['practiceTitle'], '새 이름');
+      expect(body['addProblemIdList'], isEmpty);
+      expect(body['removeProblemIdList'], isEmpty);
+      expect(find.byType(PracticeTitleWriteScreen), findsNothing);
+      // 바로 아래 단계 화면이 그대로 남아 있다.
+      expect(find.text('다음 단계'), findsOneWidget);
     });
   });
 

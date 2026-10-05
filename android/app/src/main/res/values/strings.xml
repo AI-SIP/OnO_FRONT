@@ -3,4 +3,11 @@
     <string name="client_id">_fFR5LPvfgKDimQqucMR</string>
     <string name="client_secret">5KH13wnGep</string>
     <string name="client_name">OnO</string>
+    <!-- 홈 화면 위젯. 위젯 고르기 화면에 나오는 이름과 설명이다 -->
+    <string name="widget_small_label">오늘 복습</string>
+    <string name="widget_small_description">연속 학습 일수와 이번 주 공부한 날, 오늘 복습할 문제 수를 보여 줘요</string>
+    <string name="widget_medium_label">학습 달력</string>
+    <string name="widget_medium_description">연속 학습 일수와 최근 4주 학습 달력을 보여 줘요</string>
+    <string name="widget_large_label">학습 달력과 오늘 복습</string>
+    <string name="widget_large_description">최근 5주 학습 달력과 오늘 복습할 문제 3개를 보여 줘요</string>
 </resources>

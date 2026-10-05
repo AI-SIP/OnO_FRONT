@@ -39,22 +39,110 @@ void main() {
     expect(find.text('이미지가 없어 분석하지 못했어요'), findsOneWidget);
   });
 
-  testWidgets('상태가 NOT_STARTED 면 분석 중 문구를 보여준다', (tester) async {
+  testWidgets('상태가 NOT_STARTED 면 분석하지 않은 문제로 보이고 분석하기를 누를 수 있다',
+      (tester) async {
+    // 등록할 때 AI 분석을 끄면 이 상태로 남는다. 전에는 분석 중으로 보여서
+    // 끝나지 않는 로딩처럼 보였다.
+    final analysis = buildAnalysis(status: ProblemAnalysisStatus.NOT_STARTED);
+    var requested = 0;
+
+    await pumpOnoWidget(
+      tester,
+      Builder(
+        builder: (context) => _wrap(buildAnalysisSection(
+          context,
+          analysis,
+          Colors.pink,
+          onRequestAnalysis: () => requested++,
+        )),
+      ),
+    );
+
+    expect(find.text('AI 분석을 하지 않은 문제예요'), findsOneWidget);
+    expect(find.byType(CircularProgressIndicator), findsNothing);
+
+    await tester.tap(find.text('AI 분석하기'));
+    expect(requested, 1);
+  });
+
+  testWidgets('상태가 RATE_LIMIT_EXCEEDED 면 한도 안내와 다시 분석하기를 보여준다', (tester) async {
+    expect(ProblemAnalysisStatus.fromString('RATE_LIMIT_EXCEEDED'),
+        ProblemAnalysisStatus.RATE_LIMIT_EXCEEDED);
+    final analysis =
+        buildAnalysis(status: ProblemAnalysisStatus.RATE_LIMIT_EXCEEDED);
+    var requested = 0;
+
+    await pumpOnoWidget(
+      tester,
+      Builder(
+        builder: (context) => _wrap(buildAnalysisSection(
+          context,
+          analysis,
+          Colors.pink,
+          onRequestAnalysis: () => requested++,
+        )),
+      ),
+    );
+
+    expect(find.text('오늘 AI 분석 횟수를 모두 썼어요'), findsOneWidget);
+    await tester.tap(find.text('다시 분석하기'));
+    expect(requested, 1);
+  });
+
+  testWidgets('분석하기 콜백이 없으면 버튼을 그리지 않는다', (tester) async {
     final analysis = buildAnalysis(status: ProblemAnalysisStatus.NOT_STARTED);
 
-    // CircularProgressIndicator 가 계속 애니메이션하므로 pumpAndSettle 을
-    // 쓰지 않는다.
     await pumpOnoWidget(
       tester,
       Builder(
         builder: (context) =>
             _wrap(buildAnalysisSection(context, analysis, Colors.pink)),
       ),
-      settle: false,
     );
 
-    expect(find.text('AI가 문제를 분석하고 있어요'), findsOneWidget);
-    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    expect(find.text('AI 분석하기'), findsNothing);
+  });
+
+  testWidgets('분석을 기다리다 확인을 멈췄으면 다시 확인하기를 보여준다', (tester) async {
+    final analysis = buildAnalysis(status: ProblemAnalysisStatus.PROCESSING);
+    var refreshed = 0;
+
+    await pumpOnoWidget(
+      tester,
+      Builder(
+        builder: (context) => _wrap(buildAnalysisSection(
+          context,
+          analysis,
+          Colors.pink,
+          timedOut: true,
+          onRefreshAnalysis: () => refreshed++,
+        )),
+      ),
+    );
+
+    expect(find.text('분석이 생각보다 오래 걸리고 있어요'), findsOneWidget);
+    await tester.tap(find.text('다시 확인하기'));
+    expect(refreshed, 1);
+  });
+
+  testWidgets('실패하면 다시 분석하기를 누를 수 있다', (tester) async {
+    final analysis = buildAnalysis(status: ProblemAnalysisStatus.FAILED);
+    var requested = 0;
+
+    await pumpOnoWidget(
+      tester,
+      Builder(
+        builder: (context) => _wrap(buildAnalysisSection(
+          context,
+          analysis,
+          Colors.pink,
+          onRequestAnalysis: () => requested++,
+        )),
+      ),
+    );
+
+    await tester.tap(find.text('다시 분석하기'));
+    expect(requested, 1);
   });
 
   testWidgets('상태가 PROCESSING 이면 분석 중 문구를 보여준다', (tester) async {

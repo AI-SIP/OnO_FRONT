@@ -121,7 +121,7 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
 
-    expect(find.text('방 생성에 실패했습니다'), findsOneWidget);
+    expect(find.text('방을 만들지 못했어요'), findsOneWidget);
     expect(find.byType(StudyRoomCreateScreen), findsOneWidget);
   });
 

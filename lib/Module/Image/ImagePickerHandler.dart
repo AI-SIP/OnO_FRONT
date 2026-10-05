@@ -51,7 +51,10 @@ class ImagePickerHandler {
     // 화면을 한 번 더 띄우면 같은 일을 두 번 시키는 셈이다.
     if (capture.alreadyCropped) return capture.files.first;
 
-    return cropImageFile(capture.files.first, accent: accent);
+    // 자르기에서 취소하면 자르지 않은 원본을 쓴다. 앨범과 달리 카메라로 찍은
+    // 것은 다시 고를 수 없어서, 전에는 취소 한 번에 찍은 사진이 사라졌다.
+    final original = capture.files.first;
+    return await cropImageFile(original, accent: accent) ?? original;
   }
 
   /// 카메라로 여러 장을 이어서 찍는다.
@@ -227,6 +230,8 @@ class ImagePickerHandler {
     BuildContext context, {
     int maxShots = maxShotsPerSession,
   }) async {
+    final accent =
+        Provider.of<ThemeHandler>(context, listen: false).primaryColor;
     final choice = await _showSourceSheet(context, multiple: true);
     if (choice == null || !context.mounted) return [];
 
@@ -239,7 +244,14 @@ class ImagePickerHandler {
     }
 
     FirebaseAnalytics.instance.logEvent(name: 'image_select_multiple_gallery');
-    return _logPicked('gallery', await pickMultipleImagesFromGallery(context));
+    final picked =
+        _logPicked('gallery', await pickMultipleImagesFromGallery(context));
+    // 한 장만 골랐으면 자르기를 거친다. 취소하면 원본이다.
+    if (picked.length == 1) {
+      final original = picked.first;
+      return [await cropImageFile(original, accent: accent) ?? original];
+    }
+    return picked;
   }
 
   /// 실제로 받은 장수를 남긴다. image_select_* 는 어디서 가져올지 고른
@@ -283,8 +295,16 @@ class ImagePickerHandler {
     );
 
     if (multiple) {
-      final pickedFiles =
+      var pickedFiles =
           _logPicked('gallery', await pickMultipleImagesFromGallery(context));
+      // 한 장만 골랐으면 카메라처럼 자르기를 거친다. 전에는 앨범 사진은 어디서도
+      // 자를 수 없었다. 여러 장이면 한 장씩 자르게 하지 않는다. 취소하면 원본이다.
+      if (pickedFiles.length == 1) {
+        final original = pickedFiles.first;
+        pickedFiles = [
+          await cropImageFile(original, accent: accent) ?? original
+        ];
+      }
       if (pickedFiles.isNotEmpty) onMultipleImagesPicked(pickedFiles);
       return;
     }

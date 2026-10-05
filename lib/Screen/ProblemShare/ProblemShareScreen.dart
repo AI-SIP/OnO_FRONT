@@ -333,7 +333,7 @@ class _ProblemShareScreenState extends State<ProblemShareScreen> {
         severity: AppErrorSeverity.error,
       );
       if (mounted) {
-        AppSnackBar.showError('이미지를 공유하지 못했습니다. 잠시 후 다시 시도해주세요.');
+        AppSnackBar.showError('이미지를 공유하지 못했어요. 잠시 후 다시 시도해 주세요.');
       }
     }
   }

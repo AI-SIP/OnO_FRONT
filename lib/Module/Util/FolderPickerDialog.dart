@@ -120,10 +120,12 @@ class _FolderPickerDialogState extends State<FolderPickerDialog> {
       final foldersProvider =
           Provider.of<FoldersProvider>(context, listen: false);
 
+      // 책장과 같은 순서로 보인다.
       final response = await foldersProvider.folderService.getSubfoldersV2(
         folderId: node.folderId,
         cursor: node.nextCursor,
         size: 20,
+        sort: foldersProvider.bookshelfSort,
       );
 
       // 하위 폴더들을 트리 노드로 변환
@@ -188,7 +190,7 @@ class _FolderPickerDialogState extends State<FolderPickerDialog> {
             '선택 안 됨';
     final selectedNode = _findNodeById(_rootNode, _selectedFolderId);
     final createTargetName = selectedNode?.folderName ?? selectedFolderName;
-    final dialogTitle = widget.isManagementMode ? '공책 정리' : '공책 선택';
+    final dialogTitle = widget.isManagementMode ? '공책 옮기기' : '공책 선택';
     final confirmText = widget.isManagementMode ? '완료하기' : '선택하기';
 
     final maxHeight = size.height * 0.86;
@@ -275,7 +277,7 @@ class _FolderPickerDialogState extends State<FolderPickerDialog> {
                           ),
                         ),
                         IconButton(
-                          tooltip: '공책 추가',
+                          tooltip: '공책 만들기',
                           icon: const ClayIcon(
                             "assets/Icon/addNote.png",
                             width: 26,
@@ -286,7 +288,7 @@ class _FolderPickerDialogState extends State<FolderPickerDialog> {
                               ? null
                               : () async {
                                   await _showFolderNameDialog(
-                                    dialogTitle: '공책 생성',
+                                    dialogTitle: '공책 만들기',
                                     defaultFolderName: '',
                                     parentFolderName: createTargetName,
                                     onFolderNameSubmitted: (folderName) async {
@@ -467,7 +469,9 @@ class _FolderPickerDialogState extends State<FolderPickerDialog> {
       themeProvider: themeProvider,
     );
 
-    if (node.parentFolderId == null) return row;
+    // 공책을 끌어 옮기는 것은 공책 옮기기에서만 한다. 옮길 곳을 고르기만 하는
+    // 창에서도 길게 누르면 공책이 바로 옮겨져서, 고르다가 구조가 바뀌었다.
+    if (node.parentFolderId == null || !widget.isManagementMode) return row;
 
     return LongPressDraggable<FolderTreeNode>(
       data: node,
@@ -576,6 +580,7 @@ class _FolderPickerDialogState extends State<FolderPickerDialog> {
                       ),
                     )
                   : IconButton(
+                      tooltip: node.isExpanded ? '접기' : '펼치기',
                       padding: EdgeInsets.zero,
                       icon: Icon(
                         node.isExpanded
@@ -859,7 +864,7 @@ class _FolderPickerDialogState extends State<FolderPickerDialog> {
       if (mounted) {
         SnackBarDialog.showSnackBar(
           context: context,
-          message: '공책을 옮기지 못했어요. 잠시 후 다시 시도해주세요.',
+          message: '공책을 옮기지 못했어요. 잠시 후 다시 시도해 주세요.',
           backgroundColor: Colors.redAccent,
         );
       }

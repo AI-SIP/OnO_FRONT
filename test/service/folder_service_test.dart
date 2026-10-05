@@ -271,7 +271,7 @@ void main() {
 
       expect(
         http.lastRequest.url.toString(),
-        '$testBaseUrl/api/folders/3/subfolders/V2?size=20',
+        '$testBaseUrl/api/folders/3/subfolders/V2?size=20&sort=NEWEST',
       );
       expect(result.content, hasLength(1));
       expect(result.hasNext, isTrue);

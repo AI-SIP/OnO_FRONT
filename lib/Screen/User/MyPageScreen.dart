@@ -30,6 +30,10 @@ import '../../Module/Design/AppRadius.dart';
 import '../../Module/Design/AppColors.dart';
 import '../../Module/Design/AppToast.dart';
 import 'package:ono/Util/AppAnalytics.dart';
+import '../../Module/Dialog/LoadingDialog.dart';
+import '../../Util/NotificationService.dart';
+import 'package:permission_handler/permission_handler.dart';
+import '../../Module/Dialog/ConfirmDialog.dart';
 
 class SettingScreen extends StatefulWidget {
   final TutorialTargets? tutorialTargets;
@@ -99,6 +103,7 @@ class _SettingScreenState extends State<SettingScreen> {
           Padding(
             padding: const EdgeInsets.only(right: 16.0),
             child: IconButton(
+              tooltip: '설정',
               icon: Icon(Icons.settings, color: themeProvider.primaryColor),
               onPressed: () {
                 Navigator.of(context).push(
@@ -199,13 +204,40 @@ class _SettingScreenState extends State<SettingScreen> {
     );
   }
 
+  /// 로그인하지 않았을 때. 전에는 문구만 있고 로그인으로 가는 길이 없었다.
+  /// 글자 크기도 화면 높이에 따라 바뀌어서 고정 크기로 둔다.
   Widget _buildLoginPrompt(ThemeHandler themeProvider) {
-    double screenHeight = MediaQuery.of(context).size.height;
     return Center(
-      child: StandardText(
-        text: '로그인을 통해 설정을 변경해보세요!',
-        fontSize: screenHeight * 0.016,
-        color: themeProvider.primaryColor,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          StandardText(
+            text: '로그인하면 설정을 바꿀 수 있어요',
+            fontSize: 15,
+            color: themeProvider.primaryColor,
+          ),
+          const SizedBox(height: 16),
+          ElevatedButton(
+            onPressed: () => Navigator.of(context).pushAndRemoveUntil(
+              TossPageRoute(builder: (context) => const LoginScreen()),
+              (route) => false,
+            ),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: themeProvider.primaryColor,
+              elevation: 0,
+              minimumSize: const Size(160, 48),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppRadius.medium),
+              ),
+            ),
+            child: const StandardText(
+              text: '로그인하기',
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -535,8 +567,25 @@ class _MyPageSettingsScreenState extends State<_MyPageSettingsScreen> {
                       });
                     } catch (_) {
                       if (!context.mounted) return;
-                      AppToast.error('알림 설정 변경에 실패했습니다. 다시 시도해주세요.');
+                      AppToast.error('알림 설정을 바꾸지 못했어요. 잠시 후 다시 시도해 주세요.');
+                      return;
                     }
+                    // 켰는데 기기에서 알림을 막아 두었으면 받지 못한다. 전에는
+                    // 토글만 켜지고 알림은 오지 않았다.
+                    if (!value) return;
+                    await NotificationService.instance
+                        .requestPermissionIfNeeded(source: 'setting_toggle');
+                    if (!await NotificationService.instance
+                        .isPermissionDenied()) {
+                      return;
+                    }
+                    AppToast.show(
+                      message: '기기 설정에서 OnO 알림이 꺼져 있어요',
+                      type: ToastType.info,
+                      duration: const Duration(seconds: 5),
+                      actionLabel: '설정 열기',
+                      onAction: openAppSettings,
+                    );
                   },
                 ),
               ],
@@ -547,20 +596,27 @@ class _MyPageSettingsScreenState extends State<_MyPageSettingsScreen> {
             child: AccountActionButtons(
               onLogoutTap: () => _showConfirmationDialog(
                 context,
-                '로그아웃',
-                '정말 로그아웃 하시겠습니까?\n(게스트 유저의 경우 모든 정보가 삭제됩니다.)',
+                '로그아웃할까요?',
+                confirmLabel: '로그아웃',
+                // 게스트는 로그아웃하면 데이터가 지워지는데 전에는 괄호 한 줄로만
+                // 알렸다.
+                '게스트로 이용 중이라면 로그아웃할 때 지금까지 쓴 오답노트와 복습 기록이 모두 지워져요.',
                 () async {
                   // 게스트는 로그아웃이 곧 계정 삭제라 서버 요청이 나간다.
                   // 실패하면 로그아웃되지 않은 것이므로 알리고 화면을 두어야
                   // 한다. 예전에는 예외를 아무도 받지 않아 아무 반응 없이
                   // 멈춘 것처럼 보였다.
+                  // 서버 요청이 끝날 때까지 아무 표시가 없어 다시 누르게 됐다.
+                  LoadingDialog.show(context, '로그아웃하는 중...');
                   try {
                     await userProvider.signOut();
                   } catch (error) {
                     debugPrint('로그아웃 실패: $error');
-                    AppToast.error('로그아웃에 실패했어요. 잠시 후 다시 시도해주세요.');
+                    if (context.mounted) LoadingDialog.hide(context);
+                    AppToast.error('로그아웃에 실패했어요. 잠시 후 다시 시도해 주세요.');
                     return;
                   }
+                  if (context.mounted) LoadingDialog.hide(context);
                   screenIndexProvider.setSelectedIndex(0);
 
                   if (!context.mounted) return;
@@ -572,16 +628,20 @@ class _MyPageSettingsScreenState extends State<_MyPageSettingsScreen> {
               ),
               onDeleteAccountTap: () => _showConfirmationDialog(
                 context,
-                '회원 탈퇴',
-                '정말 회원 탈퇴 하시겠습니까?\n그동안 작성했던 모든 오답노트 및 개인정보가 삭제됩니다. 이 작업은 되돌릴 수 없습니다.',
+                '탈퇴할까요?',
+                confirmLabel: '탈퇴하기',
+                '그동안 작성했던 모든 오답노트 및 개인정보가 삭제돼요. 이 작업은 되돌릴 수 없어요.',
                 () async {
+                  LoadingDialog.show(context, '탈퇴하는 중...');
                   try {
                     await userProvider.deleteAccount();
                   } catch (error) {
                     debugPrint('회원 탈퇴 실패: $error');
-                    AppToast.error('회원 탈퇴에 실패했어요. 잠시 후 다시 시도해주세요.');
+                    if (context.mounted) LoadingDialog.hide(context);
+                    AppToast.error('회원 탈퇴에 실패했어요. 잠시 후 다시 시도해 주세요.');
                     return;
                   }
+                  if (context.mounted) LoadingDialog.hide(context);
                   screenIndexProvider.setSelectedIndex(0);
 
                   if (!context.mounted) return;
@@ -650,7 +710,7 @@ Widget _buildTutorialReplaySection({
                   StandardText(
                     text: 'OnO 사용법을 처음부터 다시 둘러봐요',
                     fontSize: 11,
-                    color: Colors.grey,
+                    color: AppColors.textSecondary,
                   ),
                 ],
               ),
@@ -667,102 +727,22 @@ Widget _buildTutorialReplaySection({
   );
 }
 
-void _showConfirmationDialog(BuildContext context, String title, String message,
-    VoidCallback onConfirm) {
-  showTossDialog(
-    context: context,
-    builder: (BuildContext context) {
-      return Dialog(
-        backgroundColor: Colors.white,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppRadius.large),
-        ),
-        child: Container(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: Colors.orange.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(AppRadius.small),
-                    ),
-                    child: const Icon(
-                      Icons.warning_amber_rounded,
-                      color: Colors.orange,
-                      size: 20,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  StandardText(
-                    text: title,
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary,
-                  ),
-                ],
-              ),
-              const SizedBox(height: 20),
-              StandardText(
-                text: message,
-                fontSize: 15,
-                color: AppColors.textPrimary,
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 24),
-              Row(
-                children: [
-                  Expanded(
-                    child: TextButton(
-                      onPressed: () {
-                        Navigator.of(context).pop();
-                      },
-                      style: TextButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 8),
-                        backgroundColor: Colors.grey[100],
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(AppRadius.small),
-                        ),
-                      ),
-                      child: const StandardText(
-                        text: '취소',
-                        fontSize: 14,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: TextButton(
-                      onPressed: () {
-                        Navigator.of(context).pop();
-                        onConfirm();
-                      },
-                      style: TextButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 8),
-                        backgroundColor: Colors.red,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(AppRadius.small),
-                        ),
-                      ),
-                      child: const StandardText(
-                        text: '확인',
-                        fontSize: 14,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      );
-    },
+/// 로그아웃과 탈퇴를 묻는다. 확정 버튼은 '확인' 대신 [confirmLabel] 로 무엇을
+/// 하는지 적는다.
+Future<void> _showConfirmationDialog(
+  BuildContext context,
+  String title,
+  String message,
+  VoidCallback onConfirm, {
+  required String confirmLabel,
+}) async {
+  final confirmed = await showConfirmDialog(
+    context,
+    title: title,
+    message: message,
+    confirmLabel: confirmLabel,
+    destructive: true,
+    icon: Icons.warning_amber_rounded,
   );
+  if (confirmed) onConfirm();
 }

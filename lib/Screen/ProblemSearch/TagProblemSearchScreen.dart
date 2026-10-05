@@ -21,6 +21,9 @@ import '../../Module/Motion/TossPageRoute.dart';
 import '../../Module/Design/AppColors.dart';
 import '../../Module/Design/AppRadius.dart';
 import '../../Util/AppAnalytics.dart';
+import '../../Util/AppErrorReporter.dart';
+import '../../Util/PendingDeletion.dart';
+import '../../Provider/FoldersProvider.dart';
 
 enum _SearchMode { tag, title }
 
@@ -43,7 +46,8 @@ class _TagProblemSearchScreenState extends State<TagProblemSearchScreen> {
   final ScrollController _scrollController = ScrollController();
   final TextEditingController _queryController = TextEditingController();
 
-  _SearchMode _mode = _SearchMode.tag;
+  // 제목으로 찾는 사람이 더 많아서 제목 검색을 먼저 연다.
+  _SearchMode _mode = _SearchMode.title;
 
   List<TagModel> _tags = [];
   int? _selectedTagId;
@@ -54,8 +58,15 @@ class _TagProblemSearchScreenState extends State<TagProblemSearchScreen> {
   bool _hasNext = false;
   bool _isLoadingProblems = false;
 
+  /// 마지막 조회가 실패했는지. 실패를 결과 없음과 구분해 다시 시도를 보인다.
+  bool _loadFailed = false;
+
   String _currentQuery = '';
   Timer? _debounce;
+
+  /// 요청마다 오른다. 마지막 요청의 응답만 쓴다. 전에는 받는 중에 더 입력하면
+  /// 새 검색이 버려져서, 입력칸과 다른 옛 검색어의 결과가 남았다.
+  int _requestSeq = 0;
 
   final List<ProblemModel> _selectedProblems = [];
 
@@ -66,12 +77,14 @@ class _TagProblemSearchScreenState extends State<TagProblemSearchScreen> {
     _selectedProblems.addAll(widget.initialSelectedProblems);
     _scrollController.addListener(_onScroll);
     _queryController.addListener(_onQueryChanged);
+    PendingDeletion.instance.addListener(_onPendingDeletionChanged);
     _loadTagsAndFirstTagProblems();
   }
 
   @override
   void dispose() {
     _debounce?.cancel();
+    PendingDeletion.instance.removeListener(_onPendingDeletionChanged);
     _scrollController.removeListener(_onScroll);
     _queryController.removeListener(_onQueryChanged);
     _scrollController.dispose();
@@ -79,11 +92,24 @@ class _TagProblemSearchScreenState extends State<TagProblemSearchScreen> {
     super.dispose();
   }
 
+  void _onPendingDeletionChanged() {
+    if (mounted) setState(() {});
+  }
+
   void _onScroll() {
     if (_scrollController.position.pixels >=
         _scrollController.position.maxScrollExtent * 0.8) {
       _loadMoreProblems();
     }
+  }
+
+  /// 받은 쪽이 화면을 다 채우지 못하면 스크롤 리스너가 불리지 않는다. 태블릿
+  /// 두 열에서는 한 쪽이 열 줄이라 이렇게 될 수 있어서 그린 뒤에 한 번 본다.
+  void _loadMoreIfListEndVisible() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !_scrollController.hasClients) return;
+      _onScroll();
+    });
   }
 
   void _onQueryChanged() {
@@ -113,6 +139,8 @@ class _TagProblemSearchScreenState extends State<TagProblemSearchScreen> {
       if (_selectedTagId != null && _mode == _SearchMode.tag) {
         await _loadTagProblems(_selectedTagId!, isInitial: true);
       }
+    } catch (e, stackTrace) {
+      _onLoadFailed(e, stackTrace);
     } finally {
       if (mounted) {
         setState(() => _isLoadingTags = false);
@@ -122,12 +150,14 @@ class _TagProblemSearchScreenState extends State<TagProblemSearchScreen> {
 
   Future<void> _switchMode(_SearchMode mode) async {
     if (_mode == mode) return;
+    _requestSeq++;
     setState(() {
       _mode = mode;
       _problems = [];
       _cursor = null;
       _hasNext = false;
       _isLoadingProblems = false;
+      _loadFailed = false;
     });
 
     if (_mode == _SearchMode.tag && _selectedTagId != null) {
@@ -143,7 +173,10 @@ class _TagProblemSearchScreenState extends State<TagProblemSearchScreen> {
   }
 
   Future<void> _loadTagProblems(int tagId, {required bool isInitial}) async {
-    if (_isLoadingProblems) return;
+    // 처음부터 다시 찾는 것은 받는 중이어도 새로 보낸다. 앞선 응답은 버린다.
+    if (!isInitial && _isLoadingProblems) return;
+    if (!isInitial && !_hasNext) return;
+    final seq = ++_requestSeq;
 
     if (isInitial) {
       setState(() {
@@ -152,10 +185,13 @@ class _TagProblemSearchScreenState extends State<TagProblemSearchScreen> {
         _cursor = null;
         _hasNext = false;
         _isLoadingProblems = true;
+        _loadFailed = false;
       });
     } else {
-      if (!_hasNext) return;
-      setState(() => _isLoadingProblems = true);
+      setState(() {
+        _isLoadingProblems = true;
+        _loadFailed = false;
+      });
     }
 
     try {
@@ -173,7 +209,7 @@ class _TagProblemSearchScreenState extends State<TagProblemSearchScreen> {
           'has_next': response.hasNext,
         });
       }
-      if (!mounted) return;
+      if (!mounted || seq != _requestSeq) return;
       setState(() {
         if (isInitial) {
           _problems = response.content;
@@ -183,15 +219,23 @@ class _TagProblemSearchScreenState extends State<TagProblemSearchScreen> {
         _cursor = response.nextCursor;
         _hasNext = response.hasNext;
       });
+    } catch (e, stackTrace) {
+      // 예전에는 catch 가 없어서 실패해도 결과가 없는 것처럼 보였고, 입력
+      // 디바운스 타이머 안에서 난 예외는 아무도 받지 않았다.
+      if (seq == _requestSeq) _onLoadFailed(e, stackTrace);
     } finally {
-      if (mounted) {
+      if (mounted && seq == _requestSeq) {
         setState(() => _isLoadingProblems = false);
+        _loadMoreIfListEndVisible();
       }
     }
   }
 
   Future<void> _searchByTitle(String query, {required bool isInitial}) async {
-    if (_isLoadingProblems) return;
+    // 처음부터 다시 찾는 것은 받는 중이어도 새로 보낸다. 앞선 응답은 버린다.
+    if (!isInitial && _isLoadingProblems) return;
+    if (!isInitial && !_hasNext) return;
+    final seq = ++_requestSeq;
 
     final trimmed = query.trim();
     _currentQuery = trimmed;
@@ -212,10 +256,13 @@ class _TagProblemSearchScreenState extends State<TagProblemSearchScreen> {
         _cursor = null;
         _hasNext = false;
         _isLoadingProblems = true;
+        _loadFailed = false;
       });
     } else {
-      if (!_hasNext) return;
-      setState(() => _isLoadingProblems = true);
+      setState(() {
+        _isLoadingProblems = true;
+        _loadFailed = false;
+      });
     }
 
     try {
@@ -233,7 +280,7 @@ class _TagProblemSearchScreenState extends State<TagProblemSearchScreen> {
           'has_next': response.hasNext,
         });
       }
-      if (!mounted) return;
+      if (!mounted || seq != _requestSeq) return;
       setState(() {
         if (isInitial) {
           _problems = response.content;
@@ -243,15 +290,47 @@ class _TagProblemSearchScreenState extends State<TagProblemSearchScreen> {
         _cursor = response.nextCursor;
         _hasNext = response.hasNext;
       });
+    } catch (e, stackTrace) {
+      // 예전에는 catch 가 없어서 실패해도 결과가 없는 것처럼 보였고, 입력
+      // 디바운스 타이머 안에서 난 예외는 아무도 받지 않았다.
+      if (seq == _requestSeq) _onLoadFailed(e, stackTrace);
     } finally {
-      if (mounted) {
+      if (mounted && seq == _requestSeq) {
         setState(() => _isLoadingProblems = false);
+        _loadMoreIfListEndVisible();
       }
     }
   }
 
+  void _onLoadFailed(Object error, StackTrace stackTrace) {
+    debugPrint('검색 결과를 불러오지 못했습니다: $error');
+    unawaited(AppErrorReporter.report(
+      error,
+      stackTrace,
+      source: 'problem_search_load',
+      severity: AppErrorSeverity.warning,
+    ));
+    if (mounted) setState(() => _loadFailed = true);
+  }
+
+  /// 실패한 조회를 다시 한다. 받아 둔 결과가 있으면 다음 쪽부터 다시 받는다.
+  Future<void> _retryLoad() async {
+    final isInitial = _problems.isEmpty;
+    if (_mode == _SearchMode.tag && _tags.isEmpty) {
+      setState(() => _loadFailed = false);
+      await _loadTagsAndFirstTagProblems();
+      return;
+    }
+    if (_mode == _SearchMode.tag && _selectedTagId != null) {
+      await _loadTagProblems(_selectedTagId!, isInitial: isInitial);
+      return;
+    }
+    await _searchByTitle(_currentQuery, isInitial: isInitial);
+  }
+
   Future<void> _loadMoreProblems() async {
-    if (_isLoadingProblems || !_hasNext) return;
+    // 다음 쪽을 받다 실패했으면 스크롤할 때마다 다시 부르지 않고 버튼을 기다린다.
+    if (_isLoadingProblems || !_hasNext || _loadFailed) return;
 
     if (_mode == _SearchMode.tag && _selectedTagId != null) {
       await _loadTagProblems(_selectedTagId!, isInitial: false);
@@ -365,15 +444,15 @@ class _TagProblemSearchScreenState extends State<TagProblemSearchScreen> {
       child: Row(
         children: [
           modeChip(
-            mode: _SearchMode.tag,
-            label: '태그로 검색',
-            icon: Icons.sell_outlined,
-          ),
-          const SizedBox(width: 8),
-          modeChip(
             mode: _SearchMode.title,
             label: '제목으로 검색',
             icon: Icons.search_rounded,
+          ),
+          const SizedBox(width: 8),
+          modeChip(
+            mode: _SearchMode.tag,
+            label: '태그로 검색',
+            icon: Icons.sell_outlined,
           ),
         ],
       ),
@@ -386,6 +465,9 @@ class _TagProblemSearchScreenState extends State<TagProblemSearchScreen> {
       padding: const EdgeInsets.fromLTRB(20, 4, 20, 10),
       child: TextField(
         controller: _queryController,
+        // 검색하러 들어왔으니 바로 쓸 수 있게 한다. 복습 세트에 넣을 문제를
+        // 고르는 화면에서는 키보드가 목록을 가려서 띄우지 않는다.
+        autofocus: !widget.selectable,
         textInputAction: TextInputAction.search,
         onSubmitted: (value) => _searchByTitle(value.trim(), isInitial: true),
         style: baseTextStyle.copyWith(
@@ -444,7 +526,7 @@ class _TagProblemSearchScreenState extends State<TagProblemSearchScreen> {
             border: Border.all(color: AppColors.border),
           ),
           child: StandardText(
-            text: '생성된 태그가 없습니다.',
+            text: '생성된 태그가 없어요.',
             fontSize: 13,
             color: Colors.grey[600]!,
           ),
@@ -501,7 +583,13 @@ class _TagProblemSearchScreenState extends State<TagProblemSearchScreen> {
   static const int _staggeredItemLimit = 8;
 
   Widget _buildProblemList(ThemeHandler themeProvider) {
-    if (_isLoadingProblems && _problems.isEmpty) {
+    // 지우고 되돌리기를 기다리는 문제는 빼고 그린다. 전에는 상세에서 지우고
+    // 돌아와도 검색 결과에 그대로 남아 있었다.
+    final pending = PendingDeletion.instance;
+    final problems =
+        _problems.where((p) => !pending.isProblemHidden(p.problemId)).toList();
+
+    if (_isLoadingProblems && problems.isEmpty) {
       return const SkeletonList(
         itemCount: 5,
         itemHeight: 88,
@@ -510,35 +598,95 @@ class _TagProblemSearchScreenState extends State<TagProblemSearchScreen> {
       );
     }
 
-    if (_problems.isEmpty) {
+    if (problems.isEmpty && _loadFailed) {
+      return _buildEmptyState(
+        '오답노트를 불러오지 못했어요',
+        detail: '인터넷 연결을 확인하고 다시 시도해 주세요.',
+        action: _buildRetryButton(themeProvider),
+      );
+    }
+
+    if (problems.isEmpty) {
       if (_mode == _SearchMode.title && _currentQuery.isEmpty) {
         // 문구만 덩그러니 있으면 화면이 비어 보인다. 다른 빈 화면처럼
         // 그림을 두되, 검색 안내라 연필 대신 돋보기를 쓴다. 둘 다 같은 손으로
         // 빚은 점토 그림이라 나란히 놓아도 결이 맞는다.
         return _buildEmptyState(
-          '검색어를 입력해주세요.',
+          '검색어를 입력해 주세요.',
           iconAsset: 'assets/Icon/Search.png',
           detail: '오답노트 제목의 일부만 넣어도 찾을 수 있어요.',
         );
       }
       final emptyText =
-          _mode == _SearchMode.tag ? '해당 태그의 오답노트가 없습니다.' : '검색 결과가 없습니다.';
+          _mode == _SearchMode.tag ? '해당 태그의 오답노트가 없어요.' : '검색 결과가 없어요.';
       return _buildEmptyState(emptyText);
     }
 
+    // 넓은 화면에서는 두 열로 놓는다.
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final columns = constraints.maxWidth >= 700 ? 2 : 1;
+        if (columns == 1)
+          return _buildSingleColumnList(problems, themeProvider);
+        final rowCount = (problems.length / columns).ceil();
+        return ListView.builder(
+          controller: _scrollController,
+          padding: const EdgeInsets.fromLTRB(20, 4, 20, 20),
+          itemCount: rowCount + (_hasNext || _isLoadingProblems ? 1 : 0),
+          itemBuilder: (context, index) {
+            if (index == rowCount) {
+              if (_loadFailed && !_isLoadingProblems) {
+                return Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Center(child: _buildRetryButton(themeProvider)),
+                );
+              }
+              return const Padding(
+                padding: EdgeInsets.all(16),
+                child: Center(child: CircularProgressIndicator()),
+              );
+            }
+            final first = index * columns;
+            return Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                for (var i = first; i < first + columns; i++) ...[
+                  if (i > first) const SizedBox(width: 12),
+                  Expanded(
+                    child: i < problems.length
+                        ? _buildProblemTile(problems[i], themeProvider)
+                        : const SizedBox.shrink(),
+                  ),
+                ],
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildSingleColumnList(
+      List<ProblemModel> problems, ThemeHandler themeProvider) {
     return ListView.builder(
       controller: _scrollController,
       padding: const EdgeInsets.fromLTRB(20, 4, 20, 20),
-      itemCount: _problems.length + (_hasNext || _isLoadingProblems ? 1 : 0),
+      itemCount: problems.length + (_hasNext || _isLoadingProblems ? 1 : 0),
       itemBuilder: (context, index) {
-        if (index == _problems.length) {
+        if (index == problems.length) {
+          if (_loadFailed && !_isLoadingProblems) {
+            return Padding(
+              padding: const EdgeInsets.all(16),
+              child: Center(child: _buildRetryButton(themeProvider)),
+            );
+          }
           return const Padding(
             padding: EdgeInsets.all(16),
             child: Center(child: CircularProgressIndicator()),
           );
         }
 
-        final problem = _problems[index];
+        final problem = problems[index];
         // 검색 결과가 툭 나타나지 않고 하나씩 들어온다.
         return AppearTransition(
           enabled: index < _staggeredItemLimit,
@@ -551,7 +699,33 @@ class _TagProblemSearchScreenState extends State<TagProblemSearchScreen> {
 
   /// [iconAsset] 을 주면 기본 연필 대신 그 그림을 그린다. [detail] 은 그 아래
   /// 덧붙이는 한 줄이다.
-  Widget _buildEmptyState(String message, {String? iconAsset, String? detail}) {
+  Widget _buildRetryButton(ThemeHandler themeProvider) {
+    return OutlinedButton(
+      onPressed: _retryLoad,
+      style: OutlinedButton.styleFrom(
+        foregroundColor: themeProvider.primaryColor,
+        side: BorderSide(
+            color: themeProvider.primaryColor.withValues(alpha: 0.5)),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.small),
+        ),
+      ),
+      child: StandardText(
+        text: '다시 시도',
+        fontSize: 14,
+        fontWeight: FontWeight.w600,
+        color: themeProvider.primaryColor,
+      ),
+    );
+  }
+
+  Widget _buildEmptyState(
+    String message, {
+    String? iconAsset,
+    String? detail,
+    Widget? action,
+  }) {
     return LayoutBuilder(
       builder: (context, constraints) => SingleChildScrollView(
         child: ConstrainedBox(
@@ -584,6 +758,10 @@ class _TagProblemSearchScreenState extends State<TagProblemSearchScreen> {
                         fontSize: 13,
                       ),
                     ],
+                    if (action != null) ...[
+                      const SizedBox(height: 18),
+                      action,
+                    ],
                   ],
                 ),
               ),
@@ -602,7 +780,8 @@ class _TagProblemSearchScreenState extends State<TagProblemSearchScreen> {
     final isSelected = _isSelected(problem);
     final title =
         problem.reference?.isNotEmpty == true ? problem.reference! : '제목 없음';
-    final isMobile = MediaQuery.of(context).size.width < 600;
+    // 크기만 본다. 키보드가 오르내릴 때마다 화면 전체를 다시 그리지 않게 한다.
+    final isMobile = MediaQuery.sizeOf(context).width < 600;
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
@@ -619,9 +798,23 @@ class _TagProblemSearchScreenState extends State<TagProblemSearchScreen> {
               builder: (_) => ProblemDetailScreen(problemId: problem.problemId),
             ),
           );
+          // 상세에서 복습하거나 고친 값으로 카드를 바꾼다. 전에는 돌아와도
+          // 들어가기 전 모습 그대로였다.
+          if (!mounted) return;
+          final latest = Provider.of<ProblemsProvider>(context, listen: false)
+              .cachedProblem(problem.problemId);
+          final index =
+              _problems.indexWhere((p) => p.problemId == problem.problemId);
+          if (latest != null && index >= 0) {
+            setState(() => _problems[index] = latest);
+          }
         },
         child: ProblemThumbnailCard(
           title: title,
+          subtitle: problem.folderId == null
+              ? null
+              : Provider.of<FoldersProvider>(context, listen: false)
+                  .folderNameOf(problem.folderId!),
           imageUrl: problemImageUrl,
           tags: problem.tags,
           solveCount: problem.solveCount,

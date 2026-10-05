@@ -3,6 +3,9 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../../Model/Problem/ProblemModel.dart';
+import '../../Model/Problem/ProblemRegisterModel.dart';
+import '../../Module/Design/AppToast.dart';
+import '../../Provider/ProblemsProvider.dart';
 import '../../Module/Text/mobile_font_size.dart';
 import '../../Module/Text/StandardText.dart';
 import '../../Module/Text/UnderlinedText.dart';
@@ -11,6 +14,7 @@ import '../../Module/Theme/ThemeHandler.dart';
 import '../ProblemSolve/ProblemSolveEntry.dart';
 import 'Widget/AnalysisSection.dart';
 import 'Widget/ImageSection.dart';
+import 'Widget/MemoEditSheet.dart';
 import 'Widget/RepeatSectionV2.dart';
 import '../../Module/Motion/AppHaptic.dart';
 import '../../Module/Motion/AppMotion.dart';
@@ -19,15 +23,60 @@ import '../../Module/Design/AppColors.dart';
 import '../../Module/Design/AppRadius.dart';
 import '../../Util/AppAnalytics.dart';
 
+/// 공책에서 연 상세의 이전, 다음. 다시 풀기 버튼 양옆에 화살표로 둔다.
+/// 넘길 곳이 없는 쪽은 null 이라 흐리게 막는다.
+class ProblemDetailNavigation {
+  final VoidCallback? onPrevious;
+  final VoidCallback? onNext;
+
+  /// 몇 번째인지. 다시 풀기 버튼 안에 작게 붙인다. 예) '2 / 20+'
+  final String? positionLabel;
+
+  /// 복습 세트의 마지막 문제에서 다음 대신 오른쪽에 두는 마치기.
+  final VoidCallback? onFinish;
+
+  const ProblemDetailNavigation({
+    this.onPrevious,
+    this.onNext,
+    this.positionLabel,
+    this.onFinish,
+  });
+}
+
 class ProblemDetailTemplate extends StatefulWidget {
   final ProblemModel problemModel;
   final bool isExpanded;
   final Function(bool) onExpansionChanged;
 
+  /// 다시 풀기를 저장까지 마쳤을 때 어떤 방식으로 풀었는지 알려 준다.
+  /// 복습 세트에서 다음 문제를 바로 풀지 물을 때 쓴다.
+  final ValueChanged<ProblemSolveMode>? onSolved;
+
+  /// 있으면 화면이 열리자마자 이 방식으로 다시 풀기를 시작한다. 복습 세트에서
+  /// `다음 문제 바로 풀기` 를 골랐을 때 앞 문제와 같은 방식으로 이어 푼다.
+  final ProblemSolveMode? autoStartMode;
+
+  /// AI 분석을 다시 요청한다. 분석하지 않은 문제, 한도 초과, 실패일 때 버튼으로 보인다.
+  final VoidCallback? onRequestAnalysis;
+
+  /// 분석을 기다리다 확인을 멈췄는지. 그때는 [onRefreshAnalysis] 로 다시 확인하게 한다.
+  final bool analysisTimedOut;
+  final VoidCallback? onRefreshAnalysis;
+
+  /// 있으면 다시 풀기 버튼과 같은 줄에 이전, 다음 화살표를 둔다. 전에는 그
+  /// 아래에 이전, 다음 줄이 한 겹 더 쌓여서 문제 이미지를 볼 자리가 좁았다.
+  final ProblemDetailNavigation? navigation;
+
   const ProblemDetailTemplate({
     required this.problemModel,
     required this.isExpanded,
     required this.onExpansionChanged,
+    this.onSolved,
+    this.autoStartMode,
+    this.onRequestAnalysis,
+    this.analysisTimedOut = false,
+    this.onRefreshAnalysis,
+    this.navigation,
     super.key,
   });
 
@@ -57,6 +106,42 @@ class _ProblemDetailTemplateState extends State<ProblemDetailTemplate>
         _currentTabIndex = _tabController.index;
       });
     });
+    final autoStartMode = widget.autoStartMode;
+    if (autoStartMode != null) {
+      // 화면이 다 그려진 뒤에 연다. 넘김 효과가 끝나기 전에 위로 덮이지 않게
+      // 한 박자 기다린다.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        Future<void>.delayed(AppMotion.page, () {
+          if (mounted) _startSolve(mode: autoStartMode);
+        });
+      });
+    }
+  }
+
+  /// 다시 풀기. [mode] 를 넘기면 방식 고르기를 건너뛴다.
+  Future<void> _startSolve({ProblemSolveMode? mode}) async {
+    final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
+    final problemImageUrls = (widget.problemModel.problemImageDataList ?? [])
+        .map((image) => image.imageUrl)
+        .toList();
+    ProblemSolveMode? usedMode = mode;
+
+    final result = await ProblemSolveEntry.open(
+      context: context,
+      problemId: widget.problemModel.problemId,
+      problemImageUrls: problemImageUrls,
+      onRefresh: () {},
+      themeProvider: themeProvider,
+      mode: mode,
+      onModeSelected: (selected) => usedMode = selected,
+    );
+
+    if (result == true && mounted) {
+      setState(() {
+        _reviewRefreshSignal++;
+      });
+      if (usedMode != null) widget.onSolved?.call(usedMode!);
+    }
   }
 
   @override
@@ -346,11 +431,20 @@ class _ProblemDetailTemplateState extends State<ProblemDetailTemplate>
                 fontWeight: FontWeight.w600,
                 color: AppColors.textPrimary,
               ),
-              const Spacer(),
-              UnderlinedText(
-                text: DateFormat('yyyy년 M월 d일')
-                    .format(widget.problemModel.displaySolvedAt),
-                fontSize: 16,
+              const SizedBox(width: 12),
+              // 글자를 크게 키우면 날짜가 줄을 넘어서, 남는 폭에 맞춰 줄인다.
+              Expanded(
+                child: Align(
+                  alignment: Alignment.centerRight,
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: UnderlinedText(
+                      text: DateFormat('yyyy년 M월 d일')
+                          .format(widget.problemModel.displaySolvedAt),
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
               ),
             ],
           ),
@@ -360,41 +454,83 @@ class _ProblemDetailTemplateState extends State<ProblemDetailTemplate>
   }
 
   Widget _buildBottomReviewCta(ThemeHandler themeProvider, bool isWide) {
-    final problemImages = widget.problemModel.problemImageDataList ?? [];
-    final problemImageUrls =
-        problemImages.map((image) => image.imageUrl).toList();
-
+    final navigation = widget.navigation;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
       color: Colors.white,
-      child: SizedBox(
-        height: 50,
-        child: FloatingActionButton.extended(
-          onPressed: () async {
-            final result = await ProblemSolveEntry.open(
-              context: context,
-              problemId: widget.problemModel.problemId,
-              problemImageUrls: problemImageUrls,
-              onRefresh: () {},
-              themeProvider: themeProvider,
-            );
-
-            if (result == true && mounted) {
-              setState(() {
-                _reviewRefreshSignal++;
-              });
-            }
-          },
-          backgroundColor: themeProvider.primaryColor,
-          icon: const Icon(Icons.replay, color: Colors.white, size: 20),
-          label: const StandardText(
-            text: '다시 풀기',
-            color: Colors.white,
-            fontSize: 15,
-            fontWeight: FontWeight.bold,
-          ),
-          elevation: 0,
+      alignment: Alignment.center,
+      // 넓은 화면에서 버튼이 화면 폭 전체로 늘어나지 않게 막는다.
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 560),
+        child: Row(
+          children: [
+            if (navigation != null) ...[
+              _NavigationArrow(
+                tooltip: '이전 문제',
+                icon: Icons.chevron_left,
+                accent: themeProvider.primaryColor,
+                onTap: navigation.onPrevious,
+              ),
+              const SizedBox(width: 10),
+            ],
+            Expanded(
+              child: SizedBox(
+                height: 50,
+                child: FloatingActionButton.extended(
+                  heroTag: null,
+                  onPressed: _startSolve,
+                  backgroundColor: themeProvider.primaryColor,
+                  icon: const Icon(Icons.replay, color: Colors.white, size: 20),
+                  label: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const StandardText(
+                        text: '다시 풀기',
+                        color: Colors.white,
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      if (navigation?.positionLabel != null) ...[
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 7,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.22),
+                            borderRadius: BorderRadius.circular(AppRadius.full),
+                          ),
+                          child: StandardText(
+                            text: navigation!.positionLabel!,
+                            color: Colors.white,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                  elevation: 0,
+                ),
+              ),
+            ),
+            if (navigation != null) ...[
+              const SizedBox(width: 10),
+              if (navigation.onNext == null && navigation.onFinish != null)
+                _FinishButton(
+                  accent: themeProvider.primaryColor,
+                  onTap: navigation.onFinish!,
+                )
+              else
+                _NavigationArrow(
+                  tooltip: '다음 문제',
+                  icon: Icons.chevron_right,
+                  accent: themeProvider.primaryColor,
+                  onTap: navigation.onNext,
+                ),
+            ],
+          ],
         ),
       ),
     );
@@ -414,6 +550,62 @@ class _ProblemDetailTemplateState extends State<ProblemDetailTemplate>
         color: themeProvider.primaryColor,
       ),
     );
+  }
+
+  Widget _buildAddMemoButton(ThemeHandler themeProvider) {
+    return InkWell(
+      onTap: () => _editMemo(themeProvider),
+      borderRadius: BorderRadius.circular(AppRadius.medium),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 14),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(AppRadius.medium),
+          border: Border.all(
+            color: themeProvider.primaryColor.withValues(alpha: 0.3),
+          ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.add, size: 18, color: themeProvider.primaryColor),
+            const SizedBox(width: 6),
+            StandardText(
+              text: '메모 추가',
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: themeProvider.primaryColor,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// 메모만 바로 쓰고 저장한다. 비운 채로 저장하면 메모를 지운다.
+  Future<void> _editMemo(ThemeHandler themeProvider) async {
+    final before = widget.problemModel.memo ?? '';
+    final memo = await showMemoEditSheet(
+      context,
+      initialMemo: before,
+      color: themeProvider.primaryColor,
+    );
+    if (memo == null || !mounted) return;
+    try {
+      await Provider.of<ProblemsProvider>(context, listen: false).updateProblem(
+        ProblemRegisterModel(
+          problemId: widget.problemModel.problemId,
+          memo: ProblemRegisterModel.clampMemo(memo),
+        ),
+      );
+      AppAnalytics.logEvent('problem_memo_save', {
+        'source': 'detail',
+        'had_memo': before.isNotEmpty,
+      });
+      AppToast.success(memo.isEmpty ? '메모를 지웠어요' : '메모를 저장했어요');
+    } catch (_) {
+      AppToast.error('메모를 저장하지 못했어요. 잠시 후 다시 시도해 주세요.');
+    }
   }
 
   Widget _buildSectionCard(
@@ -493,7 +685,13 @@ class _ProblemDetailTemplateState extends State<ProblemDetailTemplate>
       title: 'AI 분석 결과',
       icon: Icons.auto_awesome,
       child: buildAnalysisSection(
-          context, widget.problemModel.analysis, themeProvider.primaryColor),
+        context,
+        widget.problemModel.analysis,
+        themeProvider.primaryColor,
+        onRequestAnalysis: widget.onRequestAnalysis,
+        timedOut: widget.analysisTimedOut,
+        onRefreshAnalysis: widget.onRefreshAnalysis,
+      ),
     );
     final hasTags = widget.problemModel.tags.isNotEmpty;
     final hasMemo = widget.problemModel.memo != null &&
@@ -519,7 +717,7 @@ class _ProblemDetailTemplateState extends State<ProblemDetailTemplate>
             themeProvider,
           ),
         ),
-        if (hasTags || hasMemo) const SizedBox(height: 24),
+        const SizedBox(height: 24),
         if (hasTags) ...[
           _buildSectionCard(
             themeProvider,
@@ -550,22 +748,33 @@ class _ProblemDetailTemplateState extends State<ProblemDetailTemplate>
               }).toList(),
             ),
           ),
-          if (hasMemo) const SizedBox(height: 24),
+          const SizedBox(height: 24),
         ],
-        if (hasMemo) ...[
-          _buildSectionCard(
-            themeProvider,
-            title: '메모',
-            icon: Icons.edit,
-            child: Padding(
-              padding: const EdgeInsets.only(left: 4.0),
-              child: UnderlinedText(
-                text: widget.problemModel.memo!,
-                fontSize: 18,
-              ),
-            ),
-          ),
-        ],
+        // 메모는 비어 있어도 칸을 둔다. 전에는 메모가 없으면 칸이 아예 없어서,
+        // 복습하다 떠오른 것을 적으려면 수정 화면 전체로 가야 했다.
+        _buildSectionCard(
+          themeProvider,
+          title: '메모',
+          icon: Icons.edit,
+          trailing: hasMemo
+              ? IconButton(
+                  tooltip: '메모 고치기',
+                  visualDensity: VisualDensity.compact,
+                  icon: Icon(Icons.edit_outlined,
+                      size: 18, color: themeProvider.primaryColor),
+                  onPressed: () => _editMemo(themeProvider),
+                )
+              : null,
+          child: hasMemo
+              ? Padding(
+                  padding: const EdgeInsets.only(left: 4.0),
+                  child: UnderlinedText(
+                    text: widget.problemModel.memo!,
+                    fontSize: 18,
+                  ),
+                )
+              : _buildAddMemoButton(themeProvider),
+        ),
       ],
     );
 
@@ -619,6 +828,73 @@ class _ProblemDetailTemplateState extends State<ProblemDetailTemplate>
       themeProvider.primaryColor,
       isWide,
       refreshSignal: _reviewRefreshSignal,
+      onStartSolve: _startSolve,
+    );
+  }
+}
+
+/// 다시 풀기 버튼 양옆의 이전, 다음 화살표. 버튼과 높이를 맞춘다.
+class _NavigationArrow extends StatelessWidget {
+  final String tooltip;
+  final IconData icon;
+  final Color accent;
+  final VoidCallback? onTap;
+
+  const _NavigationArrow({
+    required this.tooltip,
+    required this.icon,
+    required this.accent,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final enabled = onTap != null;
+    return Tooltip(
+      message: tooltip,
+      child: Material(
+        color: enabled ? accent.withValues(alpha: 0.1) : AppColors.surfaceMuted,
+        borderRadius: BorderRadius.circular(AppRadius.full),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(AppRadius.full),
+          child: SizedBox(
+            width: 50,
+            height: 50,
+            child: Icon(
+              icon,
+              size: 26,
+              color: enabled ? accent : AppColors.textDisabled,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// 복습 세트의 마지막 문제에서 다음 화살표 자리에 두는 마치기.
+class _FinishButton extends StatelessWidget {
+  final Color accent;
+  final VoidCallback onTap;
+
+  const _FinishButton({required this.accent, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 50,
+      child: OutlinedButton(
+        onPressed: onTap,
+        style: OutlinedButton.styleFrom(
+          side: BorderSide(color: accent, width: 1.5),
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppRadius.full),
+          ),
+        ),
+        child: StandardText(text: '복습 마치기', fontSize: 14, color: accent),
+      ),
     );
   }
 }

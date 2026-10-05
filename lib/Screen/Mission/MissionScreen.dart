@@ -19,6 +19,7 @@ import 'MissionHeroCard.dart';
 import 'MissionHistoryScreen.dart';
 import 'MissionSegments.dart';
 import '../../Util/AppAnalytics.dart';
+import '../../Module/Design/AppLayout.dart';
 
 /// 일일 미션과 주간 미션을 보여 주고 보상을 받는 화면이다.
 ///
@@ -86,121 +87,128 @@ class _MissionScreenState extends State<MissionScreen> {
           color: themeProvider.primaryColor,
         ),
       ),
-      body: !missionProvider.hasMissions
-          ? _buildEmpty(themeProvider)
-          : MissionClaimScope(
-              counterKey: _counterKey,
-              // 이 화면의 카운터는 **오늘 받은 XP** 다. 주간이나 지난 미션을
-              // 받으면 코인만 날아오고 오늘 숫자는 그대로여야 한다.
-              countsToward: (result) => missionProvider.dailyMissions
-                  .any((m) => m.progressId == result.progressId),
-              builder: (context, claim) => Column(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(
-                      AppSpacing.lg,
-                      0,
-                      AppSpacing.lg,
-                      AppSpacing.md,
-                    ),
-                    child: Column(
-                      children: [
-                        AppearTransition(
-                          child: MissionHeroCard(
-                            dailyMissions: missionProvider.dailyMissions,
-                            level:
-                                userProvider.userInfoModel?.totalStudyLevel ??
-                                    1,
-                            primaryColor: themeProvider.primaryColor,
-                            counterKey: _counterKey,
-                            pendingXp: claim.pendingXp,
-                            arrivalTick: claim.arrivalTick,
-                            onCounterTap: () => Navigator.push(
-                              context,
-                              TossPageRoute(
-                                builder: (_) => const MissionHistoryScreen(),
+      // 처음 불러오는 동안에도 '아직 미션이 없어요' 가 떠서, 미션이 정말 없는
+      // 것과 구분되지 않았다. 조회 실패는 서버에 미션 API 가 없을 때와 구분할 수
+      // 없어서(MissionService.getMissions) 지금처럼 조용히 빈 안내로 둔다.
+      body: AppContentWidth(
+        child: !missionProvider.hasMissions
+            ? (missionProvider.isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : _buildEmpty(themeProvider))
+            : MissionClaimScope(
+                counterKey: _counterKey,
+                // 이 화면의 카운터는 **오늘 받은 XP** 다. 주간이나 지난 미션을
+                // 받으면 코인만 날아오고 오늘 숫자는 그대로여야 한다.
+                countsToward: (result) => missionProvider.dailyMissions
+                    .any((m) => m.progressId == result.progressId),
+                builder: (context, claim) => Column(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(
+                        AppSpacing.lg,
+                        0,
+                        AppSpacing.lg,
+                        AppSpacing.md,
+                      ),
+                      child: Column(
+                        children: [
+                          AppearTransition(
+                            child: MissionHeroCard(
+                              dailyMissions: missionProvider.dailyMissions,
+                              level:
+                                  userProvider.userInfoModel?.totalStudyLevel ??
+                                      1,
+                              primaryColor: themeProvider.primaryColor,
+                              counterKey: _counterKey,
+                              pendingXp: claim.pendingXp,
+                              arrivalTick: claim.arrivalTick,
+                              onCounterTap: () => Navigator.push(
+                                context,
+                                TossPageRoute(
+                                  builder: (_) => const MissionHistoryScreen(),
+                                ),
                               ),
                             ),
                           ),
-                        ),
-                        if (missionProvider.expiredUnclaimedCount > 0) ...[
-                          const SizedBox(height: AppSpacing.md),
-                          AppearTransition(
-                            delay: AppMotion.stagger,
-                            child: ExpiredMissionBanner(
-                              count: missionProvider.expiredUnclaimedCount,
-                              onTap: () {
-                                AppHaptic.secondary();
-                                showExpiredMissionSheet(
-                                  context,
-                                  onClaim: claim.claim,
-                                  // 목록과 같은 것을 넘긴다. 시트에서 받아도
-                                  // 실패하면 카드가 흔들리고 코인도 날아간다.
-                                  rewardKeyOf: claim.rewardKeyOf,
-                                  shakeTickOf: claim.shakeTickOf,
-                                );
-                              },
+                          if (missionProvider.expiredUnclaimedCount > 0) ...[
+                            const SizedBox(height: AppSpacing.md),
+                            AppearTransition(
+                              delay: AppMotion.stagger,
+                              child: ExpiredMissionBanner(
+                                count: missionProvider.expiredUnclaimedCount,
+                                onTap: () {
+                                  AppHaptic.secondary();
+                                  showExpiredMissionSheet(
+                                    context,
+                                    onClaim: claim.claim,
+                                    // 목록과 같은 것을 넘긴다. 시트에서 받아도
+                                    // 실패하면 카드가 흔들리고 코인도 날아간다.
+                                    rewardKeyOf: claim.rewardKeyOf,
+                                    shakeTickOf: claim.shakeTickOf,
+                                  );
+                                },
+                              ),
                             ),
+                          ],
+                          const SizedBox(height: AppSpacing.md),
+                          // 등장 연출로 감싸지 않는다. 감싸면 그 안쪽이 다시
+                          // 만들어질 때 선택된 알약이 잠깐 사라진다.
+                          MissionSegments(
+                            key: const ValueKey('mission_segments'),
+                            index: _tabIndex,
+                            color: themeProvider.primaryColor,
+                            onChanged: (index) => setState(() {
+                              AppAnalytics.logEvent('mission_tab_view', {
+                                'period': index == 0 ? 'daily' : 'weekly',
+                              });
+                              _tabIndex = index;
+                              // 탭을 옮긴 뒤로는 목록이 하나씩 올라오지 않는다.
+                              _entryPlayed = true;
+                            }),
                           ),
                         ],
-                        const SizedBox(height: AppSpacing.md),
-                        // 등장 연출로 감싸지 않는다. 감싸면 그 안쪽이 다시
-                        // 만들어질 때 선택된 알약이 잠깐 사라진다.
-                        MissionSegments(
-                          key: const ValueKey('mission_segments'),
-                          index: _tabIndex,
-                          color: themeProvider.primaryColor,
-                          onChanged: (index) => setState(() {
-                            AppAnalytics.logEvent('mission_tab_view', {
-                              'period': index == 0 ? 'daily' : 'weekly',
-                            });
-                            _tabIndex = index;
-                            // 탭을 옮긴 뒤로는 목록이 하나씩 올라오지 않는다.
-                            _entryPlayed = true;
-                          }),
-                        ),
-                      ],
+                      ),
                     ),
-                  ),
-                  Expanded(
-                    // 전환 영역 뒤를 반드시 칠해 둔다. 비어 있으면 바뀌는
-                    // 사이에 검정 캔버스가 그대로 비친다.
-                    child: ColoredBox(
-                      color: AppColors.background,
-                      child: AnimatedSwitcher(
-                        duration: AppMotion.fast,
-                        switchInCurve: AppMotion.enter,
-                        switchOutCurve: AppMotion.exit,
-                        // 페이드만 한다. 크기를 건드리면 가장자리에 틈이 생긴다.
-                        transitionBuilder: (child, animation) =>
-                            FadeTransition(opacity: animation, child: child),
-                        layoutBuilder: (currentChild, previousChildren) =>
-                            Stack(
-                          fit: StackFit.expand,
-                          children: [
-                            ...previousChildren,
-                            if (currentChild != null) currentChild,
-                          ],
-                        ),
-                        // 한 번에 한 탭만 그린다. 두 탭을 함께 들고 있으면
-                        // 숨은 쪽까지 같이 흐려진다.
-                        child: KeyedSubtree(
-                          key: ValueKey<int>(_tabIndex),
-                          child: _buildMissionList(
-                            _tabIndex == 0
-                                ? missionProvider.dailyMissions
-                                : missionProvider.weeklyMissions,
-                            missionProvider,
-                            themeProvider,
-                            claim,
+                    Expanded(
+                      // 전환 영역 뒤를 반드시 칠해 둔다. 비어 있으면 바뀌는
+                      // 사이에 검정 캔버스가 그대로 비친다.
+                      child: ColoredBox(
+                        color: AppColors.background,
+                        child: AnimatedSwitcher(
+                          duration: AppMotion.fast,
+                          switchInCurve: AppMotion.enter,
+                          switchOutCurve: AppMotion.exit,
+                          // 페이드만 한다. 크기를 건드리면 가장자리에 틈이 생긴다.
+                          transitionBuilder: (child, animation) =>
+                              FadeTransition(opacity: animation, child: child),
+                          layoutBuilder: (currentChild, previousChildren) =>
+                              Stack(
+                            fit: StackFit.expand,
+                            children: [
+                              ...previousChildren,
+                              if (currentChild != null) currentChild,
+                            ],
+                          ),
+                          // 한 번에 한 탭만 그린다. 두 탭을 함께 들고 있으면
+                          // 숨은 쪽까지 같이 흐려진다.
+                          child: KeyedSubtree(
+                            key: ValueKey<int>(_tabIndex),
+                            child: _buildMissionList(
+                              _tabIndex == 0
+                                  ? missionProvider.dailyMissions
+                                  : missionProvider.weeklyMissions,
+                              missionProvider,
+                              themeProvider,
+                              claim,
+                            ),
                           ),
                         ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
+      ),
     );
   }
 

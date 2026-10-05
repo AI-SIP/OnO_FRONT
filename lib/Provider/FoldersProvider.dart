@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:collection';
 
 import 'package:flutter/material.dart';
@@ -10,6 +11,8 @@ import 'package:ono/Util/AppErrorReporter.dart';
 
 import '../Model/Folder/FolderModel.dart';
 import '../Model/Problem/ProblemModel.dart';
+import '../Model/Common/ListSort.dart';
+import '../Util/BookshelfSortPreference.dart';
 
 // 폴더별 스크롤 상태를 저장하는 클래스
 class FolderScrollState {
@@ -21,6 +24,12 @@ class FolderScrollState {
   bool problemHasNext = false;
   bool isLoadingSubfolders = false;
   bool isLoadingProblems = false;
+
+  /// 하위 공책과 오답노트는 따로 받는다. 한쪽만 저장해도 이 상태가 생기니,
+  /// 각각 받았는지를 따로 둔다. 전에는 하위 공책만 저장된 공책을 오답노트도
+  /// 받은 것으로 보고 빈 목록을 그렸다.
+  bool subfoldersCached = false;
+  bool problemsCached = false;
 
   FolderScrollState();
 }
@@ -42,7 +51,43 @@ class FoldersProvider with ChangeNotifier {
   int _rootFolderRefreshTimestamp = 0;
   int get rootFolderRefreshTimestamp => _rootFolderRefreshTimestamp;
 
+  /// 공책마다 마지막으로 다시 받으라고 알린 때. 그 공책 화면이 뒤에 깔려 있어도
+  /// 다시 받게 한다. 하위 공책에서 하나 더 쓰기로 쓴 오답노트가 돌아와도 안
+  /// 보였다.
+  final Map<int, int> _folderRefreshTimestamps = {};
+  int folderRefreshTimestamp(int folderId) =>
+      _folderRefreshTimestamps[folderId] ?? 0;
+
   FolderModel? get currentFolder => _currentFolder;
+
+  ListSort _bookshelfSort = ListSort.newest;
+
+  /// 책장의 하위 공책과 오답노트를 어느 순서로 보일지. 처음에는 최근 등록순이다.
+  ListSort get bookshelfSort => _bookshelfSort;
+
+  bool _bookshelfSortLoaded = false;
+
+  /// 기기에 기억해 둔 정렬을 처음 한 번만 읽는다. 바뀌었으면 받아 둔 목록을
+  /// 버린다.
+  Future<void> loadBookshelfSort() async {
+    if (_bookshelfSortLoaded) return;
+    _bookshelfSortLoaded = true;
+    final saved = await BookshelfSortPreference.load();
+    if (saved == _bookshelfSort) return;
+    _bookshelfSort = saved;
+    _folderCache.clear();
+    notifyListeners();
+  }
+
+  /// 책장 정렬을 바꾼다. 받아 둔 목록은 예전 순서라 모두 버린다. 커서가 순서에
+  /// 묶여 있어서 이어 받을 수 없다.
+  void setBookshelfSort(ListSort sort) {
+    if (sort == _bookshelfSort) return;
+    _bookshelfSort = sort;
+    _folderCache.clear();
+    unawaited(BookshelfSortPreference.save(sort));
+    notifyListeners();
+  }
 
   // 호환성을 위한 getter (정렬된 리스트 반환)
   List<FolderModel> get folders => _foldersMap.values.toList();
@@ -99,13 +144,27 @@ class FoldersProvider with ChangeNotifier {
     return _folderCache[folderId]?.problemHasNext ?? false;
   }
 
+  /// 받아 둔 정보에서 공책 이름을 찾는다. 서버에 묻지 않아서 아직 열어 본 적
+  /// 없는 공책이면 null 이다. 책장(루트)은 '책장' 이다.
+  String? folderNameOf(int folderId) {
+    if (rootFolder?.folderId == folderId) return '책장';
+    final folder = _foldersMap[folderId];
+    if (folder != null) return folder.folderName;
+    for (final state in _folderCache.values) {
+      for (final sub in state.subfolders) {
+        if (sub.folderId == folderId) return sub.folderName;
+      }
+    }
+    return null;
+  }
+
   // 캐시 존재 여부 확인 (빈 리스트도 유효한 캐시)
   bool hasSubfolderCache(int folderId) {
-    return _folderCache.containsKey(folderId);
+    return _folderCache[folderId]?.subfoldersCached ?? false;
   }
 
   bool hasProblemCache(int folderId) {
-    return _folderCache.containsKey(folderId);
+    return _folderCache[folderId]?.problemsCached ?? false;
   }
 
   // 외부에서 캐시에 데이터 저장 (DirectoryScreen에서 사용)
@@ -122,6 +181,7 @@ class FoldersProvider with ChangeNotifier {
 
     final state = _folderCache[folderId]!;
     state.subfolders = List.from(subfolders); // 복사본 저장
+    state.subfoldersCached = true;
     state.subfolderNextCursor = nextCursor;
     state.subfolderHasNext = hasNext;
 
@@ -143,6 +203,7 @@ class FoldersProvider with ChangeNotifier {
 
     final state = _folderCache[folderId]!;
     state.problems = List.from(problems); // 복사본 저장
+    state.problemsCached = true;
     state.problemNextCursor = nextCursor;
     state.problemHasNext = hasNext;
 
@@ -260,9 +321,11 @@ class FoldersProvider with ChangeNotifier {
         folderId: folderId,
         cursor: state.subfolderNextCursor,
         size: 20,
+        sort: _bookshelfSort,
       );
 
       state.subfolders.addAll(response.content);
+      state.subfoldersCached = true;
       state.subfolderNextCursor = response.nextCursor;
       state.subfolderHasNext = response.hasNext;
 
@@ -300,9 +363,11 @@ class FoldersProvider with ChangeNotifier {
         folderId: folderId,
         cursor: state.problemNextCursor,
         size: 20,
+        sort: _bookshelfSort,
       );
 
       state.problems.addAll(response.content);
+      state.problemsCached = true;
       state.problemNextCursor = response.nextCursor;
       state.problemHasNext = response.hasNext;
 
@@ -407,6 +472,7 @@ class FoldersProvider with ChangeNotifier {
   Future<void> refreshFolder(int folderId) async {
     // 캐시 제거
     _folderCache.remove(folderId);
+    _folderRefreshTimestamps[folderId] = DateTime.now().millisecondsSinceEpoch;
 
     // 루트 폴더이면 타임스탬프 업데이트
     if (rootFolder != null && folderId == rootFolder!.folderId) {

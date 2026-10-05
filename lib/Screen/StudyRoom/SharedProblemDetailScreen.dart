@@ -170,7 +170,7 @@ class _SharedProblemDetailScreenState extends State<SharedProblemDetailScreen> {
       await provider.deleteSharedProblem(problem.sharedProblemId);
       if (context.mounted) Navigator.pop(context);
     } catch (_) {
-      if (context.mounted) AppSnackBar.showError('공유 취소에 실패했습니다');
+      if (context.mounted) AppSnackBar.showError('공유 취소에 실패했어요');
     }
   }
 
@@ -298,6 +298,7 @@ class _SharedProblemDetailScreenState extends State<SharedProblemDetailScreen> {
         backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
+          tooltip: '뒤로',
           icon:
               Icon(Icons.arrow_back_ios_new, color: Colors.grey[700], size: 20),
           onPressed: () => Navigator.pop(context),
@@ -387,7 +388,7 @@ class _SharedProblemDetailScreenState extends State<SharedProblemDetailScreen> {
               StandardText(
                 text: _timeAgo(problem.sharedAt),
                 fontSize: 12,
-                color: Colors.grey[500]!,
+                color: AppColors.textSecondary,
                 fontWeight: FontWeight.normal,
                 fontFamily: 'PretendardLight',
               ),
@@ -467,7 +468,7 @@ class _SharedProblemDetailScreenState extends State<SharedProblemDetailScreen> {
           StandardText(
             text: '문제 이미지를 불러올 수 없어요',
             fontSize: 13,
-            color: Colors.grey[500]!,
+            color: AppColors.textSecondary,
             fontWeight: FontWeight.normal,
             fontFamily: 'PretendardLight',
           ),

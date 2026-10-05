@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:ono/Module/Text/StandardText.dart';
+import 'package:ono/Module/Dialog/ConfirmDialog.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -106,7 +108,7 @@ void main() {
         );
       });
 
-      expect(find.text('로그인을 통해 설정을 변경해보세요!'), findsOneWidget);
+      expect(find.text('로그인하면 설정을 바꿀 수 있어요'), findsOneWidget);
       expect(find.byType(ProfileEditCard), findsNothing);
       expect(find.byType(StreakCard), findsNothing);
       expect(find.text('학습 리포트'), findsNothing);
@@ -238,9 +240,9 @@ void main() {
 
       await openAccountActionDialog(tester, '로그아웃');
 
-      expect(find.textContaining('정말 로그아웃 하시겠습니까'), findsOneWidget);
+      expect(find.textContaining('로그아웃할까요'), findsOneWidget);
       expect(find.text('취소'), findsOneWidget);
-      expect(find.text('확인'), findsOneWidget);
+      expect(_confirmButton(), findsOneWidget);
     });
 
     testWidgets('취소를 누르면 signOut 이 호출되지 않는다', (tester) async {
@@ -277,7 +279,7 @@ void main() {
 
       await openAccountActionDialog(tester, '로그아웃');
 
-      await tester.tap(find.text('확인'));
+      await tester.tap(_confirmButton());
       await tester.pumpAndSettle();
 
       verify(() => userProvider.signOut()).called(1);
@@ -300,7 +302,7 @@ void main() {
 
       await openAccountActionDialog(tester, '로그아웃');
 
-      await tester.tap(find.text('확인'));
+      await tester.tap(_confirmButton());
       await tester.pumpAndSettle();
 
       expect(find.byType(LoginScreen), findsNothing);
@@ -322,7 +324,7 @@ void main() {
 
       await openAccountActionDialog(tester, '회원 탈퇴');
 
-      expect(find.textContaining('이 작업은 되돌릴 수 없습니다'), findsOneWidget);
+      expect(find.textContaining('이 작업은 되돌릴 수 없어요'), findsOneWidget);
     });
 
     testWidgets('취소를 누르면 deleteAccount 가 호출되지 않는다', (tester) async {
@@ -358,7 +360,7 @@ void main() {
 
       await openAccountActionDialog(tester, '회원 탈퇴');
 
-      await tester.tap(find.text('확인'));
+      await tester.tap(_confirmButton());
       await tester.pumpAndSettle();
 
       verify(() => userProvider.deleteAccount()).called(1);
@@ -366,3 +368,13 @@ void main() {
     });
   });
 }
+
+/// 확인 창 안의 확정 버튼. 로그아웃은 버튼 이름이 화면의 로그아웃 버튼과 같아서
+/// 창 안에서 찾는다.
+Finder _confirmButton() => find.descendant(
+      of: find.byType(ConfirmDialog),
+      matching: find.byWidgetPredicate((w) =>
+          w is TextButton &&
+          (w.child is StandardText) &&
+          ['로그아웃', '탈퇴하기'].contains((w.child as StandardText).text)),
+    );

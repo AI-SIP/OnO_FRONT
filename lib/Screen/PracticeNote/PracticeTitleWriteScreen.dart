@@ -28,11 +28,19 @@ class PracticeTitleWriteScreen extends StatefulWidget {
   final PracticeNoteUpdateModel? practiceNoteUpdateModel;
   final PracticeNoteDetailModel? practiceNoteDetailModel;
 
+  /// 저장한 뒤 이 화면만 닫는다(`true` 로 닫힌다).
+  ///
+  /// 세트 상세의 `복습 세트 설정` 과 오답노트 상세의 `새 복습 세트 만들기` 는 문제
+  /// 고르기 화면을 거치지 않고 바로 열려서, 원래처럼 여러 화면을 닫으면 그
+  /// 앞 화면까지 닫힌다.
+  final bool closeOnlySelf;
+
   const PracticeTitleWriteScreen({
     super.key,
     this.practiceRegisterModel,
     this.practiceNoteUpdateModel,
     this.practiceNoteDetailModel,
+    this.closeOnlySelf = false,
   });
 
   @override
@@ -148,12 +156,16 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
           });
 
           if (!context.mounted) return;
-          _showSnackBar(context, themeProvider, '복습 세트가 수정되었습니다.',
+          _showSnackBar(context, themeProvider, '복습 세트가 수정됐어요.',
               themeProvider.primaryColor);
 
-          Navigator.pop(context);
-          Navigator.pop(context);
-          Navigator.pop(context);
+          if (widget.closeOnlySelf) {
+            Navigator.pop(context, true);
+          } else {
+            Navigator.pop(context);
+            Navigator.pop(context);
+            Navigator.pop(context);
+          }
         } else {
           widget.practiceRegisterModel!.setPracticeTitle(_titleController.text);
 
@@ -181,11 +193,15 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
           });
 
           if (!context.mounted) return;
-          _showSnackBar(context, themeProvider, '복습 세트가 생성되었습니다.',
+          _showSnackBar(context, themeProvider, '복습 세트가 생성됐어요.',
               themeProvider.primaryColor);
 
-          Navigator.pop(context);
-          Navigator.pop(context);
+          if (widget.closeOnlySelf) {
+            Navigator.pop(context, true);
+          } else {
+            Navigator.pop(context);
+            Navigator.pop(context);
+          }
         }
       } catch (error, stackTrace) {
         debugPrint(error.toString());
@@ -201,8 +217,8 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
             context,
             themeProvider,
             isUpdate
-                ? '복습 세트 수정에 실패했습니다. 잠시 후 다시 시도해주세요.'
-                : '복습 세트 생성에 실패했습니다. 잠시 후 다시 시도해주세요.',
+                ? '복습 세트 수정에 실패했어요. 잠시 후 다시 시도해 주세요.'
+                : '복습 세트 생성에 실패했어요. 잠시 후 다시 시도해 주세요.',
             Colors.red,
           );
         }
@@ -325,8 +341,11 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
   AppBar _buildAppBar(ThemeHandler themeProvider) {
     return AppBar(
       title: StandardText(
-        text:
-            widget.practiceNoteUpdateModel == null ? "복습 세트 만들기" : "복습 세트 수정하기",
+        text: widget.practiceNoteUpdateModel == null
+            ? "복습 세트 만들기"
+            : widget.closeOnlySelf
+                ? "복습 세트 설정"
+                : "복습 세트 수정하기",
         fontSize: 18,
         color: themeProvider.primaryColor,
       ),
@@ -480,9 +499,11 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
             elevation: 0,
           ),
           child: StandardText(
-            text: widget.practiceRegisterModel == null
-                ? "복습 세트 수정하기"
-                : "복습 세트 만들기",
+            text: widget.practiceRegisterModel != null
+                ? "복습 세트 만들기"
+                : widget.closeOnlySelf
+                    ? "저장하기"
+                    : "복습 세트 수정하기",
             fontSize: 16,
             fontWeight: FontWeight.bold,
             color: Colors.white,
@@ -539,16 +560,13 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
                       fontSize: 15,
                       color: AppColors.textPrimary,
                     ),
-                    Transform.scale(
-                      scale: 0.8,
-                      child: Switch(
-                        value: _notifyEnabled,
-                        activeColor: theme.primaryColor,
-                        inactiveTrackColor: Colors.grey.shade300,
-                        inactiveThumbColor: Colors.grey,
-                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        onChanged: (v) => setState(() => _notifyEnabled = v),
-                      ),
+                    // 줄인 스위치는 누르는 영역이 작았다. 원래 크기로 둔다.
+                    Switch(
+                      value: _notifyEnabled,
+                      activeColor: theme.primaryColor,
+                      inactiveTrackColor: Colors.grey.shade300,
+                      inactiveThumbColor: Colors.grey,
+                      onChanged: (v) => setState(() => _notifyEnabled = v),
                     ),
                   ],
                 ),

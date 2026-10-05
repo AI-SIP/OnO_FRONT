@@ -20,10 +20,13 @@ import 'package:ono/Provider/UserProvider.dart';
 import 'package:ono/Screen/Folder/DirectoryScreen.dart';
 
 import '../../helpers/helpers.dart';
+import 'package:ono/Model/Common/ListSort.dart';
 
 class _FakeUserProvider extends Mock implements UserProvider {}
 
 void main() {
+  setUpAll(() => registerFallbackValue(ListSort.newest));
+
   setUpOnoWidgetTest();
 
   // 문제 그림은 비워 둔다. 그림이 있으면 CachedNetworkImage 가 뜨는데, 골든을
@@ -69,6 +72,7 @@ void main() {
           folderId: any(named: 'folderId'),
           cursor: any(named: 'cursor'),
           size: any(named: 'size'),
+          sort: any(named: 'sort'),
         )).thenAnswer((_) async => PaginatedResponse(
           content: subfolders,
           nextCursor: null,
@@ -85,6 +89,7 @@ void main() {
           folderId: any(named: 'folderId'),
           cursor: any(named: 'cursor'),
           size: any(named: 'size'),
+          sort: any(named: 'sort'),
         )).thenAnswer((_) async => PaginatedResponse(
           content: problems,
           nextCursor: null,
