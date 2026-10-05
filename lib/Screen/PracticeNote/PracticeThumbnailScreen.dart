@@ -65,6 +65,9 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
   late ScrollController _scrollController;
   int _lastPracticeRefreshTimestamp = 0;
 
+  /// 화면을 다 채웠는지 마지막으로 확인한 때의 세트 수.
+  int? _autoFillCount;
+
   @override
   void initState() {
     super.initState();
@@ -88,7 +91,11 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
       final provider =
           Provider.of<ProblemPracticeProvider>(context, listen: false);
       if (provider.hasNext && !provider.isLoading) {
-        provider.loadMorePracticeThumbnails();
+        // 다음 쪽 실패는 다음 스크롤에서 다시 받는다. 받는 곳이 없어 앱 밖으로
+        // 새던 예외를 여기서 끝낸다.
+        provider.loadMorePracticeThumbnails().catchError((Object e) {
+          debugPrint('복습 세트 다음 쪽을 받지 못했습니다: $e');
+        });
       }
     }
   }
@@ -497,6 +504,16 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
     // 처음 불러오는 중이면 화면 가운데 스피너 대신 목록 모양을 보여준다.
     if (thumbnails.isEmpty && isLoadingMore) {
       return _buildLoadingIndicator();
+    }
+
+    // 받은 쪽이 화면을 다 채우지 못하면 스크롤 리스너가 불리지 않는다. 두 열에서는
+    // 한 쪽이 열 줄이라 이렇게 될 수 있어서 그린 뒤에 한 번 본다.
+    // 받은 개수가 그대로면 다시 보지 않는다. 실패했을 때 되풀이하지 않게 한다.
+    if (hasMore && !isLoadingMore && _autoFillCount != thumbnails.length) {
+      _autoFillCount = thumbnails.length;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && _scrollController.hasClients) _onScroll();
+      });
     }
 
     // 넓은 화면에서는 두 열로 놓는다. 태블릿에서도 한 줄이라 카드가 길게

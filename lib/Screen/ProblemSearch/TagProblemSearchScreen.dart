@@ -64,6 +64,10 @@ class _TagProblemSearchScreenState extends State<TagProblemSearchScreen> {
   String _currentQuery = '';
   Timer? _debounce;
 
+  /// 요청마다 오른다. 마지막 요청의 응답만 쓴다. 전에는 받는 중에 더 입력하면
+  /// 새 검색이 버려져서, 입력칸과 다른 옛 검색어의 결과가 남았다.
+  int _requestSeq = 0;
+
   final List<ProblemModel> _selectedProblems = [];
 
   @override
@@ -97,6 +101,15 @@ class _TagProblemSearchScreenState extends State<TagProblemSearchScreen> {
         _scrollController.position.maxScrollExtent * 0.8) {
       _loadMoreProblems();
     }
+  }
+
+  /// 받은 쪽이 화면을 다 채우지 못하면 스크롤 리스너가 불리지 않는다. 태블릿
+  /// 두 열에서는 한 쪽이 열 줄이라 이렇게 될 수 있어서 그린 뒤에 한 번 본다.
+  void _loadMoreIfListEndVisible() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !_scrollController.hasClients) return;
+      _onScroll();
+    });
   }
 
   void _onQueryChanged() {
@@ -137,6 +150,7 @@ class _TagProblemSearchScreenState extends State<TagProblemSearchScreen> {
 
   Future<void> _switchMode(_SearchMode mode) async {
     if (_mode == mode) return;
+    _requestSeq++;
     setState(() {
       _mode = mode;
       _problems = [];
@@ -159,7 +173,10 @@ class _TagProblemSearchScreenState extends State<TagProblemSearchScreen> {
   }
 
   Future<void> _loadTagProblems(int tagId, {required bool isInitial}) async {
-    if (_isLoadingProblems) return;
+    // 처음부터 다시 찾는 것은 받는 중이어도 새로 보낸다. 앞선 응답은 버린다.
+    if (!isInitial && _isLoadingProblems) return;
+    if (!isInitial && !_hasNext) return;
+    final seq = ++_requestSeq;
 
     if (isInitial) {
       setState(() {
@@ -171,7 +188,6 @@ class _TagProblemSearchScreenState extends State<TagProblemSearchScreen> {
         _loadFailed = false;
       });
     } else {
-      if (!_hasNext) return;
       setState(() {
         _isLoadingProblems = true;
         _loadFailed = false;
@@ -193,7 +209,7 @@ class _TagProblemSearchScreenState extends State<TagProblemSearchScreen> {
           'has_next': response.hasNext,
         });
       }
-      if (!mounted) return;
+      if (!mounted || seq != _requestSeq) return;
       setState(() {
         if (isInitial) {
           _problems = response.content;
@@ -206,16 +222,20 @@ class _TagProblemSearchScreenState extends State<TagProblemSearchScreen> {
     } catch (e, stackTrace) {
       // 예전에는 catch 가 없어서 실패해도 결과가 없는 것처럼 보였고, 입력
       // 디바운스 타이머 안에서 난 예외는 아무도 받지 않았다.
-      _onLoadFailed(e, stackTrace);
+      if (seq == _requestSeq) _onLoadFailed(e, stackTrace);
     } finally {
-      if (mounted) {
+      if (mounted && seq == _requestSeq) {
         setState(() => _isLoadingProblems = false);
+        _loadMoreIfListEndVisible();
       }
     }
   }
 
   Future<void> _searchByTitle(String query, {required bool isInitial}) async {
-    if (_isLoadingProblems) return;
+    // 처음부터 다시 찾는 것은 받는 중이어도 새로 보낸다. 앞선 응답은 버린다.
+    if (!isInitial && _isLoadingProblems) return;
+    if (!isInitial && !_hasNext) return;
+    final seq = ++_requestSeq;
 
     final trimmed = query.trim();
     _currentQuery = trimmed;
@@ -239,7 +259,6 @@ class _TagProblemSearchScreenState extends State<TagProblemSearchScreen> {
         _loadFailed = false;
       });
     } else {
-      if (!_hasNext) return;
       setState(() {
         _isLoadingProblems = true;
         _loadFailed = false;
@@ -261,7 +280,7 @@ class _TagProblemSearchScreenState extends State<TagProblemSearchScreen> {
           'has_next': response.hasNext,
         });
       }
-      if (!mounted) return;
+      if (!mounted || seq != _requestSeq) return;
       setState(() {
         if (isInitial) {
           _problems = response.content;
@@ -274,10 +293,11 @@ class _TagProblemSearchScreenState extends State<TagProblemSearchScreen> {
     } catch (e, stackTrace) {
       // 예전에는 catch 가 없어서 실패해도 결과가 없는 것처럼 보였고, 입력
       // 디바운스 타이머 안에서 난 예외는 아무도 받지 않았다.
-      _onLoadFailed(e, stackTrace);
+      if (seq == _requestSeq) _onLoadFailed(e, stackTrace);
     } finally {
-      if (mounted) {
+      if (mounted && seq == _requestSeq) {
         setState(() => _isLoadingProblems = false);
+        _loadMoreIfListEndVisible();
       }
     }
   }
