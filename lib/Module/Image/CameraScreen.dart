@@ -12,6 +12,7 @@ import 'package:provider/provider.dart';
 import 'CameraCapture.dart';
 import 'CropImage.dart';
 import '../Design/AppColors.dart';
+import '../Dialog/UnsavedChangesScope.dart';
 import '../Design/AppToast.dart';
 import '../Design/AppRadius.dart';
 import '../Design/AppSpacing.dart';
@@ -146,6 +147,8 @@ class _CameraScreenState extends State<CameraScreen>
   void initState() {
     super.initState();
     AppAnalytics.logScreenView('CameraScreen');
+    // 알림이나 홈 위젯으로 화면이 한꺼번에 닫힐 때도 담아 둔 사진이 있으면 묻는다.
+    UnsavedChangesScope.register(this, () => _shots.isNotEmpty);
 
     // 화면 방향을 세로로 고정
     SystemChrome.setPreferredOrientations([
@@ -279,6 +282,7 @@ class _CameraScreenState extends State<CameraScreen>
 
   @override
   void dispose() {
+    UnsavedChangesScope.unregister(this);
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.portraitUp,
       DeviceOrientation.portraitDown,
