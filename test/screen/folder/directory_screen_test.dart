@@ -438,10 +438,8 @@ void main() {
   });
 
   group('선택 모드', () {
-    // 옮기기와 지우기를 한 메뉴로 묶었더니 무엇을 하는 화면인지 바로 보이지
-    // 않아서 둘로 나눴다.
-    Finder moveMenuItem() => find.text('골라서 옮기기');
-    Finder deleteMenuItem() => find.text('골라서 지우기');
+    // 공책 옮기기가 따로 있어서 선택 모드는 지우기만 한다.
+    Finder deleteMenuItem() => find.text('여러 개 삭제하기');
 
     testWidgets('더보기 버튼을 누르면 편집 메뉴가 열린다', (tester) async {
       await pumpDirectory(tester);
@@ -451,25 +449,11 @@ void main() {
 
       expect(find.text('공책 만들기'), findsOneWidget);
       expect(find.text('공책 옮기기'), findsOneWidget);
-      expect(moveMenuItem(), findsOneWidget);
       expect(deleteMenuItem(), findsOneWidget);
+      expect(find.text('골라서 옮기기'), findsNothing);
     });
 
-    testWidgets('골라서 옮기기는 옮기기 버튼만 보인다', (tester) async {
-      await pumpDirectory(tester);
-
-      await tester.tap(find.byIcon(Icons.more_vert));
-      await tester.pumpAndSettle();
-      await tester.tap(moveMenuItem());
-      await tester.pumpAndSettle();
-
-      expect(find.text('옮길 항목 선택'), findsOneWidget);
-      expect(find.text('취소하기'), findsOneWidget);
-      expect(find.text('옮기기'), findsOneWidget);
-      expect(find.text('삭제하기'), findsNothing);
-    });
-
-    testWidgets('골라서 지우기는 삭제하기 버튼만 보인다', (tester) async {
+    testWidgets('여러 개 삭제하기를 누르면 삭제하기 버튼만 보인다', (tester) async {
       await pumpDirectory(tester);
 
       await tester.tap(find.byIcon(Icons.more_vert));
@@ -477,7 +461,7 @@ void main() {
       await tester.tap(deleteMenuItem());
       await tester.pumpAndSettle();
 
-      expect(find.text('지울 항목 선택'), findsOneWidget);
+      expect(find.text('삭제할 항목 선택'), findsOneWidget);
       expect(find.text('취소하기'), findsOneWidget);
       expect(find.text('삭제하기'), findsOneWidget);
       expect(find.text('옮기기'), findsNothing);
@@ -505,12 +489,12 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(deleteMenuItem());
       await tester.pumpAndSettle();
-      expect(find.text('지울 항목 선택'), findsOneWidget);
+      expect(find.text('삭제할 항목 선택'), findsOneWidget);
 
       await tester.tap(find.byIcon(Icons.close));
       await tester.pumpAndSettle();
 
-      expect(find.text('지울 항목 선택'), findsNothing);
+      expect(find.text('삭제할 항목 선택'), findsNothing);
       expect(find.text('취소하기'), findsNothing);
     });
   });

@@ -29,7 +29,14 @@ class ProblemDetailNavigation {
   final VoidCallback? onPrevious;
   final VoidCallback? onNext;
 
-  const ProblemDetailNavigation({this.onPrevious, this.onNext});
+  /// 공책에서 몇 번째인지. 다시 풀기 버튼 안에 작게 붙인다. 예) '2 / 20+'
+  final String? positionLabel;
+
+  const ProblemDetailNavigation({
+    this.onPrevious,
+    this.onNext,
+    this.positionLabel,
+  });
 }
 
 class ProblemDetailTemplate extends StatefulWidget {
@@ -517,11 +524,34 @@ class _ProblemDetailTemplateState extends State<ProblemDetailTemplate>
                   onPressed: _startSolve,
                   backgroundColor: themeProvider.primaryColor,
                   icon: const Icon(Icons.replay, color: Colors.white, size: 20),
-                  label: const StandardText(
-                    text: '다시 풀기',
-                    color: Colors.white,
-                    fontSize: 15,
-                    fontWeight: FontWeight.bold,
+                  label: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const StandardText(
+                        text: '다시 풀기',
+                        color: Colors.white,
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      if (navigation?.positionLabel != null) ...[
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 7,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.22),
+                            borderRadius: BorderRadius.circular(AppRadius.full),
+                          ),
+                          child: StandardText(
+                            text: navigation!.positionLabel!,
+                            color: Colors.white,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
                   elevation: 0,
                 ),

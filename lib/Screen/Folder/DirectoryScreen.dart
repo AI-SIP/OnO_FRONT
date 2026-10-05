@@ -18,10 +18,8 @@ import 'package:provider/provider.dart';
 import '../../Model/Problem/ProblemModel.dart';
 import '../../Model/Problem/ProblemThumbnailModel.dart';
 import '../../Exception/ApiException.dart';
-import '../../Module/Dialog/LoadingDialog.dart';
 import '../../Module/Design/AppToast.dart';
 import '../../Util/PendingDeletion.dart';
-import '../../Module/Util/FolderPickerWidget.dart';
 import '../../Module/Image/DisplayImage.dart';
 import '../../Module/Problem/ProblemThumbnailCard.dart';
 import '../../Module/Text/mobile_font_size.dart';
@@ -72,10 +70,6 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
   // 오답노트 수는 클라이언트가 정확히 모르므로 개수 없이 범위만 알린다.
   static const String _folderDeleteScopeMessage = '안에 있는 공책과 오답노트도 함께 삭제돼요.';
   bool _isSelectionMode = false; // 선택 모드 활성화 여부
-
-  /// 고르기를 무엇 하려고 켰는지. 옮기기와 지우기를 한 메뉴로 묶었더니
-  /// 무엇을 하는 화면인지 바로 보이지 않아서 나눴다.
-  _SelectionAction _selectionAction = _SelectionAction.move;
   late final ProblemsProvider _problemsProvider;
 
   // 지금 목록을 받은 정렬. 다른 공책 화면에서 정렬을 바꾸고 돌아오면 다시 받는다.
@@ -736,17 +730,27 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
       elevation: 0, // AppBar 그림자 제거
       centerTitle: true, // 제목을 항상 가운데로 배치
       backgroundColor: Colors.white,
-      title: StandardText(
-        text: _isSelectionMode
-            ? (_selectionAction == _SelectionAction.move
-                ? '옮길 항목 선택'
-                : '지울 항목 선택')
-            : ((_currentFolder?.parentFolder?.folderId != null &&
-                    _currentFolder?.folderName != null)
-                ? _currentFolder!.folderName
-                : '책장'),
-        fontSize: 18,
-        color: themeProvider.primaryColor,
+      // 오른쪽 버튼이 왼쪽 뒤로 가기보다 넓어서, 긴 공책 이름은 가운데에서
+      // 왼쪽으로 밀려 보였다. 양쪽에서 넓은 쪽만큼 비워 두고 넘치면 줄인다.
+      title: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxWidth: (MediaQuery.sizeOf(context).width -
+                  2 * ((_isSelectionMode ? 1 : 3) * 48.0 + 16) -
+                  32)
+              .clamp(80.0, double.infinity),
+        ),
+        child: StandardText(
+          text: _isSelectionMode
+              ? '삭제할 항목 선택'
+              : ((_currentFolder?.parentFolder?.folderId != null &&
+                      _currentFolder?.folderName != null)
+                  ? _currentFolder!.folderName
+                  : '책장'),
+          fontSize: 18,
+          color: themeProvider.primaryColor,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
       ),
       actions: [
         Padding(
@@ -1197,30 +1201,14 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                     ),
                     const SizedBox(height: 8),
                     _buildActionItem(
-                      icon: Icons.checklist_rounded,
-                      iconColor: themeProvider.primaryColor,
-                      title: '골라서 옮기기',
-                      onTap: () {
-                        Navigator.pop(context);
-                        setState(() {
-                          _isSelectionMode = true;
-                          _selectionAction = _SelectionAction.move;
-                        });
-                        FirebaseAnalytics.instance
-                            .logEvent(name: 'directory_enable_edit_mode');
-                      },
-                    ),
-                    const SizedBox(height: 8),
-                    _buildActionItem(
                       icon: Icons.delete_outline,
                       iconColor: Colors.red,
-                      title: '골라서 지우기',
+                      title: '여러 개 삭제하기',
                       titleColor: Colors.red,
                       onTap: () {
                         Navigator.pop(context);
                         setState(() {
                           _isSelectionMode = true;
-                          _selectionAction = _SelectionAction.delete;
                         });
                         FirebaseAnalytics.instance
                             .logEvent(name: 'directory_enable_edit_mode');
@@ -1877,8 +1865,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     return StandardText(
       // 하위 공책만 든 공책도 있어서 0개여도 비었다고 쓰지 않는다.
       text: '오답노트 $countText개',
-      fontSize: 13,
-      fontFamily: 'PretendardLight',
+      fontSize: 12.5,
       color: AppColors.textTertiary,
       overflow: TextOverflow.ellipsis,
       maxLines: 1,
@@ -2099,146 +2086,43 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
             ),
           ),
           const SizedBox(width: 10),
-          if (_selectionAction == _SelectionAction.move)
-            Expanded(
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                    backgroundColor: themeProvider.primaryColor,
-                    disabledBackgroundColor: Colors.grey[300],
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(AppRadius.small),
-                    ),
-                    padding: const EdgeInsets.symmetric(vertical: 8)),
-                onPressed: selectedCount > 0 ? _moveSelectedItems : null,
-                child: const StandardText(
-                  text: '옮기기',
-                  fontSize: 14,
-                  color: Colors.white,
-                ),
-              ),
-            )
-          else
-            Expanded(
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(AppRadius.small),
-                    ),
-                    padding: const EdgeInsets.symmetric(vertical: 8)),
-                onPressed: selectedCount > 0 ? _confirmDelete : () {},
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const StandardText(
-                      text: '삭제하기',
-                      fontSize: 14,
+          Expanded(
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppRadius.small),
+                  ),
+                  padding: const EdgeInsets.symmetric(vertical: 8)),
+              onPressed: selectedCount > 0 ? _confirmDelete : () {},
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const StandardText(
+                    text: '삭제하기',
+                    fontSize: 14,
+                    color: Colors.white,
+                  ),
+                  const SizedBox(width: 8),
+                  Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: const BoxDecoration(
                       color: Colors.white,
+                      shape: BoxShape.circle,
                     ),
-                    const SizedBox(width: 8),
-                    Container(
-                      padding: const EdgeInsets.all(4),
-                      decoration: const BoxDecoration(
-                        color: Colors.white,
-                        shape: BoxShape.circle,
-                      ),
-                      child: StandardText(
-                        text: '$selectedCount',
-                        fontSize: 12,
-                        color: Colors.red,
-                      ),
+                    child: StandardText(
+                      text: '$selectedCount',
+                      fontSize: 12,
+                      color: Colors.red,
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
+          ),
         ],
       ),
     );
-  }
-
-  /// 고른 오답노트와 공책을 한 번에 다른 공책으로 옮긴다.
-  ///
-  /// 전에는 여러 개를 골라도 지우기만 할 수 있어서, 옮기려면 하나씩 끌어다
-  /// 놓아야 했다. 서버에 일괄 이동이 없어 한 건씩 보내고, 실패한 것은 세어
-  /// 알린다. 공책을 자기 하위로 옮기는 것은 서버가 막는다.
-  Future<void> _moveSelectedItems() async {
-    final currentFolderId = _currentFolder?.folderId;
-    final target =
-        await FolderPickerWidget.showPicker(context, currentFolderId);
-    if (target == null || !mounted) return;
-    if (target == currentFolderId) {
-      AppToast.show(message: '지금 있는 공책이에요. 다른 공책을 골라 주세요.');
-      return;
-    }
-
-    final foldersProvider =
-        Provider.of<FoldersProvider>(context, listen: false);
-    final problemsProvider =
-        Provider.of<ProblemsProvider>(context, listen: false);
-    final problemIds = List<int>.from(_selectedProblemIds);
-    final folders = _localSubfolders
-        .where((folder) => _selectedFolderIds.contains(folder.folderId))
-        .toList();
-
-    LoadingDialog.show(context, '옮기는 중...');
-    var moved = 0;
-    var failed = 0;
-    for (final problemId in problemIds) {
-      try {
-        await problemsProvider.updateProblem(
-          ProblemRegisterModel(problemId: problemId, folderId: target),
-        );
-        moved++;
-      } catch (e) {
-        debugPrint('오답노트 옮기기 실패 - problemId: $problemId, $e');
-        failed++;
-      }
-    }
-    for (final folder in folders) {
-      if (folder.folderId == target) {
-        failed++;
-        continue;
-      }
-      try {
-        await foldersProvider.updateFolder(
-            folder.folderName, folder.folderId, target);
-        moved++;
-      } catch (e) {
-        debugPrint('공책 옮기기 실패 - folderId: ${folder.folderId}, $e');
-        failed++;
-      }
-    }
-
-    if (currentFolderId != null) {
-      await foldersProvider.refreshFolder(currentFolderId);
-    }
-    await foldersProvider.refreshFolder(target);
-    if (!mounted) return;
-    LoadingDialog.hide(context);
-
-    AppAnalytics.logEvent('items_moved', {
-      'folder_count': folders.length,
-      'problem_count': problemIds.length,
-      'count': moved,
-      'failed_count': failed,
-    });
-
-    setState(() {
-      _isSelectionMode = false;
-      _selectedFolderIds.clear();
-      _selectedProblemIds.clear();
-    });
-    await _loadFolderData();
-    if (!mounted) return;
-
-    if (failed == 0) {
-      AppToast.success('$moved개를 옮겼어요');
-    } else if (moved == 0) {
-      AppToast.error('옮기지 못했어요. 잠시 후 다시 시도해 주세요.');
-    } else {
-      AppToast.error('$moved개를 옮겼고 $failed개는 옮기지 못했어요');
-    }
   }
 
   Future<void> _deleteSelectedItems() async {
@@ -2834,5 +2718,3 @@ class _DropHighlight extends StatelessWidget {
     );
   }
 }
-
-enum _SelectionAction { move, delete }
