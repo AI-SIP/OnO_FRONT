@@ -7,8 +7,8 @@ import '../../../Module/Text/StandardText.dart';
 
 /// 오답노트 상세에서 메모만 바로 쓰는 시트.
 ///
-/// 저장을 누르면 앞뒤 공백을 지운 글을 돌려주고, 닫으면 null 이다. 서버가 빈
-/// 메모를 무시해서 지울 수는 없으므로, 비어 있으면 저장 버튼을 막는다.
+/// 저장을 누르면 앞뒤 공백을 지운 글을 돌려주고, 닫으면 null 이다. 원래 메모가
+/// 있으면 비운 채로 저장해 지울 수 있다. 서버는 빈 메모를 받으면 메모를 지운다.
 Future<String?> showMemoEditSheet(
   BuildContext context, {
   required String initialMemo,
@@ -47,7 +47,8 @@ class _MemoEditSheetState extends State<_MemoEditSheet> {
 
   bool get _canSave {
     final text = _controller.text.trim();
-    return text.isNotEmpty && text != widget.initialMemo.trim();
+    final initial = widget.initialMemo.trim();
+    return text != initial && (text.isNotEmpty || initial.isNotEmpty);
   }
 
   @override
