@@ -523,4 +523,21 @@ void main() {
       expect(provider.hasSubfolderCache(1), isFalse);
     });
   });
+
+  test('하위 공책만 저장한 공책은 오답노트를 받은 것으로 보지 않는다', () {
+    provider.saveSubfoldersToCache(5, const [], null, false);
+
+    expect(provider.hasSubfolderCache(5), isTrue);
+    expect(provider.hasProblemCache(5), isFalse);
+
+    provider.saveProblemsToCache(5, const [], null, false);
+    expect(provider.hasProblemCache(5), isTrue);
+  });
+
+  test('공책을 다시 받으라고 알리면 그 공책의 새로고침 신호가 바뀐다', () async {
+    expect(provider.folderRefreshTimestamp(5), 0);
+    await provider.refreshFolder(5);
+    expect(provider.folderRefreshTimestamp(5), greaterThan(0));
+    expect(provider.folderRefreshTimestamp(6), 0);
+  });
 }
