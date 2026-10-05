@@ -55,8 +55,8 @@ class ProblemThumbnailCard extends StatelessWidget {
     this.statusColor,
     this.subtitle,
     this.padding = const EdgeInsets.all(12),
-    this.imageWidth = 50,
-    this.imageHeight = 70,
+    this.imageWidth = 60,
+    this.imageHeight = 76,
     this.contentGap = 16,
     this.trailingGap = 12,
     this.titleFontSize = 16,
@@ -116,10 +116,16 @@ class ProblemThumbnailCard extends StatelessWidget {
         clipBehavior: Clip.antiAlias,
         child: isSelected
             ? Icon(Icons.check, color: themeProvider.primaryColor)
-            : DisplayImage(
-                imagePath: imageUrl,
-                fit: BoxFit.cover,
-              ),
+            // 전에는 이미지 둘레에 여백 10 이 들어가서 칸의 절반도 안 되는
+            // 크기로 보였다. 칸을 다 쓰고, 문제가 시작하는 위쪽을 남긴다.
+            : imageUrl == null || imageUrl!.isEmpty
+                ? DisplayImage(imagePath: imageUrl)
+                : DisplayImage(
+                    imagePath: imageUrl,
+                    fit: BoxFit.cover,
+                    padding: EdgeInsets.zero,
+                    alignment: Alignment.topCenter,
+                  ),
       ),
     );
   }
@@ -239,90 +245,65 @@ class ProblemThumbnailCard extends StatelessWidget {
     // '정답 n/3' 과 다른 뜻이라 푼 횟수를 글자로 붙인다.
     final shownLabel = progressLabel ?? '$solveCount회 풂';
 
+    final neverSolved = lastSolvedDateText == null && solveCount <= 0;
+
+    // 전에는 테두리 친 상자 두 개를 세로로 쌓아서 카드 오른쪽이 무겁고 글자가
+    // 작았다. 상자 없이 오른쪽에 붙여, 진행 점과 푼 횟수, 최근 복습일을
+    // 세 줄로 놓는다.
     return Semantics(
       label: lastSolvedDateText == null
           ? '복습 기록 없음, $progressText'
           : '최근 복습 $lastSolvedDateText, $progressText',
-      child: SizedBox(
-        width: 64,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-              decoration: BoxDecoration(
-                color: Colors.grey.shade50,
-                borderRadius: BorderRadius.circular(AppRadius.small),
-                border: Border.all(color: Colors.grey.shade200),
-              ),
-              child: Column(
+      child: ExcludeSemantics(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minWidth: 52, maxWidth: 72),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Row(
                 mainAxisSize: MainAxisSize.min,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: List.generate(3, (index) {
-                      final filled = index < cappedSolveCount;
-                      return Container(
-                        width: 12,
-                        height: 4,
-                        margin: EdgeInsets.only(right: index == 2 ? 0 : 3),
-                        decoration: BoxDecoration(
-                          color: filled
-                              ? themeProvider.primaryColor
-                              : Colors.grey.shade300,
-                          borderRadius: BorderRadius.circular(2),
-                        ),
-                      );
-                    }),
-                  ),
-                  ...[
-                    const SizedBox(height: 4),
-                    StandardText(
-                      text: shownLabel,
-                      fontSize: 10,
-                      color: themeProvider.primaryColor,
-                      textAlign: TextAlign.center,
+                children: List.generate(3, (index) {
+                  final filled = index < cappedSolveCount;
+                  return Container(
+                    width: 7,
+                    height: 7,
+                    margin: EdgeInsets.only(left: index == 0 ? 0 : 4),
+                    decoration: BoxDecoration(
+                      color: filled
+                          ? themeProvider.primaryColor
+                          : AppColors.border,
+                      shape: BoxShape.circle,
                     ),
-                  ],
-                ],
+                  );
+                }),
               ),
-            ),
-            const SizedBox(height: 6),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 4),
-              decoration: BoxDecoration(
-                color: lastSolvedDateText != null
-                    ? themeProvider.primaryColor.withValues(alpha: 0.07)
-                    : Colors.grey.shade100,
-                borderRadius: BorderRadius.circular(AppRadius.small),
+              const SizedBox(height: 6),
+              StandardText(
+                text: neverSolved && progressLabel == null
+                    ? '아직 안 풂'
+                    : shownLabel,
+                fontSize: 12,
+                color: neverSolved
+                    ? AppColors.textTertiary
+                    : themeProvider.primaryColor,
+                textAlign: TextAlign.right,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
-              child: lastSolvedDateText != null
-                  ? Column(
-                      children: [
-                        StandardText(
-                          text: '최근 복습',
-                          fontSize: 10,
-                          color: themeProvider.primaryColor,
-                        ),
-                        const SizedBox(height: 1),
-                        StandardText(
-                          text: lastSolvedDateText,
-                          fontSize: 10,
-                          color: themeProvider.primaryColor,
-                        ),
-                      ],
-                    )
-                  : StandardText(
-                      text: '기록 없음',
-                      fontSize: 10,
-                      color: AppColors.textSecondary,
-                      textAlign: TextAlign.center,
-                    ),
-            ),
-          ],
+              if (lastSolvedDateText != null) ...[
+                const SizedBox(height: 2),
+                StandardText(
+                  text: '$lastSolvedDateText 복습',
+                  fontSize: 11,
+                  fontFamily: 'PretendardLight',
+                  color: AppColors.textTertiary,
+                  textAlign: TextAlign.right,
+                  maxLines: 1,
+                ),
+              ],
+            ],
+          ),
         ),
       ),
     );
