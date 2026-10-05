@@ -30,7 +30,7 @@ class PracticeTitleWriteScreen extends StatefulWidget {
 
   /// 저장한 뒤 이 화면만 닫는다(`true` 로 닫힌다).
   ///
-  /// 세트 상세의 `세트 설정` 과 오답노트 상세의 `새 복습 세트 만들기` 는 문제
+  /// 세트 상세의 `복습 세트 설정` 과 오답노트 상세의 `새 복습 세트 만들기` 는 문제
   /// 고르기 화면을 거치지 않고 바로 열려서, 원래처럼 여러 화면을 닫으면 그
   /// 앞 화면까지 닫힌다.
   final bool closeOnlySelf;
@@ -344,7 +344,7 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
         text: widget.practiceNoteUpdateModel == null
             ? "복습 세트 만들기"
             : widget.closeOnlySelf
-                ? "세트 설정"
+                ? "복습 세트 설정"
                 : "복습 세트 수정하기",
         fontSize: 18,
         color: themeProvider.primaryColor,
