@@ -120,10 +120,12 @@ class _FolderPickerDialogState extends State<FolderPickerDialog> {
       final foldersProvider =
           Provider.of<FoldersProvider>(context, listen: false);
 
+      // 책장과 같은 순서로 보인다.
       final response = await foldersProvider.folderService.getSubfoldersV2(
         folderId: node.folderId,
         cursor: node.nextCursor,
         size: 20,
+        sort: foldersProvider.bookshelfSort,
       );
 
       // 하위 폴더들을 트리 노드로 변환

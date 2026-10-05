@@ -50,12 +50,17 @@ class ProblemDetailScreen extends StatefulWidget {
   /// 다음 버튼을 둔다. 전에는 문제마다 목록으로 돌아갔다가 다시 들어가야 했다.
   final List<int>? folderQueue;
 
+  /// 공책에 아직 받지 않은 오답노트가 더 있는지. 순서는 받아 둔 것까지라,
+  /// 더 있으면 개수 뒤에 + 를 붙여 전체가 아님을 보인다.
+  final bool folderQueueHasMore;
+
   const ProblemDetailScreen({
     required this.problemId,
     this.isPractice = false,
     this.reviewQueue,
     this.autoStartMode,
     this.folderQueue,
+    this.folderQueueHasMore = false,
     super.key,
   });
 
@@ -1232,6 +1237,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
           child: _FolderNavigationRow(
             index: index,
             total: queue.length,
+            hasMore: widget.folderQueueHasMore,
             onPrevious: index > 0
                 ? () => _openFolderQueueProblem(queue[index - 1], isNext: false)
                 : null,
@@ -1252,6 +1258,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
       builder: (_) => ProblemDetailScreen(
         problemId: problemId,
         folderQueue: widget.folderQueue,
+        folderQueueHasMore: widget.folderQueueHasMore,
       ),
     );
     // 바꿔 끼우면 이 화면의 결과가 곧바로 끝난다. 처음 연 화면이 넘겨 간 상세의
@@ -1314,12 +1321,14 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
 class _FolderNavigationRow extends StatelessWidget {
   final int index;
   final int total;
+  final bool hasMore;
   final VoidCallback? onPrevious;
   final VoidCallback? onNext;
 
   const _FolderNavigationRow({
     required this.index,
     required this.total,
+    this.hasMore = false,
     required this.onPrevious,
     required this.onNext,
   });
@@ -1358,7 +1367,7 @@ class _FolderNavigationRow extends StatelessWidget {
           iconFirst: true,
         ),
         StandardText(
-          text: '${index + 1} / $total',
+          text: '${index + 1} / $total${hasMore ? '+' : ''}',
           fontSize: 14,
           color: AppColors.textSecondary,
         ),
