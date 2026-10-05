@@ -101,6 +101,14 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
   // 루트 폴더 새로고침 타임스탬프 추적
   int _lastRootFolderRefreshTimestamp = 0;
 
+  // 하위 공책 새로고침 타임스탬프 추적
+  int _lastFolderRefreshTimestamp = 0;
+
+  /// 다시 받기를 시작할 때마다 오른다. 다시 받는 중에 먼저 나간 쪽 요청의
+  /// 응답이 오면 버린다. 전에는 다음 쪽을 받는 중에 정렬을 바꾸면 옛 정렬의
+  /// 쪽과 커서가 새 목록에 붙었다.
+  int _loadGeneration = 0;
+
   // 새로고침 중복 실행 방지
   bool _isRefreshing = false;
   bool _isQuickCreateOpen = false;
@@ -117,6 +125,12 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     PendingDeletion.instance.addListener(_onPendingDeletionChanged);
     _problemsProvider = Provider.of<ProblemsProvider>(context, listen: false)
       ..addListener(_syncProblemsFromProvider);
+    final folderId = widget.folderId;
+    if (folderId != null) {
+      _lastFolderRefreshTimestamp =
+          Provider.of<FoldersProvider>(context, listen: false)
+              .folderRefreshTimestamp(folderId);
+    }
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       // 이 화면의 폴더 데이터 로드
@@ -169,6 +183,16 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     }
   }
 
+  /// 받은 쪽이 화면을 다 채우지 못해 스크롤이 생기지 않으면 스크롤 리스너가
+  /// 불리지 않는다. 태블릿 두 열에서는 한 쪽이 열 줄이라 이렇게 될 수 있어서,
+  /// 쪽을 받을 때마다 그린 뒤에 한 번 확인한다.
+  void _loadMoreIfListEndVisible() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !_scrollController.hasClients) return;
+      _onScroll();
+    });
+  }
+
   /// 이 공책의 하위 공책과 오답노트를 다시 받는다.
   ///
   /// 이미 그려 둔 목록이 있으면 [keepVisible] 로 그대로 둔 채 받아서 바꿔
@@ -176,6 +200,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
   /// 옮기고 지울 때마다 스켈레톤이 뜨고 맨 위부터 다시 그렸다. 정렬을 바꿀
   /// 때처럼 순서가 달라지면 false 로 불러 맨 위부터 그린다.
   Future<void> _loadFolderData({bool? keepVisible}) async {
+    final generation = ++_loadGeneration;
     final keep = keepVisible ?? _currentFolder != null;
     final savedOffset =
         keep && _scrollController.hasClients ? _scrollController.offset : null;
@@ -190,6 +215,12 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     try {
       final foldersProvider =
           Provider.of<FoldersProvider>(context, listen: false);
+      // 스스로 다시 받는 것이니, 이 공책에 온 새로고침 신호는 이미 받은 셈이다.
+      final ownFolderId = widget.folderId;
+      if (ownFolderId != null) {
+        _lastFolderRefreshTimestamp =
+            foldersProvider.folderRefreshTimestamp(ownFolderId);
+      }
       await foldersProvider.loadBookshelfSort();
       _loadedSort = foldersProvider.bookshelfSort;
 
@@ -207,6 +238,8 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
 
       // 폴더 메타데이터만 가져오기 (Provider의 currentFolder는 업데이트하지 않음)
       final folder = await foldersProvider.getFolder(targetFolderId);
+      // 그사이 더 늦게 시작한 다시 받기가 있으면 그쪽에 맡긴다.
+      if (generation != _loadGeneration) return;
 
       // 로컬 상태 초기화. 목록을 그대로 두는 경우에는 첫 쪽이 오면 바꿔 낀다.
       if (mounted) {
@@ -223,6 +256,9 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
           _problemNextCursor = null;
           _subfolderHasNext = false;
           _problemHasNext = false;
+          // 먼저 나간 쪽 요청은 응답을 버리므로, 첫 쪽 요청을 막지 않게 푼다.
+          _isLoadingSubfolders = false;
+          _isLoadingProblems = false;
         });
       }
 
@@ -260,7 +296,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
       // 겹치면 늦게 시작한 쪽이 먼저 끝나는데, 그때 지우면 먼저 시작한 쪽의
       // 첫 쪽이 예전 목록 뒤에 붙어 같은 카드가 두 번 보였다. 실패해서 남아
       // 있으면 다음에 받는 첫 쪽이 바꿔 낀다.
-      if (mounted) {
+      if (mounted && generation == _loadGeneration) {
         setState(() {
           _isInitialLoading = false;
         });
@@ -306,6 +342,9 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
 
     if (!mounted) return;
 
+    final generation = _loadGeneration;
+    // 실패했을 때 끝이 보인다고 곧바로 다시 부르면 실패를 되풀이한다.
+    var loaded = false;
     setState(() {
       _isLoadingSubfolders = true;
     });
@@ -351,6 +390,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
         size: 20,
         sort: foldersProvider.bookshelfSort,
       );
+      if (generation != _loadGeneration) return;
 
       // 로컬 상태 업데이트 (모든 페이지)
       if (mounted) {
@@ -370,9 +410,11 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
       debugPrint(
           '💾 Saved total ${_localSubfolders.length} subfolders to cache for folder $folderId');
 
+      loaded = true;
       debugPrint(
           'Loaded ${response.content.length} subfolders from server for folder $folderId');
     } catch (e, stackTrace) {
+      if (generation != _loadGeneration) return;
       debugPrint('Error loading subfolders locally: $e');
       debugPrint(stackTrace.toString());
       await AppErrorReporter.report(
@@ -389,10 +431,11 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
         );
       }
     } finally {
-      if (mounted) {
+      if (mounted && generation == _loadGeneration) {
         setState(() {
           _isLoadingSubfolders = false;
         });
+        if (loaded) _loadMoreIfListEndVisible();
       }
     }
   }
@@ -432,6 +475,9 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
 
     if (!mounted) return;
 
+    final generation = _loadGeneration;
+    // 실패했을 때 끝이 보인다고 곧바로 다시 부르면 실패를 되풀이한다.
+    var loaded = false;
     setState(() {
       _isLoadingProblems = true;
     });
@@ -476,6 +522,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
         size: 20,
         sort: foldersProvider.bookshelfSort,
       );
+      if (generation != _loadGeneration) return;
 
       // 로컬 상태 업데이트 (모든 페이지)
       if (mounted) {
@@ -495,9 +542,11 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
       debugPrint(
           '💾 Saved total ${_localProblems.length} problems to cache for folder $folderId');
 
+      loaded = true;
       debugPrint(
           'Loaded ${response.content.length} problems from server for folder $folderId');
     } catch (e, stackTrace) {
+      if (generation != _loadGeneration) return;
       debugPrint('Error loading problems locally: $e');
       debugPrint(stackTrace.toString());
       await AppErrorReporter.report(
@@ -514,10 +563,11 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
         );
       }
     } finally {
-      if (mounted) {
+      if (mounted && generation == _loadGeneration) {
         setState(() {
           _isLoadingProblems = false;
         });
+        if (loaded) _loadMoreIfListEndVisible();
       }
     }
   }
@@ -525,6 +575,19 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+
+    // 하위 공책 화면은 그 공책에 온 새로고침 신호를 본다.
+    final folderId = widget.folderId;
+    if (folderId != null) {
+      final latest = Provider.of<FoldersProvider>(context, listen: false)
+          .folderRefreshTimestamp(folderId);
+      if (latest != _lastFolderRefreshTimestamp && _currentFolder != null) {
+        _lastFolderRefreshTimestamp = latest;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) _loadFolderData();
+        });
+      }
+    }
 
     // 루트 폴더 화면인 경우에만 타임스탬프 감지
     if (widget.folderId == null) {
@@ -565,9 +628,12 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     final themeProvider = Provider.of<ThemeHandler>(context);
     final foldersProvider = Provider.of<FoldersProvider>(context);
     final reviewDueProvider = Provider.of<ReviewDueProvider>(context);
+    // 뒤에 깔린 공책 화면은 지금 다시 받지 않고 돌아올 때 받는다. 전에는
+    // 깊은 공책에서 정렬을 바꾸면 뒤에 쌓인 화면이 모두 한꺼번에 다시 받았다.
     if (_loadedSort != null &&
         _loadedSort != foldersProvider.bookshelfSort &&
-        !_isInitialLoading) {
+        !_isInitialLoading &&
+        (ModalRoute.of(context)?.isCurrent ?? true)) {
       _loadedSort = foldersProvider.bookshelfSort;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) _loadFolderData(keepVisible: false);
@@ -1626,8 +1692,13 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                 return DirectoryScreen(folderId: folder.folderId);
               }),
             ).then((_) {
-              // 하위 폴더에서 돌아왔을 때 현재 폴더 데이터 새로고침
-              _loadFolderData();
+              if (!mounted) return;
+              // 하위 폴더에서 돌아왔을 때 현재 폴더 데이터 새로고침. 그사이
+              // 정렬이 바뀌었으면 순서가 달라지니 맨 위부터 그린다.
+              final sortChanged = _loadedSort !=
+                  Provider.of<FoldersProvider>(context, listen: false)
+                      .bookshelfSort;
+              _loadFolderData(keepVisible: sortChanged ? false : null);
             });
           }
         },
@@ -2465,12 +2536,16 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     setState(() => _localProblems = next);
     final foldersProvider =
         Provider.of<FoldersProvider>(context, listen: false);
-    foldersProvider.saveProblemsToCache(
-      folderId,
-      _localProblems,
-      _problemNextCursor,
-      _problemHasNext,
-    );
+    // 다시 받는 중에는 커서가 비어 있어서, 이때 저장하면 다음 쪽이 없는 것으로
+    // 캐시에 남는다. 첫 쪽이 오면 그쪽이 저장한다.
+    if (!_replaceProblemsOnNextPage && !_isLoadingProblems) {
+      foldersProvider.saveProblemsToCache(
+        folderId,
+        _localProblems,
+        _problemNextCursor,
+        _problemHasNext,
+      );
+    }
     // 옮겨 간 공책은 받아 둔 목록을 버려서, 열 때 새로 받게 한다.
     for (final id in movedOutTo) {
       unawaited(foldersProvider.refreshFolder(id));

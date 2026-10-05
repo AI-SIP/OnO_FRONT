@@ -333,6 +333,34 @@ void main() {
       expect(find.text('수학 문제집 p.12'), findsOneWidget);
     });
 
+    testWidgets('첫 쪽이 화면을 다 채우지 못하면 스크롤하지 않아도 다음 쪽을 받는다', (tester) async {
+      stubDefaultFolderLoad(
+        problems: [buildProblem(problemId: 100, reference: '첫 쪽 문제')],
+        problemHasNext: true,
+      );
+      when(() => problemService.getFolderProblemsV2(
+            folderId: any(named: 'folderId'),
+            cursor: 999,
+            size: any(named: 'size'),
+            sort: any(named: 'sort'),
+          )).thenAnswer((_) async => PaginatedResponse(
+            content: [buildProblem(problemId: 101, reference: '둘째 쪽 문제')],
+            nextCursor: null,
+            hasNext: false,
+            size: 1,
+          ));
+
+      await pumpDirectory(tester, surfaceSize: OnoSurface.tablet);
+
+      verify(() => problemService.getFolderProblemsV2(
+            folderId: any(named: 'folderId'),
+            cursor: 999,
+            size: any(named: 'size'),
+            sort: any(named: 'sort'),
+          )).called(1);
+      expect(find.text('둘째 쪽 문제'), findsOneWidget);
+    });
+
     testWidgets('상세에서 문제를 다시 받으면 책장 카드도 그 값으로 바뀐다', (tester) async {
       stubDefaultFolderLoad(
         problems: [buildProblem(problemId: 100, reference: '고치기 전 제목')],
