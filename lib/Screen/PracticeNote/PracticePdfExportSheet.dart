@@ -169,7 +169,7 @@ class _PracticePdfExportSheetState extends State<_PracticePdfExportSheet> {
         children: [
           for (final (layout, title, subtitle) in const [
             (WorksheetLayout.two, '두 문제', '풀이 칸 넓게'),
-            (WorksheetLayout.four, '네 문제', '종이 아끼기'),
+            (WorksheetLayout.four, '네 문제', '한눈에 많이'),
           ])
             Expanded(
               child: _LayoutOption(
