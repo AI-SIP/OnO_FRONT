@@ -82,13 +82,21 @@ void main() {
   });
 
   group('buildPracticeWorksheetPdf', () {
+    // 시트에서 고를 수 있는 경우의 수 전부. 메모는 정답지가 있을 때만 켤 수 있다.
+    const answerChoices = [
+      (withAnswers: true, withMemo: true, name: '정답지_메모'),
+      (withAnswers: true, withMemo: false, name: '정답지만'),
+      (withAnswers: false, withMemo: false, name: '정답지_없음'),
+    ];
     for (final layout in WorksheetLayout.values) {
-      for (final withAnswers in [true, false]) {
-        test('${layout.name} 배치, 정답지 $withAnswers 로 끝까지 그린다', () async {
+      for (final choice in answerChoices) {
+        final label =
+            '${layout == WorksheetLayout.two ? '두문제' : '네문제'}_${choice.name}';
+        test('$label 로 끝까지 그린다', () async {
           final options = WorksheetOptions(
             layout: layout,
-            withAnswers: withAnswers,
-            withMemo: withAnswers,
+            withAnswers: choice.withAnswers,
+            withMemo: choice.withMemo,
           );
           // 마지막 쪽이 덜 차는 경우까지 보려고 쪽 수로 나눠떨어지지 않게 둔다.
           final bytes = await build(7, options);
@@ -97,22 +105,13 @@ void main() {
           // 눈으로 볼 때: PDF_OUT=/tmp/out flutter test <이 파일>
           final out = Platform.environment['PDF_OUT'];
           if (out != null) {
-            File('$out/${layout.name}_$withAnswers.pdf')
+            File('$out/$label.pdf')
               ..createSync(recursive: true)
               ..writeAsBytesSync(bytes);
           }
         });
       }
     }
-
-    test('메모를 빼도 정답지를 그린다', () async {
-      final bytes = await build(
-        3,
-        const WorksheetOptions(
-            layout: WorksheetLayout.two, withAnswers: true, withMemo: false),
-      );
-      expect(bytes, isNotEmpty);
-    });
   });
 
   group('shrinkWorksheetImage', () {
