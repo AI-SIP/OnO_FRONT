@@ -35,9 +35,13 @@ class LearningReportService {
   ///
   /// [baseDate] 를 비우면 서버가 오늘(KST)로 본다. 기기 날짜를 보내면 시간대가
   /// 다른 기기에서 하루 어긋난 주를 받을 수 있어서, 지금 기간은 비워서 부른다.
+  ///
+  /// 마이페이지 카드처럼 실패해도 자리만 비워 두면 되는 곳은
+  /// [showErrorSnackBar] 를 끈다.
   Future<LearningOverviewModel> getOverview({
     required LearningOverviewPeriod period,
     DateTime? baseDate,
+    bool showErrorSnackBar = true,
   }) async {
     final queryParams = <String, String>{'period': period.apiValue};
     if (baseDate != null) {
@@ -48,6 +52,7 @@ class LearningReportService {
       method: 'GET',
       url: '$baseUrl/overview',
       queryParams: queryParams,
+      showErrorSnackBar: showErrorSnackBar,
     );
 
     // 본문이 비면 0 으로 채운 보고서를 그리는 대신 실패로 알린다. 기록이

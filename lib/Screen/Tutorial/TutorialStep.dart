@@ -94,7 +94,7 @@ const List<TutorialStep> tutorialSteps = [
     id: 'report',
     tabIndex: 4,
     targetType: TutorialTargetType.reportCard,
-    title: '학습 리포트',
+    title: '학습 보고서',
     description: '복습 추이와 약점을 확인하면\n어떤 부분을 더 공부해야 할지 쉽게 알 수 있어요.',
   ),
 ];
