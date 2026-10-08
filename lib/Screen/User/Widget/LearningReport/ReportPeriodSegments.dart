@@ -8,11 +8,11 @@ import '../../../../Module/Motion/PressableScale.dart';
 import '../../../../Module/Text/StandardText.dart';
 import 'ReportPalette.dart';
 
-/// 주간, 월간, 전체를 고르는 세그먼트다.
+/// 주간, 월간, 전체를 고르는 밑줄 탭이다.
 ///
-/// 미션 화면의 `MissionSegments` 와 같은 구조로, 흰 알약 하나가 옆으로
-/// 미끄러진다. 칸마다 흰 바탕을 켜고 끄면 바뀌는 동안 두 칸이 다 회색으로
-/// 보인다.
+/// 회색 트랙 위에 흰 알약을 미끄러뜨리던 모양은 설정 화면 스위치처럼 보여서
+/// 테마색 밑줄 하나가 옆으로 미끄러지게 바꿨다. 칸마다 밑줄을 켜고 끄면
+/// 바뀌는 동안 두 칸에 다 줄이 없어 보인다.
 class ReportPeriodSegments extends StatelessWidget {
   final LearningOverviewPeriod selected;
   final ReportPalette palette;
@@ -31,8 +31,8 @@ class ReportPeriodSegments extends StatelessWidget {
     LearningOverviewPeriod.total: '전체',
   };
 
-  /// 미끄러지는 흰 알약을 테스트에서 찾는 키.
-  static const Key pillKey = Key('report_segment_pill');
+  /// 미끄러지는 밑줄을 테스트에서 찾는 키.
+  static const Key indicatorKey = Key('report_segment_indicator');
 
   @override
   Widget build(BuildContext context) {
@@ -43,38 +43,13 @@ class ReportPeriodSegments extends StatelessWidget {
     final x = periods.length == 1 ? 0.0 : -1 + 2 * index / (periods.length - 1);
 
     return Container(
-      padding: const EdgeInsets.all(3),
-      decoration: BoxDecoration(
-        color: palette.track,
-        borderRadius: BorderRadius.circular(12),
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      decoration: const BoxDecoration(
+        color: AppColors.surface,
+        border: Border(bottom: BorderSide(color: ReportPalette.divider)),
       ),
       child: Stack(
         children: [
-          Positioned.fill(
-            child: AnimatedAlign(
-              duration: reduced ? Duration.zero : AppMotion.normal,
-              curve: AppMotion.emphasized,
-              alignment: Alignment(x, 0),
-              child: FractionallySizedBox(
-                widthFactor: 1 / periods.length,
-                heightFactor: 1,
-                child: Container(
-                  key: pillKey,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(9),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.06),
-                        blurRadius: 2,
-                        offset: const Offset(0, 1),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
           Row(
             children: [
               for (final period in periods)
@@ -89,15 +64,15 @@ class ReportPeriodSegments extends StatelessWidget {
                     child: ConstrainedBox(
                       // 글자를 키운 기기에서는 늘어나야 해서 높이를 고정하지
                       // 않고 최소만 잡는다.
-                      constraints: const BoxConstraints(minHeight: 36),
+                      constraints: const BoxConstraints(minHeight: 46),
                       child: Center(
                         child: StandardText(
                           text: labels[period]!,
-                          fontSize: 14,
+                          fontSize: 15,
                           height: 1.3,
                           color: period == selected
                               ? AppColors.textPrimary
-                              : ReportPalette.textMuted,
+                              : AppColors.textTertiary,
                           textAlign: TextAlign.center,
                           maxLines: 1,
                         ),
@@ -106,6 +81,28 @@ class ReportPeriodSegments extends StatelessWidget {
                   ),
                 ),
             ],
+          ),
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            height: 2,
+            child: AnimatedAlign(
+              duration: reduced ? Duration.zero : AppMotion.normal,
+              curve: AppMotion.emphasized,
+              alignment: Alignment(x, 0),
+              child: FractionallySizedBox(
+                widthFactor: 1 / periods.length,
+                heightFactor: 1,
+                child: DecoratedBox(
+                  key: indicatorKey,
+                  decoration: BoxDecoration(
+                    color: palette.deep,
+                    borderRadius: BorderRadius.circular(1),
+                  ),
+                ),
+              ),
+            ),
           ),
         ],
       ),

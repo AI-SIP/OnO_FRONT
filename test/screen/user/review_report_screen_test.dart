@@ -109,7 +109,7 @@ void main() {
       expect(find.text('학습 보고서'), findsOneWidget);
       // 요약
       expect(find.text('10월 5일 ~ 10월 11일'), findsOneWidget);
-      expect(find.text('이번 주에 복습한 문제'), findsOneWidget);
+      expect(find.text('이번 주에'), findsOneWidget);
       expect(find.text('14'), findsOneWidget);
       expect(find.text('지난주보다 5문제 더 풀었어요'), findsOneWidget);
       expect(find.text('64%'), findsOneWidget);
@@ -188,7 +188,7 @@ void main() {
           )).called(1);
       expect(find.text('9월 28일 ~ 10월 4일'), findsOneWidget);
       // 넘겨 본 주에서는 `이번 주` 라고 쓰지 않는다.
-      expect(find.text('이 주에 복습한 문제'), findsOneWidget);
+      expect(find.text('이 주에'), findsOneWidget);
       expect(find.text('전 주보다 5문제 더 풀었어요'), findsOneWidget);
 
       final next = tester.widget<IconButton>(
@@ -223,7 +223,7 @@ void main() {
             ),
             baseDate: any(named: 'baseDate', that: isNull),
           )).called(1);
-      expect(find.text('이번 주에 복습한 문제'), findsOneWidget);
+      expect(find.text('이번 주에'), findsOneWidget);
     });
 
     testWidgets('세그먼트를 바꾸면 기존 값 그대로 period 를 남긴다', (tester) async {
@@ -353,7 +353,7 @@ void main() {
     await tester.tap(find.text('전체'));
     await tester.pumpAndSettle();
 
-    expect(find.text('지금까지 복습한 문제'), findsOneWidget);
+    expect(find.text('지금까지'), findsOneWidget);
     expect(find.text('312'), findsOneWidget);
     expect(find.byTooltip('이전 주'), findsNothing);
     expect(find.textContaining('보다'), findsNothing);
@@ -398,7 +398,7 @@ void main() {
     await tester.tap(find.text('다시 시도'));
     await tester.pumpAndSettle();
 
-    expect(find.text('이번 주에 복습한 문제'), findsOneWidget);
+    expect(find.text('이번 주에'), findsOneWidget);
   });
 
   group('오늘 복습할 문제 둘째 줄', () {

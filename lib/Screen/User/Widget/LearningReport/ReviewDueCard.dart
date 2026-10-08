@@ -95,7 +95,11 @@ class ReviewDueCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 18),
-          ReportPrimaryButton(label: '복습하기', onTap: onStart),
+          ReportPrimaryButton(
+            label: '복습하기',
+            color: palette.base,
+            onTap: onStart,
+          ),
         ],
       ),
     );

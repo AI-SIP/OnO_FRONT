@@ -14,16 +14,21 @@ import 'ReportWording.dart';
 /// 오답노트 전체가 지금 어떤 상태인지. 확실히 아는 문제, 헷갈리는 문제,
 /// 안 풀어본 문제 세 단계로 나눈다.
 ///
+/// 세 단계는 테마색 진하게, 옅게, 회색으로 칠한다. 초록과 주황으로 고정했을
+/// 때는 어느 테마에서나 같은 화면이라 내 앱 같지 않았다.
+///
 /// 기간과 상관없이 오늘 기준이다. 지난 주를 넘겨 봐도 같은 숫자가 나온다.
 class NoteStatusCard extends StatelessWidget {
   final LearningNoteStatus status;
   final ReportWording wording;
+  final ReportPalette palette;
   final Duration delay;
 
   const NoteStatusCard({
     super.key,
     required this.status,
     required this.wording,
+    required this.palette,
     this.delay = Duration.zero,
   });
 
@@ -49,13 +54,13 @@ class NoteStatusCard extends StatelessWidget {
         label: '확실히 아는 문제',
         description: '연달아 ${status.knownThreshold}번 맞힌 문제',
         count: status.knownCount,
-        color: ReportPalette.green,
+        color: palette.deep,
       ),
       _Level(
         label: '헷갈리는 문제',
         description: '맞혔다 틀렸다 하는 문제',
         count: status.unsureCount,
-        color: ReportPalette.orange,
+        color: palette.light,
       ),
       _Level(
         label: '안 풀어본 문제',
@@ -86,7 +91,7 @@ class NoteStatusCard extends StatelessWidget {
                     value: status.knownCount,
                     fontSize: 32,
                     height: 1.2,
-                    color: ReportPalette.greenInk,
+                    color: palette.ink,
                     delay: delay + _gaugeDelay,
                   ),
                 ),
@@ -122,6 +127,7 @@ class NoteStatusCard extends StatelessWidget {
             _NewlyKnownRow(
               text: wording.inThisPeriod,
               count: status.newlyKnownCount,
+              palette: palette,
             ),
           ],
         ],
@@ -280,8 +286,13 @@ class _NewlyKnownRow extends StatelessWidget {
   /// `이번 주에`, `이 달에` 처럼 앞에 붙는 말.
   final String text;
   final int count;
+  final ReportPalette palette;
 
-  const _NewlyKnownRow({required this.text, required this.count});
+  const _NewlyKnownRow({
+    required this.text,
+    required this.count,
+    required this.palette,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -289,7 +300,7 @@ class _NewlyKnownRow extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(12, 14, 14, 14),
       decoration: BoxDecoration(
-        color: ReportPalette.greenSoft,
+        color: palette.page,
         borderRadius: BorderRadius.circular(ReportPalette.buttonRadius),
       ),
       child: Row(
@@ -297,8 +308,8 @@ class _NewlyKnownRow extends StatelessWidget {
           Container(
             width: 26,
             height: 26,
-            decoration: const BoxDecoration(
-              color: ReportPalette.green,
+            decoration: BoxDecoration(
+              color: palette.deep,
               shape: BoxShape.circle,
             ),
             child: const Icon(
@@ -315,10 +326,10 @@ class _NewlyKnownRow extends StatelessWidget {
                   TextSpan(text: '$text '),
                   TextSpan(
                     text: '$count문제',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontFamily: 'PretendardBold',
                       fontWeight: FontWeight.w700,
-                      color: ReportPalette.greenInk,
+                      color: palette.ink,
                     ),
                   ),
                   const TextSpan(text: '가 확실히 아는 문제가 됐어요'),

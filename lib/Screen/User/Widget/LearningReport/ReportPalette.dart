@@ -4,9 +4,9 @@ import '../../../../Module/Design/AppColors.dart';
 
 /// 학습 보고서가 쓰는 색이다.
 ///
-/// 초록, 주황, 빨강, 회색은 뜻이 정해진 색이라 테마와 상관없이 고정한다.
-/// 초록은 좋아졌다와 안다, 주황은 헷갈린다, 빨강은 많이 틀린다와 줄었다,
-/// 회색은 아직 안 했다. 테마색은 오늘과 내 앱을 가리킬 때만 쓴다.
+/// 대부분 테마색에서 만든다. 처음에는 초록, 주황, 빨강을 뜻 있는 색으로
+/// 고정했는데 어느 테마에서나 같은 화면이라 내 앱 같지 않았다. 지금 고정색은
+/// 폴더 정답률 글자(빨강, 주황, 초록)와 아직 안 한 것을 뜻하는 회색뿐이다.
 ///
 /// 테마색에서 파생하는 값은 HSL 로 만든다. 테마마다 채도가 크게 달라서
 /// 투명도로 섞으면 분홍은 옅고 파랑은 진하게 나온다. 밝기를 고정하고 채도에
@@ -14,20 +14,12 @@ import '../../../../Module/Design/AppColors.dart';
 class ReportPalette {
   // ── 뜻이 정해진 색 ────────────────────────────────────────
 
-  static const Color green = Color(0xFF2FB67C);
-  static const Color greenInk = Color(0xFF16794D);
-  static const Color greenBg = Color(0xFFE6F6EE);
-  static const Color greenSoft = Color(0xFFF0FAF5);
-
-  /// 작은 숫자(`+8%p`, 폴더 정답률)에 쓰는 초록. 알약 글자보다 한 단계 밝다.
+  /// 폴더 정답률이 70% 이상일 때의 글자.
   static const Color greenText = Color(0xFF1F9D63);
 
-  static const Color orange = Color(0xFFFFB547);
   static const Color orangeInk = Color(0xFFE8710A);
-  static const Color orangeBg = Color(0xFFFFF1E5);
 
   static const Color redInk = Color(0xFFE5484D);
-  static const Color redBg = Color(0xFFFDECEC);
 
   static const Color gray = Color(0xFFD1D6DB);
 
@@ -36,13 +28,12 @@ class ReportPalette {
   /// 날짜, 칸 이름처럼 본문보다 옅은 글자. 시안의 `#6B7684` 다.
   static const Color textMuted = Color(0xFF6B7684);
 
-  /// 초록 줄 안의 본문 글자. 시안의 `#333D4B` 다.
+  /// 테마색 줄 안의 본문 글자. 시안의 `#333D4B` 다.
   static const Color textBody = Color(0xFF333D4B);
 
   /// 카드 안 구분선과 막대 바탕.
   static const Color divider = AppColors.surfaceMuted;
 
-  static const double cardRadius = 24;
   static const double buttonRadius = 14;
 
   // ── 테마색에서 만드는 것 ──────────────────────────────────
@@ -50,11 +41,8 @@ class ReportPalette {
   /// 막대 그래프. 테마색 그대로다.
   final Color base;
 
-  /// 화면 바탕. 카드가 흰색이라 아주 옅게 깐다.
+  /// 요약 세 칸의 바탕. 흰 화면 위라 아주 옅게 깐다.
   final Color page;
-
-  /// 세그먼트 트랙.
-  final Color track;
 
   /// 막대 트랙과 오늘 복습할 문제 아이콘 바탕.
   final Color soft;
@@ -63,12 +51,25 @@ class ReportPalette {
   /// 진하게 둔다.
   final Color deep;
 
+  /// 오답노트 상태의 헷갈리는 문제. [deep] 과 나란히 놓여도 구분되게 밝게 둔다.
+  final Color light;
+
+  /// 요약 세 칸 사이의 선. 옅은 테마색 바탕 위라 회색 대신 같은 색을 한 단계
+  /// 진하게 쓴다.
+  final Color line;
+
+  /// 요약 문장의 문제 수. 흰 바탕의 큰 글자라 [deep] 보다 한 단계 진하게 둬야
+  /// 노랑이나 하늘색 테마에서도 읽힌다.
+  final Color ink;
+
   const ReportPalette._({
     required this.base,
     required this.page,
-    required this.track,
     required this.soft,
     required this.deep,
+    required this.ink,
+    required this.light,
+    required this.line,
   });
 
   factory ReportPalette.of(Color primary) {
@@ -81,9 +82,11 @@ class ReportPalette {
     return ReportPalette._(
       base: primary,
       page: tone(0.45, 0.965),
-      track: tone(0.30, 0.90),
       soft: tone(1.0, 0.95),
       deep: tone(0.65, 0.52),
+      ink: tone(0.65, 0.42),
+      light: tone(0.75, 0.80),
+      line: tone(0.45, 0.89),
     );
   }
 
@@ -92,13 +95,6 @@ class ReportPalette {
     if (accuracy < 50) return redInk;
     if (accuracy < 70) return orangeInk;
     return greenText;
-  }
-
-  /// 정답률에 맞는 바탕색.
-  static Color accuracyBg(double accuracy) {
-    if (accuracy < 50) return redBg;
-    if (accuracy < 70) return orangeBg;
-    return greenBg;
   }
 }
 

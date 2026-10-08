@@ -16,6 +16,7 @@ import 'ReportPalette.dart';
 /// 할 수 있는 일이 없었다. 폴더로 묶으면 눌러서 그 폴더로 바로 갈 수 있다.
 class WeakFolderCard extends StatelessWidget {
   final List<LearningWeakFolder> folders;
+  final ReportPalette palette;
 
   /// [rank] 는 1 부터 센다.
   final void Function(LearningWeakFolder folder, int rank) onTap;
@@ -25,6 +26,7 @@ class WeakFolderCard extends StatelessWidget {
   const WeakFolderCard({
     super.key,
     required this.folders,
+    required this.palette,
     required this.onTap,
     this.delay = Duration.zero,
   });
@@ -46,6 +48,7 @@ class WeakFolderCard extends StatelessWidget {
                 _FolderRow(
                   folder: shown[i],
                   rank: i + 1,
+                  palette: palette,
                   divided: i < shown.length - 1,
                   onTap: () => onTap(shown[i], i + 1),
                 ),
@@ -61,12 +64,14 @@ class WeakFolderCard extends StatelessWidget {
 class _FolderRow extends StatelessWidget {
   final LearningWeakFolder folder;
   final int rank;
+  final ReportPalette palette;
   final bool divided;
   final VoidCallback onTap;
 
   const _FolderRow({
     required this.folder,
     required this.rank,
+    required this.palette,
     required this.divided,
     required this.onTap,
   });
@@ -98,14 +103,15 @@ class _FolderRow extends StatelessWidget {
               height: 28,
               alignment: Alignment.center,
               decoration: BoxDecoration(
-                color: ReportPalette.accuracyBg(percent.toDouble()),
+                // 순위는 테마색, 정답률 글자만 빨강, 주황, 초록으로 둔다.
+                color: palette.soft,
                 borderRadius: BorderRadius.circular(9),
               ),
               child: StandardText(
                 text: '$rank',
                 fontSize: 13,
                 height: 1.2,
-                color: ink,
+                color: palette.ink,
               ),
             ),
             const SizedBox(width: 14),

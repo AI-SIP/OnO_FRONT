@@ -283,7 +283,7 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
     final isEmpty = overview != null && overview.summary.reviewCount == 0;
 
     return Scaffold(
-      backgroundColor: palette.page,
+      backgroundColor: AppColors.surface,
       body: SafeArea(
         bottom: false,
         child: DefaultTextStyle.merge(
@@ -291,7 +291,17 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
           child: AppContentWidth(
             child: Column(
               children: [
-                _buildHeader(showShare: !isEmpty),
+                _buildHeader(
+                  showShare: !isEmpty,
+                  titleColor: themeProvider.primaryColor,
+                ),
+                AppearTransition(
+                  child: ReportPeriodSegments(
+                    selected: _period,
+                    palette: palette,
+                    onChanged: _selectPeriod,
+                  ),
+                ),
                 Expanded(
                   child: RefreshIndicator(
                     color: palette.deep,
@@ -302,17 +312,7 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
                         // 내용이 짧아도 당겨서 새로 고칠 수 있게 한다.
                         physics: const AlwaysScrollableScrollPhysics(),
                         padding: const EdgeInsets.only(bottom: 32),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            _buildTitle(palette),
-                            Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 16),
-                              child: _buildBody(palette, overview),
-                            ),
-                          ],
-                        ),
+                        child: _buildBody(palette, overview),
                       ),
                     ),
                   ),
@@ -325,7 +325,8 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
     );
   }
 
-  Widget _buildHeader({required bool showShare}) {
+  /// 뒤로 가기, 가운데 제목, 공유. 제목은 마이페이지처럼 테마색으로 쓴다.
+  Widget _buildHeader({required bool showShare, required Color titleColor}) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 6),
       child: Row(
@@ -339,8 +340,20 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
               color: AppColors.textPrimary,
             ),
           ),
-          const Spacer(),
-          if (showShare)
+          Expanded(
+            child: StandardText(
+              text: '학습 보고서',
+              fontSize: 18,
+              height: 1.3,
+              color: titleColor,
+              textAlign: TextAlign.center,
+              maxLines: 1,
+            ),
+          ),
+          if (!showShare)
+            // 공유 버튼이 없어도 제목이 가운데에 오게 같은 폭을 비워 둔다.
+            const SizedBox(width: 48)
+          else
             _sharing
                 ? const SizedBox(
                     width: 48,
@@ -365,37 +378,6 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
                       color: AppColors.textPrimary,
                     ),
                   ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTitle(ReportPalette palette) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          const AppearTransition(
-            child: ReportTracking(
-              letterSpacing: -0.6,
-              child: StandardText(
-                text: '학습 보고서',
-                fontSize: 26,
-                height: 1.3,
-                color: AppColors.textPrimary,
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
-          AppearTransition(
-            delay: AppMotion.stagger,
-            child: ReportPeriodSegments(
-              selected: _period,
-              palette: palette,
-              onChanged: _selectPeriod,
-            ),
-          ),
         ],
       ),
     );
@@ -438,6 +420,7 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
               onStartReview: canStartReview ? () => _startReview(queue) : null,
               onPrevious: () => _move(forward: false),
               onNext: () => _move(forward: true),
+              today: _today,
               delay: delay,
             )
       ),
@@ -446,6 +429,7 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
         (delay) => NoteStatusCard(
               status: overview.noteStatus,
               wording: wording,
+              palette: palette,
               delay: delay,
             )
       ),
@@ -466,6 +450,7 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
           'folders',
           (delay) => WeakFolderCard(
                 folders: overview.weakFolders,
+                palette: palette,
                 onTap: _openFolder,
                 delay: delay,
               )
@@ -496,8 +481,8 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         for (var i = 0; i < cards.length; i++) ...[
-          if (i > 0) const SizedBox(height: 12),
-          // 카드는 제목과 세그먼트 뒤로 한 장씩 들어온다.
+          if (i > 0) const ReportSectionGap(),
+          // 칸은 머리와 탭 뒤로 하나씩 들어온다.
           // 오늘 복습할 문제 카드가 생기거나 빠질 때 아래 카드가 새로 만들어져
           // 차오름이 다시 돌지 않게 카드마다 key 를 준다.
           AppearTransition(
@@ -538,7 +523,7 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
               decoration: BoxDecoration(
-                color: AppColors.surface,
+                color: AppColors.surfaceMuted,
                 borderRadius: BorderRadius.circular(ReportPalette.buttonRadius),
               ),
               child: const StandardText(

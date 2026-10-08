@@ -6,7 +6,10 @@ import '../../../../Module/Motion/PressableScale.dart';
 import '../../../../Module/Text/StandardText.dart';
 import 'ReportPalette.dart';
 
-/// 보고서의 흰 카드. 다섯 칸이 같은 모서리와 바탕을 쓴다.
+/// 보고서의 한 칸. 흰 바탕에 칸끼리는 [ReportSectionGap] 띠로 나눈다.
+///
+/// 처음에는 칸마다 둥근 흰 카드를 옅은 테마색 바탕 위에 띄웠는데, 카드가 다섯
+/// 장 쌓이니 덩어리가 많아 보여서 흰 바탕 한 장으로 바꿨다.
 class ReportCard extends StatelessWidget {
   final Widget child;
   final EdgeInsetsGeometry padding;
@@ -14,7 +17,7 @@ class ReportCard extends StatelessWidget {
   const ReportCard({
     super.key,
     required this.child,
-    this.padding = const EdgeInsets.all(22),
+    this.padding = const EdgeInsets.fromLTRB(20, 24, 20, 24),
   });
 
   @override
@@ -22,11 +25,21 @@ class ReportCard extends StatelessWidget {
     return Container(
       width: double.infinity,
       padding: padding,
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(ReportPalette.cardRadius),
-      ),
+      color: AppColors.surface,
       child: child,
+    );
+  }
+}
+
+/// 칸 사이의 회색 띠.
+class ReportSectionGap extends StatelessWidget {
+  const ReportSectionGap({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const SizedBox(
+      height: 10,
+      child: ColoredBox(color: ReportPalette.divider),
     );
   }
 }
@@ -51,17 +64,19 @@ class ReportCardTitle extends StatelessWidget {
   }
 }
 
-/// 검정 바탕에 흰 글자인 주 버튼.
+/// 테마색 바탕에 흰 글자인 주 버튼. 앱의 다른 주 버튼(`추가`)과 같은 색이다.
 ///
-/// 테마색 바탕에 흰 글자를 두면 분홍이나 하늘색 같은 파스텔 테마에서 글자가
-/// 잘 안 읽힌다. 테마와 상관없이 검정으로 둔다.
+/// 처음에는 파스텔 테마에서 흰 글자가 옅어 보일까 봐 검정으로 두었는데,
+/// 보고서만 테마와 따로 놀아서 테마색으로 바꿨다.
 class ReportPrimaryButton extends StatelessWidget {
   final String label;
+  final Color color;
   final VoidCallback onTap;
 
   const ReportPrimaryButton({
     super.key,
     required this.label,
+    required this.color,
     required this.onTap,
   });
 
@@ -77,7 +92,7 @@ class ReportPrimaryButton extends StatelessWidget {
         alignment: Alignment.center,
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
-          color: AppColors.textPrimary,
+          color: color,
           borderRadius: BorderRadius.circular(ReportPalette.buttonRadius),
         ),
         child: StandardText(
