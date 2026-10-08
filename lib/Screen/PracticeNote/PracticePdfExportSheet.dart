@@ -111,7 +111,7 @@ class _PracticePdfExportSheetState extends State<_PracticePdfExportSheet> {
             _buildSwitchRow(
               context,
               title: '정답지 맨 뒤에 붙이기',
-              subtitle: '정답 사진이랑 짚고 갈 것을 모아 둬요',
+              subtitle: '정답 사진을 모아 둬요',
               value: _withAnswers,
               onChanged: (value) => setState(() => _withAnswers = value),
             ),

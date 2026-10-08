@@ -89,7 +89,6 @@ class PracticePdfExporter {
           ),
           problemImage: problemImages[problem.problemId],
           answerImage: answerImages[problem.problemId],
-          keyPoints: problem.analysis?.keyPoints,
           memo: options.withMemo ? problem.memo : null,
         ),
     ];

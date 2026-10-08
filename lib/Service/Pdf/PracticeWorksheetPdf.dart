@@ -43,21 +43,20 @@ class WorksheetOptions {
 }
 
 /// 학습지에 들어갈 문제 하나. 이미지는 미리 받아 줄여 둔 바이트다.
+///
+/// AI 분석은 넣지 않는다. 출력해서 다시 푸는 종이에는 정답과 내 메모면 된다.
 class WorksheetItem {
   /// 번호 옆 한 줄. 제목, 태그, 복습 기록을 이어 붙인 것이다.
   final String meta;
   final Uint8List? problemImage;
   final Uint8List? answerImage;
 
-  /// AI 분석의 핵심 포인트. 분석이 없으면 null 이다.
-  final List<String>? keyPoints;
   final String? memo;
 
   const WorksheetItem({
     required this.meta,
     this.problemImage,
     this.answerImage,
-    this.keyPoints,
     this.memo,
   });
 }
@@ -123,11 +122,7 @@ Future<Uint8List> buildPracticeWorksheetPdf({
                 : _fourUp(style, pageItems, start),
           ),
           pw.SizedBox(height: 10),
-          _footer(
-            number,
-            totalPages,
-            options.withAnswers ? '정답은 마지막 장에 있어요' : '',
-          ),
+          _footer(number, totalPages),
         ],
       ),
     ));
@@ -162,7 +157,7 @@ Future<Uint8List> buildPracticeWorksheetPdf({
               ),
             ),
             pw.SizedBox(height: 10),
-            _footer(number, totalPages, '짚고 갈 것은 OnO AI 분석에서 가져왔어요'),
+            _footer(number, totalPages),
           ],
         ),
       ));
@@ -235,7 +230,7 @@ pw.Widget _accentRule(_Style style) {
   return pw.Container(height: 2.25, color: style.accent);
 }
 
-pw.Widget _footer(int page, int total, String right) {
+pw.Widget _footer(int page, int total) {
   const small = pw.TextStyle(fontSize: 8.25, color: _muted);
   return pw.Container(
     padding: const pw.EdgeInsets.only(top: 7),
@@ -258,9 +253,8 @@ pw.Widget _footer(int page, int total, String right) {
           child: pw.Text('$page / $total',
               style: small, textAlign: pw.TextAlign.center),
         ),
-        pw.Expanded(
-          child: pw.Text(right, style: small, textAlign: pw.TextAlign.right),
-        ),
+        // 쪽 번호가 가운데 오도록 오른쪽 칸을 비워 둔다.
+        pw.Expanded(child: pw.SizedBox()),
       ],
     ),
   );
@@ -280,9 +274,9 @@ pw.Widget _photo(Uint8List? bytes, String emptyText, {double padding = 6}) {
                 style: const pw.TextStyle(fontSize: 8.5, color: _faint)),
           )
         // Image 의 alignment 는 칸을 꽉 채운 뒤 그 안에서 맞추는데, 가로 사진이
-        // 칸 아래쪽에 붙어 나왔다. Align 이 먼저 크기를 정하게 해서 위에 붙인다.
+        // 칸 아래쪽에 붙어 나왔다. Align 이 먼저 크기를 정하게 해서 가운데 둔다.
         : pw.Align(
-            alignment: pw.Alignment.topLeft,
+            alignment: pw.Alignment.center,
             child: pw.Image(pw.MemoryImage(bytes), fit: pw.BoxFit.contain),
           ),
   );
@@ -571,8 +565,7 @@ pw.Widget _fourUp(_Style style, List<WorksheetItem> items, int offset) {
 // ==================== 정답지 ====================
 
 const double _answerNumberWidth = 30;
-const double _answerPhotoWidth = 118;
-const double _answerMemoWidth = 118;
+const double _answerMemoWidth = 190;
 const double _answerGap = 13;
 
 pw.Widget _answerHeader(_Style style, String title) {
@@ -621,10 +614,7 @@ pw.Widget _answerColumnLabels(bool withMemo) {
         pw.SizedBox(
             width: _answerNumberWidth, child: pw.Text('번호', style: label)),
         pw.SizedBox(width: _answerGap),
-        pw.SizedBox(
-            width: _answerPhotoWidth, child: pw.Text('정답', style: label)),
-        pw.SizedBox(width: _answerGap),
-        pw.Expanded(child: pw.Text('짚고 갈 것', style: label)),
+        pw.Expanded(child: pw.Text('정답', style: label)),
         if (withMemo) ...[
           pw.SizedBox(width: _answerGap),
           pw.SizedBox(
@@ -637,11 +627,6 @@ pw.Widget _answerColumnLabels(bool withMemo) {
 
 pw.Widget _answerRow(_Style style, WorksheetItem item, int number,
     {required bool withMemo}) {
-  final points = (item.keyPoints ?? const <String>[])
-      .map((p) => p.trim())
-      .where((p) => p.isNotEmpty)
-      .take(2)
-      .toList();
   final memo = item.memo?.trim() ?? '';
 
   return pw.Container(
@@ -660,45 +645,8 @@ pw.Widget _answerRow(_Style style, WorksheetItem item, int number,
           ),
         ),
         pw.SizedBox(width: _answerGap),
-        pw.SizedBox(
-          width: _answerPhotoWidth,
-          child: _photo(item.answerImage, '정답 사진이 없어요', padding: 4),
-        ),
-        pw.SizedBox(width: _answerGap),
         pw.Expanded(
-          child: points.isEmpty
-              ? pw.Text(
-                  item.keyPoints == null ? 'AI 분석이 없는 문제예요' : '짚고 갈 것이 없어요',
-                  style: const pw.TextStyle(fontSize: 9, color: _faint),
-                )
-              : pw.Column(
-                  crossAxisAlignment: pw.CrossAxisAlignment.start,
-                  children: [
-                    for (final point in points)
-                      pw.Padding(
-                        padding: const pw.EdgeInsets.only(bottom: 5),
-                        child: pw.Row(
-                          crossAxisAlignment: pw.CrossAxisAlignment.start,
-                          children: [
-                            pw.SizedBox(
-                              width: 8,
-                              child: pw.Text('·',
-                                  style: const pw.TextStyle(color: _faint)),
-                            ),
-                            pw.Expanded(
-                              child: pw.Text(
-                                point,
-                                maxLines: 3,
-                                overflow: pw.TextOverflow.clip,
-                                style: const pw.TextStyle(
-                                    fontSize: 9.5, lineSpacing: 2),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                  ],
-                ),
+          child: _photo(item.answerImage, '정답 사진이 없어요', padding: 4),
         ),
         if (withMemo) ...[
           pw.SizedBox(width: _answerGap),

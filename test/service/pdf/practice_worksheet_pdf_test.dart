@@ -41,13 +41,6 @@ void main() {
                 ? null
                 : (i.isEven ? _photo(1400, 900) : _photo(800, 1400)),
             answerImage: i % 4 == 3 ? null : _photo(1000, 700),
-            keyPoints: i % 5 == 4
-                ? null
-                : [
-                    'f′(x) = 3x² − 6x = 0 에서 x = 0, 2 이고 x = 2 에서 극소가 된다',
-                    '극솟값 f(2) = a − 4 = −2 이므로 a = 2',
-                    '이 줄은 두 개까지만 넣어서 안 보여야 한다',
-                  ],
             memo: i.isEven ? '극댓값이랑 극솟값 위치를 또 바꿔 썼다. 다음엔 증감표부터 그리기' : null,
           ),
       ];
