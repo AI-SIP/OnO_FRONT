@@ -461,6 +461,22 @@ void main() {
     expect(find.text('복습 세트 삭제하기'), findsOneWidget);
   });
 
+  testWidgets('앱바의 PDF 아이콘을 누르면 PDF로 뽑기 시트가 뜬다', (tester) async {
+    practiceProvider.currentProblems = [_problem(10)];
+
+    await pumpOnoWidget(
+      tester,
+      screen(practice: _practice(problemIdList: [10])),
+      practiceProvider: practiceProvider,
+    );
+
+    await tester.tap(find.byTooltip('PDF로 뽑기'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('1문제를 다시 풀 학습지로 만들어요'), findsOneWidget);
+    expect(find.text('PDF 만들기'), findsOneWidget);
+  });
+
   testWidgets('삭제하기를 고르면 확인 다이얼로그가 뜨고, 삭제를 누르면 서비스가 호출된다', (tester) async {
     practiceProvider.currentProblems = [_problem(10)];
 

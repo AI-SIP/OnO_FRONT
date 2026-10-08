@@ -52,7 +52,7 @@ dependencies:
   # 문서 모드. 안드로이드는 ML Kit, iOS 는 VisionKit 의 문서 스캐너를 띄운다.
   # 종이 테두리를 찾아 원근을 펴고 그림자를 걷어 내는 일을 OS 가 대신 해 준다.
   cunning_document_scanner: ^3.0.2
-  image: ^3.0.1
+  image: ^4.1.0
   share_plus: ^10.0.2
   path_provider: ^2.1.4
   permission_handler: ^11.3.1
@@ -74,6 +74,9 @@ dependencies:
   # 서버가 구버전 앱을 가려내 XP 자동 적립 여부를 정하는 데 쓴다.
   package_info_plus: ^9.0.1
   home_widget: ^0.9.2+1
+  # 복습 세트를 다시 풀 학습지 PDF 로 뽑는다. 기기 안에서 그린다.
+  # 3.13 부터 Dart 3.12 가 필요해서 3.12 에 둔다.
+  pdf: ^3.12.0
 
 dev_dependencies:
   flutter_test:
@@ -133,6 +136,9 @@ flutter:
     - assets/Animation/
     - assets/emoji/
     - assets/no_image.png
+    # PDF 학습지용. pdf 패키지는 TrueType 만 읽어서 앱의 Pretendard(.otf)를 못 쓴다.
+    - assets/fonts/pdf/Pretendard-Regular.ttf
+    - assets/fonts/pdf/Pretendard-Bold.ttf
 
   fonts:
     - family: HandWrite

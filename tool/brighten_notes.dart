@@ -10,18 +10,17 @@ void main(List<String> args) {
   for (final name in args.skip(1)) {
     final path = 'assets/Icon/$name.png';
     final src = img.decodePng(File(path).readAsBytesSync())!;
-    for (var y = 0; y < src.height; y++) {
-      for (var x = 0; x < src.width; x++) {
-        final c = src.getPixel(x, y);
-        final a = img.getAlpha(c);
-        if (a == 0) continue;
-        int lift(int v) {
-          final t = v / 255.0;
-          return ((t + (1 - t) * k * t) * 255).round().clamp(0, 255);
-        }
-        src.setPixel(x, y, img.getColor(
-          lift(img.getRed(c)), lift(img.getGreen(c)), lift(img.getBlue(c)), a));
-      }
+    int lift(num v) {
+      final t = v / 255.0;
+      return ((t + (1 - t) * k * t) * 255).round().clamp(0, 255);
+    }
+
+    for (final p in src) {
+      if (p.a == 0) continue;
+      p
+        ..r = lift(p.r)
+        ..g = lift(p.g)
+        ..b = lift(p.b);
     }
     File(path).writeAsBytesSync(img.encodePng(src, level: 6));
     stdout.writeln('  $name');
