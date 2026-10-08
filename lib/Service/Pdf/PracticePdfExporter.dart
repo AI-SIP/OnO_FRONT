@@ -36,6 +36,7 @@ class PracticePdfExporter {
   static const int _maxImageSide = 1400;
   static const int _jpegQuality = 82;
   static const int _downloadConcurrency = 4;
+  static const int _downloadAttempts = 3;
   static const Duration _downloadTimeout = Duration(seconds: 20);
 
   final http.Client _client;
@@ -125,19 +126,27 @@ class PracticePdfExporter {
   }
 
   Future<Uint8List?> _loadImage(String url) async {
-    try {
-      final response =
-          await _client.get(Uri.parse(url)).timeout(_downloadTimeout);
-      if (response.statusCode != 200) {
-        debugPrint('[PracticePdfExporter] 사진을 못 받음 ${response.statusCode}');
-        return null;
+    for (var attempt = 1; attempt <= _downloadAttempts; attempt++) {
+      try {
+        final response =
+            await _client.get(Uri.parse(url)).timeout(_downloadTimeout);
+        if (response.statusCode != 200) {
+          debugPrint('[PracticePdfExporter] 사진을 못 받음 ${response.statusCode}');
+          return null;
+        }
+        return await compute(shrinkWorksheetImage, response.bodyBytes);
+      } catch (e) {
+        // 시뮬레이터에서 S3 사진 20장 중 2장이 'Connection closed before full
+        // header was received' 로 빠졌다. 묵혀 둔 연결을 S3 가 먼저 닫은
+        // 것이라 새 연결로 다시 받으면 된다.
+        debugPrint('[PracticePdfExporter] 사진을 못 받음($attempt번째): $e');
+        if (attempt < _downloadAttempts) {
+          await Future.delayed(Duration(milliseconds: 300 * attempt));
+        }
       }
-      return await compute(shrinkWorksheetImage, response.bodyBytes);
-    } catch (e) {
-      // 한 장 못 받았다고 PDF 를 포기하지 않는다. 그 칸만 비워 둔다.
-      debugPrint('[PracticePdfExporter] 사진을 못 받음: $e');
-      return null;
     }
+    // 끝내 못 받아도 PDF 를 포기하지 않는다. 그 칸만 비워 둔다.
+    return null;
   }
 }
 
