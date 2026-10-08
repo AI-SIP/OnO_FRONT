@@ -40,6 +40,7 @@ import 'Screen/User/MyPageScreen.dart';
 import 'Util/AppAnalytics.dart';
 import 'Util/AppErrorReporter.dart';
 import 'Util/AppNavigator.dart';
+import 'Util/PhantomTapGuard.dart';
 import 'Util/AppSnackBar.dart';
 import 'Util/SentryEnvironment.dart';
 import 'Util/NotificationService.dart';
@@ -57,6 +58,7 @@ Future<void> main() async {
   await runZonedGuarded<Future<void>>(
     () async {
       WidgetsFlutterBinding.ensureInitialized();
+      PhantomTapGuard.install();
       await dotenv.load(fileName: '.env');
 
       FlutterError.onError = (details) {
