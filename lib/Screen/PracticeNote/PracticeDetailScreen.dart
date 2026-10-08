@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../../Provider/CosmeticProvider.dart';
 import '../User/Widget/FrogCharacter.dart';
@@ -29,6 +30,10 @@ import '../../Module/Design/AppRadius.dart';
 import '../../Util/AppAnalytics.dart';
 import '../../Util/AppErrorReporter.dart';
 import '../../Module/Dialog/ConfirmDialog.dart';
+import '../../Module/Dialog/LoadingDialog.dart';
+import '../../Service/Pdf/PracticePdfExporter.dart';
+import '../../Service/Pdf/PracticeWorksheetPdf.dart';
+import 'PracticePdfExportSheet.dart';
 
 class PracticeDetailScreen extends StatefulWidget {
   final PracticeNoteDetailModel practice;
@@ -287,6 +292,19 @@ class _PracticeDetailScreenState extends State<PracticeDetailScreen> {
                     const SizedBox(height: 12),
                     _buildActionItem(
                       context: context,
+                      icon: Icons.picture_as_pdf_outlined,
+                      iconColor: themeProvider.primaryColor,
+                      title: 'PDF로 뽑기',
+                      subtitle: '출력해서 다시 풀 학습지로 만들어요.',
+                      onTap: () {
+                        Navigator.pop(sheetContext);
+                        _exportPdf(context, themeProvider);
+                      },
+                      themeProvider: themeProvider,
+                    ),
+                    const SizedBox(height: 12),
+                    _buildActionItem(
+                      context: context,
                       icon: Icons.delete_forever,
                       iconColor: Colors.red,
                       title: '복습 세트 삭제하기',
@@ -326,6 +344,71 @@ class _PracticeDetailScreenState extends State<PracticeDetailScreen> {
         ),
       ),
     );
+  }
+
+  /// 세트를 학습지 PDF 로 만들어 공유 창을 연다. 사진을 받는 동안은 로딩을
+  /// 띄우고, 사진 몇 장을 못 받아도 그 칸만 비워 두고 만든다.
+  Future<void> _exportPdf(
+      BuildContext context, ThemeHandler themeProvider) async {
+    final problems = List.of(_practiceProvider.currentProblems);
+    if (problems.isEmpty) {
+      AppToast.info('문제가 없어서 PDF를 만들 수 없어요.');
+      return;
+    }
+
+    AppAnalytics.logEvent('practice_pdf_sheet_open', {
+      'problem_count': problems.length,
+    });
+    final options = await showPracticePdfExportSheet(
+      context,
+      problemCount: problems.length,
+      accentColor: themeProvider.primaryColor,
+    );
+    if (options == null || !context.mounted) return;
+
+    final navigator = Navigator.of(context, rootNavigator: true);
+    final screenSize = MediaQuery.of(context).size;
+    final startedAt = DateTime.now();
+    LoadingDialog.show(context, 'PDF 만드는 중이에요');
+    try {
+      final result = await PracticePdfExporter().export(
+        title: _practice.practiceTitle,
+        problems: problems,
+        options: options,
+        accentColor: themeProvider.primaryColor,
+        analysis: _analysis,
+      );
+      LoadingDialog.hideFromNavigator(navigator);
+
+      AppAnalytics.logEvent('practice_pdf_created', {
+        'mode': options.layout.analyticsName,
+        'with_answers': options.withAnswers,
+        'with_memo': options.withMemo,
+        'problem_count': problems.length,
+        'page_count': result.pageCount,
+        'failed_count': result.failedImageCount,
+        'duration_sec': DateTime.now().difference(startedAt).inSeconds,
+      });
+      if (result.failedImageCount > 0) {
+        AppToast.info('사진 ${result.failedImageCount}장을 못 받아서 그 칸은 비워 뒀어요.');
+      }
+
+      await Share.shareXFiles(
+        [XFile(result.file.path, mimeType: 'application/pdf')],
+        // 아이패드는 공유 창을 띄울 자리가 없으면 열리지 않는다.
+        sharePositionOrigin:
+            Rect.fromLTWH(0, 0, screenSize.width, screenSize.height / 2),
+      );
+    } catch (e, stackTrace) {
+      LoadingDialog.hideFromNavigator(navigator);
+      await AppErrorReporter.report(
+        e,
+        stackTrace,
+        source: 'practice_pdf_export',
+        severity: AppErrorSeverity.error,
+      );
+      AppToast.error('PDF를 만들지 못했어요. 잠시 후 다시 해 주세요.');
+    }
   }
 
   Widget _buildActionItem({
