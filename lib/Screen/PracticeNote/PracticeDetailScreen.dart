@@ -189,6 +189,16 @@ class _PracticeDetailScreenState extends State<PracticeDetailScreen> {
           padding: const EdgeInsets.only(right: 16.0), // 우측에 여백 추가
           child: Row(
             children: [
+              // ⋮ 안에만 두면 아무도 몰라서 앱바에 바로 꺼내 둔다.
+              IconButton(
+                tooltip: 'PDF로 뽑기',
+                icon: Icon(
+                  Icons.picture_as_pdf_outlined,
+                  color: themeProvider.primaryColor,
+                ),
+                onPressed: () =>
+                    _exportPdf(context, themeProvider, source: 'appbar'),
+              ),
               IconButton(
                 tooltip: '더 보기',
                 icon: Icon(
@@ -298,7 +308,7 @@ class _PracticeDetailScreenState extends State<PracticeDetailScreen> {
                       subtitle: '출력해서 다시 풀 학습지로 만들어요.',
                       onTap: () {
                         Navigator.pop(sheetContext);
-                        _exportPdf(context, themeProvider);
+                        _exportPdf(context, themeProvider, source: 'menu');
                       },
                       themeProvider: themeProvider,
                     ),
@@ -348,8 +358,8 @@ class _PracticeDetailScreenState extends State<PracticeDetailScreen> {
 
   /// 세트를 학습지 PDF 로 만들어 공유 창을 연다. 사진을 받는 동안은 로딩을
   /// 띄우고, 사진 몇 장을 못 받아도 그 칸만 비워 두고 만든다.
-  Future<void> _exportPdf(
-      BuildContext context, ThemeHandler themeProvider) async {
+  Future<void> _exportPdf(BuildContext context, ThemeHandler themeProvider,
+      {required String source}) async {
     final problems = List.of(_practiceProvider.currentProblems);
     if (problems.isEmpty) {
       AppToast.info('문제가 없어서 PDF를 만들 수 없어요.');
@@ -357,6 +367,7 @@ class _PracticeDetailScreenState extends State<PracticeDetailScreen> {
     }
 
     AppAnalytics.logEvent('practice_pdf_sheet_open', {
+      'source': source,
       'problem_count': problems.length,
     });
     final options = await showPracticePdfExportSheet(
