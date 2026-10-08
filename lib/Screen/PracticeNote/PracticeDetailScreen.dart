@@ -393,8 +393,12 @@ class _PracticeDetailScreenState extends State<PracticeDetailScreen> {
         AppToast.info('사진 ${result.failedImageCount}장을 못 받아서 그 칸은 비워 뒀어요.');
       }
 
+      final fileName = result.file.uri.pathSegments.last;
       await Share.shareXFiles(
-        [XFile(result.file.path, mimeType: 'application/pdf')],
+        [XFile(result.file.path, name: fileName, mimeType: 'application/pdf')],
+        // iOS 공유 창 머리는 subject 로만 제목을 단다. 없으면 'PDF · 5.7MB' 만
+        // 떠서 무슨 파일인지 알 수 없었다. 메일 제목으로도 쓰인다.
+        subject: fileName.replaceAll(RegExp(r'\.pdf$'), ''),
         // 아이패드는 공유 창을 띄울 자리가 없으면 열리지 않는다.
         sharePositionOrigin:
             Rect.fromLTWH(0, 0, screenSize.width, screenSize.height / 2),
