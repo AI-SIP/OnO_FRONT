@@ -1,0 +1,27 @@
+{
+  "period": "WEEK",
+  "startDate": "2026-10-05",
+  "endDate": "2026-10-11",
+  "hasPrevious": true,
+  "hasNext": false,
+  "summary": { "reviewCount": 0, "accuracy": null, "studyDays": 0, "currentStreak": 0 },
+  "previous": { "reviewCount": 11, "accuracy": 60.0, "studyDays": 4 },
+  "noteStatus": {
+    "totalCount": 86,
+    "knownCount": 18,
+    "unsureCount": 51,
+    "unsolvedCount": 17,
+    "newlyKnownCount": 0,
+    "knownThreshold": 3
+  },
+  "weakFolders": [],
+  "trend": [
+    { "startDate": "2026-10-05", "endDate": "2026-10-05", "reviewCount": 0 },
+    { "startDate": "2026-10-06", "endDate": "2026-10-06", "reviewCount": 0 },
+    { "startDate": "2026-10-07", "endDate": "2026-10-07", "reviewCount": 0 },
+    { "startDate": "2026-10-08", "endDate": "2026-10-08", "reviewCount": 0 },
+    { "startDate": "2026-10-09", "endDate": "2026-10-09", "reviewCount": 0 },
+    { "startDate": "2026-10-10", "endDate": "2026-10-10", "reviewCount": 0 },
+    { "startDate": "2026-10-11", "endDate": "2026-10-11", "reviewCount": 0 }
+  ]
+}
