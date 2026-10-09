@@ -6,7 +6,7 @@ import 'package:ono/Model/Problem/ReviewDueProblemModel.dart';
 import 'package:ono/Module/Motion/TossPageRoute.dart';
 import 'package:ono/Provider/ReviewDueProvider.dart';
 import 'package:ono/Screen/Folder/DirectoryScreen.dart';
-import 'package:ono/Screen/ProblemDetail/ProblemDetailScreen.dart';
+import 'package:ono/Screen/ReviewDue/ReviewDueScreen.dart';
 import 'package:ono/Screen/User/Widget/LearningReport/ReviewDueCard.dart';
 import 'package:ono/Screen/User/Widget/ReviewReportScreen.dart';
 import 'package:ono/Util/AppClock.dart';
@@ -239,28 +239,26 @@ void main() {
       expect(analyticsRecorder.loggedParameters[index], {'period': 'total'});
     });
 
-    testWidgets('복습하기는 추천 목록 순서대로 문제 상세를 연다', (tester) async {
+    testWidgets('복습하기는 문제를 바로 열지 않고 추천 복습 목록을 연다', (tester) async {
       final observer = await pumpReport(tester);
       final before = observer.pushed.length;
 
-      // 누른 뒤 다음 프레임을 그리면 문제 상세가 실제로 빌드되며 네트워크를
+      // 누른 뒤 다음 프레임을 그리면 목록 화면이 실제로 빌드되며 네트워크를
       // 타므로 pump 하지 않는다.
       await tester.tap(find.text('복습하기'));
 
       expect(observer.pushed.length, before + 1);
-      final screen = pushedScreen(tester, observer.pushed.last);
-      expect(screen, isA<ProblemDetailScreen>());
-      screen as ProblemDetailScreen;
-      expect(screen.problemId, 100);
-      expect(screen.reviewQueue, [100, 101, 102, 103, 104]);
+      expect(
+        pushedScreen(tester, observer.pushed.last),
+        isA<ReviewDueScreen>(),
+      );
 
       final index = analyticsRecorder.loggedEvents.lastIndexOf(
-        'review_due_start',
+        'report_review_due_tap',
       );
+      expect(analyticsRecorder.loggedParameters[index], {'count': 5});
       expect(
-        analyticsRecorder.loggedParameters[index],
-        {'count': 5, 'source': 'report'},
-      );
+          analyticsRecorder.loggedEvents, isNot(contains('review_due_start')));
     });
 
     testWidgets('자주 틀린 폴더 줄은 그 폴더를 연다', (tester) async {

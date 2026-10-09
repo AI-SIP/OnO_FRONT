@@ -6,8 +6,8 @@ import 'package:ono/Module/Theme/ThemeHandler.dart';
 import 'package:ono/Provider/ReviewDueProvider.dart';
 import 'package:ono/Provider/UserProvider.dart';
 import 'package:ono/Screen/Folder/DirectoryScreen.dart';
-import 'package:ono/Screen/ProblemDetail/ProblemDetailScreen.dart';
 import 'package:ono/Screen/ProblemShare/AchievementCardScreen.dart';
+import 'package:ono/Screen/ReviewDue/ReviewDueScreen.dart';
 import 'package:ono/Service/Api/LearningReport/LearningReportService.dart';
 import 'package:ono/Util/AppAnalytics.dart';
 import 'package:ono/Util/AppClock.dart';
@@ -71,7 +71,7 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
   int _replayToken = 0;
 
   bool _sharing = false;
-  bool _startingReview = false;
+  bool _openingReviewDue = false;
 
   @override
   void initState() {
@@ -211,28 +211,21 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
     ]);
   }
 
-  /// 추천 복습 화면의 시작 버튼과 같은 순서로 연다. 복습하고 돌아오면 숫자가
-  /// 바뀌었으니 보고서와 오늘 복습할 문제를 다시 받는다.
-  Future<void> _startReview(List<int> queue) async {
-    // 빠르게 두 번 누르면 문제 화면이 두 번 쌓인다.
-    if (queue.isEmpty || _startingReview) return;
-    _startingReview = true;
-    AppAnalytics.logEvent('review_due_start', {
-      'count': queue.length,
-      'source': 'report',
-    });
+  /// 추천 복습 목록을 연다. 예전에는 맨 앞 문제부터 바로 열었는데, 무엇을
+  /// 풀게 될지 모른 채 들어가서 목록을 먼저 보고 고르게 한다. 복습하고
+  /// 돌아오면 숫자가 바뀌었으니 보고서와 오늘 복습할 문제를 다시 받는다.
+  Future<void> _openReviewDue(int count) async {
+    // 빠르게 두 번 누르면 목록 화면이 두 번 쌓인다.
+    if (_openingReviewDue) return;
+    _openingReviewDue = true;
+    AppAnalytics.logEvent('report_review_due_tap', {'count': count});
     try {
       await Navigator.push(
         context,
-        TossPageRoute(
-          builder: (_) => ProblemDetailScreen(
-            problemId: queue.first,
-            reviewQueue: queue,
-          ),
-        ),
+        TossPageRoute(builder: (_) => const ReviewDueScreen()),
       );
     } finally {
-      _startingReview = false;
+      _openingReviewDue = false;
     }
     if (!mounted) return;
     _refresh();
@@ -404,9 +397,9 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
     final wording = ReportWording.of(overview);
     final reviewDue = context.watch<ReviewDueProvider>();
     final dueData = reviewDue.data;
-    final queue = dueData?.problems.map((p) => p.problemId).toList() ?? [];
     final dueCount = dueData?.dueCount;
-    final canStartReview = (dueCount ?? 0) > 0 && queue.isNotEmpty;
+    final canStartReview =
+        (dueCount ?? 0) > 0 && (dueData?.problems.isNotEmpty ?? false);
     final isEmpty = overview.summary.reviewCount == 0;
 
     final cards = <(String, Widget Function(Duration delay))>[
@@ -417,7 +410,8 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
               wording: wording,
               palette: palette,
               dueCount: dueCount,
-              onStartReview: canStartReview ? () => _startReview(queue) : null,
+              onStartReview:
+                  canStartReview ? () => _openReviewDue(dueCount!) : null,
               onPrevious: () => _move(forward: false),
               onNext: () => _move(forward: true),
               today: _today,
@@ -442,7 +436,7 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
                 oldestNextReviewAt: dueData!.problems.first.nextReviewAt,
                 today: _today,
                 palette: palette,
-                onStart: () => _startReview(queue),
+                onStart: () => _openReviewDue(dueCount),
               )
         ),
       if (!isEmpty && overview.weakFolders.isNotEmpty)
