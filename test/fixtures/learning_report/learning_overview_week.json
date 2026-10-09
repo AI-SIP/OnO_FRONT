@@ -1,0 +1,31 @@
+{
+  "period": "WEEK",
+  "startDate": "2026-10-05",
+  "endDate": "2026-10-11",
+  "hasPrevious": true,
+  "hasNext": false,
+  "summary": { "reviewCount": 14, "accuracy": 64.0, "studyDays": 4, "currentStreak": 5 },
+  "previous": { "reviewCount": 9, "accuracy": 56.0, "studyDays": 3 },
+  "noteStatus": {
+    "totalCount": 86,
+    "knownCount": 21,
+    "unsureCount": 48,
+    "unsolvedCount": 17,
+    "newlyKnownCount": 3,
+    "knownThreshold": 3
+  },
+  "weakFolders": [
+    { "folderId": 12, "name": "이차함수", "solveCount": 16, "wrongCount": 6, "accuracy": 38.0 },
+    { "folderId": 7, "name": "확률과 통계", "solveCount": 11, "wrongCount": 4, "accuracy": 55.0 },
+    { "folderId": 31, "name": "수열", "solveCount": 9, "wrongCount": 2, "accuracy": 72.0 }
+  ],
+  "trend": [
+    { "startDate": "2026-10-05", "endDate": "2026-10-05", "reviewCount": 2 },
+    { "startDate": "2026-10-06", "endDate": "2026-10-06", "reviewCount": 3 },
+    { "startDate": "2026-10-07", "endDate": "2026-10-07", "reviewCount": 2 },
+    { "startDate": "2026-10-08", "endDate": "2026-10-08", "reviewCount": 7 },
+    { "startDate": "2026-10-09", "endDate": "2026-10-09", "reviewCount": 0 },
+    { "startDate": "2026-10-10", "endDate": "2026-10-10", "reviewCount": 0 },
+    { "startDate": "2026-10-11", "endDate": "2026-10-11", "reviewCount": 0 }
+  ]
+}

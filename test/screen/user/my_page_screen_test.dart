@@ -111,12 +111,12 @@ void main() {
       expect(find.text('로그인하면 설정을 바꿀 수 있어요'), findsOneWidget);
       expect(find.byType(ProfileEditCard), findsNothing);
       expect(find.byType(StreakCard), findsNothing);
-      expect(find.text('학습 리포트'), findsNothing);
+      expect(find.text('학습 보고서'), findsNothing);
     });
   });
 
   group('로그인 상태', () {
-    testWidgets('사용자 이름과 학습 리포트 카드가 보인다', (tester) async {
+    testWidgets('사용자 이름과 학습 보고서 카드가 보인다', (tester) async {
       await withMockedNetworkImages(() async {
         await pumpOnoWidget(
           tester,
@@ -128,7 +128,7 @@ void main() {
       });
 
       expect(find.textContaining('오노프렌즈님의 학습 기록'), findsOneWidget);
-      expect(find.text('학습 리포트'), findsOneWidget);
+      expect(find.text('학습 보고서'), findsOneWidget);
       expect(find.byType(ProfileEditCard), findsOneWidget);
       expect(find.byType(StreakCard), findsOneWidget);
     });
@@ -147,7 +147,7 @@ void main() {
       expect(find.textContaining('이름 없음님의 학습 기록'), findsOneWidget);
     });
 
-    testWidgets('학습 리포트 카드를 탭하면 ReviewReportScreen 으로 이동한다', (tester) async {
+    testWidgets('학습 보고서 카드를 탭하면 ReviewReportScreen 으로 이동한다', (tester) async {
       final navigatorObserver = _MockNavigatorObserver();
       when(() => navigatorObserver.didPush(any(), any())).thenReturn(null);
 
@@ -160,7 +160,7 @@ void main() {
         );
       });
 
-      await tester.tap(find.text('학습 리포트'));
+      await tester.tap(find.text('학습 보고서'));
       await tester.pumpAndSettle();
 
       expect(find.byType(ReviewReportScreen), findsOneWidget);

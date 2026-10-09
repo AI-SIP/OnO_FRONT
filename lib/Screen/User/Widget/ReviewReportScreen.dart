@@ -1,28 +1,41 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:ono/Model/LearningReport/LearningReportResponseModel.dart';
+import 'package:ono/Model/LearningReport/LearningOverviewModel.dart';
 import 'package:ono/Module/Text/StandardText.dart';
-import 'package:ono/Module/Theme/ClayIcon.dart';
 import 'package:ono/Module/Theme/ThemeHandler.dart';
+import 'package:ono/Provider/ReviewDueProvider.dart';
 import 'package:ono/Provider/UserProvider.dart';
+import 'package:ono/Screen/Folder/DirectoryScreen.dart';
 import 'package:ono/Screen/ProblemShare/AchievementCardScreen.dart';
+import 'package:ono/Screen/ReviewDue/ReviewDueScreen.dart';
 import 'package:ono/Service/Api/LearningReport/LearningReportService.dart';
+import 'package:ono/Util/AppAnalytics.dart';
+import 'package:ono/Util/AppClock.dart';
 import 'package:provider/provider.dart';
-import '../../../Util/AppSnackBar.dart';
-import '../../../Module/Motion/AppHaptic.dart';
-import '../../../Module/Motion/PressableScale.dart';
-import '../../../Module/Motion/TossPageRoute.dart';
-import '../../../Module/Motion/AnimatedGauge.dart';
+
+import '../../../Module/Design/AppColors.dart';
+import '../../../Module/Design/AppLayout.dart';
 import '../../../Module/Motion/AppMotion.dart';
 import '../../../Module/Motion/AppearTransition.dart';
-import '../../../Module/Design/AppColors.dart';
-import '../../../Module/Design/AppRadius.dart';
-import '../../../Module/Design/AppSpacing.dart';
-import 'package:ono/Util/AppAnalytics.dart';
-import '../../../Module/Design/AppLayout.dart';
+import '../../../Module/Motion/MotionReplayScope.dart';
+import '../../../Module/Motion/PressableScale.dart';
+import '../../../Module/Motion/TossPageRoute.dart';
+import '../../../Util/AppSnackBar.dart';
+import 'LearningReport/NoteStatusCard.dart';
+import 'LearningReport/ReportCard.dart';
+import 'LearningReport/ReportPalette.dart';
+import 'LearningReport/ReportPeriodSegments.dart';
+import 'LearningReport/ReportSummaryCard.dart';
+import 'LearningReport/ReportTrendCard.dart';
+import 'LearningReport/ReportWording.dart';
+import 'LearningReport/ReviewDueCard.dart';
+import 'LearningReport/WeakFolderCard.dart';
 
-enum ReportPeriod { weekly, monthly, total }
-
+/// 학습 보고서.
+///
+/// 위에서 아래로 "이번 기간에 얼마나 했고, 내 오답노트가 지금 어떤 상태이고,
+/// 그래서 지금 무엇을 풀면 되는지"가 읽히게 다섯 칸을 둔다. 요약, 오답노트
+/// 상태, 오늘 복습할 문제, 자주 틀린 폴더, 막대 그래프 순이다.
 class ReviewReportScreen extends StatefulWidget {
   /// 테스트에서 가짜 서비스를 넣기 위한 것이다. 앱에서는 넘기지 않는다.
   final LearningReportService? reportService;
@@ -37,950 +50,481 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
   late final LearningReportService _reportService =
       widget.reportService ?? LearningReportService();
 
-  ReportPeriod _selectedPeriod = ReportPeriod.weekly;
-  LearningReportResponseModel? _report;
-  bool _isLoading = true;
-  String? _errorMessage;
+  LearningOverviewPeriod _period = LearningOverviewPeriod.week;
+
+  /// 기간마다 보고 있는 날. null 이면 오늘이 들어 있는 기간이다. 주간에서
+  /// 지난 주로 넘긴 뒤 월간을 봤다가 돌아와도 보던 주가 그대로 있게 한다.
+  final Map<LearningOverviewPeriod, DateTime?> _baseDates = {};
+
+  /// 받은 보고서. 탭을 오갈 때마다 다시 부르지 않는다. 당겨서 새로 고치거나
+  /// 복습하고 돌아오면 비운다.
+  final Map<String, LearningOverviewModel> _cache = {};
+
+  /// 지금 받는 중인 보고서의 키.
+  String? _loadingKey;
+  bool _failed = false;
+
+  /// 늦게 돌아온 응답이 그사이 바꾼 기간을 덮지 않게 요청마다 올린다.
+  int _requestSerial = 0;
+
+  /// 바뀔 때마다 숫자와 막대가 처음부터 다시 차오른다.
+  int _replayToken = 0;
+
+  bool _sharing = false;
+  bool _openingReviewDue = false;
 
   @override
   void initState() {
     super.initState();
     AppAnalytics.logScreenView('ReviewReportScreen');
-    _fetchReport();
+    _load();
+    // 첫 build 안에서 Provider 를 건드리면 build 중 알림 오류가 난다.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      context.read<ReviewDueProvider>().fetchReviewDue();
+    });
   }
 
-  Future<void> _fetchReport({DateTime? baseDate}) async {
+  DateTime get _today => DateUtils.dateOnly(AppClock.now());
+
+  /// [date] 가 들어 있는 주의 월요일이나 달의 1일.
+  DateTime _periodStart(LearningOverviewPeriod period, DateTime date) {
+    final day = DateUtils.dateOnly(date);
+    switch (period) {
+      case LearningOverviewPeriod.week:
+        return _shiftDays(day, -(day.weekday - DateTime.monday));
+      case LearningOverviewPeriod.month:
+        return DateTime(day.year, day.month, 1);
+      case LearningOverviewPeriod.total:
+        return day;
+    }
+  }
+
+  /// 기간과 그 첫날로 보고서를 구분한다.
+  String _keyOf(LearningOverviewPeriod period, DateTime? baseDate) {
+    if (period == LearningOverviewPeriod.total) return period.apiValue;
+    final start = _periodStart(period, baseDate ?? _today);
+    return '${period.apiValue}:${DateFormat('yyyy-MM-dd').format(start)}';
+  }
+
+  String get _currentKey => _keyOf(_period, _baseDates[_period]);
+
+  LearningOverviewModel? get _overview => _cache[_currentKey];
+
+  Future<void> _load({bool force = false}) async {
+    final period = _period;
+    final baseDate = _baseDates[period];
+    final key = _keyOf(period, baseDate);
+
+    if (!force && _cache.containsKey(key)) {
+      // 다른 탭에서 받던 응답이 늦게 와도 지금 화면을 다시 그리지 않게 한다.
+      // 받은 것은 그대로 기억해 둔다.
+      _requestSerial++;
+      setState(() {
+        _loadingKey = null;
+        _failed = false;
+        _replayToken++;
+      });
+      return;
+    }
+
+    final serial = ++_requestSerial;
     setState(() {
-      _isLoading = true;
-      _errorMessage = null;
+      _loadingKey = key;
+      _failed = false;
     });
 
     try {
-      final response =
-          await _reportService.getLearningReport(baseDate: baseDate);
+      final overview = await _reportService.getOverview(
+        period: period,
+        baseDate: baseDate,
+      );
       if (!mounted) return;
+      // 늦게 온 응답은 비어 있는 자리만 채운다. 그사이 새로 고친 값이 있으면
+      // 그게 더 최신이라 덮지 않는다.
+      if (serial == _requestSerial || !_cache.containsKey(key)) {
+        _cache[key] = overview;
+      }
+      if (serial != _requestSerial) return;
       setState(() {
-        _report = response;
-        _isLoading = false;
+        _loadingKey = null;
+        _replayToken++;
       });
-    } catch (e) {
+    } catch (_) {
+      if (!mounted || serial != _requestSerial) return;
+      // 받아 둔 것을 그대로 보여 주는 중이면 실패를 알리지 않으면 새로 고친
+      // 줄 안다.
+      if (_cache.containsKey(key)) {
+        AppSnackBar.showError('보고서를 새로 불러오지 못했어요.');
+      }
+      setState(() {
+        _loadingKey = null;
+        _failed = true;
+      });
+    }
+  }
+
+  void _selectPeriod(LearningOverviewPeriod period) {
+    if (period == _period) return;
+    AppAnalytics.logEvent(
+      'report_period_view',
+      {'period': period.analyticsValue},
+    );
+    _period = period;
+    _load();
+  }
+
+  /// 이전, 다음 기간으로 넘긴다. 그 기간 안의 아무 날이나 보내면 서버가 그
+  /// 주나 달을 준다.
+  void _move({required bool forward}) {
+    final overview = _overview;
+    if (overview == null) return;
+    final DateTime? target = forward
+        ? (overview.endDate == null ? null : _shiftDays(overview.endDate!, 1))
+        : (overview.startDate == null
+            ? null
+            : _shiftDays(overview.startDate!, -1));
+    if (target == null) return;
+
+    AppAnalytics.logEvent('report_period_move', {
+      'period': _period.analyticsValue,
+      'choice': forward ? 'next' : 'previous',
+    });
+
+    // 오늘이 들어 있는 기간으로 돌아오면 날짜 없이 부른다. 서버의 오늘(KST)
+    // 기준으로 받아야 기기 시간대가 달라도 이번 주가 어긋나지 않는다.
+    final isCurrent =
+        _periodStart(_period, target) == _periodStart(_period, _today);
+    _baseDates[_period] = isCurrent ? null : target;
+    _load();
+  }
+
+  /// 받아 둔 보고서를 버리고 다시 받는다. 보고 있는 기간은 새 응답이 올
+  /// 때까지 그대로 둔다. 같이 비우면 새로 고치는 동안 화면이 로딩으로 바뀐다.
+  Future<void> _refresh() async {
+    final shown = _cache[_currentKey];
+    _cache.clear();
+    if (shown != null) _cache[_currentKey] = shown;
+    await Future.wait([
+      _load(force: true),
+      context.read<ReviewDueProvider>().fetchReviewDue(),
+    ]);
+  }
+
+  /// 추천 복습 목록을 연다. 예전에는 맨 앞 문제부터 바로 열었는데, 무엇을
+  /// 풀게 될지 모른 채 들어가서 목록을 먼저 보고 고르게 한다. 복습하고
+  /// 돌아오면 숫자가 바뀌었으니 보고서와 오늘 복습할 문제를 다시 받는다.
+  Future<void> _openReviewDue(int count) async {
+    // 빠르게 두 번 누르면 목록 화면이 두 번 쌓인다.
+    if (_openingReviewDue) return;
+    _openingReviewDue = true;
+    AppAnalytics.logEvent('report_review_due_tap', {'count': count});
+    try {
+      await Navigator.push(
+        context,
+        TossPageRoute(builder: (_) => const ReviewDueScreen()),
+      );
+    } finally {
+      _openingReviewDue = false;
+    }
+    if (!mounted) return;
+    _refresh();
+  }
+
+  void _openFolder(LearningWeakFolder folder, int rank) {
+    AppAnalytics.logEvent('report_folder_tap', {'rank': rank});
+    Navigator.push(
+      context,
+      TossPageRoute(builder: (_) => DirectoryScreen(folderId: folder.folderId)),
+    );
+  }
+
+  /// 공유 카드는 예전 보고서의 주간 값을 그린다. 화면을 열 때마다 부르지
+  /// 않고 공유를 누를 때 한 번만 받는다.
+  Future<void> _share() async {
+    if (_sharing) return;
+    final userInfo = context.read<UserProvider>().userInfoModel;
+    if (userInfo == null) {
+      AppSnackBar.showError('사용자 정보를 불러올 수 없어요.');
+      return;
+    }
+    setState(() => _sharing = true);
+    try {
+      final report = await _reportService.getLearningReport();
       if (!mounted) return;
-      setState(() {
-        _isLoading = false;
-        _errorMessage = '학습 리포트를 불러오지 못했어요. 잠시 후 다시 시도해 주세요.';
-      });
+      await Navigator.push(
+        context,
+        TossPageRoute(
+          builder: (_) => AchievementCardScreen(
+            userInfo: userInfo,
+            weeklyReport: report.weekly,
+          ),
+        ),
+      );
+    } catch (_) {
+      AppSnackBar.showError('공유할 보고서를 불러오지 못했어요.');
+    } finally {
+      if (mounted) setState(() => _sharing = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final themeProvider = Provider.of<ThemeHandler>(context);
-    final userProvider = Provider.of<UserProvider>(context);
-    final userName = userProvider.userInfoModel?.name ?? '사용자';
+    final themeProvider = context.watch<ThemeHandler>();
+    final palette = ReportPalette.of(themeProvider.primaryColor);
+    final overview = _overview;
+    final isEmpty = overview != null && overview.summary.reviewCount == 0;
 
     return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        centerTitle: true,
-        backgroundColor: Colors.white,
-        title: StandardText(
-          text: '$userName님의 학습 리포트',
-          fontSize: 18,
-          color: themeProvider.primaryColor,
-        ),
-        actions: [
-          IconButton(
-            tooltip: '공유하기',
-            icon: Icon(
-              Icons.share_rounded,
-              color: _report != null
-                  ? themeProvider.primaryColor
-                  : Colors.grey[300],
-            ),
-            onPressed:
-                _report != null ? () => _navigateToShareCard(context) : null,
-          ),
-        ],
-      ),
-      // 태블릿 가로에서 카드가 화면 끝까지 늘어나지 않게 모은다.
-      body: AppContentWidth(child: _buildBody(themeProvider)),
-    );
-  }
-
-  Widget _buildBody(ThemeHandler themeProvider) {
-    if (_isLoading) {
-      return Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const ClayIcon(
-              'assets/Icon/Glass.png',
-              width: 120,
-              height: 120,
-            ),
-            const SizedBox(height: 12),
-            const StandardText(
-              text: '리포트 분석 중...',
-              fontSize: 17,
-              color: AppColors.textPrimary,
-              fontWeight: FontWeight.w700,
-              fontFamily: 'PretendardBold',
-            ),
-            const SizedBox(height: 12),
-            SizedBox(
-              width: 22,
-              height: 22,
-              child: CircularProgressIndicator(
-                strokeWidth: 2.5,
-                color: themeProvider.primaryColor,
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-
-    if (_errorMessage != null) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              StandardText(
-                text: _errorMessage!,
-                fontSize: 14,
-                color: AppColors.textPrimary,
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 12),
-              ElevatedButton(
-                onPressed: _fetchReport,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: themeProvider.primaryColor,
+      backgroundColor: AppColors.surface,
+      body: SafeArea(
+        bottom: false,
+        child: DefaultTextStyle.merge(
+          style: reportTabularFigures,
+          child: AppContentWidth(
+            child: Column(
+              children: [
+                _buildHeader(
+                  showShare: !isEmpty,
+                  titleColor: themeProvider.primaryColor,
                 ),
-                child: const StandardText(
-                  text: '다시 시도',
-                  fontSize: 13,
-                  color: Colors.white,
+                AppearTransition(
+                  child: ReportPeriodSegments(
+                    selected: _period,
+                    palette: palette,
+                    onChanged: _selectPeriod,
+                  ),
                 ),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-
-    if (_report == null) {
-      return const Center(
-        child: StandardText(
-          text: '표시할 리포트가 없어요.',
-          fontSize: 14,
-          color: AppColors.textPrimary,
-        ),
-      );
-    }
-
-    final periodReport = _getCurrentPeriodReport();
-    final comparison = _getCurrentComparison();
-    final viewData = _ReportViewData.fromPeriod(periodReport);
-
-    // 위에서부터 한 덩어리씩 들어오게 한다. 숫자와 그래프가 많은 화면이라
-    // 한꺼번에 나타나면 어디를 봐야 할지 알기 어렵다.
-    var step = 0;
-    Widget appear(Widget child) => AppearTransition(
-          delay: AppMotion.stagger * (step++),
-          child: child,
-        );
-
-    return ListView(
-      // 화면 밖 카드를 미리 만들어 두면 스크롤해서 닿기도 전에 막대가 다
-      // 자라 버린다. 도달할 때 만들어지도록 미리 만드는 범위를 없앤다.
-      // 카드가 열 개 남짓이라 이렇게 해도 스크롤이 무거워지지 않는다.
-      cacheExtent: 0,
-      padding: const EdgeInsets.fromLTRB(16, 18, 16, 30),
-      children: [
-        appear(_buildSummaryCard(themeProvider, viewData, comparison)),
-        const SizedBox(height: 26),
-        appear(_buildPeriodSelector(themeProvider)),
-        const SizedBox(height: 30),
-        appear(_buildSectionTitle(themeProvider, '핵심 지표', Icons.auto_graph)),
-        const SizedBox(height: 14),
-        appear(_buildStatsGrid(themeProvider, viewData)),
-        const SizedBox(height: 20),
-        appear(_buildSectionTitle(
-          themeProvider,
-          '복습 횟수 추이',
-          Icons.stacked_bar_chart_rounded,
-        )),
-        const SizedBox(height: 14),
-        appear(_buildTrendCard(themeProvider, viewData)),
-        const SizedBox(height: 40),
-        appear(_buildSectionTitle(
-          themeProvider,
-          '집중 복습 추천',
-          Icons.edit_note_rounded,
-        )),
-        const SizedBox(height: 14),
-        appear(_buildWeakTopicCard(themeProvider, viewData)),
-        const SizedBox(height: 14),
-        appear(_buildActionCard(themeProvider)),
-        const SizedBox(height: 18),
-        const Padding(
-          padding: EdgeInsets.only(left: 4),
-          child: Row(
-            children: [
-              Icon(
-                Icons.info_outline_rounded,
-                size: 14,
-                color: Colors.grey,
-              ),
-              SizedBox(width: 6),
-              StandardText(
-                text: '학습 리포트는 매일 자정 갱신돼요.',
-                fontSize: 12,
-                color: AppColors.textSecondary,
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 8),
-      ],
-    );
-  }
-
-  LearningPeriodReport _getCurrentPeriodReport() {
-    switch (_selectedPeriod) {
-      case ReportPeriod.weekly:
-        return _report!.weekly;
-      case ReportPeriod.monthly:
-        return _report!.monthly;
-      case ReportPeriod.total:
-        return _report!.total;
-    }
-  }
-
-  LearningReportComparison? _getCurrentComparison() {
-    switch (_selectedPeriod) {
-      case ReportPeriod.weekly:
-        return _report!.weeklyComparison;
-      case ReportPeriod.monthly:
-        return _report!.monthlyComparison;
-      case ReportPeriod.total:
-        return null;
-    }
-  }
-
-  Widget _buildSummaryCard(
-    ThemeHandler themeProvider,
-    _ReportViewData data,
-    LearningReportComparison? comparison,
-  ) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(AppRadius.xlarge),
-        border: Border.all(
-          color: themeProvider.primaryColor.withValues(alpha: 0.22),
-          width: 1.2,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: themeProvider.primaryColor.withValues(alpha: 0.1),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: themeProvider.primaryColor,
-                  borderRadius: BorderRadius.circular(AppRadius.full),
-                ),
-                child: StandardText(
-                  text: data.badge,
-                  fontSize: 11,
-                  color: Colors.white,
-                  fontWeight: FontWeight.w700,
-                  fontFamily: 'PretendardBold',
-                ),
-              ),
-              const Spacer(),
-              Icon(
-                Icons.insights_rounded,
-                color: themeProvider.primaryColor,
-                size: 22,
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          StandardText(
-            text: data.title,
-            fontSize: 18,
-            color: AppColors.textPrimary,
-            fontWeight: FontWeight.w800,
-            fontFamily: 'PretendardBold',
-          ),
-          const SizedBox(height: 6),
-          StandardText(
-            text: _buildSummarySubtitle(comparison),
-            fontSize: 13,
-            color: AppColors.textSecondary,
-            fontWeight: FontWeight.w600,
-            fontFamily: 'PretendardLight',
-          ),
-          const SizedBox(height: AppSpacing.lg),
-          // 이 기간을 한 줄로 요약한다. 아래 카드를 다 읽지 않아도
-          // 무엇을 얼마나 했는지 먼저 눈에 들어오게 한다.
-          Row(
-            children: [
-              _buildSummaryFigure(
-                  '작성', '${data.noteWriteCount}', themeProvider),
-              _buildSummaryDivider(),
-              _buildSummaryFigure('복습', '${data.reviewCount}', themeProvider),
-              _buildSummaryDivider(),
-              _buildSummaryFigure(
-                '정답률',
-                '${data.averageAccuracy.toStringAsFixed(0)}%',
-                themeProvider,
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// 요약 카드 안에 나란히 놓는 수치 하나.
-  Widget _buildSummaryFigure(
-      String label, String value, ThemeHandler themeProvider) {
-    return Expanded(
-      child: Column(
-        children: [
-          StandardText(
-            text: value,
-            fontSize: 20,
-            color: themeProvider.primaryColor,
-            fontFamily: 'PretendardBold',
-          ),
-          const SizedBox(height: 2),
-          StandardText(
-            text: label,
-            fontSize: 11,
-            color: AppColors.textTertiary,
-            fontWeight: FontWeight.w600,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSummaryDivider() {
-    return Container(
-      width: 1,
-      height: 28,
-      color: AppColors.border,
-    );
-  }
-
-  String _buildSummarySubtitle(LearningReportComparison? comparison) {
-    if (comparison == null) {
-      if (_report!.recommendations.nextWeekGoal.isNotEmpty) {
-        return _report!.recommendations.nextWeekGoal;
-      }
-      return _report!.recommendations.strengths.isNotEmpty
-          ? _report!.recommendations.strengths.first
-          : '학습 리포트를 확인해 주세요.';
-    }
-
-    final reviewText =
-        _buildChangeSentence('복습 횟수', comparison.reviewCountChangeRate);
-    final accuracyText =
-        _buildChangeSentence('정답률', comparison.averageAccuracyChangeRate);
-    final tone = _buildComparisonTone(
-      comparison.reviewCountChangeRate,
-      comparison.averageAccuracyChangeRate,
-    );
-    return '이전 기간보다 $reviewText, $accuracyText. $tone';
-  }
-
-  String _buildChangeSentence(String subject, double value) {
-    final subjectWithParticle = _withSubjectParticle(subject);
-    final rate = _formatPercent(value.abs());
-    if (value > 0) {
-      return '$subjectWithParticle $rate% 상승했어요';
-    }
-    if (value < 0) {
-      return '$subjectWithParticle $rate% 하락했어요';
-    }
-    return '$subjectWithParticle 변화가 없어요';
-  }
-
-  String _buildComparisonTone(double reviewRate, double accuracyRate) {
-    if (reviewRate >= 0 && accuracyRate >= 0) {
-      return '학습 흐름이 좋아지고 있어요.';
-    }
-    if (reviewRate < 0 && accuracyRate < 0) {
-      return '복습 리듬을 다시 잡아보면 좋아요.';
-    }
-    return '현재 추이를 유지하면서 약한 부분을 보완해보세요.';
-  }
-
-  String _withSubjectParticle(String word) {
-    if (word.isEmpty) return word;
-    final lastCode = word.runes.last;
-    if (lastCode < 0xAC00 || lastCode > 0xD7A3) {
-      return '$word가';
-    }
-    final hasBatchim = ((lastCode - 0xAC00) % 28) != 0;
-    return '$word${hasBatchim ? '이' : '가'}';
-  }
-
-  String _formatPercent(double value) {
-    final fixed = value.toStringAsFixed(1);
-    return fixed.endsWith('.0') ? fixed.substring(0, fixed.length - 2) : fixed;
-  }
-
-  Widget _buildPeriodSelector(ThemeHandler themeProvider) {
-    return Container(
-      padding: const EdgeInsets.all(3),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(AppRadius.large),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Row(
-        children: [
-          _buildPeriodChip(themeProvider, ReportPeriod.weekly, '주간'),
-          _buildPeriodChip(themeProvider, ReportPeriod.monthly, '월간'),
-          _buildPeriodChip(themeProvider, ReportPeriod.total, '누적'),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPeriodChip(
-    ThemeHandler themeProvider,
-    ReportPeriod period,
-    String label,
-  ) {
-    final isSelected = _selectedPeriod == period;
-    return Expanded(
-      child: PressableScale(
-        haptic: HapticLevel.selection,
-        onTap: () {
-          AppAnalytics.logEvent('report_period_view', {'period': period.name});
-          setState(() {
-            _selectedPeriod = period;
-          });
-        },
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 180),
-          curve: Curves.easeOut,
-          margin: const EdgeInsets.symmetric(horizontal: 2),
-          padding: const EdgeInsets.symmetric(vertical: 8),
-          decoration: BoxDecoration(
-            color: isSelected
-                ? themeProvider.primaryColor.withValues(alpha: 0.15)
-                : Colors.transparent,
-            borderRadius: BorderRadius.circular(AppRadius.medium),
-            border: isSelected
-                ? Border.all(color: themeProvider.primaryColor, width: 1)
-                : null,
-          ),
-          child: Center(
-            child: StandardText(
-              text: label,
-              fontSize: 13,
-              color:
-                  isSelected ? themeProvider.darkPrimaryColor : Colors.black87,
-              fontWeight: FontWeight.w800,
-              fontFamily: 'PretendardBold',
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSectionTitle(
-    ThemeHandler themeProvider,
-    String title,
-    IconData icon,
-  ) {
-    return Row(
-      children: [
-        Container(
-          width: 32,
-          height: 32,
-          decoration: BoxDecoration(
-            color: themeProvider.primaryColor.withValues(alpha: 0.10),
-            borderRadius: BorderRadius.circular(AppRadius.medium),
-          ),
-          child: Icon(icon, size: 17, color: themeProvider.primaryColor),
-        ),
-        const SizedBox(width: AppSpacing.md),
-        StandardText(
-          text: title,
-          fontSize: 17,
-          color: AppColors.textPrimary,
-          fontFamily: 'PretendardBold',
-        ),
-      ],
-    );
-  }
-
-  Widget _buildStatsGrid(ThemeHandler themeProvider, _ReportViewData data) {
-    return Column(
-      children: [
-        IntrinsicHeight(
-          child: Row(
-            // 두 카드의 높이를 서로 맞춘다. 늘어날 수 있게 바꾸면서 한쪽만
-            // 커지면 줄이 어긋나 보인다.
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Expanded(
-                child: _buildStatCard(
-                  themeProvider,
-                  '작성한 오답 노트',
-                  '${data.noteWriteCount}개',
-                  Icons.edit_note_rounded,
-                  const Color(0xFF9B7EDE),
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: _buildStatCard(
-                  themeProvider,
-                  '복습 세트 열람',
-                  '${data.notePracticeCount}회',
-                  Icons.menu_book_rounded,
-                  const Color(0xFF4A90D9),
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 10),
-        IntrinsicHeight(
-          child: Row(
-            // 두 카드의 높이를 서로 맞춘다. 늘어날 수 있게 바꾸면서 한쪽만
-            // 커지면 줄이 어긋나 보인다.
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Expanded(
-                child: _buildStatCard(
-                  themeProvider,
-                  '오답노트 복습',
-                  '${data.reviewCount}회',
-                  Icons.repeat,
-                  const Color(0xFF3DBE8B),
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: _buildStatCard(
-                  themeProvider,
-                  '평균 정답률',
-                  '${data.averageAccuracy.toStringAsFixed(1)}%',
-                  Icons.check_circle_outline,
-                  const Color(0xFF2FA97C),
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 10),
-        IntrinsicHeight(
-          child: Row(
-            // 두 카드의 높이를 서로 맞춘다. 늘어날 수 있게 바꾸면서 한쪽만
-            // 커지면 줄이 어긋나 보인다.
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Expanded(
-                child: _buildStatCard(
-                  themeProvider,
-                  '연속 학습일',
-                  '${data.consecutiveLearningDays}일',
-                  Icons.local_fire_department_outlined,
-                  const Color(0xFFF2764B),
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: _buildStatCard(
-                  themeProvider,
-                  '평균 학습 시간',
-                  '${data.averageStudyTimeMinutes.toStringAsFixed(1)}분',
-                  Icons.schedule,
-                  const Color(0xFFE0736F),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  /// "12개", "0.0%", "3.5분" 처럼 숫자 뒤에 단위가 붙은 값을 갈라 그린다.
-  ///
-  /// 통째로 키우면 글자가 커서 부담스럽고, 통째로 줄이면 무엇이 중요한 값인지
-  /// 안 보인다. 숫자만 키우고 단위는 작고 옅게 두면 시선이 숫자에 먼저 간다.
-  Widget _buildStatValue(String value) {
-    final match = RegExp(r'^([\d.,]+)(.*)$').firstMatch(value);
-    final number = match?.group(1) ?? value;
-    final unit = match?.group(2) ?? '';
-
-    // 글자를 키우면 숫자와 단위가 카드 폭을 넘어간다. 줄바꿈할 수 있는
-    // 문장이 아니라 한 덩어리라, 넘칠 때는 줄이는 쪽이 자연스럽다.
-    return FittedBox(
-      fit: BoxFit.scaleDown,
-      alignment: Alignment.centerLeft,
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.baseline,
-        textBaseline: TextBaseline.alphabetic,
-        children: [
-          StandardText(
-            text: number,
-            fontSize: 22,
-            color: AppColors.textPrimary,
-            fontFamily: 'PretendardBold',
-          ),
-          if (unit.isNotEmpty) ...[
-            const SizedBox(width: 2),
-            StandardText(
-              text: unit,
-              fontSize: 13,
-              color: AppColors.textTertiary,
-              fontWeight: FontWeight.w600,
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStatCard(
-    ThemeHandler themeProvider,
-    String label,
-    String value,
-    IconData icon,
-    Color accent,
-  ) {
-    return Container(
-      // 고정 높이(104)로 두면 기기 글자 크기를 키운 사용자에게서 라벨과 숫자가
-      // 카드 밖으로 넘친다. 최소 높이만 잡고 내용이 크면 늘어나게 둔다.
-      // 같은 줄의 두 카드는 IntrinsicHeight 로 높이를 맞춘다.
-      constraints: const BoxConstraints(minHeight: 104),
-      padding: const EdgeInsets.fromLTRB(
-          AppSpacing.lg, AppSpacing.lg, AppSpacing.lg, AppSpacing.md),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppRadius.large),
-        border: Border.all(color: AppColors.border),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 6,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // 아이콘을 맨몸으로 두면 존재감이 없다. 지표마다 다른 색을 옅게 깔되,
-          // 라벨과 같은 줄에 둔다. 세로로 쌓으면 카드 높이를 넘긴다.
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  color: accent.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(AppRadius.small),
-                ),
-                child: Icon(icon, size: 14, color: accent),
-              ),
-              const SizedBox(width: AppSpacing.sm),
-              Expanded(
-                child: StandardText(
-                  text: label,
-                  fontSize: 12,
-                  color: AppColors.textTertiary,
-                  fontWeight: FontWeight.w600,
-                  fontFamily: 'PretendardBold',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ],
-          ),
-          const Spacer(),
-          _buildStatValue(value),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTrendCard(ThemeHandler themeProvider, _ReportViewData data) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(AppRadius.large),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: SizedBox(
-        height: 134,
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: List.generate(data.trendBars.length, (index) {
-            final isPeak = data.trendBars[index] ==
-                data.trendBars.reduce((a, b) => a > b ? a : b);
-            return Expanded(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  Expanded(
-                    child: LayoutBuilder(
-                      builder: (context, constraints) {
-                        const labelHeight = 14.0;
-                        const gap = 4.0;
-                        const minBarHeight = 4.0;
-                        final usableBarHeight =
-                            (constraints.maxHeight - labelHeight - gap)
-                                .clamp(0.0, constraints.maxHeight);
-
-                        final rawBarHeight =
-                            usableBarHeight * data.trendBars[index];
-                        final barHeight = rawBarHeight < minBarHeight
-                            ? minBarHeight
-                            : (rawBarHeight > usableBarHeight
-                                ? usableBarHeight
-                                : rawBarHeight);
-
-                        final numberBottom = barHeight + gap;
-
-                        return Stack(
-                          children: [
-                            Align(
-                              alignment: Alignment.bottomCenter,
-                              // 0 에서 제 높이까지 자라난다. 값이 바뀌면 그때
-                              // 있던 높이에서 이어서 움직인다.
-                              child: AnimatedGaugeValue(
-                                value: barHeight,
-                                duration: AppMotion.gauge,
-                                delay: AppMotion.stagger * index,
-                                builder: (context, grown) => Container(
-                                  width: 16,
-                                  height: grown,
-                                  decoration: BoxDecoration(
-                                    borderRadius:
-                                        BorderRadius.circular(AppRadius.small),
-                                    gradient: LinearGradient(
-                                      begin: Alignment.bottomCenter,
-                                      end: Alignment.topCenter,
-                                      colors: [
-                                        themeProvider.primaryColor,
-                                        themeProvider.lightPrimaryColor,
-                                      ],
-                                    ),
-                                    boxShadow: isPeak
-                                        ? [
-                                            BoxShadow(
-                                              color: themeProvider.primaryColor
-                                                  .withValues(alpha: 0.35),
-                                              blurRadius: 8,
-                                              offset: const Offset(0, 2),
-                                            ),
-                                          ]
-                                        : null,
-                                  ),
-                                ),
-                              ),
-                            ),
-                            Positioned(
-                              left: 0,
-                              right: 0,
-                              bottom: numberBottom,
-                              child: Center(
-                                child: SizedBox(
-                                  height: labelHeight,
-                                  child: FittedBox(
-                                    fit: BoxFit.scaleDown,
-                                    child: StandardText(
-                                      text: data.trendCounts[index].toString(),
-                                      fontSize: 12,
-                                      color: AppColors.textPrimary,
-                                      fontWeight: FontWeight.w700,
-                                      fontFamily: 'PretendardBold',
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        );
-                      },
+                Expanded(
+                  child: RefreshIndicator(
+                    color: palette.deep,
+                    onRefresh: _refresh,
+                    child: MotionReplayScope(
+                      token: _replayToken,
+                      child: SingleChildScrollView(
+                        // 내용이 짧아도 당겨서 새로 고칠 수 있게 한다.
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        padding: const EdgeInsets.only(bottom: 32),
+                        child: _buildBody(palette, overview),
+                      ),
                     ),
                   ),
-                  const SizedBox(height: 8),
-                  SizedBox(
-                    height: 16,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// 뒤로 가기, 가운데 제목, 공유. 제목은 마이페이지처럼 테마색으로 쓴다.
+  Widget _buildHeader({required bool showShare, required Color titleColor}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 6),
+      child: Row(
+        children: [
+          IconButton(
+            tooltip: '뒤로 가기',
+            onPressed: () => Navigator.maybePop(context),
+            icon: const Icon(
+              Icons.arrow_back_ios_new_rounded,
+              size: 20,
+              color: AppColors.textPrimary,
+            ),
+          ),
+          Expanded(
+            child: StandardText(
+              text: '학습 보고서',
+              fontSize: 18,
+              height: 1.3,
+              color: titleColor,
+              textAlign: TextAlign.center,
+              maxLines: 1,
+            ),
+          ),
+          if (!showShare)
+            // 공유 버튼이 없어도 제목이 가운데에 오게 같은 폭을 비워 둔다.
+            const SizedBox(width: 48)
+          else
+            _sharing
+                ? const SizedBox(
+                    width: 48,
+                    height: 48,
                     child: Center(
-                      child: FittedBox(
-                        fit: BoxFit.scaleDown,
-                        child: StandardText(
-                          text: data.trendLabels[index],
-                          fontSize: 11,
-                          color: AppColors.textSecondary,
-                          fontWeight: FontWeight.w700,
-                          fontFamily: 'PretendardBold',
+                      child: SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: AppColors.textPrimary,
                         ),
                       ),
                     ),
-                  ),
-                ],
-              ),
-            );
-          }),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildWeakTopicCard(ThemeHandler themeProvider, _ReportViewData data) {
-    final items = data.weakAreas.isEmpty
-        ? ['현재 취약 영역 데이터가 없어요.']
-        : data.weakAreas
-            .map((e) => '${e.topic} (오답 ${e.wrongCount}회)')
-            .toList();
-
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(AppRadius.large),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: items
-            .map(
-              (topic) => Container(
-                margin: const EdgeInsets.only(bottom: 8),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(AppRadius.medium),
-                  color: themeProvider.primaryColor.withValues(alpha: 0.08),
-                  border: Border.all(
-                    color: themeProvider.primaryColor.withValues(alpha: 0.2),
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.arrow_right_alt_rounded,
-                      size: 18,
-                      color: themeProvider.primaryColor,
-                    ),
-                    const SizedBox(width: 6),
-                    Expanded(
-                      child: StandardText(
-                        text: topic,
-                        fontSize: 13,
-                        color: AppColors.textPrimary,
-                        fontWeight: FontWeight.w700,
-                        fontFamily: 'PretendardBold',
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            )
-            .toList(),
-      ),
-    );
-  }
-
-  void _navigateToShareCard(BuildContext context) {
-    final userInfo =
-        Provider.of<UserProvider>(context, listen: false).userInfoModel;
-    if (userInfo == null) {
-      AppSnackBar.showError('사용자 정보를 불러올 수 없어요.');
-      return;
-    }
-    Navigator.push(
-      context,
-      TossPageRoute(
-        builder: (_) => AchievementCardScreen(
-          userInfo: userInfo,
-          weeklyReport: _report!.weekly,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildActionCard(ThemeHandler themeProvider) {
-    final actions = _report!.recommendations.actions;
-
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(AppRadius.large),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Row(
-            children: [
-              StandardText(
-                text: '학습 가이드',
-                fontSize: 15,
-                color: AppColors.textPrimary,
-                fontWeight: FontWeight.w700,
-                fontFamily: 'PretendardBold',
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          ...actions.map(
-            (action) => Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.only(top: 5),
-                    child: Icon(
-                      Icons.check_circle,
-                      size: 14,
-                      color: themeProvider.primaryColor,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: StandardText(
-                      text: action,
-                      fontSize: 12,
+                  )
+                : IconButton(
+                    tooltip: '공유하기',
+                    onPressed: _share,
+                    icon: const Icon(
+                      Icons.ios_share_rounded,
+                      size: 20,
                       color: AppColors.textPrimary,
-                      fontWeight: FontWeight.w600,
-                      fontFamily: 'PretendardLight',
                     ),
                   ),
-                ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBody(ReportPalette palette, LearningOverviewModel? overview) {
+    if (overview == null) {
+      if (_failed && _loadingKey == null) return _buildError();
+      return Padding(
+        padding: const EdgeInsets.only(top: 80),
+        child: Center(
+          child: SizedBox(
+            width: 24,
+            height: 24,
+            child: CircularProgressIndicator(
+              strokeWidth: 2.5,
+              color: palette.deep,
+            ),
+          ),
+        ),
+      );
+    }
+
+    final wording = ReportWording.of(overview);
+    final reviewDue = context.watch<ReviewDueProvider>();
+    final dueData = reviewDue.data;
+    final dueCount = dueData?.dueCount;
+    final canStartReview =
+        (dueCount ?? 0) > 0 && (dueData?.problems.isNotEmpty ?? false);
+    final isEmpty = overview.summary.reviewCount == 0;
+
+    final cards = <(String, Widget Function(Duration delay))>[
+      (
+        'summary',
+        (delay) => ReportSummaryCard(
+              overview: overview,
+              wording: wording,
+              palette: palette,
+              dueCount: dueCount,
+              onStartReview:
+                  canStartReview ? () => _openReviewDue(dueCount!) : null,
+              onPrevious: () => _move(forward: false),
+              onNext: () => _move(forward: true),
+              today: _today,
+              delay: delay,
+            )
+      ),
+      (
+        'status',
+        (delay) => NoteStatusCard(
+              status: overview.noteStatus,
+              wording: wording,
+              palette: palette,
+              delay: delay,
+            )
+      ),
+      // 기록이 없는 지금 기간에는 요약 카드에 같은 버튼이 이미 있다.
+      if (canStartReview && !(isEmpty && wording.isCurrent))
+        (
+          'due',
+          (_) => ReviewDueCard(
+                dueCount: dueCount!,
+                oldestNextReviewAt: dueData!.problems.first.nextReviewAt,
+                today: _today,
+                palette: palette,
+                onStart: () => _openReviewDue(dueCount),
+              )
+        ),
+      if (!isEmpty && overview.weakFolders.isNotEmpty)
+        (
+          'folders',
+          (delay) => WeakFolderCard(
+                folders: overview.weakFolders,
+                palette: palette,
+                onTap: _openFolder,
+                delay: delay,
+              )
+        ),
+      if (!isEmpty && overview.trend.isNotEmpty)
+        (
+          'trend',
+          (delay) => ReportTrendCard(
+                trend: overview.trend,
+                wording: wording,
+                palette: palette,
+                today: _today,
+                delay: delay,
+              )
+        ),
+      if (isEmpty && overview.hasPrevious && !wording.isTotal)
+        (
+          'previous',
+          (_) => _PreviousReportRow(
+                overview: overview,
+                wording: wording,
+                onTap: () => _move(forward: false),
+              )
+        ),
+    ];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        for (var i = 0; i < cards.length; i++) ...[
+          if (i > 0) const ReportSectionGap(),
+          // 칸은 머리와 탭 뒤로 하나씩 들어온다.
+          // 오늘 복습할 문제 카드가 생기거나 빠질 때 아래 카드가 새로 만들어져
+          // 차오름이 다시 돌지 않게 카드마다 key 를 준다.
+          AppearTransition(
+            key: ValueKey(cards[i].$1),
+            delay: AppMotion.stagger * 2 * (i + 1),
+            child: cards[i].$2(AppMotion.stagger * 2 * (i + 1)),
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildError() {
+    return Padding(
+      padding: const EdgeInsets.only(top: 64),
+      child: Column(
+        children: [
+          const StandardText(
+            text: '보고서를 불러오지 못했어요',
+            fontSize: 15,
+            height: 1.4,
+            color: AppColors.textPrimary,
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 4),
+          const StandardText(
+            text: '잠시 뒤에 다시 시도해 주세요',
+            fontSize: 13,
+            height: 1.4,
+            fontFamily: 'PretendardLight',
+            fontWeight: FontWeight.w300,
+            color: ReportPalette.textMuted,
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 20),
+          PressableScale(
+            onTap: () => _load(force: true),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              decoration: BoxDecoration(
+                color: AppColors.surfaceMuted,
+                borderRadius: BorderRadius.circular(ReportPalette.buttonRadius),
+              ),
+              child: const StandardText(
+                text: '다시 시도',
+                fontSize: 14,
+                height: 1.3,
+                color: AppColors.textPrimary,
               ),
             ),
           ),
@@ -990,109 +534,95 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
   }
 }
 
-class _ReportViewData {
-  final String badge;
-  final String title;
-  final int noteWriteCount;
-  final int notePracticeCount;
-  final int reviewCount;
-  final double averageAccuracy;
-  final int consecutiveLearningDays;
-  final double averageStudyTimeMinutes;
-  final List<double> trendBars;
-  final List<int> trendCounts;
-  final List<String> trendLabels;
-  final List<LearningWeakArea> weakAreas;
+/// 기록이 없는 기간의 맨 아래 줄. 앞 기간으로 넘긴다.
+class _PreviousReportRow extends StatelessWidget {
+  final LearningOverviewModel overview;
+  final ReportWording wording;
+  final VoidCallback onTap;
 
-  const _ReportViewData({
-    required this.badge,
-    required this.title,
-    required this.noteWriteCount,
-    required this.notePracticeCount,
-    required this.reviewCount,
-    required this.averageAccuracy,
-    required this.consecutiveLearningDays,
-    required this.averageStudyTimeMinutes,
-    required this.trendBars,
-    required this.trendCounts,
-    required this.trendLabels,
-    required this.weakAreas,
+  const _PreviousReportRow({
+    required this.overview,
+    required this.wording,
+    required this.onTap,
   });
 
-  factory _ReportViewData.fromPeriod(LearningPeriodReport report) {
-    final maxReview = report.trend.isEmpty
-        ? 1
-        : report.trend
-            .map((e) => e.reviewCount)
-            .reduce((a, b) => a > b ? a : b)
-            .clamp(1, 1 << 30);
-
-    final bars = report.trend
-        .map((e) => e.reviewCount == 0 ? 0.06 : e.reviewCount / maxReview)
-        .toList();
-    final counts = report.trend.map((e) => e.reviewCount).toList();
-
-    final labels = report.trend
-        .map((e) => _formatTrendLabel(e.label, report.periodLabel))
-        .toList();
-
-    return _ReportViewData(
-      badge: report.periodLabel,
-      title: _buildTitle(report),
-      noteWriteCount: report.noteWriteCount,
-      notePracticeCount: report.notePracticeCount,
-      reviewCount: report.reviewCount,
-      averageAccuracy: report.averageAccuracy,
-      consecutiveLearningDays: report.consecutiveLearningDays,
-      averageStudyTimeMinutes: report.averageStudyTimeMinutes,
-      trendBars: bars,
-      trendCounts: counts,
-      trendLabels: labels,
-      weakAreas: report.weakAreas,
+  /// 앞 기간의 날짜. 주는 7일 앞, 달은 앞 달 1일부터 말일까지다.
+  (DateTime, DateTime)? get _previousRange {
+    final start = overview.startDate;
+    if (start == null) return null;
+    if (wording.period == LearningOverviewPeriod.month) {
+      return (
+        DateTime(start.year, start.month - 1, 1),
+        DateTime(start.year, start.month, 0),
+      );
+    }
+    return (
+      _shiftDays(start, -7),
+      _shiftDays(start, -1),
     );
   }
 
-  static String _buildTitle(LearningPeriodReport report) {
-    final end = report.endDate != null
-        ? DateFormat('yyyy.MM.dd').format(report.endDate!)
-        : '';
+  @override
+  Widget build(BuildContext context) {
+    final range = _previousRange;
+    final previous = overview.previous;
+    final parts = [
+      if (range != null) formatReportRange(range.$1, range.$2),
+      // 지금 기간의 비교 값은 오늘까지와 같은 날 수만 센 것이라 앞 기간
+      // 전체 수가 아니다. 지난 기간을 보고 있을 때만 앞 기간 전체와 비교한다.
+      if (!wording.isCurrent && previous != null)
+        '${previous.reviewCount}문제 복습',
+    ];
 
-    if (report.startDate != null) {
-      final start = DateFormat('yyyy.MM.dd').format(report.startDate!);
-      return '$start ~ $end 리포트';
-    }
-
-    if (end.isNotEmpty) {
-      return '누적 리포트';
-    }
-
-    return '학습 리포트';
-  }
-
-  static String _formatTrendLabel(String raw, String periodLabel) {
-    // 월간은 서버가 '1주차/2주차' 같은 표시용 라벨을 내려주므로 그대로 사용
-    if (periodLabel == 'MONTHLY') {
-      return raw;
-    }
-
-    final parsed = DateTime.tryParse(raw);
-    if (parsed != null) {
-      // 일 단위 데이터
-      if (raw.length == 10) {
-        return '${parsed.month}/${parsed.day}';
-      }
-      return DateFormat('M월').format(parsed);
-    }
-
-    // yyyy-MM 형태 처리
-    final ym = RegExp(r'^\\d{4}-\\d{2}$');
-    if (ym.hasMatch(raw)) {
-      final month = int.tryParse(raw.split('-')[1]);
-      if (month != null) {
-        return '$month월';
-      }
-    }
-
-    return raw;
+    return PressableScale(
+      onTap: onTap,
+      child: ReportCard(
+        padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 20),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  ReportTracking(
+                    letterSpacing: -0.2,
+                    child: StandardText(
+                      text: wording.previousReportLabel,
+                      fontSize: 15,
+                      height: 1.3,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  if (parts.isNotEmpty) ...[
+                    const SizedBox(height: 3),
+                    StandardText(
+                      text: parts.join(' · '),
+                      fontSize: 13,
+                      height: 1.3,
+                      fontFamily: 'PretendardLight',
+                      fontWeight: FontWeight.w300,
+                      color: AppColors.textTertiary,
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            const Icon(
+              Icons.chevron_right_rounded,
+              size: 22,
+              color: AppColors.textDisabled,
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
+
+/// 날짜를 달력 기준으로 며칠 옮긴다.
+///
+/// `Duration(days: 1)` 은 24시간이라 서머타임이 끝나는 25시간짜리 날에는 같은
+/// 날에 머문다. 그러면 다음 주 화살표가 같은 주를 다시 부른다.
+DateTime _shiftDays(DateTime day, int days) =>
+    DateTime(day.year, day.month, day.day + days);

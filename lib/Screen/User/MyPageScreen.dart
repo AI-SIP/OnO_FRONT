@@ -1,5 +1,3 @@
-import 'dart:ui';
-
 import 'package:firebase_analytics/firebase_analytics.dart';
 
 import 'package:flutter/material.dart';
@@ -20,6 +18,7 @@ import '../../Module/Motion/MotionReplayScope.dart';
 import '../../Module/Motion/PressableScale.dart';
 import '../../Module/Motion/TossPageRoute.dart';
 import 'Widget/AccountActionButtons.dart';
+import 'Widget/LearningReport/ReportPreviewCard.dart';
 import 'Widget/ReviewReportScreen.dart';
 import 'Widget/SettingMenuButtons.dart';
 import 'Widget/ThemeChangeButton.dart';
@@ -63,6 +62,8 @@ class _SettingScreenState extends State<SettingScreen> {
   /// 들어올 때마다 이 값을 올려 게이지와 카드를 처음부터 다시 재생한다.
   int _visitSequence = 0;
   bool _wasSelected = false;
+
+  final GlobalKey<ReportPreviewCardState> _reportPreviewKey = GlobalKey();
 
   @override
   void initState() {
@@ -245,17 +246,12 @@ class _SettingScreenState extends State<SettingScreen> {
   Widget _buildReviewReportButton(
     ThemeHandler themeProvider, {
     double horizontalMarginFactor = 0.04,
-    bool compact = false,
   }) {
     final mediaQuery = MediaQuery.of(context);
     final screenHeight = mediaQuery.size.height;
     final screenWidth = mediaQuery.size.width;
     final isTablet = mediaQuery.size.shortestSide >= 600;
     final isTabletLandscape = isTablet && screenWidth > screenHeight;
-
-    const dummyBars = [0.38, 0.55, 0.42, 0.78, 0.60, 0.88, 0.70];
-    const dummyCounts = [4, 6, 5, 9, 7, 10, 8];
-    const dummyLabels = ['월', '화', '수', '목', '금', '토', '일'];
 
     return Container(
       key: widget.tutorialTargets?.reportCardKey,
@@ -264,19 +260,21 @@ class _SettingScreenState extends State<SettingScreen> {
         vertical: screenHeight * 0.005,
       ),
       child: PressableScale(
-        onTap: () {
-          Navigator.of(context).push(
+        onTap: () async {
+          await Navigator.of(context).push(
             TossPageRoute(
               builder: (context) => const ReviewReportScreen(),
             ),
           );
+          // 보고서에서 복습하고 돌아오면 숫자가 바뀌어 있다.
+          _reportPreviewKey.currentState?.reload();
         },
         child: Container(
           padding: EdgeInsets.fromLTRB(
             screenHeight * 0.018,
             isTabletLandscape ? screenHeight * 0.030 : screenHeight * 0.018,
             screenHeight * 0.018,
-            isTabletLandscape ? screenHeight * 0.024 : screenHeight * 0.014,
+            isTabletLandscape ? screenHeight * 0.024 : screenHeight * 0.018,
           ),
           decoration: BoxDecoration(
             color: Colors.white,
@@ -293,188 +291,12 @@ class _SettingScreenState extends State<SettingScreen> {
               ),
             ],
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: themeProvider.primaryColor.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(AppRadius.medium),
-                    ),
-                    child: Icon(
-                      Icons.stacked_bar_chart_rounded,
-                      color: themeProvider.primaryColor,
-                      size: 16,
-                    ),
-                  ),
-                  SizedBox(width: screenHeight * 0.015),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        StandardText(
-                          text: compact ? '학습\n리포트' : '학습 리포트',
-                          fontSize: 15,
-                          color: AppColors.textPrimary,
-                          fontWeight: FontWeight.w700,
-                        ),
-                        if (!compact) ...[
-                          const SizedBox(height: 3),
-                          StandardText(
-                            text: '복습 추이와 약점 분석을 확인해요',
-                            fontSize: 11,
-                            color: Colors.grey[700]!,
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
-                  Icon(
-                    Icons.chevron_right,
-                    size: 20,
-                    color: Colors.grey[400],
-                  ),
-                ],
-              ),
-              SizedBox(
-                  height: isTabletLandscape
-                      ? screenHeight * 0.024
-                      : screenHeight * 0.014),
-              _buildMosaicTrendPreview(
-                themeProvider,
-                dummyBars,
-                dummyCounts,
-                dummyLabels,
-                graphHeight: isTabletLandscape ? 140.0 : 100.0,
-              ),
-            ],
+          child: ReportPreviewCard(
+            key: _reportPreviewKey,
+            primaryColor: themeProvider.primaryColor,
+            refreshToken: _visitSequence,
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildMosaicTrendPreview(
-    ThemeHandler themeProvider,
-    List<double> bars,
-    List<int> counts,
-    List<String> labels, {
-    double graphHeight = 100.0,
-  }) {
-    final maxBar = bars.reduce((a, b) => a > b ? a : b);
-
-    return SizedBox(
-      height: graphHeight,
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: List.generate(bars.length, (index) {
-          final isPeak = bars[index] == maxBar;
-          return Expanded(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                Expanded(
-                  child: LayoutBuilder(
-                    builder: (context, constraints) {
-                      const labelHeight = 14.0;
-                      const gap = 4.0;
-                      const minBarHeight = 4.0;
-                      final usableBarHeight =
-                          (constraints.maxHeight - labelHeight - gap)
-                              .clamp(0.0, constraints.maxHeight);
-                      final rawBarHeight = usableBarHeight * bars[index];
-                      final barHeight = rawBarHeight < minBarHeight
-                          ? minBarHeight
-                          : (rawBarHeight > usableBarHeight
-                              ? usableBarHeight
-                              : rawBarHeight);
-                      final numberBottom = barHeight + gap;
-
-                      return Stack(
-                        children: [
-                          Align(
-                            alignment: Alignment.bottomCenter,
-                            child: Container(
-                              width: 16,
-                              height: barHeight,
-                              decoration: BoxDecoration(
-                                borderRadius:
-                                    BorderRadius.circular(AppRadius.small),
-                                gradient: LinearGradient(
-                                  begin: Alignment.bottomCenter,
-                                  end: Alignment.topCenter,
-                                  colors: [
-                                    themeProvider.primaryColor,
-                                    themeProvider.lightPrimaryColor,
-                                  ],
-                                ),
-                                boxShadow: isPeak
-                                    ? [
-                                        BoxShadow(
-                                          color: themeProvider.primaryColor
-                                              .withValues(alpha: 0.35),
-                                          blurRadius: 8,
-                                          offset: const Offset(0, 2),
-                                        ),
-                                      ]
-                                    : null,
-                              ),
-                            ),
-                          ),
-                          Positioned(
-                            left: 0,
-                            right: 0,
-                            bottom: numberBottom,
-                            child: Center(
-                              child: SizedBox(
-                                height: labelHeight,
-                                child: FittedBox(
-                                  fit: BoxFit.scaleDown,
-                                  child: ImageFiltered(
-                                    imageFilter: ImageFilter.blur(
-                                      sigmaX: 3.5,
-                                      sigmaY: 3.5,
-                                    ),
-                                    child: StandardText(
-                                      text: counts[index].toString(),
-                                      fontSize: 12,
-                                      color: AppColors.textPrimary,
-                                      fontWeight: FontWeight.w700,
-                                      fontFamily: 'PretendardBold',
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      );
-                    },
-                  ),
-                ),
-                const SizedBox(height: 8),
-                SizedBox(
-                  height: 16,
-                  child: Center(
-                    child: FittedBox(
-                      fit: BoxFit.scaleDown,
-                      child: StandardText(
-                        text: labels[index],
-                        fontSize: 11,
-                        color: Colors.grey[700]!,
-                        fontWeight: FontWeight.w700,
-                        fontFamily: 'PretendardBold',
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          );
-        }),
       ),
     );
   }

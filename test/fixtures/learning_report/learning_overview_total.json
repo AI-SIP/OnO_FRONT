@@ -1,0 +1,29 @@
+{
+  "period": "TOTAL",
+  "startDate": "2026-03-02",
+  "endDate": "2026-10-08",
+  "hasPrevious": false,
+  "hasNext": false,
+  "summary": { "reviewCount": 312, "accuracy": 61.5, "studyDays": 87, "currentStreak": 5 },
+  "previous": null,
+  "noteStatus": {
+    "totalCount": 86,
+    "knownCount": 21,
+    "unsureCount": 48,
+    "unsolvedCount": 17,
+    "newlyKnownCount": 21,
+    "knownThreshold": 3
+  },
+  "weakFolders": [
+    { "folderId": 12, "name": "이차함수", "solveCount": 64, "wrongCount": 30, "accuracy": 45.3 },
+    { "folderId": 7, "name": "확률과 통계", "solveCount": 52, "wrongCount": 19, "accuracy": 58.7 }
+  ],
+  "trend": [
+    { "startDate": "2026-05-01", "endDate": "2026-05-31", "reviewCount": 41 },
+    { "startDate": "2026-06-01", "endDate": "2026-06-30", "reviewCount": 58 },
+    { "startDate": "2026-07-01", "endDate": "2026-07-31", "reviewCount": 35 },
+    { "startDate": "2026-08-01", "endDate": "2026-08-31", "reviewCount": 62 },
+    { "startDate": "2026-09-01", "endDate": "2026-09-30", "reviewCount": 70 },
+    { "startDate": "2026-10-01", "endDate": "2026-10-31", "reviewCount": 22 }
+  ]
+}

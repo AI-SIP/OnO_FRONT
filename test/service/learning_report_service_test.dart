@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ono/Exception/ApiException.dart';
+import 'package:ono/Model/LearningReport/LearningOverviewModel.dart';
 import 'package:ono/Service/Api/HttpService.dart';
 import 'package:ono/Service/Api/LearningReport/LearningReportService.dart';
 
@@ -228,6 +229,65 @@ void main() {
         throwsA(isA<UnauthorizedException>()),
       );
       expect(http.callCount, 0);
+    });
+  });
+
+  group('getOverview', () {
+    Map<String, dynamic> overviewJson() =>
+        loadJsonFixture('learning_report/learning_overview_week.json');
+
+    test('GET /api/learning-reports/overview 에 period 만 붙인다', () async {
+      final http = TestHttpClient.respondJson(apiEnvelope(overviewJson()));
+      final overview = await buildService(http)
+          .getOverview(period: LearningOverviewPeriod.week);
+
+      expect(http.lastRequest.method, 'GET');
+      expect(http.lastRequest.url.path, '/api/learning-reports/overview');
+      expect(http.lastRequest.queryParameters, {'period': 'WEEK'});
+      expect(http.lastRequest.authorization, 'test-access-token');
+      expect(overview.summary.reviewCount, 14);
+    });
+
+    test('월간과 전체는 MONTH, TOTAL 로 보낸다', () async {
+      final http = TestHttpClient.respondJson(apiEnvelope(overviewJson()));
+      final service = buildService(http);
+
+      await service.getOverview(period: LearningOverviewPeriod.month);
+      expect(http.lastRequest.queryParameters['period'], 'MONTH');
+
+      await service.getOverview(period: LearningOverviewPeriod.total);
+      expect(http.lastRequest.queryParameters['period'], 'TOTAL');
+    });
+
+    test('baseDate 를 주면 yyyy-MM-dd 로 붙인다', () async {
+      final http = TestHttpClient.respondJson(apiEnvelope(overviewJson()));
+      await buildService(http).getOverview(
+        period: LearningOverviewPeriod.week,
+        baseDate: DateTime(2026, 9, 3, 23, 59),
+      );
+
+      expect(http.lastRequest.queryParameters, {
+        'period': 'WEEK',
+        'baseDate': '2026-09-03',
+      });
+    });
+
+    test('본문이 비어 있으면 0 으로 채우지 않고 ParseException', () async {
+      final http = TestHttpClient.respondJson(apiEnvelope(null));
+      await expectLater(
+        buildService(http).getOverview(period: LearningOverviewPeriod.week),
+        throwsA(isA<ParseException>()),
+      );
+    });
+
+    test('구버전 서버라 404 면 예외로 알린다', () async {
+      final http = TestHttpClient.respondWith(
+        errorResponse(statusCode: 404, message: 'Not Found'),
+      );
+      await expectLater(
+        buildService(http).getOverview(period: LearningOverviewPeriod.week),
+        throwsA(anything),
+      );
     });
   });
 }

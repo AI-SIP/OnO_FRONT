@@ -1,32 +1,83 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:ono/Model/LearningReport/LearningReportResponseModel.dart';
+import 'package:ono/Model/LearningReport/LearningOverviewModel.dart';
+import 'package:ono/Model/Problem/ReviewDueProblemModel.dart';
+import 'package:ono/Provider/ReviewDueProvider.dart';
 import 'package:ono/Screen/User/Widget/ReviewReportScreen.dart';
+import 'package:ono/Util/AppClock.dart';
 
 import '../../helpers/helpers.dart';
 
-/// 학습 리포트의 핵심 지표 카드가 글자 크기를 키운 기기에서 깨지지 않는지 본다.
+/// 학습 보고서가 글자 크기를 키운 기기에서 깨지지 않는지 본다.
 ///
-/// 카드 높이가 104 로 고정돼 있어서, 삼성 기기처럼 기본 글자가 크거나 접근성
-/// 에서 글자를 키운 사용자에게 라벨과 숫자가 카드 밖으로 넘쳤다. 숫자와 단위도
-/// 한 줄에 안 들어가면 오른쪽으로 넘쳤다.
+/// 삼성 기기처럼 기본 글자가 크거나 접근성에서 글자를 키운 사용자가 많다.
+/// 요약 카드의 세 칸은 폭을 나눠 써서 특히 넘치기 쉽다. 넘치면 Flutter 가
+/// RenderFlex 넘침 예외를 던지므로 예외가 없는지로 확인한다.
 void main() {
   setUpOnoWidgetTest();
 
-  late MockLearningReportService reportService;
-
-  setUp(() {
-    reportService = MockLearningReportService();
-    final report = LearningReportResponseModel.fromJson(
-      loadJsonFixture('learning_report/learning_report_full.json'),
-    );
-    when(() =>
-            reportService.getLearningReport(baseDate: any(named: 'baseDate')))
-        .thenAnswer((_) async => report);
+  setUpAll(() {
+    registerFallbackValue(LearningOverviewPeriod.week);
   });
 
-  Future<void> pumpReport(WidgetTester tester, double textScale) async {
+  late MockLearningReportService reportService;
+  late MockProblemService problemService;
+
+  setUp(() {
+    AppClock.setForTest(() => DateTime(2026, 10, 8, 10));
+    reportService = MockLearningReportService();
+    problemService = MockProblemService();
+    when(() => problemService.getReviewDueProblems()).thenAnswer(
+      (_) async => ReviewDueResponse(
+        dueCount: 128,
+        overdueCount: 0,
+        problems: [
+          ReviewDueProblemModel(
+            problemId: 1,
+            nextReviewAt: DateTime(2026, 8, 1),
+            reviewInterval: 1,
+            consecutiveCorrectCount: 0,
+          ),
+        ],
+      ),
+    );
+  });
+
+  tearDown(AppClock.resetForTest);
+
+  /// 숫자를 키워 둔 주간 보고서. 자릿수가 많을수록 넘치기 쉽다.
+  LearningOverviewModel bigWeek() => LearningOverviewModel.fromJson({
+        ...loadJsonFixture('learning_report/learning_overview_week.json'),
+        'summary': {
+          'reviewCount': 1284,
+          'accuracy': 100.0,
+          'studyDays': 7,
+          'currentStreak': 365,
+        },
+        'previous': {'reviewCount': 9, 'accuracy': 12.0, 'studyDays': 1},
+        'weakFolders': [
+          {
+            'folderId': 1,
+            'name': '아주 긴 폴더 이름이 들어가면 한 줄에 다 안 들어간다 고등 수학 상',
+            'solveCount': 999,
+            'wrongCount': 512,
+            'accuracy': 12.5,
+          },
+        ],
+      });
+
+  Future<void> pumpReport(
+    WidgetTester tester, {
+    required double textScale,
+    required Size size,
+    required LearningOverviewModel overview,
+  }) async {
+    when(() => reportService.getOverview(
+          period: any(named: 'period'),
+          baseDate: any(named: 'baseDate'),
+        )).thenAnswer((_) async => overview);
+
     await pumpOnoWidget(
       tester,
       Builder(
@@ -36,62 +87,60 @@ void main() {
           child: ReviewReportScreen(reportService: reportService),
         ),
       ),
-      settle: false,
+      reviewDueProvider: ReviewDueProvider(problemService: problemService),
+      surfaceSize: size,
     );
-    await tester.pump(const Duration(milliseconds: 400));
   }
 
-  /// 지표 카드들의 높이. 카드는 minHeight 104 로 잡아 둔 Container 다.
-  List<double> cardHeights(WidgetTester tester) {
-    final finder = find.byWidgetPredicate(
-      (w) => w is Container && w.constraints?.minHeight == 104,
-    );
-    return finder
-        .evaluate()
-        .map((e) => tester.getSize(find.byWidget(e.widget)).height)
-        .toList();
-  }
+  for (final scale in [1.0, 1.3, 1.6]) {
+    for (final entry in {
+      '작은 폰': OnoSurface.smallPhone,
+      '폰': OnoSurface.phone,
+      '태블릿': OnoSurface.tablet,
+    }.entries) {
+      testWidgets('글자 $scale배, ${entry.key}에서 기록 있는 주가 넘치지 않는다',
+          (tester) async {
+        await pumpReport(
+          tester,
+          textScale: scale,
+          size: entry.value,
+          overview: bigWeek(),
+        );
 
-  testWidgets('기본 글자 크기에서는 카드가 104 높이로 그려진다', (tester) async {
-    await pumpReport(tester, 1.0);
+        expect(find.text('자주 틀린 폴더'), findsOneWidget);
+        expect(tester.takeException(), isNull);
+      });
 
-    expect(find.text('핵심 지표'), findsOneWidget);
-    expect(cardHeights(tester), everyElement(104.0));
-    expect(tester.takeException(), isNull);
-  });
+      testWidgets('글자 $scale배, ${entry.key}에서 빈 주가 넘치지 않는다', (tester) async {
+        await pumpReport(
+          tester,
+          textScale: scale,
+          size: entry.value,
+          overview: LearningOverviewModel.fromJson(
+            loadJsonFixture('learning_report/learning_overview_empty.json'),
+          ),
+        );
 
-  testWidgets('글자 크기를 키우면 카드가 내용에 맞춰 늘어난다', (tester) async {
-    // 이게 이슈의 핵심이다. 높이를 104 로 고정해 두면 여기서 카드가 안 늘어나고
-    // 라벨과 숫자가 카드 밖으로 넘친다.
-    await pumpReport(tester, 1.6);
-
-    final heights = cardHeights(tester);
-    expect(heights, isNotEmpty, reason: '지표 카드를 못 찾으면 검사가 의미 없다');
-    expect(
-      heights,
-      everyElement(greaterThan(104.0)),
-      reason: '카드가 안 늘어나면 내용이 카드 밖으로 넘친다',
-    );
-  });
-
-  testWidgets('글자를 키워도 숫자와 단위가 가로로 넘치지 않는다', (tester) async {
-    await pumpReport(tester, 1.6);
-
-    expect(
-      tester.takeException(),
-      isNull,
-      reason: '숫자 줄이 카드 폭을 넘으면 RenderFlex 가로 넘침이 난다',
-    );
-  });
-
-  testWidgets('같은 줄의 두 카드는 높이가 서로 같다', (tester) async {
-    await pumpReport(tester, 1.6);
-
-    // 지표는 두 개씩 세 줄이다. 줄마다 높이가 하나여야 어긋나 보이지 않는다.
-    final heights = cardHeights(tester);
-    expect(heights.length, 6);
-    for (var i = 0; i < heights.length; i += 2) {
-      expect(heights[i], heights[i + 1]);
+        expect(find.text('지난주 보고서 보기'), findsOneWidget);
+        expect(tester.takeException(), isNull);
+      });
     }
+  }
+
+  testWidgets('글자를 키우면 요약 세 칸의 값 줄이 줄어들어 칸 안에 들어간다', (tester) async {
+    await pumpReport(
+      tester,
+      textScale: 1.6,
+      size: OnoSurface.smallPhone,
+      overview: bigWeek(),
+    );
+
+    // 값 줄은 FittedBox 로 감싸 두었다. 칸보다 넓어지면 줄여서 넣는다.
+    final value = find.text('365일째');
+    final box = find.ancestor(of: value, matching: find.byType(FittedBox));
+    expect(box, findsOneWidget);
+    final cell = tester.getRect(box);
+    final text = tester.getRect(value);
+    expect(text.right, lessThanOrEqualTo(cell.right + 0.5));
   });
 }
