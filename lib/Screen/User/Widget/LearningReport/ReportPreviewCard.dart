@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import '../../../../Model/LearningReport/LearningOverviewModel.dart';
 import '../../../../Module/Design/AppColors.dart';
 import '../../../../Module/Design/AppRadius.dart';
-import '../../../../Module/Motion/AnimatedCountText.dart';
 import '../../../../Module/Motion/AnimatedGauge.dart';
 import '../../../../Module/Motion/AppMotion.dart';
 import '../../../../Module/Motion/Skeleton.dart';
@@ -12,8 +11,8 @@ import '../../../../Service/Api/LearningReport/LearningReportService.dart';
 import '../../../../Util/AppClock.dart';
 import 'ReportPalette.dart';
 
-/// 마이페이지의 학습 보고서 카드 안쪽. 이번 주에 몇 문제를 복습했는지,
-/// 지난주와 견주면 어떤지, 요일 막대를 보여 준다.
+/// 마이페이지의 학습 보고서 카드 안쪽. 이번 주에 몇 문제를 복습했는지 한
+/// 문장과 요일 막대, 보고서로 가는 줄을 둔다.
 ///
 /// 예전에는 흐리게 가린 가짜 막대를 두었는데, 보고서를 열어 보기 전에는 내
 /// 기록인지 아닌지 알 수 없었다. 바로 위 학습 달력 카드와 같은 머리, 같은
@@ -84,6 +83,7 @@ class ReportPreviewCardState extends State<ReportPreviewCard> {
   @override
   Widget build(BuildContext context) {
     final primary = widget.primaryColor;
+    final palette = ReportPalette.of(primary);
     final overview = _overview;
 
     return Column(
@@ -92,11 +92,11 @@ class ReportPreviewCardState extends State<ReportPreviewCard> {
         _buildHeader(primary),
         const SizedBox(height: 14),
         if (overview == null && _loading)
-          const SkeletonBox(height: 98, borderRadius: 16)
+          const SkeletonBox(height: 124, borderRadius: 16)
         else
-          _buildPanel(primary, overview),
-        const SizedBox(height: 12),
-        _buildOpenButton(primary),
+          _buildPanel(primary, palette, overview),
+        const SizedBox(height: 4),
+        _buildOpenRow(palette),
       ],
     );
   }
@@ -115,28 +115,11 @@ class ReportPreviewCardState extends State<ReportPreviewCard> {
         ),
         const SizedBox(width: 12),
         const Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              StandardText(
-                text: '학습 보고서',
-                fontSize: 15,
-                color: AppColors.textPrimary,
-                fontWeight: FontWeight.w700,
-              ),
-              SizedBox(height: 2),
-              // 무엇을 볼 수 있는지 적어야 눌러 볼 마음이 든다. 숫자와 막대만
-              // 있을 때는 이 카드가 전부인 것처럼 보였다.
-              StandardText(
-                text: '정답률과 자주 틀린 폴더까지 한눈에 봐요',
-                fontSize: 12,
-                color: AppColors.textTertiary,
-                fontFamily: 'PretendardLight',
-                fontWeight: FontWeight.w300,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ],
+          child: StandardText(
+            text: '학습 보고서',
+            fontSize: 15,
+            color: AppColors.textPrimary,
+            fontWeight: FontWeight.w700,
           ),
         ),
         Icon(Icons.chevron_right, size: 20, color: Colors.grey[400]),
@@ -144,135 +127,90 @@ class ReportPreviewCardState extends State<ReportPreviewCard> {
     );
   }
 
-  /// 판 아래 `이번 주 보고서 보기`. 학습 달력의 `한 달 보기` 자리지만 이 카드는
-  /// 누르면 다른 화면으로 가서 보고서의 `복습하기` 와 같은 테마색 버튼으로 둔다.
-  /// 옅은 버튼은 바로 위 판과 붙어 판의 일부처럼 보였다. 누르는 동작은 카드
-  /// 전체를 감싼 마이페이지 쪽이 받는다.
-  Widget _buildOpenButton(Color primary) {
-    final palette = ReportPalette.of(primary);
-    return Container(
-      constraints: const BoxConstraints(minHeight: 46),
-      alignment: Alignment.center,
-      decoration: BoxDecoration(
-        color: palette.base,
-        borderRadius: BorderRadius.circular(ReportPalette.buttonRadius),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          StandardText(
-            text: '이번 주 보고서 보기',
-            fontSize: 14,
-            color: Colors.white,
-            height: 1.3,
-          ),
-          const SizedBox(width: 4),
-          const Icon(Icons.arrow_forward_rounded,
-              size: 16, color: Colors.white),
-        ],
-      ),
-    );
-  }
-
-  /// 학습 달력의 옅은 패널과 같은 판. 왼쪽에 이번 주 복습 수를 크게, 오른쪽에
-  /// 요일 막대를 둔다. 숫자와 막대를 위아래로 쌓았을 때는 막대 바탕만 줄지어
-  /// 보여서 밋밋했다. 받지 못했으면 숫자 자리에 `-` 를 둔다.
-  Widget _buildPanel(Color primary, LearningOverviewModel? overview) {
-    final palette = ReportPalette.of(primary);
+  /// 학습 달력의 옅은 패널과 같은 판. 위에 보고서 첫머리와 같은 문장, 아래에
+  /// 달력의 요일 줄처럼 일곱 막대를 둔다.
+  ///
+  /// 큰 숫자와 지난주 비교, 막대를 좌우로 나눴을 때는 굵기와 색이 제각각이라
+  /// 촌스러웠다. 문장 하나와 막대 한 줄로 줄이고 숫자만 테마색으로 둔다.
+  Widget _buildPanel(
+    Color primary,
+    ReportPalette palette,
+    LearningOverviewModel? overview,
+  ) {
     final count = overview?.summary.reviewCount;
-    final change = _changeText(overview);
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(18, 16, 14, 14),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
       decoration: BoxDecoration(
         color: primary.withValues(alpha: 0.07),
         borderRadius: BorderRadius.circular(16),
       ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.end,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Expanded(
-            flex: 4,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const StandardText(
-                  text: '이번 주 복습',
-                  fontSize: 13,
-                  color: AppColors.textSecondary,
-                  height: 1.3,
-                ),
-                const SizedBox(height: 4),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.baseline,
-                  textBaseline: TextBaseline.alphabetic,
-                  children: [
-                    if (count == null)
-                      StandardText(
-                        text: '-',
-                        fontSize: 30,
-                        color: palette.ink,
-                        fontWeight: FontWeight.w700,
-                        height: 1.15,
-                      )
-                    else
-                      AnimatedCountText(
-                        value: count,
-                        fontSize: 30,
-                        color: palette.ink,
-                        fontWeight: FontWeight.w700,
-                        height: 1.15,
-                      ),
-                    const SizedBox(width: 3),
-                    const StandardText(
-                      text: '문제',
-                      fontSize: 15,
-                      color: AppColors.textPrimary,
-                      height: 1.15,
-                    ),
-                  ],
-                ),
-                if (change != null) ...[
-                  const SizedBox(height: 6),
-                  StandardText(
-                    text: change.$1,
-                    fontSize: 12,
-                    color: change.$2 ? palette.ink : AppColors.textTertiary,
-                    height: 1.3,
-                  ),
-                ],
-              ],
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            flex: 5,
-            child: _WeekBars(
-              trend: overview?.trend ?? const [],
-              primary: primary,
-            ),
-          ),
+          _buildSentence(palette, count),
+          const SizedBox(height: 14),
+          _WeekBars(trend: overview?.trend ?? const [], primary: primary),
         ],
       ),
     );
   }
 
-  /// `지난주보다 3문제 더` 처럼 지난주와 견준 한 줄. 늘었으면 테마색, 아니면
-  /// 회색이다. 지난주 기록이 없으면 비교할 게 없어서 쓰지 않는다.
-  (String, bool)? _changeText(LearningOverviewModel? overview) {
-    final previous = overview?.previous;
-    if (overview == null || previous == null) return null;
-    final diff = overview.summary.reviewCount - previous.reviewCount;
-    if (diff > 0) return ('지난주보다 $diff문제 더', true);
-    if (diff < 0) return ('지난주보다 ${-diff}문제 덜', false);
-    if (previous.reviewCount == 0) return null;
-    return ('지난주만큼 했어요', false);
+  /// `이번 주 8문제 복습했어요`. 받지 못했으면 숫자 없이 둔다.
+  Widget _buildSentence(ReportPalette palette, int? count) {
+    const style = TextStyle(
+      fontFamily: 'PretendardBold',
+      fontSize: 15,
+      height: 1.3,
+      color: AppColors.textPrimary,
+    );
+    if (count == null) {
+      return const Text('이번 주 복습 기록', style: style);
+    }
+    if (count == 0) {
+      return const Text('이번 주는 아직 복습 전이에요', style: style);
+    }
+    return Text.rich(
+      TextSpan(
+        children: [
+          const TextSpan(text: '이번 주 '),
+          TextSpan(
+            text: '$count문제',
+            style: TextStyle(color: palette.ink),
+          ),
+          const TextSpan(text: ' 복습했어요'),
+        ],
+      ),
+      style: style,
+    );
+  }
+
+  /// 판 아래 `이번 주 보고서 보기 >`. 학습 달력의 `한 달 보기` 와 같은 자리,
+  /// 같은 크기다. 다른 화면으로 가는 줄이라 회색 대신 테마색으로 둔다. 누르는
+  /// 동작은 카드 전체를 감싼 마이페이지 쪽이 받는다.
+  Widget _buildOpenRow(ReportPalette palette) {
+    return ConstrainedBox(
+      constraints: const BoxConstraints(minHeight: 44),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          StandardText(
+            text: '이번 주 보고서 보기',
+            fontSize: 13,
+            color: palette.ink,
+          ),
+          const SizedBox(width: 2),
+          Icon(Icons.chevron_right_rounded, size: 18, color: palette.ink),
+        ],
+      ),
+    );
   }
 }
 
-/// 월요일부터 일요일까지 일곱 막대. 바탕 트랙 없이 바닥선에서 자라고, 안 한
-/// 날은 작은 점만 찍는다. 오늘은 막대와 요일 글자를 테마색으로 진하게 칠한다.
+/// 월요일부터 일요일까지 일곱 칸. 학습 달력의 요일 줄처럼 글자를 위에 두고
+/// 아래에 막대를 세운다. 안 한 날은 낮은 회색 막대, 오늘은 글자와 막대를
+/// 테마색으로 진하게 칠한다.
 class _WeekBars extends StatelessWidget {
   final List<LearningTrendBucket> trend;
   final Color primary;
@@ -280,8 +218,9 @@ class _WeekBars extends StatelessWidget {
   const _WeekBars({required this.trend, required this.primary});
 
   static const List<String> _labels = ['월', '화', '수', '목', '금', '토', '일'];
-  static const double _height = 48;
-  static const double _width = 12;
+  static const double _height = 40;
+  static const double _width = 14;
+  static const double _stub = 4;
 
   bool _isToday(LearningTrendBucket bucket) {
     final start = bucket.startDate;
@@ -316,51 +255,44 @@ class _WeekBars extends StatelessWidget {
     final count = bucket?.reviewCount ?? 0;
     final isToday = bucket != null && _isToday(bucket);
     final full = maxCount == 0 || count == 0
-        ? 0.0
-        : (_height * count / maxCount).clamp(6.0, _height);
-    final barColor = isToday ? primary : primary.withValues(alpha: 0.4);
+        ? _stub
+        : (_height * count / maxCount).clamp(8.0, _height);
+    final Color color;
+    if (count == 0) {
+      color = AppColors.textTertiary.withValues(alpha: 0.18);
+    } else {
+      color = isToday ? primary : primary.withValues(alpha: 0.45);
+    }
 
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        SizedBox(
-          height: _height,
-          child: Align(
-            alignment: Alignment.bottomCenter,
-            child: count == 0
-                ? Container(
-                    width: 4,
-                    height: 4,
-                    margin: const EdgeInsets.only(bottom: 1),
-                    decoration: BoxDecoration(
-                      color: isToday
-                          ? primary
-                          : AppColors.textTertiary.withValues(alpha: 0.35),
-                      shape: BoxShape.circle,
-                    ),
-                  )
-                : AnimatedGaugeValue(
-                    // 값이 바뀌면 그 자리에서 다시 자란다.
-                    key: ValueKey(full),
-                    value: 1,
-                    delay: AppMotion.stagger * index,
-                    builder: (context, progress) => Container(
-                      width: _width,
-                      height: full * progress.clamp(0.0, 1.0),
-                      decoration: BoxDecoration(
-                        color: barColor,
-                        borderRadius: BorderRadius.circular(_width / 2),
-                      ),
-                    ),
-                  ),
-          ),
-        ),
-        const SizedBox(height: 6),
         StandardText(
           text: _labels[index],
           fontSize: 11,
           color: isToday ? primary : AppColors.textTertiary,
           height: 1.3,
+        ),
+        const SizedBox(height: 8),
+        SizedBox(
+          height: _height,
+          child: Align(
+            alignment: Alignment.bottomCenter,
+            child: AnimatedGaugeValue(
+              // 값이 바뀌면 그 자리에서 다시 자란다.
+              key: ValueKey(full),
+              value: 1,
+              delay: AppMotion.stagger * index,
+              builder: (context, progress) => Container(
+                width: _width,
+                height: (full * progress.clamp(0.0, 1.0)).clamp(_stub, _height),
+                decoration: BoxDecoration(
+                  color: color,
+                  borderRadius: BorderRadius.circular(_stub),
+                ),
+              ),
+            ),
+          ),
         ),
       ],
     );
