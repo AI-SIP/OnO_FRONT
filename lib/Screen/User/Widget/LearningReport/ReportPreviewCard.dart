@@ -3,15 +3,17 @@ import 'package:flutter/material.dart';
 import '../../../../Model/LearningReport/LearningOverviewModel.dart';
 import '../../../../Module/Design/AppColors.dart';
 import '../../../../Module/Design/AppRadius.dart';
+import '../../../../Module/Motion/AnimatedCountText.dart';
 import '../../../../Module/Motion/AnimatedGauge.dart';
 import '../../../../Module/Motion/AppMotion.dart';
 import '../../../../Module/Motion/Skeleton.dart';
 import '../../../../Module/Text/StandardText.dart';
 import '../../../../Service/Api/LearningReport/LearningReportService.dart';
 import '../../../../Util/AppClock.dart';
+import 'ReportPalette.dart';
 
-/// 마이페이지의 학습 보고서 카드 안쪽. 이번 주에 몇 문제를 복습했는지와
-/// 요일 막대만 보여 준다.
+/// 마이페이지의 학습 보고서 카드 안쪽. 이번 주에 몇 문제를 복습했는지,
+/// 지난주와 견주면 어떤지, 요일 막대를 보여 준다.
 ///
 /// 예전에는 흐리게 가린 가짜 막대를 두었는데, 보고서를 열어 보기 전에는 내
 /// 기록인지 아닌지 알 수 없었다. 바로 위 학습 달력 카드와 같은 머리, 같은
@@ -90,7 +92,7 @@ class ReportPreviewCardState extends State<ReportPreviewCard> {
         _buildHeader(primary),
         const SizedBox(height: 14),
         if (overview == null && _loading)
-          const SkeletonBox(height: 104, borderRadius: 16)
+          const SkeletonBox(height: 98, borderRadius: 16)
         else
           _buildPanel(primary, overview),
       ],
@@ -123,50 +125,105 @@ class ReportPreviewCardState extends State<ReportPreviewCard> {
     );
   }
 
-  /// 학습 달력의 옅은 패널과 같은 판. 위에 `이번 주 복습 8문제`, 아래에 요일
-  /// 일곱 막대를 둔다. 받지 못했으면 막대 자리만 비워 둔다.
+  /// 학습 달력의 옅은 패널과 같은 판. 왼쪽에 이번 주 복습 수를 크게, 오른쪽에
+  /// 요일 막대를 둔다. 숫자와 막대를 위아래로 쌓았을 때는 막대 바탕만 줄지어
+  /// 보여서 밋밋했다. 받지 못했으면 숫자 자리에 `-` 를 둔다.
   Widget _buildPanel(Color primary, LearningOverviewModel? overview) {
+    final palette = ReportPalette.of(primary);
     final count = overview?.summary.reviewCount;
+    final change = _changeText(overview);
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(18, 16, 14, 14),
       decoration: BoxDecoration(
         color: primary.withValues(alpha: 0.07),
         borderRadius: BorderRadius.circular(16),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          Row(
-            children: [
-              const Expanded(
-                child: StandardText(
+          Expanded(
+            flex: 4,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const StandardText(
                   text: '이번 주 복습',
-                  fontSize: 14,
+                  fontSize: 13,
                   color: AppColors.textSecondary,
                   height: 1.3,
                 ),
-              ),
-              StandardText(
-                text: count == null ? '-' : '$count문제',
-                fontSize: 14,
-                color: primary,
-                fontWeight: FontWeight.w700,
-                height: 1.3,
-              ),
-            ],
+                const SizedBox(height: 4),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.baseline,
+                  textBaseline: TextBaseline.alphabetic,
+                  children: [
+                    if (count == null)
+                      StandardText(
+                        text: '-',
+                        fontSize: 30,
+                        color: palette.ink,
+                        fontWeight: FontWeight.w700,
+                        height: 1.15,
+                      )
+                    else
+                      AnimatedCountText(
+                        value: count,
+                        fontSize: 30,
+                        color: palette.ink,
+                        fontWeight: FontWeight.w700,
+                        height: 1.15,
+                      ),
+                    const SizedBox(width: 3),
+                    const StandardText(
+                      text: '문제',
+                      fontSize: 15,
+                      color: AppColors.textPrimary,
+                      height: 1.15,
+                    ),
+                  ],
+                ),
+                if (change != null) ...[
+                  const SizedBox(height: 6),
+                  StandardText(
+                    text: change.$1,
+                    fontSize: 12,
+                    color: change.$2 ? palette.ink : AppColors.textTertiary,
+                    height: 1.3,
+                  ),
+                ],
+              ],
+            ),
           ),
-          const SizedBox(height: 12),
-          _WeekBars(trend: overview?.trend ?? const [], primary: primary),
+          const SizedBox(width: 12),
+          Expanded(
+            flex: 5,
+            child: _WeekBars(
+              trend: overview?.trend ?? const [],
+              primary: primary,
+            ),
+          ),
         ],
       ),
     );
   }
+
+  /// `지난주보다 3문제 더` 처럼 지난주와 견준 한 줄. 늘었으면 테마색, 아니면
+  /// 회색이다. 지난주 기록이 없으면 비교할 게 없어서 쓰지 않는다.
+  (String, bool)? _changeText(LearningOverviewModel? overview) {
+    final previous = overview?.previous;
+    if (overview == null || previous == null) return null;
+    final diff = overview.summary.reviewCount - previous.reviewCount;
+    if (diff > 0) return ('지난주보다 $diff문제 더', true);
+    if (diff < 0) return ('지난주보다 ${-diff}문제 덜', false);
+    if (previous.reviewCount == 0) return null;
+    return ('지난주만큼 했어요', false);
+  }
 }
 
-/// 월요일부터 일요일까지 일곱 막대. 학습 달력의 점 줄처럼 요일 글자를 위에
-/// 두고, 오늘 막대만 테마색을 진하게 칠한다.
+/// 월요일부터 일요일까지 일곱 막대. 바탕 트랙 없이 바닥선에서 자라고, 안 한
+/// 날은 작은 점만 찍는다. 오늘은 막대와 요일 글자를 테마색으로 진하게 칠한다.
 class _WeekBars extends StatelessWidget {
   final List<LearningTrendBucket> trend;
   final Color primary;
@@ -174,8 +231,8 @@ class _WeekBars extends StatelessWidget {
   const _WeekBars({required this.trend, required this.primary});
 
   static const List<String> _labels = ['월', '화', '수', '목', '금', '토', '일'];
-  static const double _height = 36;
-  static const double _width = 10;
+  static const double _height = 48;
+  static const double _width = 12;
 
   bool _isToday(LearningTrendBucket bucket) {
     final start = bucket.startDate;
@@ -195,18 +252,10 @@ class _WeekBars extends StatelessWidget {
         children: [
           for (var i = 0; i < _labels.length; i++)
             Expanded(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  StandardText(
-                    text: _labels[i],
-                    fontSize: 11,
-                    color: AppColors.textTertiary,
-                    height: 1.3,
-                  ),
-                  const SizedBox(height: 6),
-                  _bar(i < trend.length ? trend[i] : null, maxCount, i),
-                ],
+              child: _column(
+                i < trend.length ? trend[i] : null,
+                maxCount,
+                i,
               ),
             ),
         ],
@@ -214,35 +263,57 @@ class _WeekBars extends StatelessWidget {
     );
   }
 
-  Widget _bar(LearningTrendBucket? bucket, int maxCount, int index) {
+  Widget _column(LearningTrendBucket? bucket, int maxCount, int index) {
     final count = bucket?.reviewCount ?? 0;
+    final isToday = bucket != null && _isToday(bucket);
     final full = maxCount == 0 || count == 0
         ? 0.0
-        : (_height * count / maxCount).clamp(5.0, _height);
-    final isToday = bucket != null && _isToday(bucket);
+        : (_height * count / maxCount).clamp(6.0, _height);
+    final barColor = isToday ? primary : primary.withValues(alpha: 0.4);
 
-    return Container(
-      width: _width,
-      height: _height,
-      alignment: Alignment.bottomCenter,
-      decoration: BoxDecoration(
-        color: primary.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(_width / 2),
-      ),
-      child: AnimatedGaugeValue(
-        // 값이 바뀌면 그 자리에서 다시 자란다.
-        key: ValueKey(full),
-        value: 1,
-        delay: AppMotion.stagger * index,
-        builder: (context, progress) => Container(
-          width: _width,
-          height: full * progress.clamp(0.0, 1.0),
-          decoration: BoxDecoration(
-            color: isToday ? primary : primary.withValues(alpha: 0.45),
-            borderRadius: BorderRadius.circular(_width / 2),
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        SizedBox(
+          height: _height,
+          child: Align(
+            alignment: Alignment.bottomCenter,
+            child: count == 0
+                ? Container(
+                    width: 4,
+                    height: 4,
+                    margin: const EdgeInsets.only(bottom: 1),
+                    decoration: BoxDecoration(
+                      color: isToday
+                          ? primary
+                          : AppColors.textTertiary.withValues(alpha: 0.35),
+                      shape: BoxShape.circle,
+                    ),
+                  )
+                : AnimatedGaugeValue(
+                    // 값이 바뀌면 그 자리에서 다시 자란다.
+                    key: ValueKey(full),
+                    value: 1,
+                    delay: AppMotion.stagger * index,
+                    builder: (context, progress) => Container(
+                      width: _width,
+                      height: full * progress.clamp(0.0, 1.0),
+                      decoration: BoxDecoration(
+                        color: barColor,
+                        borderRadius: BorderRadius.circular(_width / 2),
+                      ),
+                    ),
+                  ),
           ),
         ),
-      ),
+        const SizedBox(height: 6),
+        StandardText(
+          text: _labels[index],
+          fontSize: 11,
+          color: isToday ? primary : AppColors.textTertiary,
+          height: 1.3,
+        ),
+      ],
     );
   }
 }
