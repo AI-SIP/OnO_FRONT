@@ -95,6 +95,8 @@ class ReportPreviewCardState extends State<ReportPreviewCard> {
           const SkeletonBox(height: 98, borderRadius: 16)
         else
           _buildPanel(primary, overview),
+        const SizedBox(height: 12),
+        _buildOpenButton(primary),
       ],
     );
   }
@@ -113,15 +115,62 @@ class ReportPreviewCardState extends State<ReportPreviewCard> {
         ),
         const SizedBox(width: 12),
         const Expanded(
-          child: StandardText(
-            text: '학습 보고서',
-            fontSize: 15,
-            color: AppColors.textPrimary,
-            fontWeight: FontWeight.w700,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              StandardText(
+                text: '학습 보고서',
+                fontSize: 15,
+                color: AppColors.textPrimary,
+                fontWeight: FontWeight.w700,
+              ),
+              SizedBox(height: 2),
+              // 무엇을 볼 수 있는지 적어야 눌러 볼 마음이 든다. 숫자와 막대만
+              // 있을 때는 이 카드가 전부인 것처럼 보였다.
+              StandardText(
+                text: '정답률과 자주 틀린 폴더까지 한눈에 봐요',
+                fontSize: 12,
+                color: AppColors.textTertiary,
+                fontFamily: 'PretendardLight',
+                fontWeight: FontWeight.w300,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
           ),
         ),
         Icon(Icons.chevron_right, size: 20, color: Colors.grey[400]),
       ],
+    );
+  }
+
+  /// 판 아래 `이번 주 보고서 보기`. 학습 달력의 `한 달 보기` 자리지만 이 카드는
+  /// 누르면 다른 화면으로 가서 보고서의 `복습하기` 와 같은 테마색 버튼으로 둔다.
+  /// 옅은 버튼은 바로 위 판과 붙어 판의 일부처럼 보였다. 누르는 동작은 카드
+  /// 전체를 감싼 마이페이지 쪽이 받는다.
+  Widget _buildOpenButton(Color primary) {
+    final palette = ReportPalette.of(primary);
+    return Container(
+      constraints: const BoxConstraints(minHeight: 46),
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: palette.base,
+        borderRadius: BorderRadius.circular(ReportPalette.buttonRadius),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          StandardText(
+            text: '이번 주 보고서 보기',
+            fontSize: 14,
+            color: Colors.white,
+            height: 1.3,
+          ),
+          const SizedBox(width: 4),
+          const Icon(Icons.arrow_forward_rounded,
+              size: 16, color: Colors.white),
+        ],
+      ),
     );
   }
 
