@@ -13,6 +13,8 @@ argument-hint: "[기준 커밋 해시]"
 - reviewers는 지정하지 않음
 - milestone, project 등 나머지 항목은 지정하지 않음
 - `main` 대상 PR은 절대 생성하지 않음
+- push 와 PR 생성은 사용자 확인 없이 바로 진행 (`/pr` 호출 자체가 요청)
+- PR merge, `main`/`develop` 직접 push, force push 는 하지 않음 (사용자가 명시적으로 요청할 때만)
 
 **1단계 - 브랜치와 작업 상태 확인**
 
@@ -66,7 +68,7 @@ PR 내용에 포함할 항목:
 - 사용자 관점의 작업 내용
 - 주요 변경사항
 - 반응형 대응 여부 (UI 변경이 있는 경우)
-- 실행한 검증 결과 (`flutter analyze`, 테스트)
+- 실행한 검증 결과 (`flutter analyze --no-fatal-infos`, `flutter test`)
 - 배포 리스크 및 확인이 필요한 부분
 - 스크린샷 안내 (해당하는 경우)
 
@@ -100,7 +102,7 @@ PR 생성 후 PR 번호를 대상으로 assignee와 label을 설정한다. GitHu
 - labels: 존재하는 label만 추가
 - reviewers: 생략
 
-PR 생성 전에 `git ls-remote --exit-code origin <브랜치명>`으로 원격 브랜치 존재 여부를 확인한다. 원격에 브랜치가 없으면 `git push -u origin <브랜치명>`으로 먼저 push하여 브랜치를 생성한 뒤 PR을 생성한다.
+PR 생성 전에 `git ls-remote --exit-code origin <브랜치명>`으로 원격 브랜치 존재 여부를 확인한다. 원격에 브랜치가 없으면 `git push -u origin <브랜치명>:<브랜치명>`으로 먼저 push하여 브랜치를 생성한 뒤 PR을 생성한다. 원격 브랜치가 있는데 아직 push 하지 않은 커밋이 있으면 같은 명령으로 반영한다. 브랜치가 `origin/develop` 을 upstream 으로 추적하고 있을 수 있으니 인자 없는 `git push` 는 쓰지 않는다.
 
 **7단계 - 결과 보고**
 

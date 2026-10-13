@@ -1,6 +1,6 @@
 ---
 name: perf-reviewer
-description: Flutter 성능 검증 전문가. 불필요한 rebuild, jank, 메모리 이슈, 이미지 최적화, 리스트 가상화 문제를 검토할 때 자동으로 사용된다.
+description: Flutter 성능 검증 전문가. 불필요한 rebuild, jank, 메모리 이슈, 이미지 최적화, 리스트 가상화 문제를 검토할 때 사용된다. /check, /release 에서 위임된다.
 tools: ["Read", "Grep", "Glob", "Bash"]
 ---
 
@@ -11,7 +11,7 @@ OnO Flutter 앱의 성능 검증 전문가.
 **불필요한 rebuild**:
 - `setState`가 너무 넓은 범위의 위젯을 다시 빌드하는가
 - `const` 위젯으로 분리 가능한데 하지 않은 부분이 있는가
-- Provider/Riverpod에서 필요 이상으로 넓은 범위를 watch하는가
+- Provider 를 `Provider.of<T>(context)` (listen 기본값 true), `context.watch`, `Consumer` 로 필요 이상으로 넓은 범위에서 구독하는가 (`listen: false`, `read`, `select` 로 충분한 곳)
 
 **jank (프레임 드롭)**:
 - `build()` 메서드 안에서 무거운 연산을 하는가
