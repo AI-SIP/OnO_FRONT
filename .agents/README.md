@@ -19,6 +19,7 @@ Codex의 예전 custom prompts 방식은 재사용 프롬프트를 슬래시 명
     ono-commit/SKILL.md
     ono-issue/SKILL.md
     ono-release/SKILL.md
+    ono-sim/SKILL.md
 ```
 
 Codex는 레포 안에서 실행될 때 현재 디렉터리부터 레포 루트까지 `.agents/skills`를 스캔한다. 각 Skill은 `SKILL.md`의 front matter에 있는 `name`, `description`을 먼저 보고, 사용자 요청과 맞으면 본문을 읽어 적용한다.
@@ -76,8 +77,9 @@ release
 | `issue <설명/파일>` | `ono-issue` | GitHub 이슈 생성 | GitHub 이슈 |
 | `explain [파일/위젯/기능]` | `ono-explain` | 코드 흐름과 설계 의도 설명 | 흐름 요약, 상태/API 흐름, 주의점 |
 | `release <버전> [기준 커밋]` | `ono-release` | release 브랜치, 출시 전 검증, 버전 올림 커밋, 업데이트 내역 | 배포 판정, 버전 커밋, 복붙용 업데이트 내역 |
+| `sim [ios\|android] [화면 설명]` | `ono-sim` | dev 서버로 시뮬레이터에 띄워 화면 확인 | 스크린샷 경로, 본 것, 사용자 확인 체크리스트 |
 
-명시 호출이 필요하면 `$ono-analysis`, `$ono-plan`, `$ono-feat`, `$ono-check`, `$ono-pr`, `$ono-commit`, `$ono-issue`, `$ono-explain`, `$ono-release`처럼 Skill 이름을 직접 언급한다.
+명시 호출이 필요하면 `$ono-analysis`, `$ono-plan`, `$ono-feat`, `$ono-check`, `$ono-pr`, `$ono-commit`, `$ono-issue`, `$ono-explain`, `$ono-release`, `$ono-sim`처럼 Skill 이름을 직접 언급한다.
 
 ## 동작 방식
 
