@@ -5,9 +5,9 @@ description: OnO Flutter 레포에서 사용자가 "sim", "sim ios <화면 설�
 
 # OnO Sim Skill
 
-`.claude/skills/sim/SKILL.md` 와 같은 절차다. 한쪽을 고치면 다른 쪽도 같이 고친다.
+> 이 파일이 `sim` 절차의 정본이다. Codex 는 이 파일을 바로 쓰고, Claude Code 의 `/sim` 은 `.claude/skills/sim/SKILL.md` 래퍼가 이 파일을 읽어 따른다. 절차를 고칠 때는 이 파일만 고친다.
 
-사용자가 `sim [ios|android] [화면 설명]` 으로 요청하면 앱을 시뮬레이터에 띄우고 화면을 확인한다.
+사용자가 `sim [ios|android] [화면 설명]`(Claude Code 에서는 `/sim`) 으로 요청하면 앱을 시뮬레이터에 띄우고 화면을 확인한다.
 
 - 첫 단어가 `ios` 나 `android` 면 플랫폼으로 쓰고, 없으면 `ios` 다.
 - 나머지는 확인할 화면이나 동선 설명이다. 없으면 현재 변경사항(`git status`, `git diff`)에서 바뀐 화면을 찾는다.
@@ -25,10 +25,10 @@ flutter devices
 
 - **`.env` 가 없으면 멈춘다.** `pubspec.yaml` 의 assets 에 `.env` 가 있어서 없으면 빌드가 실패한다. worktree 에서 작업 중이면 대개 없으니 사용자에게 메인 작업 트리의 `.env` 를 이 경로에 두어 달라고 요청한다. **`.env` 내용은 출력하거나 복사하지 않는다.**
 - **실기기에는 띄우지 않는다.** `flutter devices` 에 `ksm의 iPhone` 같은 실기기가 보여도 고르지 않는다. 기기는 반드시 시뮬레이터 UDID 나 에뮬레이터 id 로 `-d` 에 직접 넘긴다.
-- 로그와 스크린샷은 **레포 밖**에 둔다. `/tmp/ono-sim/` 을 쓴다. sandbox 때문에 `xcrun simctl`, `flutter run`, `adb` 가 막히면 사용자에게 승인을 요청한다. 아래에서는 이 경로를 `$SIM_DIR` 로 부른다.
+- 로그와 스크린샷은 **레포 밖**에 둔다. 도구가 세션 전용 임시 디렉터리를 알려 줬으면 그 아래 `sim/`, 없으면 `/tmp/ono-sim/` 을 쓴다. sandbox 때문에 `xcrun simctl`, `flutter run`, `adb` 가 막히면 사용자에게 승인을 요청한다. 아래에서는 이 경로를 `$SIM_DIR` 로 부른다.
 
 ```bash
-SIM_DIR=/tmp/ono-sim
+SIM_DIR=/tmp/ono-sim   # 세션 임시 디렉터리가 있으면 그쪽으로
 mkdir -p "$SIM_DIR"
 ```
 
@@ -80,7 +80,7 @@ flutter run -d <UDID 또는 에뮬레이터 id> --dart-define=ENV=dev \
   > "$SIM_DIR/flutter-run.log" 2>&1 < /dev/null
 ```
 
-- **백그라운드로 띄운다.** 위 명령 앞에 `nohup`, 끝에 `&` 를 붙인다. 표준 입력을 `/dev/null` 로 막아도 앱은 계속 붙어 있다.
+- **백그라운드로 띄운다.** 쉘 도구에 백그라운드 실행 옵션이 있으면 그것을 쓰고 `&` 를 붙이지 않는다. 없으면 위 명령 앞에 `nohup`, 끝에 `&` 를 붙인다. 표준 입력을 `/dev/null` 로 막아도 앱은 계속 붙어 있다.
 - **뜰 때까지는 로그를 기다린다.** `sleep` 을 이어 붙이지 말고 아래처럼 성공과 실패를 모두 잡는 조건으로 기다린다. 처음 빌드는 몇 분 걸린다.
 
 ```bash
@@ -99,7 +99,7 @@ tail -20 "$SIM_DIR/flutter-run.log"
 | 끝내기 | `kill $(cat "$SIM_DIR/flutter.pid")` |
 
 - 신호를 보낸 뒤 로그에 `Reloaded` 나 `Restarted` 가 찍혔는지 확인하고 스크린샷을 다시 찍는다.
-- **hot reload 는 위 신호로만 한다.** 레포의 `.mcp.json` 은 Claude Code 용이라 Codex 에는 Dart MCP 가 붙어 있지 않고, 붙이더라도 `hot_reload`, `get_widget_tree`, `get_runtime_errors` 는 지금 쓸 수 없다. 로그의 `The Dart Tooling Daemon is available at: ws://...` 주소로 `connect_dart_tooling_daemon` 까지는 되지만, Dart 3.9.2 의 MCP 서버로 터미널에서 띄운 앱에 실행해 보면 `No active debug session` 으로 실패한다(에디터가 띄운 디버그 세션을 기준으로 동작하는 것으로 보인다). Dart MCP 는 `analyze_files`, `run_tests`, `dart_format`, `pub_dev_search` 같은 정적 도구로 쓴다.
+- **hot reload 는 위 신호로만 한다.** 레포의 `.mcp.json` 은 Claude Code 용이라 Codex 에는 Dart MCP 가 붙어 있지 않고, Claude Code 처럼 붙어 있더라도 `hot_reload`, `get_widget_tree`, `get_runtime_errors` 는 지금 쓸 수 없다. 로그의 `The Dart Tooling Daemon is available at: ws://...` 주소로 `connect_dart_tooling_daemon` 까지는 되지만, Dart 3.9.2 의 MCP 서버로 터미널에서 띄운 앱에 실행해 보면 `No active debug session` 으로 실패한다(에디터가 띄운 디버그 세션을 기준으로 동작하는 것으로 보인다). Dart MCP 는 `analyze_files`, `run_tests`, `dart_format`, `pub_dev_search` 같은 정적 도구로 쓴다.
 
 ---
 
