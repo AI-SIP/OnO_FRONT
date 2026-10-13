@@ -34,9 +34,10 @@ description: OnO Flutter 레포에서 사용자가 "pr" 또는 "pr <기준 커�
 9. 관련 이슈가 불명확하면 임의로 연결하지 않고 `없음` 또는 `확인 필요`로 작성한다.
 10. `.github/PULL_REQUEST_TEMPLATE.md`를 반드시 읽고 그 형식에 맞춰 PR body를 작성한다.
 11. 변경사항 성격에 맞춰 PR title과 label 후보를 정한다.
-12. GitHub MCP 또는 GitHub CLI로 PR을 생성한다.
-13. PR 생성 후 PR 번호를 대상으로 assignee `KiSeungMin`을 추가하고, 유효한 label만 추가한다. PR은 GitHub issue와 번호를 공유하므로 issue/label/assignee 도구를 사용할 수 있다.
-14. 생성된 PR 번호, URL, base/head, assignee, label, 연결한 이슈, 검증 여부를 보고한다.
+12. 원격 브랜치가 없거나 push 안 된 커밋이 있으면 `git push -u origin <브랜치>:<브랜치>` 로 올린다. 브랜치가 `origin/develop` 을 추적하고 있을 수 있으니 인자 없는 `git push` 는 쓰지 않는다.
+13. GitHub MCP 또는 GitHub CLI로 PR을 생성한다. 사용자 확인 없이 바로 진행한다.
+14. PR 생성 후 PR 번호를 대상으로 assignee `KiSeungMin`을 추가하고, 유효한 label만 추가한다. PR은 GitHub issue와 번호를 공유하므로 issue/label/assignee 도구를 사용할 수 있다.
+15. 생성된 PR 번호, URL, base/head, assignee, label, 연결한 이슈, 검증 여부를 보고한다.
 
 ## 제목과 라벨 기준
 
@@ -64,7 +65,7 @@ description: OnO Flutter 레포에서 사용자가 "pr" 또는 "pr <기준 커�
 - 이 명령은 실제 PR을 생성한다.
 - base branch는 항상 `develop`이다.
 - `main` 대상 PR은 생성하지 않는다.
-- 현재 브랜치를 push해야 PR 생성이 가능하지만 원격 브랜치가 없으면 사용자에게 push 필요 여부를 확인한다. 사용자가 명시적으로 허용하기 전에는 push하지 않는다.
+- PR 에 필요한 현재 브랜치 push 는 확인 없이 한다. merge, `main`/`develop` 직접 push, force push 는 사용자가 명시적으로 요청할 때만 한다.
 - Reviewers는 지정하지 않는다.
 - Assignee는 항상 `KiSeungMin`으로 지정한다.
 - 변경사항을 과장하지 않는다.

@@ -5,7 +5,7 @@ description: OnO Flutter 레포에서 사용자가 "release", "출시", "배포 
 
 # OnO Release Skill
 
-사용자가 `release`, `release <기준 커밋>`, `출시 전 검증`, `배포 전 검증`, `업데이트 내역 작성`을 요청하면 이 Skill을 따른다.
+사용자가 `release`, `release <버전> [기준 커밋]`, `출시 전 검증`, `배포 전 검증`, `업데이트 내역 작성`을 요청하면 이 Skill을 따른다.
 
 ## 목표
 
@@ -19,19 +19,28 @@ description: OnO Flutter 레포에서 사용자가 "release", "출시", "배포 
 
 ## 절차
 
+0. 출시 버전이 없으면 `pubspec.yaml` 의 현재 `version` 과 최근 `release/*` 브랜치를 보여 주고 묻는다. `git switch -c release/<버전> --no-track origin/develop` 로 release 브랜치를 만든다(이미 있으면 그 브랜치에서 진행).
 1. `git status`, `git log`, 기준 범위 diff를 확인한다.
 2. 관련 `docs` 명세서, PR 문서, `docs/업데이트 내역`을 확인해 기능 의도와 사용자 표현을 맞춘다.
-3. 가능한 경우 `flutter analyze`를 실행한다.
-4. 테스트가 필요한 요청이거나 릴리즈 최종 검증이면 가능한 경우 `flutter test`를 실행한다. 이 프로젝트는 테스트를 별도로 많이 운영하지 않으므로, 테스트가 없거나 실행하지 못한 경우 남은 리스크로 적는다.
+3. `flutter analyze --no-fatal-infos` 를 실행한다(CI 기준. info 는 기존에 많아 판정에서 제외).
+4. `flutter test` 를 실행한다. `test/` 에 단위, 위젯, 골든 테스트가 있고 CI 도 PR 마다 돌린다. 실행하지 못했으면 통과했다고 쓰지 않고 남은 리스크로 적는다.
 5. 변경 파일과 사용자 흐름 기준으로 `ono-check` 수준의 위험 검토를 수행한다.
 6. UI 변경이 있으면 작은 폰, 일반 폰, 태블릿, 가로/세로에서 overflow, 버튼 잘림, 스크롤 불가 가능성을 검토한다.
-7. 최종 판정과 업데이트 내역 초안을 함께 보고한다.
+7. 배포 가능이면 `pubspec.yaml` 의 `version: <버전>+<빌드 번호>` 만 올려(빌드 번호는 직전 출시보다 1 크게) `[Chore] <버전> 출시 버전으로 올린다 - <버전>+<빌드 번호>` 로 커밋한다.
+8. 최종 판정과 업데이트 내역 초안, 사람이 할 릴리스 빌드 명령을 함께 보고한다.
+
+릴리스 빌드 명령 (안내만 하고 실행하지 않는다):
+
+```bash
+flutter build ipa --dart-define=ENV=prod --release        # iOS, Xcode Organizer 에서 업로드
+flutter build appbundle --dart-define=ENV=prod --release  # Android, Play Console 에 업로드
+```
 
 ## 배포 불가 기준
 
 아래 항목 중 하나라도 있으면 `배포 불가`로 판정한다.
 
-- `flutter analyze` 오류 또는 새 경고가 있다.
+- `flutter analyze --no-fatal-infos` 에 error 나 warning 이 있다.
 - 테스트 실패가 있다.
 - 런타임 예외, 인증 우회, 데이터 손실, 결제/학습 기록/동기화/FCM 부작용 가능성이 높다.
 - 작은 폰이나 태블릿에서 핵심 화면을 사용할 수 없는 UI 깨짐 가능성이 높다.
@@ -96,15 +105,15 @@ description: OnO Flutter 레포에서 사용자가 "release", "출시", "배포 
 1. ...
 ```
 
-## 추천 커밋
+## 버전 커밋
 
 ```text
-[Chore] 출시 전 검증 문서 추가 - 업데이트 내역 정리 배포 리스크 점검
+[Chore] 4.1.1 출시 버전으로 올린다 - 4.1.1+75
 ```
 ````
 
 ## 주의
 
-- 실제 앱스토어/플레이스토어 제출, 빌드 업로드, git push, tag 생성은 사용자 요청 없이는 실행하지 않는다.
+- 릴리스 빌드 업로드, 앱스토어/플레이스토어 제출, `main` merge, tag 생성은 사람이 한다. release 브랜치 push 와 develop 대상 PR 은 `ono-pr` 로 한다.
 - 출시 노트를 마케팅 문구처럼 과장하지 않는다.
 - 검증을 실행하지 못하면 통과했다고 쓰지 않는다.
