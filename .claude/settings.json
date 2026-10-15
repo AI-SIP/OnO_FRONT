@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "deny": [
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "Read(./**/key.properties)",
+      "Read(./**/*.jks)",
+      "Read(./**/*.keystore)",
+      "Read(./**/*.p12)",
+      "Read(./**/*.p8)",
+      "Read(./**/*.mobileprovision)",
+      "mcp__github__merge_pull_request",
+      "Bash(gh pr merge:*)",
+      "Bash(gh issue delete:*)",
+      "Bash(git push origin main*)",
+      "Bash(git push origin develop*)",
+      "Bash(git push --force*)",
+      "Bash(git push -f*)",
+      "Bash(xcrun altool:*)"
+    ],
+    "ask": [
+      "Bash(flutter build:*)",
+      "Bash(gh release:*)",
+      "Bash(gh workflow run:*)"
+    ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/dart_check.sh",
+            "timeout": 120
+          }
+        ]
+      }
+    ]
+  }
+}

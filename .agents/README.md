@@ -2,7 +2,7 @@
 
 이 디렉터리는 OnO Flutter 프론트 레포에서 Codex가 사용할 레포 전용 Skill과 사용 설명을 담는다.
 
-Codex의 예전 custom prompts 방식은 재사용 프롬프트를 슬래시 명령으로 등록하는 구조였지만, 현재는 Skill 사용이 권장된다. 이 레포에서는 `analysis`, `plan`, `feat`, `pr`, `check`, `commit`, `explain`, `release`를 실제 CLI 명령이 아니라 Codex 작업 모드로 해석하고, `.agents/skills/ono-*` Skill이 그 동작을 정의한다.
+Codex의 예전 custom prompts 방식은 재사용 프롬프트를 슬래시 명령으로 등록하는 구조였지만, 현재는 Skill 사용이 권장된다. 이 레포에서는 `analysis`, `plan`, `feat`, `pr`, `check`, `commit`, `issue`, `explain`, `release`를 실제 CLI 명령이 아니라 Codex 작업 모드로 해석하고, `.agents/skills/ono-*` Skill이 그 동작을 정의한다.
 
 ## 파일 구조
 
@@ -17,6 +17,7 @@ Codex의 예전 custom prompts 방식은 재사용 프롬프트를 슬래시 명
     ono-pr/SKILL.md
     ono-check/SKILL.md
     ono-commit/SKILL.md
+    ono-issue/SKILL.md
     ono-release/SKILL.md
     ono-sim/SKILL.md
 ```
@@ -45,7 +46,7 @@ pr
 release
 ```
 
-위 요청들은 별도 인자가 없어도 현재 변경사항을 기준으로 검토, 분석, 설명, PR 초안 작성, 커밋 메시지 추천을 수행한다.
+위 요청들은 별도 인자가 없어도 현재 변경사항(PR 은 `origin/develop..HEAD`)을 기준으로 검토, 분석, 설명, PR 생성, 커밋을 수행한다.
 
 단, `plan`은 새 기능 설명이 없으면 명세서를 작성할 수 없으므로 사용자에게 기능 설명을 요청한다. `feat`는 인자가 없으면 최근 `docs` 명세서와 현재 변경사항을 확인해 기준 문서를 찾고, 하나로 명확하지 않으면 사용자에게 확인한다.
 
@@ -69,15 +70,16 @@ release
 |---|---|---|---|
 | `analysis [문제 설명]` | `ono-analysis` | 문제 원인 규명, 버그 분석 | 원인 후보, 코드 근거, 확인 필요 항목 |
 | `plan <기능 설명>` | `ono-plan` | 구현 전 기능 명세서 작성 | `docs/<기능 폴더>/<명세서>.md` |
-| `feat [명세서 경로/기능명]` | `ono-feat` | `plan` 문서 기준 실제 구현 | 코드 변경, 정적 검증 결과, 커밋 메시지 제안 |
+| `feat [명세서 경로/기능명]` | `ono-feat` | `plan` 문서 기준 실제 구현 (커밋 안 함) | 코드 변경, 정적 검증 결과, 커밋 메시지 제안 |
 | `check [커밋 번호]` | `ono-check` | 변경사항 위험 검토 | 위험도별 검토 결과 |
-| `pr [커밋 해쉬]` | `ono-pr` | PR 제목/본문 초안 작성 | 관련 `docs` 폴더의 PR markdown |
-| `commit` | `ono-commit` | 커밋 단위와 메시지 추천 | 커밋 단위, 포함 파일, 메시지 |
+| `pr [커밋 해쉬]` | `ono-pr` | 필요 시 push 후 develop 대상 PR 생성 | GitHub PR |
+| `commit` | `ono-commit` | 논리 단위로 나눠 실제 커밋 | 커밋 |
+| `issue <설명/파일>` | `ono-issue` | GitHub 이슈 생성 | GitHub 이슈 |
 | `explain [파일/위젯/기능]` | `ono-explain` | 코드 흐름과 설계 의도 설명 | 흐름 요약, 상태/API 흐름, 주의점 |
-| `release [기준 커밋]` | `ono-release` | 출시 전 종합 검증과 업데이트 내역 작성 | 배포 판정, 검증 결과, 복붙용 업데이트 내역 |
+| `release <버전> [기준 커밋]` | `ono-release` | release 브랜치, 출시 전 검증, 버전 올림 커밋, 업데이트 내역 | 배포 판정, 버전 커밋, 복붙용 업데이트 내역 |
 | `sim [ios\|android] [화면 설명]` | `ono-sim` | dev 서버로 시뮬레이터에 띄워 화면 확인 | 스크린샷 경로, 본 것, 사용자 확인 체크리스트 |
 
-명시 호출이 필요하면 `$ono-analysis`, `$ono-plan`, `$ono-feat`, `$ono-check`, `$ono-pr`, `$ono-commit`, `$ono-explain`, `$ono-release`, `$ono-sim`처럼 Skill 이름을 직접 언급한다.
+명시 호출이 필요하면 `$ono-analysis`, `$ono-plan`, `$ono-feat`, `$ono-check`, `$ono-pr`, `$ono-commit`, `$ono-issue`, `$ono-explain`, `$ono-release`, `$ono-sim`처럼 Skill 이름을 직접 언급한다.
 
 ## 동작 방식
 
@@ -124,11 +126,13 @@ release
 4. 실제 코드와 명세가 다르면 실제 코드 기준으로 판단하고 차이를 설명한다.
 5. 구현 전 어떤 파일을 어떤 방향으로 바꿀지 짧게 공유한다.
 6. 필요한 줄만 수정한다.
-7. 가능한 경우 `dart format`, `flutter analyze`를 실행한다.
+7. 바꾼 test 파일만 `dart format` 하고(lib 전체 포맷 금지, CI 도 test 만 검사) `flutter analyze --no-fatal-infos` 로 warning, error 0개를 확인한다. 관련 테스트가 있으면 `flutter test` 도 돌린다.
 8. 화면 변경이면 폰/태블릿/가로세로 레이아웃 리스크를 검토한다.
 9. 완료 보고 전 자가 반증을 수행한다.
 
-사용자가 따로 요청하지 않으면 Flutter 테스트 코드를 새로 만들지 않는다.
+사용자가 따로 요청하지 않으면 Flutter 테스트 코드를 새로 만들지 않는다. 다만 바꾼 동작을 검사하는 기존 테스트(`test/`)가 깨지면 함께 고친다.
+
+커밋은 하지 않는다. 커밋은 사용자가 `commit` 을 요청할 때 한다.
 
 ### `check [커밋 번호]`
 
@@ -141,7 +145,7 @@ release
 3. 변경된 파일과 영향받는 사용자 흐름을 기준으로 검토한다.
 4. 1차로 diff 기반 위험을 찾는다.
 5. 2차로 1차 결론을 반증한다. 실제 도달 가능한지, 상위 조건에서 막히지 않는지 다시 본다.
-6. 가능한 경우 `dart format`, `flutter analyze`를 실행한다.
+6. 가능한 경우 `flutter analyze --no-fatal-infos`를 실행한다(CI 기준, info 제외). 파일을 수정하지 않으므로 `dart format` 은 `--output=none --set-exit-if-changed` 로 검사만 한다.
 
 검토 관점:
 
@@ -158,57 +162,57 @@ release
 
 ### `pr [커밋 해쉬]`
 
-지정 커밋부터 현재까지의 변경사항으로 PR 초안을 작성하는 모드다.
+현재 브랜치를 `develop` 에 merge 요청하는 GitHub PR 을 실제로 만드는 모드다.
 
 동작 순서:
 
-1. 기준 커밋 해시가 있으면 `git log`, `git diff <커밋>..HEAD`, 현재 uncommitted diff를 확인한다.
-2. 기준 커밋 해시가 없으면 현재 작업 중인 변경사항을 기준으로 PR 초안을 작성한다.
-3. `.github/PULL_REQUEST_TEMPLATE.md`를 읽는다.
-4. 관련 `docs` 기능 문서 폴더를 찾는다.
-5. 폴더가 명확하지 않으면 사용자에게 확인한다.
-6. PR 제목과 본문 초안을 markdown으로 저장한다.
+1. 현재 브랜치가 `main`, `master`, `develop` 이거나 커밋 안 된 변경이 있으면 중단하고 보고한다.
+2. 기준 커밋이 있으면 `<커밋>..HEAD`, 없으면 `origin/develop..HEAD` 의 로그와 diff 를 본다.
+3. 관련 open 이슈를 검색해 명확하면 `close #번호` 를 넣는다.
+4. `.github/PULL_REQUEST_TEMPLATE.md` 형식으로 본문을 쓴다.
+5. 원격 브랜치가 없거나 push 안 된 커밋이 있으면 `git push -u origin <브랜치>:<브랜치>` 로 올린다.
+6. 사용자 확인 없이 `develop` 대상 PR 을 만들고 assignee `KiSeungMin`, 있는 label 만 붙인다.
 
-실제 PR 생성, push, branch 변경은 사용자 요청 없이는 하지 않는다.
+merge, `main`/`develop` 직접 push, force push 는 사용자가 명시적으로 요청할 때만 한다.
 
 ### `commit`
 
-현재 변경사항을 커밋 단위로 나누고 메시지를 추천하는 모드다.
+현재 변경사항을 논리 단위로 나눠 실제로 커밋하는 모드다.
 
 동작 순서:
 
 1. `git status`와 diff를 확인한다.
 2. 기능/수정/문서/설정 단위로 변경을 묶는다.
-3. 관련 없는 변경이 섞여 있으면 분리 커밋을 제안한다.
-4. 커밋 전 필요한 검증을 짧게 덧붙인다.
+3. 관련 없는 변경이 섞여 있으면 분리 커밋한다.
+4. 단위마다 `git add <파일>` 과 `git commit` 을 실행한다. `commit` 요청 자체가 커밋 요청이라 따로 확인받지 않는다.
+5. `main`/`develop` 브랜치이거나, 비밀 파일이나 빌드 산출물이 섞였거나, 어디까지 커밋할지 불분명하면 커밋하지 않고 보고한다.
 
-사용자가 명시하지 않으면 실제 `git add`나 `git commit`은 실행하지 않는다.
+push 와 PR 생성은 하지 않는다. `pr` 에서 한다.
 
 커밋 메시지 형식:
 
 ```text
-[Feat] 구현 타이틀 - 구현 상세1 구현 상세2
+[Feat] 구현 타이틀 - 구현 상세1 구현 상세2 (#이슈번호)
 ```
 
 태그는 `[Feat]`, `[Fix]`, `[Refactor]`, `[Chore]`, `[Test]`, `[Docs]` 중 변경 성격에 맞춰 선택한다.
 
-### `release [기준 커밋]`
+### `release <버전> [기준 커밋]`
 
-앱스토어/플레이스토어 제출 전에 출시 가능 여부를 점검하고, 사용자가 바로 복사할 수 있는 업데이트 내역을 작성하는 모드다.
+앱스토어/플레이스토어 제출 직전까지 준비하는 모드다. 자세한 절차는 `ono-release` Skill 과 `.claude/commands/release.md` 가 같다.
 
 동작 순서:
 
-1. 기준 커밋이 있으면 `<기준 커밋>..HEAD`와 현재 변경사항을 확인한다.
-2. 기준 커밋이 없으면 `git log`, `docs/업데이트 내역`, 현재 변경사항을 확인해 출시 범위를 찾고, 명확하지 않으면 사용자에게 확인한다.
-3. 관련 `docs` 명세서와 PR 문서를 확인해 기능 의도와 사용자 표현을 맞춘다.
-4. 가능한 경우 `flutter analyze`를 실행한다.
-5. 릴리즈 최종 검증이면 가능한 경우 `flutter test`를 실행한다.
-6. diff 기반 위험, API 계약, null 처리, 인증/동기화/FCM 부작용, 폰/태블릿 반응형 리스크를 검토한다.
-7. 배포 가능/불가/확인 후 배포 판정과 업데이트 내역 초안을 함께 보고한다.
+1. `origin/develop` 에서 `release/<버전>` 브랜치를 만든다(`--no-track`).
+2. 기준 커밋이 없으면 직전 `origin/release/*` 이후 범위를 보고, 명확하지 않으면 확인한다.
+3. `flutter analyze --no-fatal-infos` 로 warning, error 0개, `flutter test` 통과를 확인한다.
+4. diff 위험, API 계약, null 처리, 인증/동기화/FCM 부작용, 폰/태블릿 반응형 리스크를 검토한다.
+5. 배포 가능이면 `pubspec.yaml` 버전을 올려 `[Chore] <버전> 출시 버전으로 올린다 - <버전>+<빌드>` 로 커밋한다.
+6. 배포 판정과 업데이트 내역 초안을 함께 보고한다.
 
 업데이트 내역은 앱스토어/플레이스토어에 바로 붙여 넣을 수 있도록 번호 목록과 짧은 bullet로 작성한다. 내부 구현명, 클래스명, API명, PR 번호, 커밋 해시는 포함하지 않는다.
 
-실제 앱스토어/플레이스토어 제출, 빌드 업로드, git push, tag 생성은 사용자 요청 없이는 하지 않는다.
+릴리스 빌드 업로드, 스토어 제출, `main` merge, tag 생성은 사람이 한다.
 
 ### `explain [파일/위젯/기능]`
 

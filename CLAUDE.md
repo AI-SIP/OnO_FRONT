@@ -7,37 +7,39 @@
 ## 운영 가드레일
 
 **자유롭게:**
-- git 작업 (커밋·push·브랜치·머지 등) 자유
-- 코드·설정·문서 변경 자유
+- 코드·설정·문서 변경, 브랜치 생성, `/commit` 의 커밋, `/pr` 의 원격 브랜치 push 와 develop 대상 PR 생성
+- merge, main/develop 직접 push, force push 는 사용자가 명시적으로 요청할 때만
 
 **반드시 확인:**
-- 앱스토어/플레이스토어 릴리즈 배포 전 영향 범위 설명 후 확인
+- 앱스토어/플레이스토어 릴리즈 빌드·업로드 전 영향 범위 설명 후 확인 (업로드는 사람이 한다)
 - API 계약(요청/응답 shape) 변경은 백엔드 레포와 동기화 여부 확인
 - FCM 알림 발송 경로 수정 전 경고
+
+공유 가드레일은 `.claude/settings.json` (권한 deny/ask, 편집 후 dart 파일 analyze 훅).
 
 ## 빌드·검증 명령
 
 ```
-dart format .                    # 포맷
-flutter analyze                  # 정적 분석 (경고 0개 목표)
-flutter test                     # 테스트
-flutter build apk / ios          # 빌드
+dart format <바꾼 test 파일>     # 포맷은 test 만 (CI 와 같음, lib 전체 포맷 금지)
+flutter analyze --no-fatal-infos # CI 기준: warning·error 0개 (info 는 기존에 많음)
+flutter test                     # 단위·위젯·골든 테스트 (test/)
 flutter run                      # 실행
 ```
 
-출시 전: `flutter analyze` 무경고 + 테스트 통과 필수.
+출시 전: 위 analyze 기준 통과 + `flutter test` 통과 필수. 절차는 `/release`.
 
 ## 작업 방식
 
 - **응답·주석·커밋 언어**: 한국어
 - **커밋 형식**:
   ```
-  [Feat] 한 줄 요약 - 상세1 상세2
+  [Feat] 한 줄 요약 - 상세1 상세2 (#이슈번호)
   ```
   태그: `[Feat]` / `[Fix]` / `[Refactor]` / `[Chore]` / `[Test]` / `[Docs]`
 - 요청 범위 안에서만 수정. 무관한 리팩터링·포맷팅 금지.
 - 불확실하면 추정하지 말고 먼저 드러냄.
 - 관련 기획/개발 문서: `docs/` 우선 참고.
+- 코드 구조: `lib/Screen`(화면) · `lib/Module`(공용 위젯) · `lib/Provider`(상태, provider 패키지만 사용) · `lib/Service/Api`(API 호출) · `lib/Model` · `lib/Util` · `lib/Config`.
 
 ## 지표 수집 (Firebase Analytics)
 
@@ -53,12 +55,14 @@ flutter run                      # 실행
 
 | 명령 | 목적 |
 |---|---|
-| `/analysis` | 원인 규명·병렬 조사 |
+| `/analysis` | 원인 규명·병렬 조사 (코드 수정 X) |
 | `/plan` | 구현 명세서 작성 (코드 수정 X) |
-| `/feat` | plan 기반 기능 구현 |
-| `/check` | 다관점 검증·위험도 분류 |
-| `/commit` | 커밋 단위 및 메시지 제안 |
-| `/pr` | PR 초안 작성 |
+| `/feat` | plan 기반 구현 (커밋 X) |
+| `/check` | 다관점 검증·위험도 분류 (읽기 전용) |
+| `/commit` | 논리 단위로 나눠 실제 커밋 |
+| `/pr` | 필요 시 push 후 develop 대상 PR 생성 |
+| `/issue` | GitHub 이슈 생성 |
+| `/release` | 출시 전 검증·버전 올림·업데이트 내역 (업로드는 사람) |
 | `/explain` | 코드 흐름·원리 설명 |
 
 ## 에이전트 (`.claude/agents/`)

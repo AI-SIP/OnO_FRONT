@@ -7,10 +7,10 @@
 ## 목차
 
 1. [설정 파일 구조](#1-설정-파일-구조)
-2. [커스텀 명령어 7종](#2-커스텀-명령어-7종)
+2. [커스텀 명령어 9종](#2-커스텀-명령어-9종)
 3. [전문가 에이전트 6종](#3-전문가-에이전트-6종)
 4. [권한 설정](#4-권한-설정)
-5. [알림 훅](#5-알림-훅)
+5. [훅](#5-훅)
 6. [작업 파이프라인 권장 흐름](#6-작업-파이프라인-권장-흐름)
 
 ---
@@ -20,9 +20,12 @@
 ```
 OnO_FRONT/
 ├── CLAUDE.md                          ← 프로젝트 지침 (Claude가 항상 읽음)
-├── AGENTS.md                          ← 구버전 AI 에이전트 지침 (참고용)
+├── AGENTS.md                          ← Codex 용 작업 지침 (git 제외, 각자 로컬)
+├── .agents/skills/ono-*/SKILL.md      ← Codex 용 작업 모드 (이 문서의 명령어와 같은 정책)
 └── .claude/
-    ├── settings.local.json            ← 이 레포 전용 권한 설정 (git 제외)
+    ├── settings.json                  ← 팀 공유 권한·훅 (git 포함)
+    ├── settings.local.json            ← 개인 권한 설정 (git 제외)
+    ├── hooks/dart_check.sh            ← 편집 후 dart 파일 analyze 훅
     ├── commands/                      ← 커스텀 슬래시 명령어
     │   ├── analysis.md
     │   ├── plan.md
@@ -30,6 +33,8 @@ OnO_FRONT/
     │   ├── check.md
     │   ├── commit.md
     │   ├── pr.md
+    │   ├── issue.md
+    │   ├── release.md
     │   └── explain.md
     └── agents/                        ← 전문가 서브에이전트
         ├── code-tracer.md
@@ -43,11 +48,11 @@ OnO_FRONT/
 └── settings.json                      ← 글로벌 설정 (알림 훅 포함)
 ```
 
-**설정 우선순위**: 글로벌(`~/.claude/`) → 프로젝트(`.claude/settings.json`) → 로컬(`.claude/settings.local.json`)
+**설정 우선순위**: 로컬(`.claude/settings.local.json`) > 프로젝트(`.claude/settings.json`) > 글로벌(`~/.claude/settings.json`). 단 권한은 어느 파일에 있든 deny → ask → allow 순서로 먼저 걸리는 규칙이 이긴다.
 
 ---
 
-## 2. 커스텀 명령어 7종
+## 2. 커스텀 명령어 9종
 
 Claude Code 프롬프트 입력창에서 `/명령어` 형태로 호출한다.
 
@@ -59,9 +64,13 @@ Claude Code 프롬프트 입력창에서 `/명령어` 형태로 호출한다.
 | `/plan` | 구현 명세서 작성 | ✗ | ✗ |
 | `/feat` | plan 기반 기능 구현 | ✓ | ✗ |
 | `/check` | 다관점 검증 및 위험도 분류 | ✗ | ✗ |
-| `/commit` | 커밋 단위 및 메시지 제안 | ✗ | ✗ |
-| `/pr` | PR 초안 작성 | ✗ | ✗ |
+| `/commit` | 논리 단위로 나눠 실제 커밋 | ✗ | ✓ |
+| `/pr` | 필요 시 push 후 develop 대상 PR 생성 | ✗ | ✗ |
+| `/issue` | GitHub 이슈 생성 | ✗ | ✗ |
+| `/release` | 출시 전 검증, 버전 올림 커밋, 업데이트 내역 | ✓ (pubspec 버전만) | ✓ (버전 올림만) |
 | `/explain` | 코드 흐름·원리 설명 | ✗ | ✗ |
+
+merge, `main`/`develop` 직접 push, force push, 스토어 업로드는 어떤 명령도 하지 않는다. 사용자가 명시적으로 요청할 때만 한다.
 
 ---
 
@@ -124,8 +133,8 @@ Claude Code 프롬프트 입력창에서 `/명령어` 형태로 호출한다.
 1. 어떤 명세서를 기준으로 할지 확인 (불명확하면 물어봄)
 2. 명세서 + 현재 코드 확인 (차이가 있으면 설명)
 3. 명세서 구현 단계를 순서대로 실행
-4. 구현 후 `dart format .` → `flutter analyze` 자동 실행
-5. 변경 내용·사용자 영향·반응형 처리·검증 결과·리스크·추천 커밋 보고
+4. 구현 후 바꾼 test 파일만 `dart format`, `flutter analyze --no-fatal-infos`(CI 기준) 실행, 관련 테스트가 있으면 `flutter test`
+5. 변경 내용·사용자 영향·반응형 처리·검증 결과·리스크·추천 커밋 보고 (커밋은 하지 않음)
 
 **구현 규칙**:
 - 명세서 범위만 수정 (무관한 리팩터링·포맷팅 금지)
@@ -133,9 +142,9 @@ Claude Code 프롬프트 입력창에서 `/명령어` 형태로 호출한다.
 - null safety, async, 에러/로딩/빈 상태 챙김
 - API 계약 불명확 시 임의 단정 금지
 
-**커밋 메시지 형식** (제안만, 실행 안 함):
+**커밋 메시지 형식** (제안만, 커밋은 `/commit` 에서):
 ```
-[Feat] 한 줄 요약 - 상세1 상세2
+[Feat] 한 줄 요약 - 상세1 상세2 (#이슈번호)
 ```
 
 ---
@@ -150,8 +159,9 @@ Claude Code 프롬프트 입력창에서 `/명령어` 형태로 호출한다.
    - `perf-reviewer`: 불필요한 rebuild, jank, 메모리 이슈
    - `logic-reviewer`: null safety, async 경합, 상태 전이, 에러 처리
    - `side-effect-checker`: API 중복 호출, 로컬 저장 부작용, FCM
-   - `permission-auditor`: 화면 접근 제어 (UI 변경 있을 때)
-3. `flutter analyze` 실행
+   - `permission-auditor`: 화면 접근 제어 (로그인, 토큰, 라우팅 변경이 있을 때)
+   - 반응형 UI 변경은 맡길 에이전트가 없어 직접 확인
+3. `flutter analyze --no-fatal-infos` 실행
 4. 에이전트 결과를 교차 반증
 5. 위험도 분류 보고
 
@@ -171,39 +181,60 @@ Claude Code 프롬프트 입력창에서 `/명령어` 형태로 호출한다.
 
 ### `/commit [맥락 설명]`
 
-**언제**: 여러 변경사항이 쌓였을 때 어떻게 커밋을 나눌지 정리가 필요할 때.
+**언제**: 구현이 끝나 변경사항을 커밋할 때.
 
 **동작 흐름**:
 1. `git status` / `git diff` / `git diff --staged` 확인
 2. 기능 추가·버그 수정·스타일·설정 변경 등을 논리 단위로 분리
-3. 각 단위에 대해 `git add <파일>` + `git commit -m "..."` 형태로 제안
+3. 각 단위를 `git add <파일>` + `git commit` 으로 **실제 커밋** (호출 자체가 요청이라 따로 확인받지 않음)
+4. `main`/`develop` 브랜치이거나 비밀 파일, 무관한 변경이 섞여 있으면 커밋하지 않고 보고
 
-> ⚠️ **커밋을 직접 실행하지 않는다.** 제안만 한다.
+> push 와 PR 생성은 하지 않는다. `/pr` 에서 한다.
 
-**출력 예**:
+**실행 예**:
 ```
-## 커밋 1
-git add lib/screens/calendar_screen.dart
-git commit -m "[Feat] 학습 달력 주간 뷰 추가 - 태블릿 레이아웃 대응"
-
-## 커밋 2
-git add lib/widgets/calendar_item.dart
-git commit -m "[Fix] 달력 아이템 날짜 null 처리 추가"
+git add lib/Screen/PracticeNote/PracticeDetailScreen.dart
+git commit -m "[Feat] 복습 세트 상세에 다시 풀기 버튼 추가 - 태블릿 가로 배치 대응 (#382)"
 ```
 
 ---
 
 ### `/pr <기준 커밋 해시>`
 
-**언제**: 기능 브랜치 작업 완료 후 PR 초안을 빠르게 만들 때.
+**언제**: 기능 브랜치 작업을 커밋까지 마치고 develop 에 PR 을 올릴 때.
 
 **동작 흐름**:
-1. `git log <해시>..HEAD` + `git diff <해시>..HEAD` 로 변경 내역 파악
-2. `.github/PULL_REQUEST_TEMPLATE.md` 양식 확인
-3. `/plan` 명세서와 같은 `docs/` 폴더에 PR 문서 저장
-4. 변경 요약·주요 구현·반응형 대응·검증 결과·배포 리스크 포함
+1. 브랜치가 `main`/`master`/`develop` 이거나 커밋 안 된 변경이 있으면 중단
+2. `git log <해시 또는 origin/develop>..HEAD` + diff 로 변경 내역 파악
+3. 연관 open 이슈 검색 → 명확하면 `close #번호`
+4. `.github/PULL_REQUEST_TEMPLATE.md` 양식으로 본문 작성
+5. 원격 브랜치가 없거나 push 안 된 커밋이 있으면 `git push -u origin <브랜치>:<브랜치>`
+6. `develop` 대상 PR 을 **확인 없이 바로 생성**, assignee `KiSeungMin`, 있는 label 만 추가
 
-> ⚠️ 코드를 수정하거나 PR을 실제로 생성하지 않는다.
+> ⚠️ merge 하지 않는다. `main` 대상 PR 은 만들지 않는다.
+
+---
+
+### `/issue <이슈 설명 또는 파일 경로>`
+
+**언제**: 작업 전에 GitHub 이슈를 만들 때.
+
+**동작 흐름**: 입력을 읽고 `.github/ISSUE_TEMPLATE` 의 버그/공통 템플릿 중 하나를 골라 본문 작성 → 있는 label 만 붙여 `AI-SIP/OnO_FRONT` 에 생성, assignee `KiSeungMin`. 코드는 수정하지 않는다.
+
+---
+
+### `/release <출시 버전> [기준]`
+
+**언제**: 앱스토어/플레이스토어 제출 직전.
+
+**동작 흐름**:
+1. `origin/develop` 에서 `release/<버전>` 브랜치
+2. `flutter analyze --no-fatal-infos` (warning·error 0개) → `flutter test` → 에이전트 4종 병렬 검증
+3. 🟢 배포 가능이면 `pubspec.yaml` 버전 올림 커밋 (`[Chore] 4.1.1 출시 버전으로 올린다 - 4.1.1+75` 형식)
+4. 스토어에 붙여 넣을 업데이트 내역 초안 작성
+5. 릴리스 빌드 명령과 단계적 출시 방법을 **안내만** 한다
+
+> ⚠️ 릴리스 빌드 업로드, 스토어 제출, `main` merge 는 사람이 한다.
 
 ---
 
@@ -221,7 +252,7 @@ git commit -m "[Fix] 달력 아이템 날짜 null 처리 추가"
 
 **사용 예**:
 ```
-/explain lib/screens/review_screen.dart
+/explain lib/Screen/PracticeNote/PracticeDetailScreen.dart
 /explain 오답노트 목록 로딩 흐름
 /explain AuthProvider
 ```
@@ -240,7 +271,7 @@ git commit -m "[Fix] 달력 아이템 날짜 null 처리 추가"
 
 **역할**: 위젯 트리·상태 관리·API 호출 흐름을 지도로 만든다.
 
-**사용하는 명령어**: `/analysis`, `/plan`, `/feat`, `/explain`
+**사용하는 명령어**: `/analysis`, `/plan`, `/explain`
 
 **추적 방향**:
 - 위젯 트리: 진입 위젯 → 자식 → 상태 소비 위젯
@@ -260,10 +291,10 @@ git commit -m "[Fix] 달력 아이템 날짜 null 처리 추가"
 
 **역할**: Flutter 성능 문제를 찾는다.
 
-**사용하는 명령어**: `/check`
+**사용하는 명령어**: `/check`, `/release`
 
 **검토 항목**:
-- **불필요한 rebuild**: `setState` 범위, `const` 분리 미적용, 너무 넓은 watch
+- **불필요한 rebuild**: `setState` 범위, `const` 분리 미적용, 너무 넓은 `Provider.of`/watch
 - **jank**: `build()` 안 무거운 연산, 메인 스레드 동기 I/O
 - **메모리·이미지**: 컨트롤러 `dispose` 누락, Stream 누수, 이미지 캐시 미사용
 - **리스트**: `ListView` → `ListView.builder` 미전환
@@ -274,7 +305,7 @@ git commit -m "[Fix] 달력 아이템 날짜 null 처리 추가"
 
 **역할**: 비즈 로직 정합성을 검증한다.
 
-**사용하는 명령어**: `/check`
+**사용하는 명령어**: `/check`, `/release`
 
 **검토 항목**:
 - **null safety**: `!` 강제 언래핑 위험, `?.` 조용한 무시, API nullable 미방어
@@ -288,7 +319,7 @@ git commit -m "[Fix] 달력 아이템 날짜 null 처리 추가"
 
 **역할**: 의도치 않은 외부 영향과 부작용을 찾는다.
 
-**사용하는 명령어**: `/check`
+**사용하는 명령어**: `/check`, `/release`
 
 **검토 항목**:
 - **API 중복 호출**: build/initState 중복, 버튼 debounce 미적용, 페이지네이션 중복
@@ -302,7 +333,7 @@ git commit -m "[Fix] 달력 아이템 날짜 null 처리 추가"
 
 **역할**: 화면 접근 제어와 인증 흐름을 검증한다.
 
-**사용하는 명령어**: `/check` (UI 변경 포함 시)
+**사용하는 명령어**: `/check` (로그인, 토큰, 라우팅 변경 포함 시), `/release`
 
 > 데이터 격리(남의 오답노트 접근 차단)는 백엔드 책임. 여기서는 앱 화면·네비게이션 레벨만 검토.
 
@@ -317,7 +348,7 @@ git commit -m "[Fix] 달력 아이템 날짜 null 처리 추가"
 
 **역할**: 기술적 변경사항을 비기술적 언어로 보고서화한다.
 
-**사용하는 명령어**: `/pr` (내부적으로 활용)
+**사용하는 명령어**: 없음. 보고서나 비기술적 요약을 직접 요청할 때 부른다.
 
 **작성 원칙**: 존댓말, 핵심 위주, 기술 용어 최소화, Before/After 표 활용
 
@@ -329,47 +360,52 @@ git commit -m "[Fix] 달력 아이템 날짜 null 처리 추가"
 |---|---|
 | `/analysis` | `code-tracer` |
 | `/plan` | `code-tracer` |
-| `/feat` | `code-tracer` |
-| `/check` | `perf-reviewer`, `logic-reviewer`, `side-effect-checker` (+UI 변경 시 `permission-auditor`) |
+| `/check` | `perf-reviewer`, `logic-reviewer`, `side-effect-checker` (+로그인·토큰·라우팅 변경 시 `permission-auditor`) |
+| `/release` | `perf-reviewer`, `logic-reviewer`, `side-effect-checker`, `permission-auditor` |
 | `/explain` | `code-tracer` |
-| `/pr` | `report-writer` |
-| `/commit` | (없음 — 경량 명령) |
+| `/feat`, `/commit`, `/pr`, `/issue` | (없음) |
+| (직접 요청) | `report-writer` |
 
 ---
 
 ## 4. 권한 설정
 
-`.claude/settings.local.json` — 이 레포에서만 적용, git에 포함되지 않음.
+`.claude/settings.json` — 팀 공유, git 에 포함. 개인 허용 목록은 `.claude/settings.local.json`(git 제외)에 따로 둔다.
 
-### 자동 허용 (승인 없이 바로 실행)
-
-| 허용 항목 | 이유 |
-|---|---|
-| `Read`, `Grep`, `Glob` | 읽기 전용 — 위험 없음 |
-| `Bash(git status/diff/log/show/branch)` | 읽기 전용 git 조회 |
-| `Bash(ls)` | 디렉토리 조회 |
-| `Bash(flutter analyze)` | 정적 분석 — 부작용 없음 |
-| `Bash(flutter test)` | 테스트 실행 |
-| `Bash(flutter build)` | 빌드 |
-| `Bash(flutter run)` | 앱 실행 |
-| `Bash(dart format)` | 포맷팅 |
-| `Bash(find . *)` | 파일 탐색 |
-
-### 차단 (실행 불가)
+### 차단 (deny)
 
 | 차단 항목 | 이유 |
 |---|---|
-| `Bash(git push --force)` | 원격 히스토리 파괴 위험 |
-| `Bash(git reset --hard)` | 로컬 변경사항 파괴 위험 |
-| `Bash(git clean)` | 추적 안 된 파일 삭제 위험 |
+| 비밀 파일 읽기 (`.env`, 서명 키와 인증서, 프로비저닝 파일) | 공개 레포라 대화나 PR 에 섞여 나가면 안 된다 |
+| `mcp__github__merge_pull_request`, `gh pr merge` | merge 는 사람이 한다 |
+| `git push origin main*`, `git push origin develop*` | 보호 브랜치 직접 push 금지 |
+| `git push --force*`, `git push -f*` | 원격 히스토리 파괴 위험 |
+| `gh issue delete` | 이슈 삭제는 되돌릴 수 없다 |
+| `xcrun altool` | 스토어 업로드는 사람이 한다 |
 
-> `git push`(일반)는 차단 목록에 없다 — Claude가 push 제안 시 매번 승인 프롬프트가 뜬다.
+### 확인 후 실행 (ask)
+
+| 항목 | 이유 |
+|---|---|
+| `flutter build` | 릴리스 빌드는 시간이 길고 산출물이 업로드로 이어진다 |
+| `gh release`, `gh workflow run` | 외부에 보이는 작업이다 |
+
+> 권한은 어느 파일에 있든 deny → ask → allow 순서로 먼저 걸리는 규칙이 이긴다. 개인 local 에 allow 를 두어도 공유 deny/ask 를 넘지 못한다.
 
 ---
 
-## 5. 알림 훅
+## 5. 훅
 
-`~/.claude/settings.json` — 모든 프로젝트에 적용되는 글로벌 설정.
+### 편집 후 dart 검사 (`.claude/settings.json`, 팀 공유)
+
+`PostToolUse` 에서 `Edit|Write|MultiEdit` 뒤에 `.claude/hooks/dart_check.sh` 가 돈다.
+
+1. 바꾼 파일이 `.dart` 가 아니거나 레포 밖이면 아무것도 하지 않는다
+2. `test/` 아래 파일만 `dart format` (lib 는 기존 미포맷 파일이 많아 CI 도 test 만 검사)
+3. 그 파일 하나만 `flutter analyze --no-fatal-infos --no-fatal-warnings` 로 보고, warning 이나 error 가 있으면 요약을 stderr 로 내고 exit 2 → Claude 가 바로 고친다
+4. info 만 있거나 문제가 없으면 조용히 exit 0. `flutter`, `jq` 가 없으면 건너뛴다
+
+### 알림 (`~/.claude/settings.json`, 개인 글로벌)
 
 macOS 시스템 알림(`osascript`)을 사용한다. 추가 모듈 설치 불필요.
 
@@ -394,15 +430,21 @@ macOS 시스템 알림(`osascript`)을 사용한다. 추가 모듈 설치 불필
 
 1. `/plan` — 명세서 작성, 코드 건드리지 않음
 2. **검토** — 명세서 내용 확인 후 `/feat` 진행 승인
-3. `/feat` — 구현 + `dart format` + `flutter analyze` 자동 실행
-4. `/check` — 구현 결과 다관점 검증 (4개 에이전트 병렬)
-5. `/commit` — 논리 단위 분할 + 메시지 제안
-6. `/pr <기준 커밋>` — PR 초안 작성
+3. `/feat` — 구현 + 바꾼 test 파일 포맷 + `flutter analyze --no-fatal-infos` (커밋 안 함)
+4. `/check` — 구현 결과 다관점 검증 (에이전트 병렬)
+5. `/commit` — 논리 단위 분할 + 실제 커밋
+6. `/pr [기준 커밋]` — 필요 시 push 후 develop 대상 PR 생성 (merge 는 사람)
+
+### 출시
+
+```
+/release <버전>  →  release/<버전> 브랜치·검증·버전 올림 커밋  →  /pr  →  (사람) develop→main merge, 빌드 업로드, 심사 제출
+```
 
 ### 버그 조사
 
 ```
-/analysis <현상>  →  원인 파악  →  /feat  →  /check  →  /commit
+/analysis <현상>  →  원인 파악  →  /feat  →  /check  →  /commit  →  /pr
 ```
 
 ### 코드 이해
@@ -418,14 +460,14 @@ macOS 시스템 알림(`osascript`)을 사용한다. 추가 모듈 설치 불필
 | `/plan` 결과 검토 | 🔴 최고 | 방향이 잘못되면 구현 전체가 낭비 |
 | `/feat` 완료 후 | 🟠 높음 | 코드가 명세서대로 나왔는지 확인 |
 | `/check` 결과 | 🟡 중간 | 도구가 잡은 문제를 판단 |
-| `/pr` 초안 | 🟢 낮음 | 문서 수준 확인 |
+| `/pr` 결과 | 🟢 낮음 | 문서 수준 확인 |
 
 ---
 
 ## 부록: 커밋 메시지 형식
 
 ```
-[태그] 한 줄 요약 - 상세1 상세2
+[태그] 한 줄 요약 - 상세1 상세2 (#이슈번호)
 ```
 
 | 태그 | 사용 시점 |

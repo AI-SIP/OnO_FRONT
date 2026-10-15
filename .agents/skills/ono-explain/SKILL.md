@@ -17,7 +17,7 @@ Flutter에 익숙하지 않은 백엔드 개발자도 이해할 수 있도록 �
 - 상태 관리: 상태가 어디서 정의되고, 어디서 바뀌며, 어디서 UI에 반영되는가
 - API 호출: UI 이벤트에서 서비스/레포지토리/HTTP 클라이언트를 거쳐 어느 엔드포인트로 가는가
 - 에러/로딩/빈 상태: 사용자가 보는 상태가 어디서 결정되는가
-- Flutter 관용 패턴: `StatefulWidget`, `Provider/Riverpod/Bloc`, `FutureBuilder`, `LayoutBuilder` 등 해당 코드 이해에 필요한 개념
+- Flutter 관용 패턴: `StatefulWidget`, `provider` 패키지(이 앱의 유일한 상태 관리), `FutureBuilder`, `LayoutBuilder` 등 해당 코드 이해에 필요한 개념
 
 ## 절차
 

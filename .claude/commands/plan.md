@@ -29,7 +29,7 @@ $ARGUMENTS 기능에 대한 구현 명세서를 작성한다.
 
 ## API/상태 관리
 - 사용할 API 엔드포인트와 응답 필드
-- 상태 관리 방식 (Provider/Riverpod/Bloc 등)
+- 상태 관리 방식 (이 앱은 `provider` 패키지만 쓴다. `lib/Provider/` 의 기존 Provider 확장인지 새 Provider 인지)
 
 ## UI 반응형 고려사항
 - 폰/태블릿/가로화면에서 처리할 내용
