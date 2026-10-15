@@ -1,5 +1,5 @@
 ---
-description: plan 명세서 기반 기능 구현
+description: plan 명세서 기반 기능 구현 (커밋은 하지 않음)
 argument-hint: "[명세서 경로 또는 기능명, 생략 시 확인]"
 ---
 
@@ -23,10 +23,12 @@ $ARGUMENTS
 **3단계 – 검증**
 구현 후 다음을 수행한다.
 ```
-dart format .
-flutter analyze
+dart format <바꾼 test 파일>         # test 아래 바꾼 파일만. lib 전체 포맷 금지 (무관한 diff)
+flutter analyze --no-fatal-infos     # CI 기준. warning, error 가 0개여야 한다
+flutter test <관련 테스트>           # 바꾼 동작과 관련된 테스트가 있으면
 ```
-경고가 있으면 수정 후 재확인. 해결 불가능한 경우 사용자에게 설명한다.
+warning 이나 error 가 있으면 수정 후 재확인. 해결 불가능한 경우 사용자에게 설명한다.
+편집할 때마다 `.claude/settings.json` 훅이 바꾼 dart 파일을 같은 기준으로 analyze 하므로, 훅이 알려 준 문제는 바로 고친다.
 
 **4단계 – 보고**
 아래 항목을 간결하게 정리한다.
@@ -35,3 +37,6 @@ flutter analyze
 - 반응형 처리 여부
 - 실행한 검증 결과
 - 남은 리스크 또는 확인이 필요한 부분
+- 추천 커밋 단위와 메시지
+
+**커밋하지 않는다.** 커밋은 사용자가 `/commit` 을 호출할 때 한다.

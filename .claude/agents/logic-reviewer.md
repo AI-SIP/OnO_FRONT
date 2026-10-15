@@ -1,6 +1,6 @@
 ---
 name: logic-reviewer
-description: Flutter 비즈 로직 정합성 검증 전문가. null safety 위반, async 경합, 상태 전이 오류, 에러 처리 누락을 검토할 때 자동으로 사용된다.
+description: Flutter 비즈 로직 정합성 검증 전문가. null safety 위반, async 경합, 상태 전이 오류, 에러 처리 누락을 검토할 때 사용된다. /check, /release 에서 위임된다.
 tools: ["Read", "Grep", "Glob", "Bash"]
 ---
 

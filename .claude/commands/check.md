@@ -20,13 +20,15 @@ git diff [커밋해시..HEAD 또는 현재 변경분]
 - `logic-reviewer` 에이전트: null safety, async 경합, 상태 전이, 에러 처리
 - `side-effect-checker` 에이전트: API 중복 호출, 로컬 저장 부작용, FCM 관련
 
-반응형 UI 변경이 포함된 경우:
+로그인, 토큰, 라우팅, 딥링크, 로그아웃 처리 변경이 포함된 경우:
 - `permission-auditor` 에이전트: 화면 접근 제어, 인증 흐름
 
+반응형 UI 변경이 포함된 경우: 맡길 에이전트가 없으므로 직접 작은 폰, 태블릿, 가로/세로에서 overflow, 잘림, 스크롤 불가 가능성을 확인한다.
+
 **3단계 – 정적 분석**
-가능한 경우 실행:
+가능한 경우 실행 (CI 와 같은 기준, info 는 판정에서 제외):
 ```
-flutter analyze
+flutter analyze --no-fatal-infos
 ```
 
 **4단계 – 교차 반증**

@@ -18,7 +18,7 @@ description: OnO Flutter 레포에서 사용자가 "check <커밋 번호>" 또�
 3. 변경 파일별 사용자 흐름, 상태 관리, API 연동, UI 영향을 추적한다.
 4. 1차 검사는 diff 기반으로 수행한다.
 5. 2차 검사는 1차 결론을 스스로 반증한다. 상위 조건, 호출 가능성, 실제 도달 경로를 다시 확인한다.
-6. 가능한 경우 `dart format`과 `flutter analyze`를 실행한다.
+6. 가능한 경우 `flutter analyze --no-fatal-infos`(CI 기준, info 제외)를 실행한다. 이 모드는 파일을 바꾸지 않으므로 포맷은 `dart format --output=none --set-exit-if-changed <바뀐 test 파일>` 로 검사만 한다.
 7. UI 변경이 있으면 폰과 태블릿 레이아웃에서 깨질 가능성을 반드시 검토한다.
 
 ## 자가 반증

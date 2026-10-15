@@ -1,6 +1,6 @@
 ---
 name: side-effect-checker
-description: Flutter 앱의 부작용·외부 영향 검증 전문가. 로컬 저장소 부작용, API 중복 호출, FCM 토큰 처리, 의도치 않은 외부 연동을 검토할 때 자동으로 사용된다.
+description: Flutter 앱의 부작용·외부 영향 검증 전문가. 로컬 저장소 부작용, API 중복 호출, FCM 토큰 처리, 의도치 않은 외부 연동을 검토할 때 사용된다. /check, /release 에서 위임된다.
 tools: ["Read", "Grep", "Glob", "Bash"]
 ---
 

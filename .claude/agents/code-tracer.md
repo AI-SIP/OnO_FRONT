@@ -1,6 +1,6 @@
 ---
 name: code-tracer
-description: Flutter 위젯 트리·상태 관리·API 호출 흐름 추적. 코드 흐름을 따라가야 할 때, 특정 위젯의 데이터 출처를 파악할 때, 상태 변경이 어디서 일어나는지 추적할 때 자동으로 사용된다.
+description: Flutter 위젯 트리·상태 관리·API 호출 흐름 추적. 코드 흐름을 따라가야 할 때, 특정 위젯의 데이터 출처를 파악할 때, 상태 변경이 어디서 일어나는지 추적할 때 사용된다. /analysis, /plan, /explain 에서 위임된다.
 tools: ["Read", "Grep", "Glob", "Bash"]
 ---
 
@@ -18,7 +18,7 @@ OnO Flutter 앱의 코드 흐름 추적 전문가.
 
 **상태 관리 방향**:
 상태 정의 위치 → 상태 변경 트리거 → UI 반영 위치 순서로 추적한다.
-Provider/Riverpod/Bloc 등 사용 패턴을 식별한다.
+이 앱은 `provider` 패키지만 쓴다 (`lib/Provider/` 의 ChangeNotifier 를 주로 `Provider.of<T>(context)`, 일부 `context.watch`/`read`, `Consumer` 로 읽는다).
 
 **API 호출 방향**:
 UI 이벤트 → 서비스/레포지토리 → HTTP 클라이언트 → 엔드포인트 순서로 추적한다.

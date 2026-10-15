@@ -1,6 +1,6 @@
 ---
 name: permission-auditor
-description: Flutter 화면 접근 제어 및 인증 흐름 검증 전문가. 로그인 상태 없이 접근 가능한 화면, 인증 토큰 만료 처리, 화면 진입 조건을 검토할 때 자동으로 사용된다.
+description: Flutter 화면 접근 제어 및 인증 흐름 검증 전문가. 로그인 상태 없이 접근 가능한 화면, 인증 토큰 만료 처리, 화면 진입 조건을 검토할 때 사용된다. /check (로그인, 토큰, 라우팅 변경이 있을 때)와 /release 에서 위임된다.
 tools: ["Read", "Grep", "Glob", "Bash"]
 ---
 
