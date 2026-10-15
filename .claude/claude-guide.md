@@ -7,7 +7,7 @@
 ## 목차
 
 1. [설정 파일 구조](#1-설정-파일-구조)
-2. [커스텀 명령어 9종](#2-커스텀-명령어-9종)
+2. [스킬 10종](#2-스킬-10종)
 3. [전문가 에이전트 6종](#3-전문가-에이전트-6종)
 4. [권한 설정](#4-권한-설정)
 5. [훅](#5-훅)
@@ -21,21 +21,15 @@
 OnO_FRONT/
 ├── CLAUDE.md                          ← 프로젝트 지침 (Claude가 항상 읽음)
 ├── AGENTS.md                          ← Codex 용 작업 지침 (git 제외, 각자 로컬)
-├── .agents/skills/ono-*/SKILL.md      ← Codex 용 작업 모드 (이 문서의 명령어와 같은 정책)
+├── .mcp.json                          ← 프로젝트 MCP 서버 (dart mcp-server)
+├── .agents/skills/ono-*/SKILL.md      ← 스킬 절차 본문의 정본 (Codex 는 바로, Claude 는 래퍼로 읽음)
 └── .claude/
     ├── settings.json                  ← 팀 공유 권한·훅 (git 포함)
     ├── settings.local.json            ← 개인 권한 설정 (git 제외)
     ├── hooks/dart_check.sh            ← 편집 후 dart 파일 analyze 훅
-    ├── commands/                      ← 커스텀 슬래시 명령어
-    │   ├── analysis.md
-    │   ├── plan.md
-    │   ├── feat.md
-    │   ├── check.md
-    │   ├── commit.md
-    │   ├── pr.md
-    │   ├── issue.md
-    │   ├── release.md
-    │   └── explain.md
+    ├── skills/<이름>/SKILL.md          ← 슬래시 명령 래퍼 (analysis, plan, feat, check, commit,
+    │                                      pr, issue, explain, release, sim). 정본을 읽게 하고
+    │                                      Claude 전용 설정과 에이전트 위임만 둔다
     └── agents/                        ← 전문가 서브에이전트
         ├── code-tracer.md
         ├── perf-reviewer.md
@@ -52,23 +46,28 @@ OnO_FRONT/
 
 ---
 
-## 2. 커스텀 명령어 9종
+## 2. 스킬 10종
 
-Claude Code 프롬프트 입력창에서 `/명령어` 형태로 호출한다.
+Claude Code 프롬프트 입력창에서 `/명령어` 형태로 호출한다. 예전 `.claude/commands/*.md` 는 `.claude/skills/<이름>/SKILL.md` 로 옮겼고, 호출 이름은 그대로다.
+
+**절차 본문은 한 곳에만 있다.** `.claude/skills/<이름>/SKILL.md` 는 레포 루트의 `.agents/skills/ono-<이름>/SKILL.md`(Codex 가 쓰는 파일)를 Read 로 읽고 따르라는 래퍼다. 래퍼에는 `argument-hint`, `disable-model-invocation`, `$ARGUMENTS`, 에이전트 위임처럼 Claude Code 에만 있는 것만 둔다. 절차를 고칠 때는 정본만 고친다. 왜 이렇게 나눴는지는 `.agents/README.md` 의 「Claude Code 와 나눠 쓰는 구조」에 있다.
+
+**자동 호출**: `/analysis`, `/check`, `/explain` 은 읽기 전용이라 Claude 가 요청 내용을 보고 알아서 부를 수 있다. 나머지는 파일을 쓰거나 커밋, push, 이슈 생성, 시뮬레이터 실행 같은 부수효과가 있어서 `disable-model-invocation: true` 로 막아 두었고, 사람이 `/이름` 으로 불러야만 돈다.
 
 ### 명령어 한눈에 보기
 
-| 명령어 | 목적 | 코드 수정 | 커밋 실행 |
-|---|---|:---:|:---:|
-| `/analysis` | 문제 원인 규명 및 병렬 조사 | ✗ | ✗ |
-| `/plan` | 구현 명세서 작성 | ✗ | ✗ |
-| `/feat` | plan 기반 기능 구현 | ✓ | ✗ |
-| `/check` | 다관점 검증 및 위험도 분류 | ✗ | ✗ |
-| `/commit` | 논리 단위로 나눠 실제 커밋 | ✗ | ✓ |
-| `/pr` | 필요 시 push 후 develop 대상 PR 생성 | ✗ | ✗ |
-| `/issue` | GitHub 이슈 생성 | ✗ | ✗ |
-| `/release` | 출시 전 검증, 버전 올림 커밋, 업데이트 내역 | ✓ (pubspec 버전만) | ✓ (버전 올림만) |
-| `/explain` | 코드 흐름·원리 설명 | ✗ | ✗ |
+| 명령어 | 목적 | 코드 수정 | 커밋 실행 | 자동 호출 |
+|---|---|:---:|:---:|:---:|
+| `/analysis` | 문제 원인 규명 및 병렬 조사 | ✗ | ✗ | ✓ |
+| `/plan` | 구현 명세서 작성 | ✗ | ✗ | ✗ |
+| `/feat` | plan 기반 기능 구현 | ✓ | ✗ | ✗ |
+| `/check` | 다관점 검증 및 위험도 분류 | ✗ | ✗ | ✓ |
+| `/commit` | 논리 단위로 나눠 실제 커밋 | ✗ | ✓ | ✗ |
+| `/pr` | 필요 시 push 후 develop 대상 PR 생성 | ✗ | ✗ | ✗ |
+| `/issue` | GitHub 이슈 생성 | ✗ | ✗ | ✗ |
+| `/release` | 출시 전 검증, 버전 올림 커밋, 업데이트 내역 | ✓ (pubspec 버전만) | ✓ (버전 올림만) | ✗ |
+| `/explain` | 코드 흐름·원리 설명 | ✗ | ✗ | ✓ |
+| `/sim` | 시뮬레이터에 띄워 화면 확인 | ✗ | ✗ | ✗ |
 
 merge, `main`/`develop` 직접 push, force push, 스토어 업로드는 어떤 명령도 하지 않는다. 사용자가 명시적으로 요청할 때만 한다.
 
@@ -259,9 +258,25 @@ git commit -m "[Feat] 복습 세트 상세에 다시 풀기 버튼 추가 - 태�
 
 ---
 
+### `/sim [ios|android] [화면 설명]`
+
+**언제**: 바꾼 화면을 실제 앱으로 띄워 보고 싶을 때.
+
+**동작 흐름**:
+1. `.env` 가 있는지, 실기기가 아닌 시뮬레이터나 에뮬레이터가 있는지 확인 (`.env` 내용은 출력하지 않음)
+2. 시뮬레이터 부팅 후 `flutter run -d <UDID> --dart-define=ENV=dev` 를 백그라운드로 실행. 로그와 pid 파일은 레포 밖(scratchpad 나 `/tmp/ono-sim`)에 둠
+3. 스크린샷을 찍어 직접 열어 보고, 로그의 에러 줄도 확인
+4. 사용자가 직접 눌러 볼 체크리스트로 넘김. 앱 안을 누르거나 입력하지는 못함
+
+**hot reload**: `kill -USR1 $(cat <pid 파일>)`. Dart MCP(`.mcp.json` 의 `dart`)의 `hot_reload` 는 터미널에서 띄운 앱에 붙지 못해서 `analyze_files`, `run_tests` 같은 정적 도구로만 쓴다.
+
+> ⚠️ 실기기 설치, `--release` 빌드, `ENV=prod` 실행, 앱 코드 수정은 하지 않는다.
+
+---
+
 ## 3. 전문가 에이전트 6종
 
-명령어 내부에서 Claude가 자동으로 호출하는 서브에이전트. 직접 호출할 수도 있지만 보통 명령어가 알아서 쓴다.
+스킬 래퍼(`.claude/skills/*`)에서 Claude가 자동으로 호출하는 서브에이전트. 직접 호출할 수도 있지만 보통 스킬이 알아서 쓴다.
 
 모든 검증·조사 에이전트는 **읽기 전용** — 코드를 수정하거나 커밋하지 않는다.
 
@@ -354,16 +369,16 @@ git commit -m "[Feat] 복습 세트 상세에 다시 풀기 버튼 추가 - 태�
 
 ---
 
-### 명령어 ↔ 에이전트 매핑
+### 스킬 ↔ 에이전트 매핑
 
-| 명령어 | 사용 에이전트 |
+| 스킬 | 사용 에이전트 |
 |---|---|
 | `/analysis` | `code-tracer` |
 | `/plan` | `code-tracer` |
 | `/check` | `perf-reviewer`, `logic-reviewer`, `side-effect-checker` (+로그인·토큰·라우팅 변경 시 `permission-auditor`) |
 | `/release` | `perf-reviewer`, `logic-reviewer`, `side-effect-checker`, `permission-auditor` |
 | `/explain` | `code-tracer` |
-| `/feat`, `/commit`, `/pr`, `/issue` | (없음) |
+| `/feat`, `/commit`, `/pr`, `/issue`, `/sim` | (없음) |
 | (직접 요청) | `report-writer` |
 
 ---

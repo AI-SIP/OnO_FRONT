@@ -5,7 +5,9 @@ description: OnO Flutter 레포에서 사용자가 "analysis <문제 설명>" �
 
 # OnO Analysis Skill
 
-사용자가 `analysis <문제 설명>` 또는 원인 분석을 요청하면 이 Skill을 따른다. 인자가 없으면 현재 작업 중인 변경사항(`git status`, staged/unstaged diff, untracked 파일)을 대상으로 분석한다.
+> 이 파일이 `analysis` 절차의 정본이다. Codex 는 이 파일을 바로 쓰고, Claude Code 의 `/analysis` 는 `.claude/skills/analysis/SKILL.md` 래퍼가 이 파일을 읽어 따른다. 절차를 고칠 때는 이 파일만 고친다.
+
+사용자가 `analysis <문제 설명>`(Claude Code 에서는 `/analysis <문제 설명>`) 또는 원인 분석을 요청하면 이 Skill을 따른다. 인자가 없으면 현재 작업 중인 변경사항(`git status`, staged/unstaged diff, untracked 파일)을 대상으로 분석한다.
 
 ## 목표
 
@@ -23,7 +25,7 @@ description: OnO Flutter 레포에서 사용자가 "analysis <문제 설명>" �
 
 ## 조사 관점
 
-문제를 다음 차원으로 나눠 본다.
+문제를 다음 차원으로 나눠 본다. 서브에이전트를 띄울 수 있는 도구에서는 차원별로 나눠 병렬로 조사한다.
 
 - 위젯 트리와 상태 흐름: 상태가 어디서 만들어지고 어디서 깨지는가
 - API와 데이터 흐름: 요청 시점, 응답 shape, nullable 필드, 에러 처리
@@ -34,10 +36,10 @@ description: OnO Flutter 레포에서 사용자가 "analysis <문제 설명>" �
 ## 절차
 
 1. 관련 문서가 있으면 `docs` 아래에서 먼저 확인한다.
-2. 문제의 진입점이 되는 화면, 위젯, 서비스, provider/controller를 찾는다.
+2. 문제의 진입점이 되는 화면, 위젯, 서비스, provider를 찾는다(상태 관리는 `provider` 패키지만 쓴다, `lib/Provider/`).
 3. 위젯 트리, 상태 변경, API 호출 경로를 `파일:라인` 근거로 추적한다.
 4. 가능한 원인을 확신도별로 나눈다.
-5. 각 원인을 반증한다. 해당 원인이 맞다면 재현 현상이 설명되는지, 상위 조건에서 막히지 않는지 확인한다.
+5. 차원별 조사 결과를 서로 대조한다. A 원인이 맞다면 B 동작도 설명되는지, 재현 조건과 맞는지 본다.
 6. 확인되지 않은 내용은 단정하지 않고 "확인 필요"로 둔다.
 
 ## 자가 반증

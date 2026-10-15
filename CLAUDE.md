@@ -51,19 +51,25 @@ flutter run                      # 실행
 
 폰·태블릿 모두 1차 환경. 모든 UI는 반응형 기본. 고정 width/height 지양.
 
-## 커스텀 명령어 (`.claude/commands/`)
+## 스킬 (`.claude/skills/`)
 
-| 명령 | 목적 |
-|---|---|
-| `/analysis` | 원인 규명·병렬 조사 (코드 수정 X) |
-| `/plan` | 구현 명세서 작성 (코드 수정 X) |
-| `/feat` | plan 기반 구현 (커밋 X) |
-| `/check` | 다관점 검증·위험도 분류 (읽기 전용) |
-| `/commit` | 논리 단위로 나눠 실제 커밋 |
-| `/pr` | 필요 시 push 후 develop 대상 PR 생성 |
-| `/issue` | GitHub 이슈 생성 |
-| `/release` | 출시 전 검증·버전 올림·업데이트 내역 (업로드는 사람) |
-| `/explain` | 코드 흐름·원리 설명 |
+절차 본문은 `.agents/skills/ono-*/SKILL.md` 한 곳에만 있고(Codex 와 같이 씀), `.claude/skills/` 는 그 파일을 읽게 하는 래퍼다. 절차는 정본만 고친다.
+
+| 명령 | 목적 | 자동 호출 |
+|---|---|---|
+| `/analysis` | 원인 규명·병렬 조사 (읽기 전용) | O |
+| `/check` | 다관점 검증·위험도 분류 (읽기 전용) | O |
+| `/explain` | 코드 흐름·원리 설명 (읽기 전용) | O |
+| `/plan` | 구현 명세서 작성 (코드 수정 X) | X |
+| `/feat` | plan 기반 구현 (커밋 X) | X |
+| `/commit` | 논리 단위로 나눠 실제 커밋 | X |
+| `/pr` | 필요 시 push 후 develop 대상 PR 생성 | X |
+| `/issue` | GitHub 이슈 생성 | X |
+| `/release` | 출시 전 검증·버전 올림·업데이트 내역 (업로드는 사람) | X |
+| `/sim` | 시뮬레이터에 띄워 화면 확인 | X |
+
+- 시뮬레이터 확인: `/sim [ios|android] [화면 설명]`. 반드시 `--dart-define=ENV=dev`, 실기기 금지, 로그와 스크린샷은 레포 밖에 둔다.
+- Dart MCP(`.mcp.json` 의 `dart`)는 `analyze_files`, `run_tests` 같은 정적 도구로 쓴다. 터미널에서 띄운 앱의 hot reload 는 `kill -USR1 $(cat <pid 파일>)`.
 
 ## 에이전트 (`.claude/agents/`)
 
