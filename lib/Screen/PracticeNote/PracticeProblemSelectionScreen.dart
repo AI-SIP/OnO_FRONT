@@ -44,10 +44,15 @@ class PracticeProblemSelectionScreen extends StatefulWidget {
   /// 알림 화면을 건너뛰고 바로 저장한 뒤 세트 상세로 돌아간다(`true` 로 닫힌다).
   final bool addMode;
 
+  /// 테스트에서 태그 API 를 가짜로 바꿔 끼울 때만 넘긴다.
+  @visibleForTesting
+  final TagService? tagService;
+
   const PracticeProblemSelectionScreen({
     super.key,
     this.practiceModel,
     this.addMode = false,
+    this.tagService,
   }) : assert(!addMode || practiceModel != null);
 
   @override
@@ -65,7 +70,7 @@ class _PracticeProblemSelectionScreenState
   List<FolderThumbnailModel> allFolders = [];
   late final List<int> _originalProblemIds;
 
-  final TagService _tagService = TagService();
+  late final TagService _tagService = widget.tagService ?? TagService();
   final TextEditingController _titleQueryController = TextEditingController();
   Timer? _titleDebounce;
   List<TagModel> _tags = [];
@@ -102,6 +107,7 @@ class _PracticeProblemSelectionScreenState
         : [];
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
       _loadInitialFolders();
       _loadTags();
       // 추가 모드는 새로 고른 문제만 센다. 담긴 문제는 목록에서 막는다.
@@ -180,17 +186,23 @@ class _PracticeProblemSelectionScreenState
         size: 20,
       );
 
+      // 불러오는 사이 화면을 나갔으면 응답을 버린다. 릴리스 빌드에서는
+      // dispose 된 State 의 setState 가 Null check 오류로 터진다 (#400).
+      if (!mounted) return;
       setState(() {
         allFolders = response.content;
         _folderCursor = response.nextCursor;
         _folderHasNext = response.hasNext;
 
-        // 첫 번째 폴더를 선택하고 해당 폴더의 문제 로드
+        // 첫 번째 폴더를 선택한다. 문제 로드는 setState 밖에서 띄운다.
         if (allFolders.isNotEmpty) {
           selectedFolderId = allFolders[0].folderId;
-          _loadInitialProblems(allFolders[0].folderId);
         }
       });
+
+      if (allFolders.isNotEmpty) {
+        _loadInitialProblems(allFolders[0].folderId);
+      }
     } catch (e, stackTrace) {
       await _reportAndShowLoadError(
         e,
@@ -222,6 +234,7 @@ class _PracticeProblemSelectionScreenState
         size: 20,
       );
 
+      if (!mounted) return;
       setState(() {
         allFolders.addAll(response.content);
         _folderCursor = response.nextCursor;
@@ -317,6 +330,7 @@ class _PracticeProblemSelectionScreenState
         size: 20,
       );
 
+      if (!mounted) return;
       setState(() {
         _currentFolderProblems = response.content;
         _problemCursor = response.nextCursor;
@@ -472,6 +486,7 @@ class _PracticeProblemSelectionScreenState
           size: 20,
         );
 
+        if (!mounted) return;
         setState(() {
           _currentFolderProblems.addAll(response.content);
           _problemCursor = response.nextCursor;
