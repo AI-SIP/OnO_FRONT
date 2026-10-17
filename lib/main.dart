@@ -102,6 +102,9 @@ Future<void> main() async {
             isReleaseMode: kReleaseMode,
             isProfileMode: kProfileMode,
           );
+          // 네트워크 끊김, 로그인 취소처럼 앱이 처리한 실패는 이벤트 대신
+          // breadcrumb 으로 남긴다. (#401)
+          options.beforeSend = AppErrorReporter.beforeSend;
           options.profilesSampleRate = 0.0;
           options.tracesSampleRate = 1.0;
         },
